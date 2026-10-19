@@ -3,12 +3,12 @@ package com.jadzumi.video
 import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
-import androidx.core.net.toUri
 import android.os.Build
 import android.text.format.Formatter
 import android.util.LruCache
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,10 +31,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 
 @Composable fun rememberFolderPicker(library: LocalLibrary): () -> Unit {
     val context = LocalContext.current
@@ -75,13 +76,24 @@ import kotlinx.coroutines.sync.withPermit
 }
 
 @Composable private fun LocalPanel(content: @Composable ColumnScope.() -> Unit) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface) {
-        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+    Surface(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable fun LocalLibraryPage(state: LocalLibraryState, library: LocalLibrary, query: String, select: (String)->Unit, preview: ()->Unit) {
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable fun LocalLibraryPage(
+    state: LocalLibraryState,
+    library: LocalLibrary,
+    query: String,
+    select: (String) -> Unit,
+    preview: () -> Unit
+) {
     val add = rememberFolderPicker(library)
     var category by rememberSaveable { mutableStateOf("All videos") }
     val videos = remember(state.videos, query, category) {
@@ -94,56 +106,95 @@ import kotlinx.coroutines.sync.withPermit
         }
     }
 
-    PullToRefreshBox(
-        isRefreshing = state.busy,
-        onRefresh = { library.rescan() },
-        modifier = Modifier.fillMaxSize()
-    ) {
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(28.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            item {
-                Text("Your cinema, at home.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                Text("${state.videos.distinctBy { it.identity }.size} local videos · ${state.folders.size} folders", Modifier.padding(top = 8.dp))
-            }
-            item {
-                LocalPanel {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Button(onClick = add, enabled = !state.busy) {
-                            Icon(Icons.Rounded.CreateNewFolder, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Add folder")
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
+        PullToRefreshBox(
+            isRefreshing = state.busy,
+            onRefresh = { library.rescan() },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(pad),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
+            ) {
+                item {
+                    Text("Your cinema, at home.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                    Text(
+                        "${state.videos.distinctBy { it.identity }.size} local videos · ${state.folders.size} folders",
+                        Modifier.padding(top = 6.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                item {
+                    LocalPanel {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(onClick = add, enabled = !state.busy) {
+                                Icon(Icons.Rounded.CreateNewFolder, null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Add folder", maxLines = 1, softWrap = false)
+                            }
+                            if (state.busy) {
+                                TextButton(onClick = library::cancel) { Text("Cancel", maxLines = 1, softWrap = false) }
+                            }
                         }
-                        if (state.busy) TextButton(onClick = library::cancel) { Text("Cancel") }
-                    }
-                    if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                    state.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-                    Text("Pull down to refresh or tap the top sync icon to discover new videos. Files remain in place.", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(listOf("All videos", "Episodes", "Other videos")) { name ->
-                        FilterChip(category == name, { category = name }, label = { Text(name) })
+                        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+                        state.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                        Text(
+                            "Pull down to refresh or tap the top sync icon to discover new videos. Files remain in place.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-            }
-            if (videos.isEmpty()) item {
-                LocalPanel {
-                    Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
-                    Text(if (state.videos.isEmpty()) "Make room for your stories" else "No matching videos", style = MaterialTheme.typography.titleLarge)
-                    Text(if (state.folders.isEmpty()) "Add your first folder to build your offline library." else "Pull down to refresh or try another search.")
+                item {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(listOf("All videos", "Episodes", "Other videos")) { name ->
+                            FilterChip(
+                                selected = category == name,
+                                onClick = { category = name },
+                                label = { Text(name, maxLines = 1, softWrap = false) }
+                            )
+                        }
+                    }
                 }
-            }
-            items(videos, key = { it.uri }) { video ->
-                LocalVideoCard(video) { select(video.uri) }
-            }
-            item {
-                TextButton(onClick = preview) { Text("View original design samples") }
+                if (videos.isEmpty()) {
+                    item {
+                        LocalPanel {
+                            Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+                            Text(
+                                if (state.videos.isEmpty()) "Make room for your stories" else "No matching videos",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                if (state.folders.isEmpty()) "Add your first folder to build your offline library."
+                                else "Pull down to refresh or try another search."
+                            )
+                        }
+                    }
+                }
+                items(videos, key = { it.uri }) { video ->
+                    LocalVideoCard(video) { select(video.uri) }
+                }
+                item {
+                    TextButton(onClick = preview) { Text("View original design samples") }
+                }
             }
         }
     }
 }
 
-@Composable fun LocalFoldersPage(state: LocalLibraryState, library: LocalLibrary, wide: Boolean, select: (String)->Unit) {
+@OptIn(ExperimentalLayoutApi::class)
+@Composable fun LocalFoldersPage(
+    state: LocalLibraryState,
+    library: LocalLibrary,
+    wide: Boolean,
+    select: (String) -> Unit
+) {
     val context = LocalContext.current
     val add = rememberFolderPicker(library)
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
@@ -153,34 +204,71 @@ import kotlinx.coroutines.sync.withPermit
     val videos = state.videos.filter { it.folder == active?.uri }
     val totalBytes = remember(videos) { videos.sumOf { it.bytes.coerceAtLeast(0) } }
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Column {
-                Text("Folders & Storage", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                if (active != null) {
-                    Text("${videos.size} videos · ${Formatter.formatFileSize(context, totalBytes)} indexed in ${active.name}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val twoPane = maxWidth >= 840.dp
+        val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
+
+        if (twoPane) {
+            Column(
+                Modifier.fillMaxSize().padding(horizontal = pad, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                FoldersHeader(active, videos.size, totalBytes, state, add, library)
+                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                    LazyColumn(
+                        Modifier.weight(0.38f).fillMaxHeight(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 24.dp)
+                    ) {
+                        if (state.folders.isEmpty()) {
+                            item { LocalPanel { Text("No folders connected", fontWeight = FontWeight.Bold); Text("Add a folder using Android's file picker.") } }
+                        }
+                        items(state.folders, key = { it.uri }) { folder ->
+                            FolderSummaryCard(folder, state, active == folder, { selected = folder.uri }, { remove = folder })
+                        }
+                    }
+                    LazyColumn(
+                        Modifier.weight(0.62f).fillMaxHeight(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 24.dp)
+                    ) {
+                        item {
+                            Text("${videos.size} indexed videos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        }
+                        items(videos, key = { it.uri }) { video ->
+                            LocalVideoCard(video, onDelete = { videoToDelete = video }) { select(video.uri) }
+                        }
+                    }
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = add, enabled = !state.busy) {
-                    Icon(Icons.Rounded.CreateNewFolder, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Add folder")
+        } else {
+            // Single-column stacked layout for portrait / split-screen so video rows have 100% width
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(pad),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                item {
+                    FoldersHeader(active, videos.size, totalBytes, state, add, library)
                 }
-                OutlinedButton(onClick = library::fullRescan, enabled = !state.busy && state.folders.isNotEmpty()) {
-                    Text("Full Rescan")
+                if (state.folders.isEmpty()) {
+                    item { LocalPanel { Text("No folders connected", fontWeight = FontWeight.Bold); Text("Add a folder using Android's file picker.") } }
+                } else {
+                    item {
+                        Text("Connected Folders", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    }
+                    items(state.folders, key = { it.uri }) { folder ->
+                        FolderSummaryCard(folder, state, active == folder, { selected = folder.uri }, { remove = folder })
+                    }
                 }
-                if (state.busy) TextButton(onClick = library::cancel) { Text("Cancel") }
+                item {
+                    Spacer(Modifier.height(4.dp))
+                    Text("${videos.size} indexed videos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                }
+                items(videos, key = { it.uri }) { video ->
+                    LocalVideoCard(video, onDelete = { videoToDelete = video }) { select(video.uri) }
+                }
             }
-        }
-        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-        state.message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-        if (wide) Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            FolderChoices(state, active, { selected = it }, { remove = it }, Modifier.weight(0.4f))
-            FolderVideos(videos, select, { videoToDelete = it }, Modifier.weight(0.6f))
-        } else Column(Modifier.weight(1f)) {
-            FolderChoices(state, active, { selected = it }, { remove = it }, Modifier.fillMaxWidth().heightIn(max = 220.dp))
-            FolderVideos(videos, select, { videoToDelete = it }, Modifier.weight(1f))
         }
     }
 
@@ -203,126 +291,267 @@ import kotlinx.coroutines.sync.withPermit
             text = { Text("This will permanently delete \"${video.name}\" ($sizeStr) from your tablet's internal storage. This action cannot be undone.") },
             confirmButton = {
                 Button(
-                    onClick = {
-                        library.deleteVideo(video)
-                        videoToDelete = null
-                    },
+                    onClick = { library.deleteVideo(video); videoToDelete = null },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Delete permanently")
-                }
+                ) { Text("Delete permanently") }
             },
-            dismissButton = {
-                TextButton(onClick = { videoToDelete = null }) { Text("Cancel") }
-            }
+            dismissButton = { TextButton(onClick = { videoToDelete = null }) { Text("Cancel") } }
         )
     }
 }
 
-@Composable private fun FolderChoices(state: LocalLibraryState, active: LocalFolder?, select: (String)->Unit, remove: (LocalFolder)->Unit, modifier: Modifier) {
-    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
-        if (state.folders.isEmpty()) item { LocalPanel { Text("No folders connected"); Text("Add a folder using Android's file picker.") } }
-        items(state.folders, key = { it.uri }) { folder ->
-            val folderVideos = state.videos.filter { it.folder == folder.uri }
-            val folderBytes = folderVideos.sumOf { it.bytes.coerceAtLeast(0) }
-            Card(onClick = { select(folder.uri) }, colors = CardDefaults.cardColors(containerColor = if (active == folder) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)) {
-                Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(folder.name, fontWeight = FontWeight.Bold)
-                    Text("${folderVideos.size} videos · ${Formatter.formatFileSize(LocalContext.current, folderBytes)} · ${folder.status}", style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = { remove(folder) }, enabled = !state.busy) { Text("Remove from library") }
+@OptIn(ExperimentalLayoutApi::class)
+@Composable private fun FoldersHeader(
+    active: LocalFolder?,
+    videoCount: Int,
+    totalBytes: Long,
+    state: LocalLibraryState,
+    add: () -> Unit,
+    library: LocalLibrary
+) {
+    val context = LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        FlowRow(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(Modifier.padding(end = 16.dp)) {
+                Text("Folders & Storage", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                if (active != null) {
+                    Text(
+                        "$videoCount videos · ${Formatter.formatFileSize(context, totalBytes)} indexed in ${active.name}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(onClick = add, enabled = !state.busy) {
+                    Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add folder", maxLines = 1, softWrap = false)
+                }
+                OutlinedButton(onClick = library::fullRescan, enabled = !state.busy && state.folders.isNotEmpty()) {
+                    Icon(Icons.Rounded.Refresh, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Full Rescan", maxLines = 1, softWrap = false)
+                }
+                if (state.busy) {
+                    TextButton(onClick = library::cancel) { Text("Cancel", maxLines = 1, softWrap = false) }
+                }
+            }
+        }
+        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+        state.message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable private fun FolderSummaryCard(
+    folder: LocalFolder,
+    state: LocalLibraryState,
+    isActive: Boolean,
+    onSelect: () -> Unit,
+    onRemove: () -> Unit
+) {
+    val context = LocalContext.current
+    val folderVideos = remember(state.videos, folder.uri) { state.videos.filter { it.folder == folder.uri } }
+    val folderBytes = remember(folderVideos) { folderVideos.sumOf { it.bytes.coerceAtLeast(0) } }
+    Card(
+        onClick = onSelect,
+        shape = RoundedCornerShape(22.dp),
+        border = if (isActive) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f) else MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary)
+                    Text(folder.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                TextButton(
+                    onClick = onRemove,
+                    enabled = !state.busy,
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text("Remove", fontSize = 12.sp, maxLines = 1, softWrap = false)
+                }
+            }
+            Text(
+                "${folderVideos.size} videos · ${Formatter.formatFileSize(context, folderBytes)} · ${folder.status}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable private fun LocalVideoCard(
+    video: LocalVideo,
+    onDelete: (() -> Unit)? = null,
+    select: () -> Unit
+) {
+    val context = LocalContext.current
+    Card(
+        onClick = select,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shape = RoundedCornerShape(22.dp)
+    ) {
+        BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
+            val compact = maxWidth < 460.dp
+            val thumbWidth = if (compact) 92.dp else 116.dp
+            val thumbHeight = if (compact) 64.dp else 78.dp
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                LocalThumbnail(video, Modifier.size(thumbWidth, thumbHeight).clip(RoundedCornerShape(14.dp)))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        video.title,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    val sizeText = if (video.bytes >= 0) " · ${Formatter.formatFileSize(context, video.bytes)}" else ""
+                    val durText = if (video.duration > 0) timecode(video.duration / 1000) else "Duration unavailable"
+                    Text(
+                        durText + sizeText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    video.episode?.let {
+                        Text(
+                            "Season ${it.season} · Episode ${it.episode}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1
+                        )
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onDelete != null) {
+                        IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
+                            Icon(Icons.Rounded.DeleteOutline, "Delete video from storage", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                    Icon(
+                        Icons.Rounded.ChevronRight,
+                        "View file details",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
     }
 }
 
-@Composable private fun FolderVideos(videos: List<LocalVideo>, select: (String)->Unit, onDelete: (LocalVideo)->Unit, modifier: Modifier) {
-    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
-        item { Text("${videos.size} indexed videos", style = MaterialTheme.typography.titleLarge) }
-        items(videos, key = { it.uri }) { video ->
-            LocalVideoCard(video, onDelete = { onDelete(video) }) { select(video.uri) }
-        }
-    }
-}
-
-@Composable private fun LocalVideoCard(video: LocalVideo, onDelete: (() -> Unit)? = null, select: ()->Unit) {
-    Card(onClick = select, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(24.dp)) {
-        Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            LocalThumbnail(video, Modifier.size(112.dp, 80.dp).clip(RoundedCornerShape(16.dp)))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(video.title, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                val sizeText = if (video.bytes >= 0) " · ${Formatter.formatFileSize(LocalContext.current, video.bytes)}" else ""
-                Text((if (video.duration > 0) timecode(video.duration / 1000) else "Duration unavailable") + sizeText, style = MaterialTheme.typography.bodySmall)
-                video.episode?.let { Text("Season ${it.season} · Episode ${it.episode} · filename hint", style = MaterialTheme.typography.labelSmall) }
-            }
-            if (onDelete != null) {
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Rounded.DeleteOutline, "Delete video from storage", tint = MaterialTheme.colorScheme.error)
-                }
-            }
-            Icon(Icons.Rounded.ChevronRight, "View file details")
-        }
-    }
-}
-
+@OptIn(ExperimentalLayoutApi::class)
 @Composable fun LocalDetailPage(video: LocalVideo, state: LocalLibraryState, playback: PlaybackController) {
     val context = LocalContext.current
     val library = remember { LocalLibrary.get(context) }
     var confirmDelete by remember { mutableStateOf(false) }
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(28.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        item { LocalThumbnail(video, Modifier.fillMaxWidth().height(260.dp).clip(RoundedCornerShape(28.dp))) }
-        item {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(video.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(pad),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            item {
+                LocalThumbnail(video, Modifier.fillMaxWidth().heightIn(min = 200.dp, max = 260.dp).clip(RoundedCornerShape(28.dp)))
+            }
+            item {
+                FlowRow(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        video.title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f, fill = false).padding(end = 12.dp)
+                    )
 
-                val badge = if (playback.video?.identity == video.identity && playback.videoCodecBadge != null) {
-                    playback.videoCodecBadge
-                } else when {
-                    video.name.contains("hevc", ignoreCase = true) || video.name.contains("x265", ignoreCase = true) -> "HEVC Main10"
-                    video.width >= 3840 -> "4K UHD"
-                    video.width >= 1920 -> "1080p FHD"
-                    else -> null
-                }
+                    val badge = if (playback.video?.identity == video.identity && playback.videoCodecBadge != null) {
+                        playback.videoCodecBadge
+                    } else when {
+                        video.name.contains("hevc", ignoreCase = true) || video.name.contains("x265", ignoreCase = true) -> "HEVC Main10"
+                        video.width >= 3840 -> "4K UHD"
+                        video.width >= 1920 -> "1080p FHD"
+                        else -> null
+                    }
 
-                badge?.let {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.padding(start = 12.dp)
-                    ) {
-                        Text(it, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    badge?.let {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Text(
+                                it,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                softWrap = false,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 }
             }
-        }
-        item {
-            LocalPanel {
-                Text("Local file", style = MaterialTheme.typography.titleLarge)
-                Text(video.name)
-                Text("Folder: ${state.folders.firstOrNull { it.uri == video.folder }?.name ?: "Unknown"}")
-                Text("Duration: ${if (video.duration > 0) timecode(video.duration / 1000) else "Unavailable"}")
-                Text("Size: ${if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "Unavailable"}")
-                Text("Dimensions: ${if (video.width > 0 && video.height > 0) "${video.width} × ${video.height}" else "Unavailable"}")
-                Text("Media type: ${video.mime.ifEmpty { "Unavailable" }}")
-                video.episode?.let { Text("Filename suggests season ${it.season}, episode ${it.episode}.") }
+            item {
+                LocalPanel {
+                    Text("Local file", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(video.name, style = MaterialTheme.typography.bodyMedium)
+                    Text("Folder: ${state.folders.firstOrNull { it.uri == video.folder }?.name ?: "Unknown"}")
+                    Text("Duration: ${if (video.duration > 0) timecode(video.duration / 1000) else "Unavailable"}")
+                    Text("Size: ${if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "Unavailable"}")
+                    Text("Dimensions: ${if (video.width > 0 && video.height > 0) "${video.width} × ${video.height}" else "Unavailable"}")
+                    Text("Media type: ${video.mime.ifEmpty { "Unavailable" }}")
+                    video.episode?.let { Text("Filename suggests season ${it.season}, episode ${it.episode}.") }
 
-                val resume = playback.savedPosition(video)
-                if (resume > 0) Text("Resume from ${timecode(resume / 1000)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Button(onClick = { playback.open(video) }) {
-                        Icon(Icons.Rounded.PlayArrow, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(if (resume > 0) "Resume" else "Play")
+                    val resume = playback.savedPosition(video)
+                    if (resume > 0) {
+                        Text(
+                            "Resume from ${timecode(resume / 1000)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
-                    OutlinedButton(
-                        onClick = { confirmDelete = true },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Rounded.DeleteOutline, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Delete file")
+                        Button(onClick = { playback.open(video) }) {
+                            Icon(Icons.Rounded.PlayArrow, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (resume > 0) "Resume" else "Play", maxLines = 1, softWrap = false)
+                        }
+                        OutlinedButton(
+                            onClick = { confirmDelete = true },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Icon(Icons.Rounded.DeleteOutline, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Delete file", maxLines = 1, softWrap = false)
+                        }
                     }
                 }
             }
@@ -371,21 +600,25 @@ fun clearThumbnailMemoryCache() {
     val key = "${video.uri}:${video.modified}:${video.bytes}"
     val bitmap by produceState<Bitmap?>(initialValue = null, key1 = key) {
         value = null
-        value = withContext(Dispatchers.IO) { ThumbnailMemory.permits.withPermit {
-            ThumbnailMemory.cache.get(key) ?: run {
-                val retriever = MediaMetadataRetriever()
-                try {
-                    retriever.setDataSource(context, video.uri.toUri())
-                    if (Build.VERSION.SDK_INT >= 27) {
-                        retriever.getScaledFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)?.also { ThumbnailMemory.cache.put(key, it) }
-                    } else null
-                } catch (_: Exception) { null } finally { runCatching { retriever.release() } }
+        value = withContext(Dispatchers.IO) {
+            ThumbnailMemory.permits.withPermit {
+                ThumbnailMemory.cache.get(key) ?: run {
+                    val retriever = MediaMetadataRetriever()
+                    try {
+                        retriever.setDataSource(context, video.uri.toUri())
+                        if (Build.VERSION.SDK_INT >= 27) {
+                            retriever.getScaledFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                ?.also { ThumbnailMemory.cache.put(key, it) }
+                        } else null
+                    } catch (_: Exception) { null } finally { runCatching { retriever.release() } }
+                }
             }
-        } }
+        }
     }
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceVariant) {
         val frame = bitmap
         if (frame != null) Image(frame.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Movie, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary) }
+        else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Movie, null, Modifier.size(36.dp), tint = MaterialTheme.colorScheme.primary) }
     }
 }
+// END OF FILE
