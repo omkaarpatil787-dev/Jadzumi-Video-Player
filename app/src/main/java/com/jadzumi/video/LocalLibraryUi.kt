@@ -22,12 +22,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Semaphore
@@ -146,7 +148,31 @@ import kotlinx.coroutines.sync.withPermit
 @Composable fun LocalDetailPage(video: LocalVideo, state: LocalLibraryState, playback:PlaybackController) {
     LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(28.dp),verticalArrangement=Arrangement.spacedBy(20.dp)) {
         item { LocalThumbnail(video,Modifier.fillMaxWidth().height(260.dp).clip(RoundedCornerShape(28.dp))) }
-        item { Text(video.title,style=MaterialTheme.typography.headlineLarge,fontWeight=FontWeight.Bold) }
+        item {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(video.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                
+                // Codec and Quality Badge in Details view
+                val badge = if (playback.video?.identity == video.identity && playback.videoCodecBadge != null) {
+                    playback.videoCodecBadge
+                } else when {
+                    video.name.contains("hevc", ignoreCase = true) || video.name.contains("x265", ignoreCase = true) -> "HEVC Main10"
+                    video.width >= 3840 -> "4K UHD"
+                    video.width >= 1920 -> "1080p FHD"
+                    else -> null
+                }
+                
+                badge?.let {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.padding(start = 12.dp)
+                    ) {
+                        Text(it, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                }
+            }
+        }
         item { LocalPanel {
             Text("Local file",style=MaterialTheme.typography.titleLarge)
             Text(video.name)
@@ -156,10 +182,10 @@ import kotlinx.coroutines.sync.withPermit
             Text("Dimensions: ${if(video.width>0 && video.height>0) "${video.width} × ${video.height}" else "Unavailable"}")
             Text("Media type: ${video.mime.ifEmpty { "Unavailable" }}")
             video.episode?.let { Text("Filename suggests season ${it.season}, episode ${it.episode}.") }
-            Text("Decoder support depends on this device and file. Audio/subtitle controls and codec validation follow in the next milestone.",style=MaterialTheme.typography.bodySmall)
+            
             val resume=playback.savedPosition(video)
-            if(resume>0) Text("Resume from ${timecode(resume/1000)}",style=MaterialTheme.typography.bodySmall)
-            Button(onClick={playback.open(video)}) { Icon(Icons.Rounded.PlayArrow,null);Text(if(resume>0) "Resume" else "Play") }
+            if(resume>0) Text("Resume from ${timecode(resume/1000)}",style=MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            Button(onClick={playback.open(video)}) { Icon(Icons.Rounded.PlayArrow,null);Spacer(Modifier.width(8.dp));Text(if(resume>0) "Resume" else "Play") }
         } }
     }
 }
@@ -179,7 +205,7 @@ private object ThumbnailMemory {
                     retriever.setDataSource(context,video.uri.toUri())
                     if(Build.VERSION.SDK_INT >= 27) {
                         retriever.getScaledFrameAtTime(0,MediaMetadataRetriever.OPTION_CLOSEST_SYNC,480,270)?.also { ThumbnailMemory.cache.put(key,it) }
-                    } else null // API 26 keeps a placeholder; avoid allocating an unscaled 4K frame.
+                    } else null
                 } catch (_: Exception) { null } finally { runCatching { retriever.release() } }
             }
         } }
