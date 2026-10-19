@@ -37,28 +37,29 @@ fun videoContentBounds(width: Int, height: Int, aspect: Float, fit: Boolean): Vi
 fun formatChannelLayout(channelCount: Int): String = when (channelCount) {
     1 -> "Mono (1.0)"
     2 -> "Stereo (2.0)"
-    6 -> "5.1 Surround"
-    8 -> "7.1 Surround"
-    else -> if (channelCount > 0) "$channelCount Ch" else "Stereo"
+    6 -> "5.1 Surround (6 Ch)"
+    8 -> "7.1 Surround (8 Ch)"
+    else -> if (channelCount > 0) "$channelCount Ch" else "Unknown layout"
 }
 
 fun formatAudioCodec(mimeType: String?): String = when (mimeType) {
-    "audio/ac3" -> "AC-3"
-    "audio/eac3" -> "E-AC-3"
-    "audio/eac3-joc" -> "E-AC-3 JOC"
-    "audio/mp4a-latm" -> "AAC"
-    "audio/flac" -> "FLAC"
+    "audio/ac3" -> "Dolby Digital (AC-3)"
+    "audio/eac3" -> "Dolby Digital Plus (E-AC-3)"
+    "audio/eac3-joc" -> "Dolby Digital Plus (E-AC-3 JOC / Atmos)"
+    "audio/mp4a-latm" -> "AAC Stereo"
+    "audio/flac" -> "FLAC Lossless"
     "audio/vorbis" -> "Vorbis"
     "audio/opus" -> "Opus"
-    "audio/true-hd" -> "TrueHD"
-    else -> mimeType?.substringAfter('/')?.uppercase(Locale.ROOT) ?: "Audio"
+    "audio/true-hd" -> "Dolby TrueHD"
+    "audio/vnd.dts" -> "DTS"
+    "audio/vnd.dts.hd" -> "DTS-HD"
+    else -> mimeType?.substringAfter('/')?.uppercase(Locale.ROOT)?.replace("EAC3", "E-AC-3") ?: "Audio"
 }
 
 fun formatSubtitleFormat(mimeType: String?): String = when (mimeType) {
-    "text/x-ssa", "text/ssa", "application/x-ass" -> "ASS"
-    "application/x-subrip" -> "SRT"
-    "text/vtt" -> "VTT"
-    else -> "SUB"
+    "text/x-ssa", "text/ssa", "application/x-ass" -> "Styled ASS/SSA"
+    "application/x-subrip", "text/vtt" -> "SubRip (.srt / .vtt)"
+    else -> "SubRip (.srt / .vtt)"
 }
 
 fun isHdrFormat(colorTransfer: Int): Boolean =

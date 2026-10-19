@@ -228,7 +228,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .setPrioritizeTimeOverSizeThresholds(true)
                 .build()
 
-            val p = ExoPlayer.Builder(app, DefaultRenderersFactory(app).setEnableDecoderFallback(true))
+            val renderersFactory = DefaultRenderersFactory(app)
+                .setEnableDecoderFallback(true)
+                .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+
+            val p = ExoPlayer.Builder(app, renderersFactory)
                 .setMediaSourceFactory(source)
                 .setLoadControl(instantLoadControl)
                 .build()
@@ -280,14 +284,41 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     }
 
                     if (player.playbackState == Player.STATE_READY || player.playbackState == Player.STATE_BUFFERING) error = null
-                    if (player.playbackState == Player.STATE_ENDED) { completed = true; save() }
-                    else if (events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED) || events.contains(Player.EVENT_POSITION_DISCONTINUITY)) save()
+                    if (player.playbackState == Player.STATE_ENDED) {
+                        completed = true
+                        position = 0L
+                        playing = false
+                        playRequested = false
+                        save()
+                    } else if (events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED) || events.contains(Player.EVENT_POSITION_DISCONTINUITY)) {
+                        save()
+                    }
 
                     updateNotification()
                 }
 
                 override fun onPlayerError(exception: PlaybackException) {
                     if (player !== p) return
+                    val curPos = p.currentPosition
+                    val dur = p.duration.takeIf { it > 0 } ?: duration
+                    val isNearEnd = dur > 0 && (curPos >= dur - 2500L || position >= dur - 2500L || (dur > 10000L && curPos.toFloat() / dur >= 0.98f))
+                    if (isNearEnd && (
+                        exception.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED ||
+                        exception.errorCode == PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE ||
+                        exception.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW
+                    )) {
+                        completed = true
+                        position = 0L
+                        playing = false
+                        playRequested = false
+                        buffering = false
+                        error = null
+                        p.pause()
+                        save()
+                        cancelNotification()
+                        return
+                    }
+
                     error = "Could not play this file (${exception.errorCodeName}). Verify folder access or check if this codec requires fallback."
                     playing = false; playRequested = false; buffering = false; save()
                     cancelNotification()
@@ -370,21 +401,21 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         for (g in 0 until tracks.groups.size) {
             val group = tracks.groups[g]
             for (t in 0 until group.length) {
-                if (!group.isTrackSupported(t)) continue
                 val f = group.getTrackFormat(t)
                 val langTag = f.language ?: ""
                 val langDisplay = if (langTag.isNotEmpty()) Locale.forLanguageTag(langTag).displayLanguage.ifEmpty { langTag } else "Unknown"
 
                 when (group.type) {
                     C.TRACK_TYPE_AUDIO -> {
-                        val name = f.label ?: if (langDisplay != "Unknown") langDisplay else "Track ${audioList.size + 1}"
+                        val mime = f.sampleMimeType ?: f.containerMimeType
+                        val name = f.label ?: if (langDisplay != "Unknown") langDisplay else "Audio Track ${audioList.size + 1}"
                         audioList += AudioTrackInfo(
                             id = "$g:$t",
                             groupIndex = g,
                             trackIndex = t,
                             label = name,
                             language = langDisplay,
-                            codec = formatAudioCodec(f.sampleMimeType),
+                            codec = formatAudioCodec(mime),
                             channels = formatChannelLayout(f.channelCount),
                             isSelected = group.isTrackSelected(t)
                         )
@@ -397,7 +428,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                             trackIndex = t,
                             label = name,
                             language = langDisplay,
-                            format = formatSubtitleFormat(f.sampleMimeType),
+                            format = formatSubtitleFormat(f.sampleMimeType ?: f.containerMimeType),
                             isSelected = group.isTrackSelected(t)
                         )
                     }
@@ -412,6 +443,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         val p = player ?: return
         val group = p.currentTracks.groups.getOrNull(track.groupIndex) ?: return
         p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
             .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, track.trackIndex))
             .build()
     }

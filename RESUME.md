@@ -1,37 +1,42 @@
-# Jadzumi Video — Milestone 3A.1 device-test checkpoint
+# Jadzumi Video / Jadzumi Player — Active Development Checkpoint
 
-Updated 2026-10-19T10:18:06.952869+00:00. M1 and M2 remain user-approved. M3A.1 Core Playback now passes the internal build gate and awaits Xiaomi Pad 5 testing and user approval. Do not advance to M3A.2.
+Updated: 2026-10-19 (Europe/Warsaw)
+Target Device: Xiaomi Pad 5 (nabu, Android 16 Custom ROM, 16:10 display, ARM64-v8a)
 
-## Verified result
+## Milestone Status Summary
 
-- Gradle 8.11.1, full JDK 17 (Amazon Corretto 17.0.20.12.1), Android platform 36/build-tools 35.0.0 installed in this session.
-- User explicitly authorized the official Gradle release download via GitHub. This is a build-tool download exception, not authorization to publish source or use GitHub for this project.
-- Gradle assembleDebug, testDebugUnitTest and lintDebug: PASS. 16 tests, zero failures/errors/skips; lint zero errors and two warnings (target SDK 35; ARM64-only excludes ChromeOS x86_64). Existing compiler parameter-name warning and native-library stripping notice remain nonfatal.
-- Debug APK signature verified and matches M2; no INTERNET, MANAGE_EXTERNAL_STORAGE or WRITE_EXTERNAL_STORAGE permission in merged APK. Application ID and development key preserved.
-- artifacts/Jadzumi-Video-M3-debug.apk, version 0.3.0-m3 (code 3), SHA-256: 0d72734372fe7d0272106b8da34fbc632a68f3c9decd2aeadb854faccbb413a7.
-- Evidence: docs/verification/m3/20261019T101528822455Z/result.json, gradle.log, unit XML, lint XML, signatures, permissions, source hashes and source diffs.
+- **Milestone 1 — Tablet UI Foundation:** [USER-APPROVED]
+- **Milestone 2 — Local Video Library:** [USER-APPROVED]
+- **Milestone 3A — Cinema Playback:** [USER-APPROVED & DEVICE-VERIFIED]
+  - **3A.1 Core Playback:** Media3/ExoPlayer content-URI playback, seek, 10s skips, per-video resume, mini-player/fullscreen, gestures, screen lock, speed/aspect controls, scrub previews, play/pause morph.
+  - **3A.2 Cinema Formats & Instant Resume:** Audio track selection, Dolby 5.1/7.1 surround-to-stereo downmix for Pad 5 quad speakers, embedded subtitle track selection (ASS/SSA, SRT, VTT) with Turn Off option, HDR10/HEVC Main10 detection (moved to File Details), and instant keyframe-sync resume (`SeekParameters.CLOSEST_SYNC` + 100ms local buffer + 10s back-buffer).
+  - **3A.3 System Integration:** Android 13–16 `POST_NOTIFICATIONS` support, `MediaStyle` lock-screen and notification shade player card with `-10s`/`+10s` custom commands, screen-off Background Audio toggle, `WAKE_MODE_LOCAL` CPU wake lock for Android 16 custom ROMs, headset/Bluetooth noisy-audio pause, and seamless Picture-in-Picture (PiP).
+- **Milestone 3B — Library Refresh:** [USER-APPROVED & DEVICE-VERIFIED]
+  - Native Material 3 `PullToRefreshBox` on Library screen, active top toolbar Sync button, debounced incremental auto-refresh on app resume, and Full Rescan option in Folders.
+- **Milestone 3C — Internal Storage Management:** [USER-APPROVED & DEVICE-VERIFIED]
+  - Duplicate Refresh button removed from Library card, folder video count and total GB storage footprint displayed, and user-initiated permanent file deletion via scoped SAF `DocumentsContract.deleteDocument` with explicit confirmation dialog and active-playback teardown.
+- **Combined Milestone 4 + Milestone 6 — Privacy, Settings, Branding, Theme Bloom & Responsive UI:** [USER-APPROVED & DEVICE-VERIFIED]
+  - **4A Unified Privacy & About:** Two-pane layout matching `unified_privacy_about.html`, Folder Access directory cards, functional *Remember Playback Progress* and *Save Audio & Subtitle Preferences* toggles, functional *Clear Watch History*, *Clear Cache*, and *Export App Settings* actions, Omkar Patil Creator & Product Direction card with *AI-assisted development* badge, Philosophy card, and *"No popcorn included. Sorry."* footer.
+  - **4B & 4C Settings, Logo & First-Launch:** Layered folded-play Jadzumi icon (`ic_launcher.xml` and `JadzumiLogo` canvas), one-time 16:10 display detection welcome card, Light/Dark/AMOLED/System themes, customizable double-tap seek intervals (5s/10s/15s/30s), and swipe gesture toggles.
+  - **M6 Expressive Motion & Responsive/Adaptive UI Correction:** 580ms Theme Bloom circular reveal transition, content-width-aware (`BoxWithConstraints` + `FlowRow`) layouts across all screens preventing badge/chip crushing in portrait and split-screen, 2×2 vs 1×4 adaptive theme grid, and stacked single-column Folders/Privacy views on narrower widths.
 
-## Changes in this continuation
+## Current Active Source Files Modified Since M2/M3A.1
 
-All previous playback/resume/seek/PiP review fixes were retained. Only app source change: CinemaPlayer uses LocalActivity with a safe MainActivity cast instead of casting LocalContext, fixing the actual lint error. The build gate now explicitly checks for javac 17, since this environment originally had only a Java runtime. No dependency versions, approved UI, player behavior design, signing identity or milestone scope were changed.
+- `app/src/main/AndroidManifest.xml` (Added `POST_NOTIFICATIONS`, uses `@android:style/Theme.Material.NoActionBar`)
+- `app/src/main/res/drawable/ic_launcher.xml` (Official layered folded-play Jadzumi icon)
+- `app/src/main/java/com/jadzumi/video/MainActivity.kt` (Android 13–16 runtime notification permission request & background audio lifecycle)
+- `app/src/main/java/com/jadzumi/video/PlaybackModel.kt` (Audio/subtitle track models, channel layout & codec formatters, HDR transfer detection)
+- `app/src/main/java/com/jadzumi/video/PlaybackController.kt` (Fast 100ms local load control, `CLOSEST_SYNC` resume, `WAKE_MODE_LOCAL`, `MediaStyle` notification channel, track switching, watch history clearing, configurable seek/gesture preferences)
+- `app/src/main/java/com/jadzumi/video/CinemaPlayer.kt` (Clean player canvas, Audio & Subtitles side drawer, Background Audio menu toggle, configurable seek increments)
+- `app/src/main/java/com/jadzumi/video/LocalLibrary.kt` (Incremental vs full rescan, auto-refresh on resume, scoped permanent file deletion)
+- `app/src/main/java/com/jadzumi/video/LocalLibraryUi.kt` (Pull-to-refresh, adaptive Folders & Storage layout, storage footprint totals, permanent delete confirmation dialog, thumbnail cache clearing hook)
+- `app/src/main/java/com/jadzumi/video/JadzumiApp.kt` (Folded-play logo, 580ms Theme Bloom reveal, welcome card, width-aware adaptive Unified Privacy & About + Settings screens)
+- `app/src/test/java/com/jadzumi/video/PlaybackModelTest.kt` (20 unit tests covering seek clamping, bounds, channel layouts, codecs, subtitles, and HDR detection)
 
-Historical attempts are retained under docs/verification/m3. Initial failures were plugin access (proxy configuration), missing javac, expired proxy address, and then the LocalContext lint error. These are superseded by the successful gate above. Earlier source-only checks are not runtime tests. Earlier RESUME notes are retained in docs/M3-RESUME-HISTORY-2026-10-19.md.
+## Next Action on Resume
 
-## Next action and approval gate
-
-1. Install artifacts/Jadzumi-Video-M3-debug.apk as an update over M2 on Xiaomi Pad 5; same signing key was verified. Do not uninstall M2 first.
-2. Follow docs/M3-DEVICE-REVIEW.md. Prioritize H.264/AAC MP4 and MKV playback, seeking, per-video resume, close/reopen/background, rapid video switching, mini/fullscreen, existing PiP and error/retry with disconnected USB or revoked grants.
-3. Report actual device results. No Pad 5/emulator playback tests were run in this environment; no playback, lifecycle, decoder, performance or smoothness certification follows from a build.
-4. Fix device feedback within M3A.1 and save again. Await explicit approval before M3A.2 Cinema Formats. AC-3/E-AC-3, HEVC Main10, HDR and complex subtitles remain separately gated; no guarantees. Full dependency security review and release validation remain pending.
-
-## Rebuild
-
-Run python3 tools/verify_m3.py from the project root with JAVA_HOME pointing to a full JDK 17, ANDROID_HOME to platform 36/build-tools 35.0.0, and GRADLE_USER_HOME to a usable Gradle cache. Preserve wrapper 8.11.1/AGP 8.10.1/Kotlin 2.2.10/Media3 1.11.1. In this environment the local HTTP proxy address may change per command: derive Gradle proxy settings from that invocation's environment, not a saved stale address. Use the current environment CA trust settings. Never package credentials/proxy configuration into app source.
-
-Session-only toolchain root: /workspace/scratch/a2b20457baed/toolchain. JAVA_HOME subdirectory: jdk17/amazon-corretto-17.0.20.12.1-linux-x64; ANDROID_HOME subdirectory: android-sdk; GRADLE_USER_HOME subdirectory: gradle-home. These installed tool binaries/caches are not bundled in the source checkpoint and may need reinstalling in a future session.
-
-## Preservation
-
-The attached recovery archive passed CRC and all 82 original manifest hashes. Existing M1/M2 APKs, six locked design references and signing/development.keystore are preserved. The source archive contains the development signing key: keep it private; send APK only to testers. This is a debug test build, not the final private-key stable release.
-
-The original M3 recovery provenance remains in docs/M3-RECOVERY-HISTORY.md and docs/RECOVERY-VERIFICATION.md. Recovery source was reconstructed from recorded commands; do not claim byte-for-byte identity to a lost earlier temporary archive. The exact later eight-main-milestone roadmap must be recovered before later work; historical working subdivisions do not replace it.
+1. Begin **Milestone 5A — Smart Episode Continuity**:
+   - Group recognized TV/Anime episodes (`S01E01`, `2x04`) into Series & Seasons (`Season 1`, `Season 2`, `Specials`).
+   - Add per-episode watched/progress badges and "Up Next" highlighting.
+   - Implement skip protection and the **10-second Next-Episode Autoplay countdown banner** (with *Play Now* and *Cancel* buttons).
+2. Proceed to **Milestone 5B** (Optional Online Metadata, OFF by default), **Milestone 7** (Final HTML-to-Native Design Audit & QA), and **Milestone 8** (Stable v1.0 Production Release).

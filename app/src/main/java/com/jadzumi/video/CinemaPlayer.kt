@@ -14,6 +14,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -29,7 +30,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.border
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -45,6 +48,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -138,12 +142,78 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         activity.updatePip()
     }
 
-    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = if (full) Alignment.Center else Alignment.BottomEnd) {
-        val miniW = (maxWidth * 0.42f).coerceIn(240.dp, 340.dp)
-        val frame = if (full) Modifier.fillMaxSize()
-        else Modifier.safeDrawingPadding().padding(end = 20.dp, bottom = 92.dp).width(miniW).aspectRatio(16f / 9f).clip(RoundedCornerShape(24.dp))
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val totalWidth = maxWidth
+        val totalHeight = maxHeight
+        val miniW = (totalWidth * 0.40f).coerceIn(240.dp, 350.dp)
+        val miniH = miniW * (9f / 16f)
 
-        Box(frame.background(Color.Black)) {
+        val density = LocalDensity.current
+        val maxDragX = with(density) { (totalWidth - miniW - 16.dp).toPx() }.coerceAtLeast(0f)
+        val maxDragY = with(density) { (totalHeight - miniH - 96.dp).toPx() }.coerceAtLeast(0f)
+        val minDragX = with(density) { 16.dp.toPx() }
+        val minDragY = with(density) { 16.dp.toPx() }
+
+        val defaultX = with(density) { (totalWidth - miniW - 20.dp).toPx() }
+        val defaultY = with(density) { (totalHeight - miniH - 92.dp).toPx() }
+
+        var dragX by remember(video.identity) { mutableFloatStateOf(defaultX) }
+        var dragY by remember(video.identity) { mutableFloatStateOf(defaultY) }
+
+        val targetX = if (full) 0f else dragX.coerceIn(minDragX, maxDragX)
+        val targetY = if (full) 0f else dragY.coerceIn(minDragY, maxDragY)
+
+        val animX by animateFloatAsState(
+            targetValue = targetX,
+            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            label = "animX"
+        )
+        val animY by animateFloatAsState(
+            targetValue = targetY,
+            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            label = "animY"
+        )
+        val animW by animateDpAsState(
+            targetValue = if (full) totalWidth else miniW,
+            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            label = "animW"
+        )
+        val animH by animateDpAsState(
+            targetValue = if (full) totalHeight else miniH,
+            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            label = "animH"
+        )
+        val cornerRadius by animateDpAsState(
+            targetValue = if (full) 0.dp else 22.dp,
+            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            label = "cornerRadius"
+        )
+
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(animX.roundToInt(), animY.roundToInt()) }
+                .size(animW, animH)
+                .shadow(
+                    elevation = if (full) 0.dp else 18.dp,
+                    shape = RoundedCornerShape(cornerRadius)
+                )
+                .border(
+                    width = if (full) 0.dp else 1.5.dp,
+                    color = if (full) Color.Transparent else Color.White.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(cornerRadius)
+                )
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(Color.Black)
+                .pointerInput(full) {
+                    if (!full) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            dragX = (dragX + dragAmount.x).coerceIn(minDragX, maxDragX)
+                            dragY = (dragY + dragAmount.y).coerceIn(minDragY, maxDragY)
+                        }
+                    }
+                }
+        ) {
             AndroidView(
                 factory = { ctx -> PlayerView(ctx).apply { useController = false; setKeepContentOnPlayerReset(true) } },
                 modifier = Modifier.fillMaxSize().onGloballyPositioned {
@@ -303,13 +373,13 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                     }
                                 }
 
-                                // Top-Right Icons: CC and MoreVert (⋮) matching Panel 1
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    CinemaIcon("Subtitles", { quickMenuSection = "subs"; interaction++ }) {
-                                        Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(24.dp))
+                                // Top-Right Icons: Clean and uncluttered glassy controls
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    FrostedCircleButton("Audio and subtitles", { quickMenuSection = "subs"; interaction++ }, size = 44.dp) {
+                                        Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(22.dp), tint = Color.White)
                                     }
-                                    CinemaIcon("Quick menu", { quickMenuSection = "main"; interaction++ }) {
-                                        Icon(Icons.Rounded.MoreVert, null, Modifier.size(24.dp))
+                                    FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
+                                        Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
                                     }
                                 }
                             }
@@ -350,7 +420,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             // PANEL 1 & 3: INLINE TIMELINE ROW + MINIMALIST BOTTOM CONTROLS
                             Column(
                                 Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 val currentFraction = scrub ?: if (playback.duration > 0) {
                                     (playback.position.toFloat() / playback.duration).coerceIn(0f, 1f)
@@ -373,86 +443,92 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                     }
                                 }
 
-                                // Inline [1:02:15] ──────●──────── [2:49:03] Row (Panel 1 & 3)
+                                // Inline Timeline Row
                                 val activePosMs = scrub?.let { (it * playback.duration).toLong() } ?: playback.position
                                 val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
                                 val totalSec = (playback.duration / 1000).coerceAtLeast(0)
 
+                                CinemaTimelineBar(
+                                    fraction = currentFraction,
+                                    bufferedFraction = bufferedFraction,
+                                    isScrubbing = scrub != null,
+                                    enabled = playback.seekable && playback.duration > 0,
+                                    onScrub = { scrub = it; interaction++ },
+                                    onScrubFinished = {
+                                        scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
+                                        scrub = null
+                                    }
+                                )
+
+                                // Bottom Row: Glass Time Capsule (Left) & Glass Actions Dock (Right)
                                 Row(
                                     Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(
-                                        text = compactTimecode(elapsedSec),
-                                        color = Color.White.copy(alpha = 0.90f),
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-
-                                    Box(Modifier.weight(1f)) {
-                                        CinemaTimelineBar(
-                                            fraction = currentFraction,
-                                            bufferedFraction = bufferedFraction,
-                                            isScrubbing = scrub != null,
-                                            enabled = playback.seekable && playback.duration > 0,
-                                            onScrub = { scrub = it; interaction++ },
-                                            onScrubFinished = {
-                                                scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
-                                                scrub = null
+                                    // Bottom-Left: Glassy Time Capsule Pill
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = FrostedCircleBg,
+                                        border = BorderStroke(1.dp, FrostedCircleRim)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Text(
+                                                compactTimecode(elapsedSec),
+                                                color = TimelineAccent,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 12.sp)
+                                            Text(
+                                                compactTimecode(totalSec),
+                                                color = Color.White.copy(alpha = 0.85f),
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = Color.White.copy(alpha = 0.14f),
+                                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                                            ) {
+                                                Text(
+                                                    "-${compactTimecode(remSec)} remaining",
+                                                    Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                    color = Color.White.copy(alpha = 0.92f),
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
                                             }
-                                        )
-                                    }
-
-                                    Text(
-                                        text = if (playback.duration > 0) compactTimecode(totalSec) else "—",
-                                        color = Color.White.copy(alpha = 0.90f),
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-
-                                // Panel 1 Bottom Icon Row: Left (Aspect Ratio, Subtitles) | Right (Lock, Settings, PiP, Fullscreen)
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        CinemaIcon("Aspect ratio mode", {
-                                            playback.resizeMode = when (playback.resizeMode) {
-                                                AspectRatioFrameLayout.RESIZE_MODE_FIT -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                                AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> AspectRatioFrameLayout.RESIZE_MODE_FILL
-                                                else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
-                                            }
-                                            val modeName = when (playback.resizeMode) {
-                                                AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Crop to fill"
-                                                AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch"
-                                                else -> "Fit to screen"
-                                            }
-                                            message = modeName
-                                            interaction++
-                                        }) {
-                                            Icon(Icons.Rounded.AspectRatio, null, Modifier.size(22.dp))
-                                        }
-
-                                        CinemaIcon("Audio and subtitles", { quickMenuSection = "audio"; interaction++ }) {
-                                            Icon(Icons.Rounded.Subtitles, null, Modifier.size(22.dp))
                                         }
                                     }
 
-                                    Spacer(Modifier.weight(1f))
-
-                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        CinemaIcon("Lock controls", { playback.locked = true; controls = false }) {
-                                            Icon(Icons.Rounded.LockOpen, null, Modifier.size(21.dp))
-                                        }
-                                        CinemaIcon("Player settings", { quickMenuSection = "main"; interaction++ }) {
-                                            Icon(Icons.Rounded.Settings, null, Modifier.size(22.dp))
-                                        }
-                                        if (activity.supportsPip()) {
-                                            CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }) {
-                                                Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(22.dp))
+                                    // Bottom-Right: Glassy Actions Dock
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = FrostedCircleBg,
+                                        border = BorderStroke(1.dp, FrostedCircleRim)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
                                             }
-                                        }
-                                        CinemaIcon("Exit fullscreen", { playback.fullscreen = false }) {
-                                            Icon(Icons.Rounded.FullscreenExit, null, Modifier.size(24.dp))
+                                            if (activity.supportsPip()) {
+                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
+                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
+                                                }
+                                            }
+                                            CinemaIcon("Exit fullscreen", { playback.fullscreen = false }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.FullscreenExit, null, Modifier.size(20.dp))
+                                            }
                                         }
                                     }
                                 }
@@ -676,6 +752,17 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             value = "${playback.speed}x",
                             onClick = { onSelectSection("speed") }
                         )
+                        val fitName = when (playback.resizeMode) {
+                            AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Crop to fill"
+                            AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch"
+                            else -> "Fit to screen"
+                        }
+                        QuickMenuRow(
+                            icon = Icons.Rounded.AspectRatio,
+                            label = "Fit / Aspect ratio",
+                            value = fitName,
+                            onClick = { onSelectSection("aspect") }
+                        )
                         QuickMenuRow(
                             icon = Icons.Rounded.Timer,
                             label = "Sleep timer",
@@ -710,6 +797,26 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 label = if (rate == 1.0f) "1.0x (Normal)" else "${rate}x",
                                 selected = playback.speed == rate,
                                 onClick = { playback.changeSpeed(rate); onMessage("Speed: ${rate}x"); onSelectSection("main") }
+                            )
+                        }
+                    }
+                }
+
+                "aspect" -> {
+                    QuickSubMenuContainer(title = "Fit / Aspect ratio", onBack = { onSelectSection("main") }) {
+                        listOf(
+                            AspectRatioFrameLayout.RESIZE_MODE_FIT to "Fit to screen (Letterbox)",
+                            AspectRatioFrameLayout.RESIZE_MODE_ZOOM to "Crop to fill (Zoom 16:10)",
+                            AspectRatioFrameLayout.RESIZE_MODE_FILL to "Stretch to fill"
+                        ).forEach { (mode, label) ->
+                            QuickOptionItem(
+                                label = label,
+                                selected = playback.resizeMode == mode,
+                                onClick = {
+                                    playback.resizeMode = mode
+                                    onMessage("Aspect: $label")
+                                    onSelectSection("main")
+                                }
                             )
                         }
                     }
