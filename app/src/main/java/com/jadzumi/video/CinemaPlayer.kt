@@ -185,6 +185,14 @@ import kotlin.math.roundToInt
                                         DropdownMenuItem(text = { Text("Fit to screen") }, onClick = { playback.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT; menu = false })
                                         DropdownMenuItem(text = { Text("Crop to fill") }, onClick = { playback.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM; menu = false })
                                         DropdownMenuItem(text = { Text("Stretch") }, onClick = { playback.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL; menu = false })
+                                        DropdownMenuItem(
+                                            text = { Text(if (playback.backgroundAudioEnabled) "Background Audio: ON" else "Background Audio: OFF") },
+                                            onClick = {
+                                                playback.setBackgroundAudio(!playback.backgroundAudioEnabled)
+                                                message = if (playback.backgroundAudioEnabled) "Background audio enabled" else "Background audio disabled"
+                                                menu = false
+                                            }
+                                        )
                                         DropdownMenuItem(text = { Text("Restart video") }, onClick = { playback.seekTo(0); menu = false })
                                         DropdownMenuItem(text = { Text("Close video") }, onClick = { playback.close(); menu = false })
                                     }
