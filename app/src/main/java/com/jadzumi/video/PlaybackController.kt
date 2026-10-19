@@ -60,7 +60,14 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var subtitleTracks by mutableStateOf<List<SubtitleTrackInfo>>(emptyList()); private set
     var isHdr by mutableStateOf(false); private set
     var videoCodecBadge by mutableStateOf<String?>(null); private set
+
+    // Milestone 4 Privacy & Playback Settings
     var backgroundAudioEnabled by mutableStateOf(prefs.getBoolean("bg_audio", false))
+    var rememberProgress by mutableStateOf(prefs.getBoolean("remember_progress", true))
+    var saveTrackPrefs by mutableStateOf(prefs.getBoolean("save_track_prefs", true))
+    var swipeGesturesEnabled by mutableStateOf(prefs.getBoolean("swipe_gestures", true))
+    var seekIncrementSeconds by mutableIntStateOf(prefs.getInt("seek_seconds", 10))
+    var historyVersion by mutableIntStateOf(0); private set
 
     private val channelId = "playback_channel"
     private val notificationId = 1001
@@ -123,9 +130,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
         try {
             notificationManager.notify(notificationId, notification)
-        } catch (_: SecurityException) {
-            // Handled when user denies notification permission
-        }
+        } catch (_: SecurityException) { }
     }
 
     private fun cancelNotification() {
@@ -135,10 +140,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     private fun key(v: LocalVideo): String = MessageDigest.getInstance("SHA-256")
         .digest(v.identity.toByteArray()).joinToString("") { "%02x".format(it) }
 
-    private fun persistedPosition(v: LocalVideo): Long =
-        resumePosition(prefs.getLong(key(v), 0), v.duration, prefs.getBoolean(key(v) + ".done", false))
+    private fun persistedPosition(v: LocalVideo): Long {
+        if (!rememberProgress) return 0L
+        return resumePosition(prefs.getLong(key(v), 0), v.duration, prefs.getBoolean(key(v) + ".done", false))
+    }
 
     fun savedPosition(v: LocalVideo): Long {
+        @Suppress("UNUSED_EXPRESSION")
+        historyVersion
+        if (!rememberProgress) return 0L
         if (video?.identity == v.identity) return resumePosition(position, duration.takeIf { it > 0 } ?: v.duration, completed)
         return persistedPosition(v)
     }
@@ -146,6 +156,44 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun setBackgroundAudio(enabled: Boolean) {
         backgroundAudioEnabled = enabled
         prefs.edit { putBoolean("bg_audio", enabled) }
+    }
+
+    fun updateRememberProgress(enabled: Boolean) {
+        rememberProgress = enabled
+        prefs.edit { putBoolean("remember_progress", enabled) }
+    }
+
+    fun updateSaveTrackPrefs(enabled: Boolean) {
+        saveTrackPrefs = enabled
+        prefs.edit { putBoolean("save_track_prefs", enabled) }
+    }
+
+    fun updateSwipeGestures(enabled: Boolean) {
+        swipeGesturesEnabled = enabled
+        prefs.edit { putBoolean("swipe_gestures", enabled) }
+    }
+
+    fun updateSeekSeconds(seconds: Int) {
+        seekIncrementSeconds = seconds.coerceIn(5, 60)
+        prefs.edit { putInt("seek_seconds", seekIncrementSeconds) }
+    }
+
+    fun clearWatchHistory() {
+        val bg = backgroundAudioEnabled
+        val rem = rememberProgress
+        val trk = saveTrackPrefs
+        val swp = swipeGesturesEnabled
+        val sek = seekIncrementSeconds
+        prefs.edit {
+            clear()
+            putBoolean("bg_audio", bg)
+            putBoolean("remember_progress", rem)
+            putBoolean("save_track_prefs", trk)
+            putBoolean("swipe_gestures", swp)
+            putInt("seek_seconds", sek)
+        }
+        suspendedPosition = 0L
+        historyVersion++
     }
 
     fun open(v: LocalVideo) {
@@ -187,8 +235,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             player = p
 
             p.setSeekParameters(SeekParameters.CLOSEST_SYNC)
-
-            // Essential for A16 Custom ROM: keeps CPU awake during screen-off audio playback
             p.setWakeMode(C.WAKE_MODE_LOCAL)
 
             p.setAudioAttributes(
@@ -262,7 +308,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
             p.setMediaItem(mediaItem)
             p.prepare()
-            if (suspendedPosition > 0) {
+            if (suspendedPosition > 0 && rememberProgress) {
                 p.seekTo(suspendedPosition)
             }
             mediaItemAssigned = true
@@ -283,22 +329,23 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 }
 
                 override fun onCustomCommand(session: MediaSession, controller: MediaSession.ControllerInfo, customCommand: SessionCommand, args: Bundle): ListenableFuture<SessionResult> {
+                    val delta = seekIncrementSeconds * 1000L
                     when (customCommand.customAction) {
-                        "ACTION_REWIND_10" -> skip(-10000)
-                        "ACTION_FORWARD_10" -> skip(10000)
+                        "ACTION_REWIND_10" -> skip(-delta)
+                        "ACTION_FORWARD_10" -> skip(delta)
                     }
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
             }
 
             val rewindButton = CommandButton.Builder()
-                .setDisplayName("Back 10s")
+                .setDisplayName("Back ${seekIncrementSeconds}s")
                 .setIconResId(android.R.drawable.ic_media_rew)
                 .setSessionCommand(rewindCmd)
                 .build()
 
             val forwardButton = CommandButton.Builder()
-                .setDisplayName("Forward 10s")
+                .setDisplayName("Forward ${seekIncrementSeconds}s")
                 .setIconResId(android.R.drawable.ic_media_ff)
                 .setSessionCommand(forwardCmd)
                 .build()
@@ -417,6 +464,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     private fun save() {
         val v = video ?: return
+        if (!rememberProgress) return
         val pos = if (mediaItemAssigned) player?.currentPosition?.coerceAtLeast(0) ?: position else position
         position = pos; suspendedPosition = pos
         prefs.edit { putLong(key(v), pos); putBoolean(key(v) + ".done", completed) }
