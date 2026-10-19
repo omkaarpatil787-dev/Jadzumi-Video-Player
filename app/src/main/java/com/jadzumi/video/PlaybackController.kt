@@ -1,6 +1,7 @@
 package com.jadzumi.video
 
 import android.app.Application
+import android.os.Bundle
 import androidx.compose.runtime.*
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -15,8 +16,13 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
 import androidx.media3.ui.AspectRatioFrameLayout
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
@@ -42,10 +48,12 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var locked by mutableStateOf(false)
     var seekable by mutableStateOf(false); private set
 
+    // Milestone 3A.2 & 3A.3 State
     var audioTracks by mutableStateOf<List<AudioTrackInfo>>(emptyList()); private set
     var subtitleTracks by mutableStateOf<List<SubtitleTrackInfo>>(emptyList()); private set
     var isHdr by mutableStateOf(false); private set
     var videoCodecBadge by mutableStateOf<String?>(null); private set
+    var backgroundAudioEnabled by mutableStateOf(prefs.getBoolean("bg_audio", false))
 
     private var completed by mutableStateOf(false)
     private var suspendedPosition = 0L
@@ -77,6 +85,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         return persistedPosition(v)
     }
 
+    fun setBackgroundAudio(enabled: Boolean) {
+        backgroundAudioEnabled = enabled
+        prefs.edit { putBoolean("bg_audio", enabled) }
+    }
+
     fun open(v: LocalVideo) {
         if (video?.identity == v.identity && player != null) {
             fullscreen = true; locked = false
@@ -103,15 +116,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             val app = getApplication<Application>()
             val source = DefaultMediaSourceFactory(DataSource.Factory { ContentDataSource(app) })
 
-            // Ultra-fast local buffer tuning for Xiaomi Pad 5 (starts at 100ms, caches 10s back-buffer)
             val instantLoadControl = DefaultLoadControl.Builder()
-                .setBufferDurationsMs(
-                    /* minBufferMs = */ 1_500,
-                    /* maxBufferMs = */ 8_000,
-                    /* bufferForPlaybackMs = */ 100,
-                    /* bufferForPlaybackAfterRebufferMs = */ 250
-                )
-                .setBackBuffer(/* backBufferDurationMs = */ 10_000, /* retainBackBufferFromKeyframe = */ true)
+                .setBufferDurationsMs(1_500, 8_000, 100, 250)
+                .setBackBuffer(10_000, true)
                 .setPrioritizeTimeOverSizeThresholds(true)
                 .build()
 
@@ -121,7 +128,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .build()
             player = p
 
-            // Snap directly to keyframe to eliminate 6-second preroll decoding lag
             p.setSeekParameters(SeekParameters.CLOSEST_SYNC)
 
             p.setAudioAttributes(
@@ -178,13 +184,18 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 }
             })
 
+            val mediaMetadata = MediaMetadata.Builder()
+                .setTitle(v.title)
+                .setDisplayTitle(v.title)
+                .setArtist("Jadzumi Cinema Player")
+                .build()
+
             val mediaItem = MediaItem.Builder()
                 .setUri(v.uri)
                 .setMediaId(v.identity)
-                .setMediaMetadata(MediaMetadata.Builder().setTitle(v.title).build())
+                .setMediaMetadata(mediaMetadata)
                 .build()
 
-            // Prepare and seek directly with keyframe sync
             p.setMediaItem(mediaItem)
             p.prepare()
             if (suspendedPosition > 0) {
@@ -192,7 +203,48 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             }
             mediaItemAssigned = true
             p.setPlaybackSpeed(speed)
-            session = MediaSession.Builder(app, p).build()
+
+            // Setup System MediaSession with -10s / +10s interactive buttons
+            val rewindCmd = SessionCommand("ACTION_REWIND_10", Bundle.EMPTY)
+            val forwardCmd = SessionCommand("ACTION_FORWARD_10", Bundle.EMPTY)
+
+            val sessionCallback = object : MediaSession.Callback {
+                override fun onConnect(session: MediaSession, controller: MediaSession.ControllerInfo): MediaSession.ConnectionResult {
+                    val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
+                        .add(rewindCmd)
+                        .add(forwardCmd)
+                        .build()
+                    return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                        .setAvailableSessionCommands(sessionCommands)
+                        .build()
+                }
+
+                override fun onCustomCommand(session: MediaSession, controller: MediaSession.ControllerInfo, customCommand: SessionCommand, args: Bundle): ListenableFuture<SessionResult> {
+                    when (customCommand.customAction) {
+                        "ACTION_REWIND_10" -> skip(-10000)
+                        "ACTION_FORWARD_10" -> skip(10000)
+                    }
+                    return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
+            }
+
+            val rewindButton = CommandButton.Builder()
+                .setDisplayName("Back 10s")
+                .setIconResId(android.R.drawable.ic_media_rew)
+                .setSessionCommand(rewindCmd)
+                .build()
+
+            val forwardButton = CommandButton.Builder()
+                .setDisplayName("Forward 10s")
+                .setIconResId(android.R.drawable.ic_media_ff)
+                .setSessionCommand(forwardCmd)
+                .build()
+
+            session = MediaSession.Builder(app, p)
+                .setCallback(sessionCallback)
+                .setCustomLayout(listOf(rewindButton, forwardButton))
+                .build()
+
             p.playWhenReady = autoplay
         } catch (_: Exception) {
             error = "The player could not open this video. Try refreshing its folder and opening it again."
@@ -304,7 +356,13 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         prefs.edit { putLong(key(v), pos); putBoolean(key(v) + ".done", completed) }
     }
 
-    fun pauseForBackground() { save(); release() }
+    fun pauseForBackground() {
+        if (!backgroundAudioEnabled) {
+            save()
+            release()
+        }
+    }
+
     fun restoreVisible() { if (video != null && player == null && error == null) prepare(false) }
     fun close() {
         release()
