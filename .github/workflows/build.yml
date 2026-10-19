@@ -18,6 +18,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+        cache: 'gradle'
 
     - name: Accept Licenses & Install Android 36
       run: |
