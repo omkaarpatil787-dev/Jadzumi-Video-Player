@@ -1,4 +1,3 @@
-```kotlin
 package com.jadzumi.video
 
 import androidx.core.content.edit
@@ -10,11 +9,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -95,13 +90,11 @@ private val destinations = listOf(
     Destination("Settings", Icons.Rounded.Settings)
 )
 
-/** Official Jadzumi Layered Folded-Play Logo Composable */
 @Composable fun JadzumiLogo(size: Dp = 48.dp, darkSurface: Boolean = false) {
     Canvas(Modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
 
-        // Squircle background
         drawRoundRect(
             brush = Brush.linearGradient(
                 colors = if (darkSurface) listOf(Color(0xFF1E293B), Color(0xFF0F172A))
@@ -113,7 +106,6 @@ private val destinations = listOf(
             cornerRadius = CornerRadius(w * 0.24f, h * 0.24f)
         )
 
-        // Back Cobalt Folded Wing
         val backWing = Path().apply {
             moveTo(w * 0.40f, h * 0.21f)
             lineTo(w * 0.80f, h * 0.41f)
@@ -130,7 +122,6 @@ private val destinations = listOf(
             )
         )
 
-        // Front Frosted Pale-Blue Play Triangle
         val frontPlay = Path().apply {
             moveTo(w * 0.26f, h * 0.29f)
             lineTo(w * 0.66f, h * 0.50f)
@@ -163,7 +154,6 @@ private val destinations = listOf(
     val localState by library.state.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
 
-    // 580ms Theme Bloom Circular Reveal state
     val scope = rememberCoroutineScope()
     val bloomProgress = remember { Animatable(1f) }
     var bloomOriginColor by remember { mutableStateOf<Color?>(null) }
@@ -259,7 +249,6 @@ private val destinations = listOf(
                                 )
                             }
 
-                            // Milestone 4C: One-time Xiaomi Pad 5 Display & First Launch Welcome Card
                             AnimatedVisibility(visible = !firstLaunchCardShown && route == "Library") {
                                 Surface(
                                     Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp),
@@ -328,7 +317,6 @@ private val destinations = listOf(
                 }
             }
 
-            // 580ms Theme Bloom Circular Reveal Overlay
             bloomOriginColor?.let { oldColor ->
                 val progress = bloomProgress.value
                 if (progress < 1f) {
@@ -379,10 +367,6 @@ private val destinations = listOf(
     }
 }
 
-/**
- * Milestone 4 + 6: Unified Privacy & About + Full Settings Screen
- * Reproduces unified_privacy_about.html and jadzumi_tablet_settings_customization_about_me.html
- */
 @Composable private fun UnifiedSettingsAndPrivacyScreen(
     wide: Boolean,
     theme: String,
@@ -401,7 +385,6 @@ private val destinations = listOf(
     val addFolder = rememberFolderPicker(library)
 
     Column(Modifier.fillMaxSize().padding(horizontal = 28.dp)) {
-        // Top Header with Tab Switcher + "Fully Local & Private" emerald pill
         Row(
             Modifier.fillMaxWidth().padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -418,7 +401,6 @@ private val destinations = listOf(
                 }
             }
 
-            // "Fully Local & Private" Emerald Pill from unified_privacy_about.html
             Surface(
                 color = Color(0xFFECFDF5),
                 border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
@@ -450,7 +432,6 @@ private val destinations = listOf(
 
         when (topTab) {
             "Privacy & About" -> {
-                // Two-Pane Layout from unified_privacy_about.html (7 Cols Left, 5 Cols Right on Tablet)
                 if (wide) {
                     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                         LazyColumn(
@@ -628,7 +609,6 @@ private val destinations = listOf(
             Text("Local-only guarantee", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        // Card 1: Folder Access (from unified_privacy_about.html)
         Panel {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
@@ -696,7 +676,6 @@ private val destinations = listOf(
             }
         }
 
-        // Card 2: Watch History & Playback (from unified_privacy_about.html)
         Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.History, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
@@ -747,7 +726,6 @@ private val destinations = listOf(
             }
         }
 
-        // Card 3: App Data & Cache (from unified_privacy_about.html)
         Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
@@ -796,7 +774,6 @@ private val destinations = listOf(
             Text("App Identity", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        // Hero Brand Card (from unified_privacy_about.html)
         Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                 JadzumiLogo(size = 64.dp, darkSurface = darkSurface)
@@ -821,7 +798,6 @@ private val destinations = listOf(
             }
         }
 
-        // Creator & Development Acknowledgment Card (from unified_privacy_about.html)
         Panel {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
@@ -840,75 +816,4 @@ private val destinations = listOf(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Box(Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
-                        Text("AI-assisted development", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    }
-                }
-            }
-        }
-
-        // Philosophy & Overview Card (from unified_privacy_about.html)
-        Panel {
-            Text("PHILOSOPHY", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(
-                "Crafted to deliver uncompromised video playback with fluid gesture controls, accurate color rendering, and complete privacy. No background telemetry, no ads, no trackers.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-
-        // Approved Humorous Quote Notice (from unified_privacy_about.html)
-        Text(
-            "\"No popcorn included. Sorry.\"",
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            textAlign = TextAlign.Center,
-            fontStyle = FontStyle.Italic,
-            fontSize = 13.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-@Composable private fun LibraryPage(query: String, demo: Boolean, onDemo: (Boolean)->Unit, onSelect: (String)->Unit) {
-    var category by rememberSaveable { mutableStateOf("All videos") }
-    val filtered = filterVideos(if (demo) previewVideos else emptyList(), query, category)
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(28.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        item { Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("Your cinema,\nat home.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold); Text("A quiet space for the stories you keep.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp)) } } }
-        item { Panel { Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("Design preview", fontWeight = FontWeight.SemiBold); Text("Sample titles only · no videos imported", style = MaterialTheme.typography.bodySmall) }; Switch(demo, onDemo, modifier = Modifier.semantics { contentDescription = "Show sample titles" }) } } }
-        item { LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(listOf("All videos", "Movies", "TV & Anime")) { c -> FilterChip(selected = category == c, onClick = { category = c }, label = { Text(c) }) } } }
-        if (filtered.isEmpty()) item { EmptyPage(Icons.Rounded.VideoLibrary, if (demo) "No matching titles" else "Make room for your stories", if (demo) "Try another title or category." else "Your real library is empty.") }
-        if (filtered.isNotEmpty()) {
-            item { Hero(filtered.first(), onSelect) }
-            item { Text("Continue watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
-            items(filtered, key = { it.id }) { video -> VideoRow(video) { onSelect(video.id) } }
-            item { Text("Preview artwork is bundled locally. No network access is used by this build.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        }
-    }
-}
-
-@Composable private fun Art(video: PreviewVideo, modifier: Modifier = Modifier) {
-    val id = when (video.artwork) { "anime" -> R.drawable.anime; "cosmos" -> R.drawable.cosmos; else -> R.drawable.hero }
-    Image(painterResource(id), contentDescription = null, modifier = modifier, contentScale = ContentScale.Crop)
-}
-
-@Composable private fun Hero(video: PreviewVideo, onSelect: (String)->Unit) {
-    Card(onClick = { onSelect(video.id) }, shape = RoundedCornerShape(28.dp)) {
-        Box(Modifier.fillMaxWidth().heightIn(min = 280.dp)) {
-            Art(video, Modifier.matchParentSize())
-            Box(Modifier.matchParentSize().background(Brush.horizontalGradient(listOf(Color(0xF0102034), Color(0x550F2038)))))
-            Column(Modifier.padding(28.dp).widthIn(max = 580.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text("FEATURED · SAMPLE ${video.category.uppercase()}", color = Color(0xFFADC7FF), style = MaterialTheme.typography.labelMedium)
-                Text(video.title, color = Color.White, fontSize = 32.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
-                Text("Pick up where the story left off.", color = Color(0xFFD7E3F6))
-                Button(onClick = { onSelect(video.id) }) { Icon(Icons.Rounded.Movie, null); Spacer(Modifier.width(8.dp)); Text("Explore details") }
-            }
-        }
-    }
-}
-
-@Composable private fun VideoRow(video: PreviewVideo, onSelect: ()->Unit) {
-    Card(onClick = onSelect, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(24.dp)) {
-        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            Art(video, Modifier.size(100.dp, 76.dp).clip(RoundedCornerShape(16.dp)))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.
+                        Text("AI-assisted development", fontSize = 11.sp, fontWeigh
