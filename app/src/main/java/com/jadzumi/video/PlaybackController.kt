@@ -58,7 +58,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 delay(500)
                 player?.let { p ->
                     if (mediaItemAssigned) position = p.currentPosition.coerceAtLeast(0)
-                    // Preserve known video duration so it never resets to 0 or '—'
                     val currentDur = p.duration.takeIf { it > 0 } ?: video?.duration?.takeIf { it > 0 } ?: 0
                     if (currentDur > 0) duration = currentDur
                     if (++pollCount % 10 == 0) save()
@@ -82,9 +81,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         if (video?.identity == v.identity && player != null) {
             fullscreen = true; locked = false
             if (error != null) retry() else {
-                if (player?.playbackState == Player.STATE_ENDED) { completed = false; player?.seekTo(0) }
-                if (player?.playbackState == Player.STATE_IDLE) player?.prepare()
-                player?.play()
+                val p = player ?: return
+                if (p.playbackState == Player.STATE_ENDED) { completed = false; p.seekTo(0) }
+                if (p.playbackState == Player.STATE_IDLE) p.prepare()
+                p.play()
             }
             return
         }
@@ -103,24 +103,25 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             val app = getApplication<Application>()
             val source = DefaultMediaSourceFactory(DataSource.Factory { ContentDataSource(app) })
 
-            // Instant local buffer tuning: Starts playing after only 250ms buffer instead of 2500ms
-            val fastLoadControl = DefaultLoadControl.Builder()
+            // Ultra-fast local buffer tuning for Xiaomi Pad 5 (starts at 100ms, caches 10s back-buffer)
+            val instantLoadControl = DefaultLoadControl.Builder()
                 .setBufferDurationsMs(
-                    /* minBufferMs = */ 2_500,
-                    /* maxBufferMs = */ 10_000,
-                    /* bufferForPlaybackMs = */ 250,
-                    /* bufferForPlaybackAfterRebufferMs = */ 500
+                    /* minBufferMs = */ 1_500,
+                    /* maxBufferMs = */ 8_000,
+                    /* bufferForPlaybackMs = */ 100,
+                    /* bufferForPlaybackAfterRebufferMs = */ 250
                 )
+                .setBackBuffer(/* backBufferDurationMs = */ 10_000, /* retainBackBufferFromKeyframe = */ true)
                 .setPrioritizeTimeOverSizeThresholds(true)
                 .build()
 
             val p = ExoPlayer.Builder(app, DefaultRenderersFactory(app).setEnableDecoderFallback(true))
                 .setMediaSourceFactory(source)
-                .setLoadControl(fastLoadControl)
+                .setLoadControl(instantLoadControl)
                 .build()
             player = p
 
-            // Snap immediately to keyframe on resume instead of decoding 250 hidden frames
+            // Snap directly to keyframe to eliminate 6-second preroll decoding lag
             p.setSeekParameters(SeekParameters.CLOSEST_SYNC)
 
             p.setAudioAttributes(
@@ -177,18 +178,21 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 }
             })
 
-            p.setMediaItem(
-                MediaItem.Builder()
-                    .setUri(v.uri)
-                    .setMediaId(v.identity)
-                    .setMediaMetadata(MediaMetadata.Builder().setTitle(v.title).build())
-                    .build(),
-                suspendedPosition
-            )
+            val mediaItem = MediaItem.Builder()
+                .setUri(v.uri)
+                .setMediaId(v.identity)
+                .setMediaMetadata(MediaMetadata.Builder().setTitle(v.title).build())
+                .build()
+
+            // Prepare and seek directly with keyframe sync
+            p.setMediaItem(mediaItem)
+            p.prepare()
+            if (suspendedPosition > 0) {
+                p.seekTo(suspendedPosition)
+            }
             mediaItemAssigned = true
             p.setPlaybackSpeed(speed)
             session = MediaSession.Builder(app, p).build()
-            p.prepare()
             p.playWhenReady = autoplay
         } catch (_: Exception) {
             error = "The player could not open this video. Try refreshing its folder and opening it again."
