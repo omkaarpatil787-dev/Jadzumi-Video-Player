@@ -36,5 +36,5 @@ jobs:
     - name: Save APK for Download
       uses: actions/upload-artifact@v4
       with:
-        name: Jadzumi-Video-M3-debug
+        name: Jadzumi-Video-Build-4-debug
         path: app/build/outputs/apk/debug/*.apk
