@@ -5,7 +5,9 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 /** Unknown duration is represented as zero; do not turn it into a negative seek. */
-fun boundedPosition(position: Long, duration: Long): Long = if (duration > 0) position.coerceIn(0, duration) else position.coerceAtLeast(0)
+fun boundedPosition(position: Long, duration: Long): Long =
+    if (duration > 0) position.coerceIn(0, duration) else position.coerceAtLeast(0)
+
 fun resumePosition(position: Long, duration: Long, completed: Boolean): Long =
     if (completed) 0 else if (duration > 0) position.coerceIn(0, duration - 1) else position.coerceAtLeast(0)
 
@@ -32,7 +34,6 @@ fun videoContentBounds(width: Int, height: Int, aspect: Float, fit: Boolean): Vi
     return VideoContentBounds(left, top, left + contentWidth, top + contentHeight)
 }
 
-/** Formatted channel description for Xiaomi Pad 5 downmixing. */
 fun formatChannelLayout(channelCount: Int): String = when (channelCount) {
     1 -> "Mono (1.0)"
     2 -> "Stereo (2.0)"
@@ -41,7 +42,6 @@ fun formatChannelLayout(channelCount: Int): String = when (channelCount) {
     else -> if (channelCount > 0) "$channelCount Channels" else "Unknown layout"
 }
 
-/** Pretty-printed audio codec name. */
 fun formatAudioCodec(mimeType: String?): String = when (mimeType) {
     "audio/ac3" -> "Dolby Digital (AC-3)"
     "audio/eac3" -> "Dolby Digital Plus (E-AC-3)"
@@ -54,16 +54,79 @@ fun formatAudioCodec(mimeType: String?): String = when (mimeType) {
     else -> mimeType?.substringAfter('/')?.uppercase(Locale.ROOT) ?: "Audio Stream"
 }
 
-/** Pretty-printed subtitle format name. */
 fun formatSubtitleFormat(mimeType: String?): String = when (mimeType) {
     "text/x-ssa", "text/ssa", "application/x-ass" -> "Styled ASS/SSA"
     "application/x-subrip", "text/vtt" -> "SubRip (.srt / .vtt)"
     else -> "Text Subtitle"
 }
 
-/** Detects HDR10/HLG color transfer characteristics. */
 fun isHdrFormat(colorTransfer: Int): Boolean =
     colorTransfer == C.COLOR_TRANSFER_ST2084 || colorTransfer == C.COLOR_TRANSFER_HLG
+
+data class CleanPlayerHeading(val primaryTitle: String, val secondaryMeta: String?)
+
+private val epRegexSxxExx = Regex("(?i)(?:^|[ ._\\-])s(\\d{1,2})e(\\d{1,3})(?=$|[^0-9])")
+private val epRegexNxNN = Regex("(?i)(?:^|[ ._\\-])(\\d{1,2})x(\\d{1,3})(?=$|[^0-9])")
+private val yearRegex = Regex("(?:^|[ ._\\-(])(19\\d{2}|20\\d{2})(?=$|[ ._\\-)])")
+private val techStopToken = Regex(
+    "(?i)(?:^|[ ._\\-\\[(])(2160p|1080p|720p|480p|4k|uhd|webrip|web-dl|webdl|bluray|bdrip|hdrip|dvdrip|x264|x265|h264|h265|hevc|avc|10bit|8bit|hdr|hdr10|dv|ddp|aac|ac3|eac3|6ch|2ch|dual|multi|org|esub|subs|repack|proper)(?=$|[ ._\\-\\])])"
+)
+
+/**
+ * Formats raw filenames into clean cinema titles:
+ * e.g. "Castle Rock (2018) S01E01 1080p..." -> "Castle Rock · S01E01" ("2018 · Season 1, Episode 1 · 1080p")
+ * e.g. "Animals.2026.1080p.10bit.WEBRip..." -> "Animals" ("2026 · 1080p")
+ */
+fun formatCleanPlayerTitle(rawName: String, width: Int = 0, height: Int = 0): CleanPlayerHeading {
+    val base = rawName.substringBeforeLast('.', rawName).trim()
+    val epMatch = epRegexSxxExx.find(base) ?: epRegexNxNN.find(base)
+    val yearMatch = yearRegex.find(base)
+    val year = yearMatch?.groupValues?.getOrNull(1)
+
+    val resLabel = when {
+        width >= 3840 || height >= 2160 -> "4K UHD"
+        width >= 1920 || height >= 1080 -> "1080p"
+        width >= 1280 || height >= 720 -> "720p"
+        else -> null
+    }
+
+    if (epMatch != null) {
+        val season = epMatch.groupValues[1].toIntOrNull() ?: 1
+        val episode = epMatch.groupValues[2].toIntOrNull() ?: 1
+        val code = String.format(Locale.ROOT, "S%02dE%02d", season, episode)
+        val rawShow = base.substring(0, epMatch.range.first)
+            .replace(Regex("\\(\\d{4}\\)"), " ")
+            .replace(Regex("\\b(19\\d{2}|20\\d{2})\\b"), " ")
+            .replace('.', ' ')
+            .replace('_', ' ')
+            .replace(Regex("\\s+"), " ")
+            .trim(' ', '-', '·', '[', ']')
+        val showTitle = rawShow.ifEmpty { base.replace('_', ' ') }
+        val metaParts = listOfNotNull(year, "Season $season, Episode $episode", resLabel)
+        return CleanPlayerHeading(
+            primaryTitle = "$showTitle · $code",
+            secondaryMeta = metaParts.joinToString(" • ").ifEmpty { null }
+        )
+    }
+
+    val stopIndex = listOfNotNull(
+        yearMatch?.range?.first,
+        techStopToken.find(base)?.range?.first
+    ).minOrNull() ?: base.length
+
+    val cleanedMovie = base.substring(0, stopIndex)
+        .replace('.', ' ')
+        .replace('_', ' ')
+        .replace(Regex("\\s+"), " ")
+        .trim(' ', '-', '·', '(', '[')
+        .ifEmpty { base.replace('.', ' ').replace('_', ' ').trim() }
+
+    val metaParts = listOfNotNull(year, resLabel)
+    return CleanPlayerHeading(
+        primaryTitle = cleanedMovie,
+        secondaryMeta = metaParts.joinToString(" • ").ifEmpty { null }
+    )
+}
 
 data class AudioTrackInfo(
     val id: String,
@@ -85,3 +148,4 @@ data class SubtitleTrackInfo(
     val format: String,
     val isSelected: Boolean
 )
+// END OF FILE
