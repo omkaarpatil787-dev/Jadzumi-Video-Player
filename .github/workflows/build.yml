@@ -19,11 +19,15 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
+    - name: Accept Licenses & Install Android 36
+      run: |
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;35.0.0"
 
-    - name: Give permission to build
-      run: chmod +x gradlew
+    - name: Fix Windows Line Endings & Permissions
+      run: |
+        sed -i 's/\r$//' gradlew
+        chmod +x gradlew
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug --no-daemon
