@@ -1,5 +1,6 @@
 package com.jadzumi.video
 
+import android.Manifest
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -17,6 +18,7 @@ import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -38,11 +40,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val requestNotificationPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* Permission result handled */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         playback = ViewModelProvider(this)[PlaybackController::class.java]
         enableEdgeToEdge()
         ContextCompat.registerReceiver(this, receiver, IntentFilter(pipAction), ContextCompat.RECEIVER_NOT_EXPORTED)
+
+        // Request notification permission on Android 13+ / A16 to allow lock-screen media card
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
         setContent { JadzumiApp(playback) }
     }
 
@@ -112,7 +126,6 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onStop() {
-        // Pauses playback if background audio is off; keeps playing if background audio is turned on
         if (!isChangingConfigurations && ::playback.isInitialized) {
             playback.pauseForBackground()
         }
