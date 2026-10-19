@@ -133,6 +133,7 @@ private val destinations = listOf(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable fun JadzumiApp(playback: PlaybackController) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
@@ -193,120 +194,144 @@ private val destinations = listOf(
                     if (selectedId != null) selectedId = null else route = "Library"
                 }
                 BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
-                    val wide = maxWidth >= 720.dp
+                    val showRail = maxWidth >= 640.dp
                     Row(Modifier.fillMaxSize()) {
-                        if (wide) AppRail(route, colors != Light) { route = it; selectedId = null }
-                        Column(Modifier.weight(1f)) {
-                            Row(
-                                Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                if (selectedId != null) {
-                                    IconButton(onClick = { selectedId = null }) {
-                                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library")
-                                    }
-                                }
-                                if (route == "Library" && selectedId == null) {
-                                    OutlinedTextField(
-                                        query, { query = it },
-                                        Modifier.weight(1f).widthIn(max = 520.dp),
-                                        placeholder = { Text("Search your video library") },
-                                        singleLine = true,
-                                        shape = RoundedCornerShape(32.dp),
-                                        leadingIcon = { Icon(Icons.Rounded.Search, null) }
-                                    )
-                                } else {
-                                    Text(
-                                        if (selectedId != null) "Library / Details" else route,
-                                        Modifier.weight(1f),
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                        if (showRail) AppRail(route, colors != Light) { route = it; selectedId = null }
+                        BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
+                            val contentWidth = maxWidth
+                            val topPad = if (contentWidth >= 720.dp) 24.dp else 16.dp
 
-                                IconButton(
-                                    onClick = { library.rescan() },
-                                    enabled = !localState.busy && localState.folders.isNotEmpty()
+                            Column(Modifier.fillMaxSize()) {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
-                                }
-
-                                AssistChip(
-                                    onClick = { route = "Settings"; selectedId = null },
-                                    label = { Text("Privacy & About") },
-                                    leadingIcon = { Icon(Icons.Rounded.VerifiedUser, null, Modifier.size(16.dp)) }
-                                )
-                            }
-
-                            AnimatedVisibility(visible = !firstLaunchCardShown && route == "Library") {
-                                Surface(
-                                    Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp),
-                                    shape = RoundedCornerShape(24.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer
-                                ) {
-                                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                        JadzumiLogo(size = 48.dp)
-                                        Column(Modifier.weight(1f)) {
-                                            Text("Welcome to Jadzumi Player", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                            Text("16:10 Landscape Display Detected · Hardware MediaCodec & Quad-Speaker Stereo Downmix Ready · 100% Offline", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f))
-                                        }
-                                        TextButton(onClick = {
-                                            firstLaunchCardShown = true
-                                            prefs.edit { putBoolean("pad5_welcome_done", true) }
-                                        }) {
-                                            Text("Got it", fontWeight = FontWeight.Bold)
+                                    if (selectedId != null) {
+                                        IconButton(onClick = { selectedId = null }) {
+                                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library")
                                         }
                                     }
-                                }
-                            }
-
-                            Crossfade(
-                                targetState = selectedId ?: route,
-                                animationSpec = tween(if (reducedMotion) 0 else 220),
-                                modifier = Modifier.weight(1f),
-                                label = "screen"
-                            ) { current ->
-                                val video = previewVideos.find { it.id == current }
-                                val localVideo = localState.videos.find { it.uri == current }
-                                if (localVideo != null) LocalDetailPage(localVideo, localState, playback)
-                                else if (video != null) DetailPage(video)
-                                else when (current) {
-                                    "Library" -> if (demo) LibraryPage(query, demo, { demo = it }) { selectedId = it } else LocalLibraryPage(localState, library, query, { selectedId = it }, { demo = true })
-                                    "Folders" -> LocalFoldersPage(localState, library, wide) { selectedId = it }
-                                    "Settings" -> UnifiedSettingsAndPrivacyScreen(
-                                        wide = wide,
-                                        theme = theme,
-                                        onTheme = ::switchThemeWithBloom,
-                                        themeBloom = themeBloomEnabled,
-                                        onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
-                                        reduced = reducedMotion,
-                                        onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
-                                        localState = localState,
-                                        library = library,
-                                        playback = playback,
-                                        onNavigateFolders = { route = "Folders" }
-                                    )
-                                    "Playlists" -> EmptyPage(Icons.AutoMirrored.Rounded.QueueMusic, "Your collections, together", "Playlist creation is planned for a later update.")
-                                    else -> if (playback.video != null) {
-                                        Column(Modifier.padding(28.dp)) {
-                                            Text("${playback.video?.title}", style = MaterialTheme.typography.titleLarge)
-                                            Button(onClick = { playback.fullscreen = true }) { Text("Open player") }
-                                        }
+                                    if (route == "Library" && selectedId == null) {
+                                        OutlinedTextField(
+                                            value = query,
+                                            onValueChange = { query = it },
+                                            modifier = Modifier.weight(1f).widthIn(max = 520.dp),
+                                            placeholder = { Text("Search your video library", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                            singleLine = true,
+                                            shape = RoundedCornerShape(32.dp),
+                                            leadingIcon = { Icon(Icons.Rounded.Search, null) }
+                                        )
                                     } else {
-                                        EmptyPage(Icons.Rounded.PlayCircle, "Your cinema is ready", "Choose an imported video from your library, then tap Play.")
+                                        Text(
+                                            if (selectedId != null) "Library / Details" else route,
+                                            Modifier.weight(1f),
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = { library.rescan() },
+                                        enabled = !localState.busy && localState.folders.isNotEmpty()
+                                    ) {
+                                        Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
+                                    }
+
+                                    if (contentWidth >= 520.dp) {
+                                        AssistChip(
+                                            onClick = { route = "Settings"; selectedId = null },
+                                            label = { Text("Privacy & About", maxLines = 1, softWrap = false) },
+                                            leadingIcon = { Icon(Icons.Rounded.VerifiedUser, null, Modifier.size(16.dp)) }
+                                        )
                                     }
                                 }
-                            }
 
-                            if (!wide) NavigationBar {
-                                destinations.forEach { d ->
-                                    NavigationBarItem(
-                                        selected = route == d.name,
-                                        onClick = { route = d.name; selectedId = null },
-                                        icon = { Icon(d.icon, d.name) },
-                                        label = { Text(d.name, maxLines = 1, fontSize = 10.sp) }
-                                    )
+                                AnimatedVisibility(visible = !firstLaunchCardShown && route == "Library") {
+                                    Surface(
+                                        Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 6.dp),
+                                        shape = RoundedCornerShape(24.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer
+                                    ) {
+                                        Row(
+                                            Modifier.padding(18.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                        ) {
+                                            JadzumiLogo(size = 44.dp)
+                                            Column(Modifier.weight(1f)) {
+                                                Text(
+                                                    "Welcome to Jadzumi Player",
+                                                    fontWeight = FontWeight.Bold,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                                )
+                                                Text(
+                                                    "16:10 Display Detected · Hardware MediaCodec & Quad-Speaker Stereo Downmix Ready · 100% Offline",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
+                                                )
+                                            }
+                                            TextButton(onClick = {
+                                                firstLaunchCardShown = true
+                                                prefs.edit { putBoolean("pad5_welcome_done", true) }
+                                            }) {
+                                                Text("Got it", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Crossfade(
+                                    targetState = selectedId ?: route,
+                                    animationSpec = tween(if (reducedMotion) 0 else 220),
+                                    modifier = Modifier.weight(1f),
+                                    label = "screen"
+                                ) { current ->
+                                    val video = previewVideos.find { it.id == current }
+                                    val localVideo = localState.videos.find { it.uri == current }
+                                    if (localVideo != null) LocalDetailPage(localVideo, localState, playback)
+                                    else if (video != null) DetailPage(video)
+                                    else when (current) {
+                                        "Library" -> if (demo) LibraryPage(query, demo, { demo = it }) { selectedId = it } else LocalLibraryPage(localState, library, query, { selectedId = it }, { demo = true })
+                                        "Folders" -> LocalFoldersPage(localState, library, contentWidth >= 840.dp) { selectedId = it }
+                                        "Settings" -> UnifiedSettingsAndPrivacyScreen(
+                                            theme = theme,
+                                            onTheme = ::switchThemeWithBloom,
+                                            themeBloom = themeBloomEnabled,
+                                            onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
+                                            reduced = reducedMotion,
+                                            onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
+                                            localState = localState,
+                                            library = library,
+                                            playback = playback,
+                                            onNavigateFolders = { route = "Folders" }
+                                        )
+                                        "Playlists" -> EmptyPage(Icons.AutoMirrored.Rounded.QueueMusic, "Your collections, together", "Playlist creation is planned for a later update.")
+                                        else -> if (playback.video != null) {
+                                            Column(Modifier.padding(28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                Text("${playback.video?.title}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                                Button(onClick = { playback.fullscreen = true }) { Text("Open player") }
+                                            }
+                                        } else {
+                                            EmptyPage(Icons.Rounded.PlayCircle, "Your cinema is ready", "Choose an imported video from your library, then tap Play.")
+                                        }
+                                    }
+                                }
+
+                                if (!showRail) {
+                                    NavigationBar {
+                                        destinations.forEach { d ->
+                                            NavigationBarItem(
+                                                selected = route == d.name,
+                                                onClick = { route = d.name; selectedId = null },
+                                                icon = { Icon(d.icon, d.name) },
+                                                label = { Text(d.name, maxLines = 1, fontSize = 10.sp) }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -336,18 +361,18 @@ private val destinations = listOf(
 
 @Composable private fun AppRail(route: String, darkSurface: Boolean, navigate: (String)->Unit) {
     Surface(color = MaterialTheme.colorScheme.surface) {
-        Column(Modifier.width(96.dp).fillMaxHeight().padding(vertical = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.width(92.dp).fillMaxHeight().padding(vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.clickable { navigate("Settings") }) {
-                JadzumiLogo(size = 48.dp, darkSurface = darkSurface)
+                JadzumiLogo(size = 46.dp, darkSurface = darkSurface)
             }
-            Text("Jadzumi", Modifier.padding(top = 8.dp, bottom = 28.dp), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text("Jadzumi", Modifier.padding(top = 8.dp, bottom = 24.dp), fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1)
             destinations.take(4).forEach { d ->
                 NavigationRailItem(
                     selected = route == d.name,
                     onClick = { navigate(d.name) },
                     icon = { Icon(d.icon, null) },
-                    label = { Text(d.name, fontSize = 11.sp) },
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    label = { Text(d.name, fontSize = 11.sp, maxLines = 1) },
+                    modifier = Modifier.padding(bottom = 10.dp)
                 )
             }
             Spacer(Modifier.weight(1f))
@@ -355,14 +380,14 @@ private val destinations = listOf(
                 selected = route == "Settings",
                 onClick = { navigate("Settings") },
                 icon = { Icon(Icons.Rounded.Settings, null) },
-                label = { Text("Settings", fontSize = 11.sp) }
+                label = { Text("Settings", fontSize = 11.sp, maxLines = 1) }
             )
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable private fun UnifiedSettingsAndPrivacyScreen(
-    wide: Boolean,
     theme: String,
     onTheme: (String) -> Unit,
     themeBloom: Boolean,
@@ -378,134 +403,226 @@ private val destinations = listOf(
     var statusNotice by remember { mutableStateOf<String?>(null) }
     val addFolder = rememberFolderPicker(library)
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 28.dp)) {
-        Row(
-            Modifier.fillMaxWidth().padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                listOf("Privacy & About", "Appearance & Themes", "Playback & Audio").forEach { tabName ->
-                    FilterChip(
-                        selected = topTab == tabName,
-                        onClick = { topTab = tabName },
-                        label = { Text(tabName, fontWeight = if (topTab == tabName) FontWeight.Bold else FontWeight.Medium) },
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                }
-            }
-            Surface(color = Color(0xFFECFDF5), border = BorderStroke(1.dp, Color(0xFFA7F3D0)), shape = RoundedCornerShape(999.dp)) {
-                Row(Modifier.padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF10B981)))
-                    Text("Fully Local & Private", color = Color(0xFF047857), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
-            }
-        }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val twoPane = maxWidth >= 840.dp
+        val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
+        val fourColThemes = maxWidth >= 680.dp
 
-        statusNotice?.let { msg ->
-            Surface(Modifier.fillMaxWidth().padding(bottom = 12.dp), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.primaryContainer) {
-                Row(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(msg, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    TextButton(onClick = { statusNotice = null }) { Text("Dismiss") }
+        Column(Modifier.fillMaxSize().padding(horizontal = pad)) {
+            // Adaptive Header: Never squeezes "Fully Local & Private" into a narrow vertical column
+            FlowRow(
+                Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("Privacy & About", "Appearance & Themes", "Playback & Audio").forEach { tabName ->
+                        FilterChip(
+                            selected = topTab == tabName,
+                            onClick = { topTab = tabName },
+                            label = {
+                                Text(
+                                    tabName,
+                                    fontWeight = if (topTab == tabName) FontWeight.Bold else FontWeight.Medium,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            },
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    }
+                }
+                Surface(
+                    color = Color(0xFFECFDF5),
+                    border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
+                    shape = RoundedCornerShape(999.dp),
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF10B981)))
+                        Text(
+                            "Fully Local & Private",
+                            color = Color(0xFF047857),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
                 }
             }
-        }
 
-        when (topTab) {
-            "Privacy & About" -> {
-                if (wide) {
-                    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                        LazyColumn(Modifier.weight(0.58f).fillMaxHeight(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                            item { PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it } }
+            statusNotice?.let { msg ->
+                Surface(
+                    Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            msg,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(onClick = { statusNotice = null }) { Text("Dismiss", maxLines = 1, softWrap = false) }
+                    }
+                }
+            }
+
+            when (topTab) {
+                "Privacy & About" -> {
+                    if (twoPane) {
+                        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                            LazyColumn(
+                                Modifier.weight(0.57f).fillMaxHeight(),
+                                contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
+                                verticalArrangement = Arrangement.spacedBy(18.dp)
+                            ) {
+                                item { PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it } }
+                            }
+                            LazyColumn(
+                                Modifier.weight(0.43f).fillMaxHeight(),
+                                contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
+                                verticalArrangement = Arrangement.spacedBy(18.dp)
+                            ) {
+                                item { AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED") }
+                            }
                         }
-                        LazyColumn(Modifier.weight(0.42f).fillMaxHeight(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    } else {
+                        // Single-column layout for portrait / split-screen with balanced spacing
+                        LazyColumn(
+                            Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
+                            verticalArrangement = Arrangement.spacedBy(18.dp)
+                        ) {
+                            item { PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it } }
                             item { AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED") }
                         }
                     }
-                } else {
-                    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                        item { PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it } }
-                        item { AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED") }
-                    }
                 }
-            }
-            "Appearance & Themes" -> {
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    item {
-                        Panel {
-                            Text("Base Theme & Display Mode", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            Text("Switch between airy light, deep dark slate, or 0% pixel-draw AMOLED black.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 16.dp))
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                listOf(
-                                    Triple("Light", "Airy Pale-Blue", Icons.Rounded.LightMode),
-                                    Triple("Dark", "Night Slate", Icons.Rounded.DarkMode),
-                                    Triple("AMOLED", "Pure Black", Icons.Rounded.Brightness1),
-                                    Triple("System", "Auto Sync", Icons.Rounded.Devices)
-                                ).forEach { (mode, subtitle, icon) ->
-                                    val selected = theme == mode
-                                    val border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                                    val bg = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                                    Card(onClick = { onTheme(mode) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(20.dp), border = border, colors = CardDefaults.cardColors(containerColor = bg)) {
-                                        Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
-                                            Text(mode, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                            Text(if (selected) "Active" else subtitle, fontSize = 11.sp, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+
+                "Appearance & Themes" -> {
+                    val themeItems = listOf(
+                        Triple("Light", "Airy Pale-Blue", Icons.Rounded.LightMode),
+                        Triple("Dark", "Night Slate", Icons.Rounded.DarkMode),
+                        Triple("AMOLED", "Pure Black", Icons.Rounded.Brightness1),
+                        Triple("System", "Auto Sync", Icons.Rounded.Devices)
+                    )
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        item {
+                            Panel {
+                                Text("Base Theme & Display Mode", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Text(
+                                    "Switch between airy light, deep dark slate, or 0% pixel-draw AMOLED black.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                                )
+                                if (fourColThemes) {
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        themeItems.forEach { (mode, subtitle, icon) ->
+                                            ThemeOptionCard(mode, subtitle, icon, theme == mode, { onTheme(mode) }, Modifier.weight(1f))
+                                        }
+                                    }
+                                } else {
+                                    // 2x2 grid on narrower portrait/split-screen widths so cards never squash
+                                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        themeItems.chunked(2).forEach { pair ->
+                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                pair.forEach { (mode, subtitle, icon) ->
+                                                    ThemeOptionCard(mode, subtitle, icon, theme == mode, { onTheme(mode) }, Modifier.weight(1f))
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                    item {
-                        Panel {
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Column(Modifier.weight(1f)) {
-                                    Text("Theme Bloom Circular Reveal (580ms)", fontWeight = FontWeight.Bold)
-                                    Text("Smooth radial wave transition when switching between themes.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        item {
+                            Panel {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                        Text("Theme Bloom Circular Reveal (580ms)", fontWeight = FontWeight.Bold)
+                                        Text("Smooth radial wave transition when switching between themes.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
                                 }
-                                Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
-                            }
-                            HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Column(Modifier.weight(1f)) {
-                                    Text("Reduced Motion", fontWeight = FontWeight.Bold)
-                                    Text("Disable screen fades and spring animations for instant transitions.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                        Text("Reduced Motion", fontWeight = FontWeight.Bold)
+                                        Text("Disable screen fades and spring animations for instant transitions.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Switch(checked = reduced, onCheckedChange = onReduced, modifier = Modifier.semantics { contentDescription = "Reduced motion" })
                                 }
-                                Switch(checked = reduced, onCheckedChange = onReduced, modifier = Modifier.semantics { contentDescription = "Reduced motion" })
                             }
                         }
                     }
                 }
-            }
-            "Playback & Audio" -> {
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    item {
-                        Panel {
-                            Text("Double-Tap Seek Interval", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                            Text("Choose how many seconds to jump when double-tapping in the player.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                listOf(5, 10, 15, 30).forEach { sec ->
-                                    FilterChip(selected = playback.seekIncrementSeconds == sec, onClick = { playback.updateSeekSeconds(sec) }, label = { Text("$sec seconds") })
+
+                "Playback & Audio" -> {
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        item {
+                            Panel {
+                                Text("Double-Tap Seek Interval", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "Choose how many seconds to jump when double-tapping in the player.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                                )
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    listOf(5, 10, 15, 30).forEach { sec ->
+                                        FilterChip(
+                                            selected = playback.seekIncrementSeconds == sec,
+                                            onClick = { playback.updateSeekSeconds(sec) },
+                                            label = { Text("$sec seconds", maxLines = 1, softWrap = false) }
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                    item {
-                        Panel {
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Column(Modifier.weight(1f)) {
-                                    Text("Vertical Swipe HUD Gestures", fontWeight = FontWeight.Bold)
-                                    Text("Left vertical swipe controls brightness; right controls volume.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        item {
+                            Panel {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                        Text("Vertical Swipe HUD Gestures", fontWeight = FontWeight.Bold)
+                                        Text("Left vertical swipe controls brightness; right controls volume.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Switch(checked = playback.swipeGesturesEnabled, onCheckedChange = { playback.updateSwipeGestures(it) })
                                 }
-                                Switch(checked = playback.swipeGesturesEnabled, onCheckedChange = { playback.updateSwipeGestures(it) })
-                            }
-                            HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Column(Modifier.weight(1f)) {
-                                    Text("Screen-Off Background Audio", fontWeight = FontWeight.Bold)
-                                    Text("Keep playing audio with lock-screen controls when screen is off.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                        Text("Screen-Off Background Audio", fontWeight = FontWeight.Bold)
+                                        Text("Keep playing audio with lock-screen controls when screen is off.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
                                 }
-                                Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
                             }
                         }
                     }
@@ -515,6 +632,42 @@ private val destinations = listOf(
     }
 }
 
+@Composable private fun ThemeOptionCard(
+    mode: String,
+    subtitle: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    val bg = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        border = border,
+        colors = CardDefaults.cardColors(containerColor = bg)
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+            Text(mode, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, softWrap = false)
+            Text(
+                if (selected) "Active" else subtitle,
+                fontSize = 11.sp,
+                maxLines = 1,
+                softWrap = false,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable private fun PrivacyLeftPane(
     localState: LocalLibraryState,
     playback: PlaybackController,
@@ -522,7 +675,7 @@ private val destinations = listOf(
     onManagePermissions: () -> Unit,
     onStatus: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.VerifiedUser, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
@@ -532,8 +685,12 @@ private val destinations = listOf(
         }
 
         Panel {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                Column(Modifier.weight(1f).padding(end = 12.dp)) {
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Column(Modifier.weight(1f, fill = false).padding(end = 12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                         Text("Folder Access", fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -545,13 +702,17 @@ private val destinations = listOf(
                         modifier = Modifier.padding(top = 6.dp)
                     )
                 }
-                FilledTonalButton(onClick = onAddDirectory, shape = RoundedCornerShape(14.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
+                FilledTonalButton(
+                    onClick = onAddDirectory,
+                    shape = RoundedCornerShape(14.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                ) {
                     Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Add Directory", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Add Directory", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(14.dp))
             Text("ACTIVE INTERNAL DIRECTORIES", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             if (localState.folders.isEmpty()) {
@@ -561,8 +722,17 @@ private val destinations = listOf(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     localState.folders.forEach { folder ->
-                        Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-                            Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        Surface(
+                            Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Row(
+                                Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Rounded.Folder, null, tint = Color(0xFFF59E0B), modifier = Modifier.size(20.dp))
                                     Text("/${folder.name}", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -574,10 +744,19 @@ private val destinations = listOf(
                 }
             }
             HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Modify or revoke media directory permissions at any time", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    "Modify or revoke media directory permissions at any time",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f, fill = false).padding(end = 12.dp).align(Alignment.CenterVertically)
+                )
                 OutlinedButton(onClick = onManagePermissions, shape = RoundedCornerShape(12.dp)) {
-                    Text("Manage Permissions", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Manage Permissions", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
                 }
             }
         }
@@ -587,7 +766,12 @@ private val destinations = listOf(
                 Icon(Icons.Rounded.History, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Text("Watch History & Playback", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
-            Text("Playback state, resume points, and preferences are kept exclusively on this device.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+            Text(
+                "Playback state, resume points, and preferences are kept exclusively on this device.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
+            )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
@@ -616,7 +800,7 @@ private val destinations = listOf(
                 ) {
                     Icon(Icons.Rounded.DeleteSweep, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Clear Watch History", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Clear Watch History", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                 }
             }
         }
@@ -626,8 +810,16 @@ private val destinations = listOf(
                 Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Text("App Data & Cache", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
-            Text("All metadata and playback logs remain stored strictly on-device. Optional online metadata fetching is disabled by default.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                "All metadata and playback logs remain stored strictly on-device. Optional online metadata fetching is disabled by default.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 6.dp, bottom = 14.dp)
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedButton(
                     onClick = {
                         clearThumbnailMemoryCache()
@@ -637,7 +829,7 @@ private val destinations = listOf(
                 ) {
                     Icon(Icons.Rounded.Cached, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Clear Cache", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Clear Cache", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
                 }
                 OutlinedButton(
                     onClick = { onStatus("App settings snapshot verified locally (${localState.folders.size} folders, ${localState.videos.size} indexed titles).") },
@@ -645,15 +837,16 @@ private val destinations = listOf(
                 ) {
                     Icon(Icons.Rounded.FileDownload, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(6.dp))
-                    Text("Export App Settings", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                    Text("Export App Settings", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary, maxLines = 1, softWrap = false)
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable private fun AboutRightPane(darkSurface: Boolean) {
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.Info, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
@@ -663,13 +856,28 @@ private val destinations = listOf(
         }
 
         Panel {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-                JadzumiLogo(size = 64.dp, darkSurface = darkSurface)
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("Jadzumi", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                        Surface(shape = RoundedCornerShape(999.dp), color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-                            Text("Version ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})", modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                JadzumiLogo(size = 60.dp, darkSurface = darkSurface)
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("Jadzumi", fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                        Surface(
+                            shape = RoundedCornerShape(999.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        ) {
+                            Text(
+                                "Version ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                softWrap = false
+                            )
                         }
                     }
                     Text("Your movies. Your space.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
@@ -678,16 +886,36 @@ private val destinations = listOf(
         }
 
         Panel {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.padding(end = 12.dp)) {
                     Text("CREATION & PRODUCT DIRECTION", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("Omkar Patil", fontSize = 17.sp, fontWeight = FontWeight.Bold)
                     Text("Creator · Product & Design Direction", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
                 }
-                Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))) {
-                    Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         Box(Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
-                        Text("AI-assisted development", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text(
+                            "AI-assisted development",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 }
             }
@@ -705,7 +933,7 @@ private val destinations = listOf(
 
         Text(
             "\"No popcorn included. Sorry.\"",
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
             textAlign = TextAlign.Center,
             fontStyle = FontStyle.Italic,
             fontSize = 13.sp,
@@ -718,11 +946,11 @@ private val destinations = listOf(
 @Composable private fun LibraryPage(query: String, demo: Boolean, onDemo: (Boolean)->Unit, onSelect: (String)->Unit) {
     var category by rememberSaveable { mutableStateOf("All videos") }
     val filtered = filterVideos(if (demo) previewVideos else emptyList(), query, category)
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(28.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
             Column {
                 Text("Your cinema,\nat home.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                Text("A quiet space for the stories you keep.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+                Text("A quiet space for the stories you keep.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
             }
         }
         item {
@@ -739,7 +967,7 @@ private val destinations = listOf(
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(listOf("All videos", "Movies", "TV & Anime")) { c ->
-                    FilterChip(selected = category == c, onClick = { category = c }, label = { Text(c) })
+                    FilterChip(selected = category == c, onClick = { category = c }, label = { Text(c, maxLines = 1, softWrap = false) })
                 }
             }
         }
@@ -761,12 +989,12 @@ private val destinations = listOf(
 
 @Composable private fun Hero(video: PreviewVideo, onSelect: (String)->Unit) {
     Card(onClick = { onSelect(video.id) }, shape = RoundedCornerShape(28.dp)) {
-        Box(Modifier.fillMaxWidth().heightIn(min = 280.dp)) {
+        Box(Modifier.fillMaxWidth().heightIn(min = 240.dp)) {
             Art(video, Modifier.matchParentSize())
             Box(Modifier.matchParentSize().background(Brush.horizontalGradient(listOf(Color(0xF0102034), Color(0x550F2038)))))
-            Column(Modifier.padding(28.dp).widthIn(max = 580.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(Modifier.padding(24.dp).widthIn(max = 580.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("FEATURED · SAMPLE ${video.category.uppercase()}", color = Color(0xFFADC7FF), style = MaterialTheme.typography.labelMedium)
-                Text(video.title, color = Color.White, fontSize = 32.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
+                Text(video.title, color = Color.White, fontSize = 28.sp, lineHeight = 34.sp, fontWeight = FontWeight.Bold)
                 Text("Pick up where the story left off.", color = Color.White.copy(alpha = 0.85f))
                 Button(onClick = { onSelect(video.id) }) { Icon(Icons.Rounded.Movie, null); Spacer(Modifier.width(8.dp)); Text("Explore details") }
             }
@@ -775,10 +1003,10 @@ private val destinations = listOf(
 }
 
 @Composable private fun VideoRow(video: PreviewVideo, onSelect: ()->Unit) {
-    Card(onClick = onSelect, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(24.dp)) {
-        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            Art(video, Modifier.size(100.dp, 76.dp).clip(RoundedCornerShape(16.dp)))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+    Card(onClick = onSelect, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(22.dp)) {
+        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Art(video, Modifier.size(96.dp, 72.dp).clip(RoundedCornerShape(14.dp)))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(video.title, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text("${timecode(video.positionSeconds)} / ${timecode(video.durationSeconds)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 LinearProgressIndicator(progress = { video.progress }, modifier = Modifier.fillMaxWidth().height(4.dp))
@@ -790,12 +1018,12 @@ private val destinations = listOf(
 
 @Composable private fun DetailPage(video: PreviewVideo) {
     var favorite by rememberSaveable(video.id) { mutableStateOf(false) }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(28.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
-            Box(Modifier.fillMaxWidth().height(260.dp).clip(RoundedCornerShape(28.dp))) {
+            Box(Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(28.dp))) {
                 Art(video, Modifier.fillMaxSize())
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xD9101C30)))))
-                Text(video.title, Modifier.align(Alignment.BottomStart).padding(24.dp), color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                Text(video.title, Modifier.align(Alignment.BottomStart).padding(24.dp), color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
             }
         }
         item {
@@ -822,7 +1050,7 @@ private val destinations = listOf(
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Column(Modifier.padding(24.dp), content = content)
+        Column(Modifier.padding(20.dp), content = content)
     }
 }
 
