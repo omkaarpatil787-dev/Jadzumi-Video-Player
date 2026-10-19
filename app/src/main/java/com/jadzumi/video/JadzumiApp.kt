@@ -37,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 
 private val Blue = Color(0xFF005BBF)
 private val PaleBlue = Color(0xFFD0E1FA)
@@ -45,60 +47,78 @@ private val Dark = darkColorScheme(primary=Color(0xFFADC7FF), primaryContainer=C
 private data class Destination(val name: String, val icon: ImageVector)
 private val destinations = listOf(Destination("Library", Icons.Rounded.VideoLibrary), Destination("Folders", Icons.Rounded.FolderOpen), Destination("Playlists",Icons.AutoMirrored.Rounded.QueueMusic), Destination("Player",Icons.Rounded.PlayCircle), Destination("Settings",Icons.Rounded.Settings))
 
-@Composable fun JadzumiApp(playback:PlaybackController) {
+@Composable fun JadzumiApp(playback: PlaybackController) {
     val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("appearance",0) }
-    var theme by rememberSaveable { mutableStateOf(prefs.getString("theme","Light") ?: "Light") }
-    var reducedMotion by rememberSaveable { mutableStateOf(prefs.getBoolean("reducedMotion",false)) }
+    val prefs = remember { context.getSharedPreferences("appearance", 0) }
+    var theme by rememberSaveable { mutableStateOf(prefs.getString("theme", "Light") ?: "Light") }
+    var reducedMotion by rememberSaveable { mutableStateOf(prefs.getBoolean("reducedMotion", false)) }
     var route by rememberSaveable { mutableStateOf("Library") }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var demo by rememberSaveable { mutableStateOf(false) }
     val library = remember { LocalLibrary.get(context) }
     val localState by library.state.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
-    val colors = when(theme) { "Dark" -> Dark; "AMOLED" -> Dark.copy(background=Color.Black,surface=Color(0xFF080808)); "System" -> if(isSystemInDarkTheme()) Dark else Light; else -> Light }
+    val colors = when(theme) { "Dark" -> Dark; "AMOLED" -> Dark.copy(background=Color.Black, surface=Color(0xFF080808)); "System" -> if(isSystemInDarkTheme()) Dark else Light; else -> Light }
+
+    // Milestone 3B: Auto-refresh library incrementally when returning to the app
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        library.autoRefreshOnResume()
+    }
+
     DisposableEffect(colors) {
         val style = if(colors == Light) SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT) else SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
-        (context as? ComponentActivity)?.enableEdgeToEdge(statusBarStyle=style,navigationBarStyle=style)
+        (context as? ComponentActivity)?.enableEdgeToEdge(statusBarStyle=style, navigationBarStyle=style)
         onDispose { }
     }
-    MaterialTheme(colorScheme=colors, shapes=Shapes(medium=RoundedCornerShape(24.dp),large=RoundedCornerShape(28.dp))) {
+
+    MaterialTheme(colorScheme=colors, shapes=Shapes(medium=RoundedCornerShape(24.dp), large=RoundedCornerShape(28.dp))) {
         Box(Modifier.fillMaxSize()) {
-        Surface(Modifier.fillMaxSize(),color=colors.background) {
-            BackHandler(selectedId != null || route != "Library") { if(selectedId != null) selectedId=null else route="Library" }
-            BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
-                val wide = maxWidth >= 720.dp
-                Row(Modifier.fillMaxSize()) {
-                    if(wide) AppRail(route) { route=it; selectedId=null }
-                    Column(Modifier.weight(1f)) {
-                        Row(Modifier.fillMaxWidth().padding(horizontal=24.dp, vertical=10.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-                            if(selectedId != null) IconButton(onClick={selectedId=null}) { Icon(Icons.AutoMirrored.Rounded.ArrowBack,"Back to library") }
-                            if(route == "Library" && selectedId == null) {
-                                OutlinedTextField(query,{query=it},Modifier.weight(1f).widthIn(max=520.dp),placeholder={Text("Search your video library")},singleLine=true,shape=RoundedCornerShape(32.dp),leadingIcon={Icon(Icons.Rounded.Search,null)})
-                            } else Text(if(selectedId != null) "Library / Details" else route,Modifier.weight(1f),style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
-                            AssistChip(onClick={route="Settings";selectedId=null},label={Text("M3 Preview")})
-                        }
-                        Crossfade(targetState=selectedId ?: route, animationSpec=tween(if(reducedMotion) 0 else 220),modifier=Modifier.weight(1f),label="screen") { current ->
-                            val video = previewVideos.find { it.id==current }
-                            val localVideo = localState.videos.find { it.uri==current }
-                            if(localVideo != null) LocalDetailPage(localVideo,localState,playback)
-                            else if(video != null) DetailPage(video)
-                            else when(current) {
-                                "Library" -> if(demo) LibraryPage(query,demo,{demo=it}) { selectedId=it } else LocalLibraryPage(localState,library,query,{selectedId=it},{demo=true})
-                                "Folders" -> LocalFoldersPage(localState,library,wide) { selectedId=it }
-                                "Settings" -> SettingsPage(wide,theme,{theme=it;prefs.edit { putString("theme",it) }},reducedMotion,{reducedMotion=it;prefs.edit { putBoolean("reducedMotion",it) }})
-                                "Playlists" -> EmptyPage(Icons.AutoMirrored.Rounded.QueueMusic,"Your collections, together","Playlist creation is planned for a later update.")
-                                else -> if(playback.video!=null) Column(Modifier.padding(28.dp)) { Text("${playback.video?.title}",style=MaterialTheme.typography.titleLarge);Button(onClick={playback.fullscreen=true}) { Text("Open player") } } else EmptyPage(Icons.Rounded.PlayCircle,"Your cinema is ready","Choose an imported video from your library, then tap Play.")
+            Surface(Modifier.fillMaxSize(), color=colors.background) {
+                BackHandler(selectedId != null || route != "Library") { if (selectedId != null) selectedId = null else route = "Library" }
+                BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
+                    val wide = maxWidth >= 720.dp
+                    Row(Modifier.fillMaxSize()) {
+                        if (wide) AppRail(route) { route = it; selectedId = null }
+                        Column(Modifier.weight(1f)) {
+                            Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                if (selectedId != null) IconButton(onClick = { selectedId = null }) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library") }
+                                if (route == "Library" && selectedId == null) {
+                                    OutlinedTextField(query, { query = it }, Modifier.weight(1f).widthIn(max = 520.dp), placeholder = { Text("Search your video library") }, singleLine = true, shape = RoundedCornerShape(32.dp), leadingIcon = { Icon(Icons.Rounded.Search, null) })
+                                } else Text(if (selectedId != null) "Library / Details" else route, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+
+                                // Milestone 3B: Active Toolbar Sync Button
+                                IconButton(
+                                    onClick = { library.rescan() },
+                                    enabled = !localState.busy && localState.folders.isNotEmpty()
+                                ) {
+                                    Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
+                                }
+
+                                AssistChip(onClick = { route = "Settings"; selectedId = null }, label = { Text("M3B Active") })
                             }
-                        }
-                        if(!wide) NavigationBar {
-                            destinations.forEach { d -> NavigationBarItem(selected=route==d.name,onClick={route=d.name;selectedId=null},icon={Icon(d.icon,d.name)},label={Text(d.name,maxLines=1,fontSize=10.sp)}) }
+
+                            Crossfade(targetState = selectedId ?: route, animationSpec = tween(if (reducedMotion) 0 else 220), modifier = Modifier.weight(1f), label = "screen") { current ->
+                                val video = previewVideos.find { it.id == current }
+                                val localVideo = localState.videos.find { it.uri == current }
+                                if (localVideo != null) LocalDetailPage(localVideo, localState, playback)
+                                else if (video != null) DetailPage(video)
+                                else when (current) {
+                                    "Library" -> if (demo) LibraryPage(query, demo, { demo = it }) { selectedId = it } else LocalLibraryPage(localState, library, query, { selectedId = it }, { demo = true })
+                                    "Folders" -> LocalFoldersPage(localState, library, wide) { selectedId = it }
+                                    "Settings" -> SettingsPage(wide, theme, { theme = it; prefs.edit { putString("theme", it) } }, reducedMotion, { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } })
+                                    "Playlists" -> EmptyPage(Icons.AutoMirrored.Rounded.QueueMusic, "Your collections, together", "Playlist creation is planned for a later update.")
+                                    else -> if (playback.video != null) Column(Modifier.padding(28.dp)) { Text("${playback.video?.title}", style = MaterialTheme.typography.titleLarge); Button(onClick = { playback.fullscreen = true }) { Text("Open player") } } else EmptyPage(Icons.Rounded.PlayCircle, "Your cinema is ready", "Choose an imported video from your library, then tap Play.")
+                                }
+                            }
+
+                            if (!wide) NavigationBar {
+                                destinations.forEach { d -> NavigationBarItem(selected = route == d.name, onClick = { route = d.name; selectedId = null }, icon = { Icon(d.icon, d.name) }, label = { Text(d.name, maxLines = 1, fontSize = 10.sp) }) }
+                            }
                         }
                     }
                 }
             }
-        }
-        CinemaPlayer(playback,reducedMotion)
+            CinemaPlayer(playback, reducedMotion)
         }
     }
 }
