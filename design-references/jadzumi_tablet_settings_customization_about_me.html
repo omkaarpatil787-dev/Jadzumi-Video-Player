@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_dashboard" name="shell-type"/>
+<title>Jadzumi Video — Settings, Customization & About Me</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<style>
+@layer base {
+  html, body { margin:0; padding:0; }
+  body { overscroll-behavior: none; }
+  main > :first-child { margin-top:0 !important; }
+  main > :last-child { margin-bottom:0 !important; }
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(114, 119, 133, 0.25); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(114, 119, 133, 0.45); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#005bbf",
+        "primary-container": "#1a73e8",
+        "on-primary": "#ffffff",
+        "on-primary-container": "#ffffff",
+        "primary-fixed": "#d8e2ff",
+        "on-primary-fixed": "#001a41",
+        "secondary": "#4f6075",
+        "secondary-container": "#d0e1fa",
+        "on-secondary": "#ffffff",
+        "on-secondary-container": "#546479",
+        "on-secondary-fixed": "#0b1d2f",
+        "tertiary": "#2b5ab5",
+        "tertiary-container": "#4974d0",
+        "surface": "#f7f9fc",
+        "surface-dim": "#d8dadd",
+        "surface-bright": "#f7f9fc",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f2f4f7",
+        "surface-container": "#eceef1",
+        "surface-container-high": "#e6e8eb",
+        "surface-container-highest": "#e0e3e6",
+        "on-surface": "#191c1e",
+        "on-surface-variant": "#414754",
+        "outline": "#727785",
+        "outline-variant": "#c1c6d6",
+        "background": "#f7f9fc",
+        "on-background": "#191c1e"
+      },
+      borderRadius: {
+        "DEFAULT": "1rem",
+        "lg": "2rem",
+        "xl": "2.5rem",
+        "2xl": "1.75rem",
+        "3xl": "2.25rem",
+        "full": "9999px"
+      },
+      fontFamily: {
+        "display": ["Plus Jakarta Sans", "sans-serif"],
+        "headline": ["Plus Jakarta Sans", "sans-serif"],
+        "title": ["Plus Jakarta Sans", "sans-serif"],
+        "body": ["Inter", "sans-serif"],
+        "mono": ["JetBrains Mono", "monospace"]
+      }
+    }
+  }
+};
+</script>
+</head>
+<body class="bg-background font-body text-on-surface antialiased selection:bg-primary-container selection:text-white">
+
+<!-- 96px Persistent Tablet Navigation Rail (Xiaomi Pad 5 Landscape) -->
+<aside class="fixed left-0 top-0 h-full w-24 bg-surface-container-lowest/90 backdrop-blur-xl z-50 flex flex-col justify-between py-6 px-2 shadow-[0_1px_12px_rgba(26,115,232,0.06)] border-r border-outline-variant/30">
+  <div class="flex flex-col items-center gap-6">
+    <!-- App Logo & Offline Pill -->
+    <div class="flex flex-col items-center gap-1.5 cursor-pointer" onclick="switchCategory('about')">
+      <div class="w-12 h-12 rounded-2xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-[0_4px_16px_-2px_rgba(26,115,232,0.25)] hover:scale-105 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-[26px]">play_arrow</span>
+      </div>
+      <span class="font-title text-[13px] font-bold text-on-surface tracking-tight">Jadzumi</span>
+      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed text-[10px] font-semibold">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Offline
+      </span>
+    </div>
+
+    <!-- M3 Expressive Rail Items (48dp Touch Targets) -->
+    <nav class="flex flex-col items-center gap-2.5 w-full">
+      <a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" href="#">
+        <div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-[24px]">video_library</span>
+        </div>
+        <span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Library</span>
+      </a>
+
+      <a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" href="#">
+        <div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-[24px]">folder_open</span>
+        </div>
+        <span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Folders</span>
+      </a>
+
+      <a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" href="#">
+        <div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-[24px]">queue_music</span>
+        </div>
+        <span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Playlists</span>
+      </a>
+
+      <a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" href="#">
+        <div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-[24px]">slow_motion_video</span>
+        </div>
+        <span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Player</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Bottom Rail Actions: Storage Indicator & Settings (Active) -->
+  <div class="flex flex-col items-center gap-3.5 w-full px-1">
+    <div class="flex flex-col items-center w-full min-h-[48px] p-2 rounded-2xl bg-surface-container-low text-center shadow-sm" title="Internal UFS 3.1: 53.2 GB Free">
+      <span class="material-symbols-outlined text-[19px] text-primary">tablet_android</span>
+      <span class="text-[10px] font-bold text-primary mt-0.5">53.2 GB</span>
+      <span class="text-[9px] text-outline font-medium">Free</span>
+    </div>
+    
+    <!-- Active Settings Pill -->
+    <a class="flex flex-col items-center justify-center min-h-[52px] w-full py-1.5 rounded-2xl bg-secondary-container text-on-secondary-fixed shadow-sm" href="#" title="Settings & About">
+      <div class="w-14 h-9 rounded-full bg-primary-container text-white flex items-center justify-center shadow-sm">
+        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">settings</span>
+      </div>
+      <span class="text-[11px] font-bold text-primary mt-0.5">Settings</span>
+    </a>
+  </div>
+</aside>
+
+<!-- Main Page Shell (Offset by 96px for rail) -->
+<div class="flex flex-col min-h-screen" style="padding-left: 6rem;">
+  
+  <!-- Top App Bar -->
+  <header class="fixed top-0 right-0 h-16 bg-surface/90 backdrop-blur-xl z-40 flex items-center justify-between px-6 shadow-[0_1px_8px_rgba(0,0,0,0.03)]" style="left: 6rem;">
+    <!-- Search / Title Breadcrumb -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary">
+        <span class="material-symbols-outlined text-[22px]">tune</span>
+      </div>
+      <div>
+        <h1 class="font-title text-[17px] font-bold text-on-surface tracking-tight leading-tight">Settings & Customization</h1>
+        <div class="flex items-center gap-1.5 text-[11px] text-secondary">
+          <span>Xiaomi Pad 5</span>
+          <span>•</span>
+          <span class="text-primary font-semibold">Offline Core v2.4</span>
+          <span>•</span>
+          <span id="active-cat-breadcrumb" class="font-medium text-on-surface">Appearance & Personalization</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions in Header -->
+    <div class="flex items-center gap-2">
+      <!-- Quick Search inside settings -->
+      <div class="relative flex items-center hidden sm:flex">
+        <span class="material-symbols-outlined absolute left-3 text-outline text-[18px]">search</span>
+        <input id="settings-search" oninput="filterSettings(this.value)" class="w-56 h-10 pl-9 pr-3 rounded-full bg-surface-container-low text-on-surface placeholder:text-outline text-[12px] focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search settings..." type="search"/>
+      </div>
+      
+      <button onclick="resetCurrentSettings()" class="min-h-[40px] px-3.5 rounded-full bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface text-[12px] font-semibold flex items-center gap-1.5 transition-colors shadow-sm" title="Restore defaults for this section">
+        <span class="material-symbols-outlined text-[17px]">restart_alt</span>
+        <span class="hidden md:inline">Reset Section</span>
+      </button>
+
+      <button onclick="toggleDarkMode()" class="min-w-[40px] min-h-[40px] rounded-full bg-surface-container-low hover:bg-surface-container flex items-center justify-center text-secondary hover:text-on-surface transition-colors" title="Toggle Theme Preview">
+        <span class="material-symbols-outlined text-[20px]" id="theme-btn-icon">dark_mode</span>
+      </button>
+
+      <!-- Creator Badge Quick Link -->
+      <button onclick="switchCategory('about')" class="min-h-[40px] px-3.5 rounded-full bg-primary-fixed text-on-primary-fixed hover:bg-primary-container hover:text-white transition-all flex items-center gap-2 shadow-sm" title="View Creator & Credits">
+        <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[11px] font-bold">OP</span>
+        <span class="text-[12px] font-bold">Omkar Patil</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Two-Column Settings Workspace (Tablet 16:10 Master) -->
+  <main class="w-full pt-20 pb-28 px-6 bg-surface flex-1">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- LEFT COLUMN: Categories Navigation Rail / List (Cols 4) -->
+      <div class="lg:col-span-4 flex flex-col gap-2 sticky top-20">
+        <div class="p-3 bg-surface-container-lowest rounded-3xl shadow-sm border border-outline-variant/30">
+          <div class="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center justify-between">
+            <span>Categories</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-mono font-semibold">8 Sections</span>
+          </div>
+
+          <div class="flex flex-col gap-1 mt-1" id="category-nav-list">
+            
+            <!-- 1. Appearance & Personalization -->
+            <button onclick="switchCategory('appearance')" id="nav-btn-appearance" class="cat-nav-btn w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all bg-primary-container text-white shadow-sm font-semibold">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-white/20 text-white flex-shrink-0">
+                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">palette</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[13px] font-title leading-tight font-bold">Appearance & Personalization</div>
+                <div class="text-[11px] opacity-80 truncate">Theme, accent, glass, corner radius</div>
+              </div>
+              <span class="material-symbols-outlined text-[18px] opacity-70">chevron_right</span>
+            </button>
+
+            <!-- 2. Playback & Gestures -->
+            <button onclick="switchCategory('playback')" id="nav-btn-playback" class="cat-nav-btn w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all hover:bg-surface-container-low text-on-surface">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-surface-container text-primary flex-shrink-0">
+                <span class="material-symbols-outlined text-[20px]">gesture</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[13px] font-title leading-tight font-bold">Playback & Gestures</div>
+                <div class="text-[11px] text-secondary truncate">Double-tap, seek, PiP, swipe HUD</div>
+              </div>
+              <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+            </button>
+
+            <!-- 3. Audio -->
+            <button onclick="switchCategory('audio')" id="nav-btn-audio" class="cat-nav-btn w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all hover:bg-surface-container-low text-on-surface">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-surface-container text-primary flex-shrink-0">
+                <span class="material-symbols-outlined text-[20px]">audiotrack</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[13px] font-title leading-tight font-bold">Audio & Output</div>
+                <div class="text-[11px] text-secondary truncate">Preferred track, downmix, delay offset</div>
+              </div>
+              <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+            </button>
+
+            <!-- 4. Subtitles -->
+            <button onclick="switchCategory('subtitles')" id="nav-btn-subtitles" class="cat-nav-btn w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all hover:bg-surface-container-low text-on-surface">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-surface-container text-primary flex-shrink-0">
+                <span class="material-symbols-outlined text-[20px]">subtitles</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[13px] font-title leading-tight font-bold">Subtitles</div>
+                <div class="text-[11px] text-secondary truncate">Typography, styled ASS, synchronization</div>
+              </div>
+              <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+            </button>
+
+            <!-- 5. Video & Performance -->
+            <button onclick="switchCategory('performance')" id="nav-btn-performance" class="cat-nav-btn w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all hover:bg-surface-container-low text-on-surface">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-surface-container text-primary flex-shrink-0">
+                <span class="material-symbols-outlined text-[20px]">speed</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[13px] font-title leading-tight font-bold">Video & Performance</div>
+                <div class="text-[11px] text-secondary truncate">HW acceleration, refresh rate, decoders</div>
+              </div>
+              <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+            </button>
+
+            <!-- 6. Library & Storage -->
+            <button onclick="switchCategory('library')" id="nav-btn-library" class="cat-nav-btn w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all hover:bg-surface-container-low text-on-surface">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-surface-container text-primary flex-shrink-0">
+                <span class="material-symbols-outlined text-[20px]">folder_special</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[13px] font-title leading-tight font-bold">Library & Storage</div>
+                <div class="text-[11px] text-secondary truncate">Folders, cache cleanup, duplicates, scan</div>
+              </div>
+              <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+            </button>
+
+            <!-- 7. Privacy & Offline Experience -->
+            <button onclick="switchCategory('privacy')" id="nav-btn-privacy" class="cat-nav-btn w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all hover:bg-surface-container-low text-on-surface">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-surface-container text-primary flex-shrink-0">
+                <span class="material-symbols-outlined text-[20px]">lock</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[13px] font-title leading-tight font-bold">Privacy & Offline Data</div>
+                <div class="text-[11px] text-secondary truncate">Zero-tracking, local history, permissions</div>
+              </div>
+              <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+            </button>
+
+            <!-- 8. About Me & Credits (Hero section) -->
+            <button onclick="switchCategory('about')" id="nav-btn-about" class="cat-nav-btn w-full min-h-[54px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all mt-1 bg-gradient-to-r from-secondary-container to-surface-container-low text-on-secondary-fixed hover:shadow-sm">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-primary text-white flex-shrink-0 shadow-sm">
+                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">person</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[13px] font-title leading-tight font-bold text-primary">About Me & Credits</div>
+                <div class="text-[11px] text-secondary truncate font-medium">Created by Omkar Patil</div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono text-[10px] font-bold">v2.4</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Quick Storage & System Summary Card -->
+        <div class="p-4 rounded-3xl bg-surface-container-low/70 border border-outline-variant/30 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm">
+              <span class="material-symbols-outlined text-[22px]">memory</span>
+            </div>
+            <div>
+              <div class="text-[12px] font-bold text-on-surface">Offline Storage Ready</div>
+              <div class="text-[11px] text-secondary font-mono">53.2 GB Free • UFS 3.1</div>
+            </div>
+          </div>
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="Engine Healthy"></span>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Detailed Settings Panels (Cols 8) -->
+      <div class="lg:col-span-8 flex flex-col gap-6">
+
+        <!-- ========================================================
+             PANEL 1: APPEARANCE & PERSONALIZATION
+             ======================================================== -->
+        <section id="panel-appearance" class="settings-panel flex flex-col gap-6">
+          
+          <!-- Section Banner -->
+          <div class="p-6 rounded-3xl bg-gradient-to-br from-surface-container-lowest via-surface-container-low to-secondary-container/30 border border-outline-variant/30 shadow-sm relative overflow-hidden">
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span class="px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-title text-[11px] font-bold tracking-wide uppercase">Customization Core</span>
+                <h2 class="font-display text-[24px] font-bold text-on-surface tracking-tight mt-1">Appearance & Personalization</h2>
+                <p class="text-[13px] text-secondary max-w-xl mt-1 leading-relaxed">
+                  Tailor Jadzumi Video's Material 3 Expressive surfaces, tactile roundness, and frosted glass intensity for your Xiaomi Pad 5.
+                </p>
+              </div>
+              <button onclick="resetSectionAppearance()" class="min-h-[44px] px-4 rounded-full bg-surface-container-lowest hover:bg-surface-container text-primary font-title text-[12px] font-bold flex items-center gap-2 shadow-sm transition-all self-start sm:self-auto active:scale-95">
+                <span class="material-symbols-outlined text-[18px]">cached</span>
+                <span>Reset Appearance</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Customization Preview Card -->
+          <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[20px]">preview</span>
+                <span class="font-title text-[14px] font-bold text-on-surface">Live Interface Component Preview</span>
+              </div>
+              <span class="text-[11px] font-mono text-outline">Renders instantly</span>
+            </div>
+
+            <div id="live-preview-box" class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/20 transition-all flex flex-col sm:flex-row items-center gap-4 justify-between">
+              <div class="flex items-center gap-3 min-w-0">
+                <div id="preview-art-box" class="w-14 h-14 rounded-2xl bg-cover bg-center flex-shrink-0 shadow-sm border border-white/50" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCIDXBsdBVZAW7ukDMpJv8TvvAZ5muMl9myLFJKBFGeszc9b1iK4EJVbk9Ia0e6YgRN8uXGJvbzca7k71jmJEBnRXjJB34fLgMeC7ARmrVmoAd9CyEa-QlzS87ZQzilap6kFEj3WRtvSD_Og9Mr3b31nlfKgRETN1nmavcnakh4ulOpe3nTaQc5UPa8ja4VJMO9ldr5RvaLgCjml2wTJihnZFhYk62uIxMCwRFfgql0kT8ThEQhXOvT');"></div>
+                <div class="min-w-0">
+                  <div id="preview-pill" class="inline-block px-2 py-0.5 rounded-full bg-primary-container text-white text-[10px] font-bold">FEATURED DEMO</div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface truncate mt-0.5">Interstellar Horizons: The Odyssey</h4>
+                  <div class="text-[11px] text-secondary font-mono">4K UHD • 14.2 GB • Matroska</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <button id="preview-btn-primary" class="min-h-[44px] px-4 rounded-full bg-primary-container text-white text-[12px] font-bold shadow-md flex items-center gap-1.5 transition-all">
+                  <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                  <span>Play Demo</span>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm">
+                  <span class="material-symbols-outlined text-[20px]">favorite</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Theme Mode Switcher -->
+          <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+            <div>
+              <h3 class="font-title text-[15px] font-bold text-on-surface">Base Theme & Display Mode</h3>
+              <p class="text-[12px] text-secondary">Switch between airy light, deep midnight dark, or pure battery-saving AMOLED.</p>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <!-- Light -->
+              <button onclick="setThemeMode('light')" id="theme-card-light" class="theme-mode-btn p-3.5 rounded-2xl border-2 border-primary bg-primary-fixed/20 text-on-surface flex flex-col items-center gap-2 transition-all">
+                <div class="w-10 h-10 rounded-xl bg-white border border-outline-variant/30 flex items-center justify-center text-amber-500 shadow-sm">
+                  <span class="material-symbols-outlined text-[22px]">light_mode</span>
+                </div>
+                <span class="font-title text-[13px] font-bold">Light (Airy)</span>
+                <span class="text-[10px] text-primary font-semibold">Active Mode</span>
+              </button>
+
+              <!-- Dark -->
+              <button onclick="setThemeMode('dark')" id="theme-card-dark" class="theme-mode-btn p-3.5 rounded-2xl border-2 border-transparent bg-surface-container-low text-on-surface flex flex-col items-center gap-2 hover:bg-surface-container transition-all">
+                <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-blue-400 shadow-sm">
+                  <span class="material-symbols-outlined text-[22px]">dark_mode</span>
+                </div>
+                <span class="font-title text-[13px] font-bold">Dark Slate</span>
+                <span class="text-[10px] text-secondary">Night Cinema</span>
+              </button>
+
+              <!-- AMOLED Pure Black -->
+              <button onclick="setThemeMode('amoled')" id="theme-card-amoled" class="theme-mode-btn p-3.5 rounded-2xl border-2 border-transparent bg-surface-container-low text-on-surface flex flex-col items-center gap-2 hover:bg-surface-container transition-all">
+                <div class="w-10 h-10 rounded-xl bg-black border border-neutral-800 flex items-center justify-center text-white shadow-sm">
+                  <span class="material-symbols-outlined text-[22px]">brightness_1</span>
+                </div>
+                <span class="font-title text-[13px] font-bold">AMOLED Black</span>
+                <span class="text-[10px] text-secondary">0% Pixel Draw</span>
+              </button>
+
+              <!-- Follow System -->
+              <button onclick="setThemeMode('system')" id="theme-card-system" class="theme-mode-btn p-3.5 rounded-2xl border-2 border-transparent bg-surface-container-low text-on-surface flex flex-col items-center gap-2 hover:bg-surface-container transition-all">
+                <div class="w-10 h-10 rounded-xl bg-surface-container-high border border-outline-variant/30 flex items-center justify-center text-primary shadow-sm">
+                  <span class="material-symbols-outlined text-[22px]">devices</span>
+                </div>
+                <span class="font-title text-[13px] font-bold">System Sync</span>
+                <span class="text-[10px] text-secondary">Auto Time Switch</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Color Accents & Material You Palette -->
+          <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-title text-[15px] font-bold text-on-surface">Material You & Accent Color</h3>
+                <p class="text-[12px] text-secondary">Curated expressive palettes designed for cinema playback.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <label class="text-[12px] font-medium text-secondary">Dynamic Wallpaper Seed</label>
+                <input type="checkbox" checked class="w-5 h-5 rounded-md text-primary focus:ring-primary/20 accent-primary" id="dyn-color-toggle"/>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 overflow-x-auto py-1">
+              <!-- Pale Blue / Electric Aura (Default) -->
+              <button onclick="setAccentColor('#1a73e8', 'Jadzumi Blue')" class="accent-btn flex items-center gap-2 px-3.5 py-2 rounded-full border-2 border-primary bg-primary-fixed/20 text-on-surface transition-all">
+                <span class="w-5 h-5 rounded-full bg-[#1a73e8] shadow-sm flex items-center justify-center text-white text-[10px]">✓</span>
+                <span class="font-title text-[12px] font-bold">Jadzumi Pale Blue</span>
+              </button>
+              
+              <!-- Ocean Cyan -->
+              <button onclick="setAccentColor('#00838f', 'Ocean Cyan')" class="accent-btn flex items-center gap-2 px-3.5 py-2 rounded-full border-2 border-transparent bg-surface-container-low hover:bg-surface-container text-on-surface transition-all">
+                <span class="w-5 h-5 rounded-full bg-[#00838f] shadow-sm"></span>
+                <span class="font-title text-[12px] font-bold">Ocean Cyan</span>
+              </button>
+
+              <!-- Deep Violet -->
+              <button onclick="setAccentColor('#6750a4', 'Neo Violet')" class="accent-btn flex items-center gap-2 px-3.5 py-2 rounded-full border-2 border-transparent bg-surface-container-low hover:bg-surface-container text-on-surface transition-all">
+                <span class="w-5 h-5 rounded-full bg-[#6750a4] shadow-sm"></span>
+                <span class="font-title text-[12px] font-bold">Neo Violet</span>
+              </button>
+
+              <!-- Emerald Anime -->
+              <button onclick="setAccentColor('#006c4c', 'Anime Mint')" class="accent-btn flex items-center gap-2 px-3.5 py-2 rounded-full border-2 border-transparent bg-surface-container-low hover:bg-surface-container text-on-surface transition-all">
+                <span class="w-5 h-5 rounded-full bg-[#006c4c] shadow-sm"></span>
+                <span class="font-title text-[12px] font-bold">Anime Mint</span>
+              </button>
+
+              <!-- Amber Horizon -->
+              <button onclick="setAccentColor('#b35400', 'Solar Amber')" class="accent-btn flex items-center gap-2 px-3.5 py-2 rounded-full border-2 border-transparent bg-surface-container-low hover:bg-surface-container text-on-surface transition-all">
+                <span class="w-5 h-5 rounded-full bg-[#b35400] shadow-sm"></span>
+                <span class="font-title text-[12px] font-bold">Solar Amber</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Glassmorphism, Corners & Motion Sliders -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- Frosted Glass Intensity -->
+            <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col justify-between gap-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Frosted Glass Blur</h4>
+                  <p class="text-[11px] text-secondary">Controls backdrop-filter blur on floating player & rail.</p>
+                </div>
+                <span id="glass-value-label" class="font-mono text-[12px] font-bold text-primary px-2.5 py-1 rounded-full bg-secondary-container">24px</span>
+              </div>
+              <input type="range" min="0" max="48" value="24" oninput="updateGlassBlur(this.value)" class="w-full accent-primary h-2 bg-surface-container rounded-lg cursor-pointer"/>
+              <div class="flex justify-between text-[10px] text-outline font-mono">
+                <span>0px (Opaque)</span>
+                <span>24px (Approved)</span>
+                <span>48px (Ultra Frost)</span>
+              </div>
+            </div>
+
+            <!-- Corner Roundness Preference -->
+            <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col justify-between gap-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Corner Roundness</h4>
+                  <p class="text-[11px] text-secondary">Card corner curvature scale.</p>
+                </div>
+                <span id="radius-value-label" class="font-mono text-[12px] font-bold text-primary px-2.5 py-1 rounded-full bg-secondary-container">Expressive (28px)</span>
+              </div>
+              <input type="range" min="12" max="36" value="28" oninput="updateCornerRadius(this.value)" class="w-full accent-primary h-2 bg-surface-container rounded-lg cursor-pointer"/>
+              <div class="flex justify-between text-[10px] text-outline font-mono">
+                <span>12px (Subtle)</span>
+                <span>28px (Approved)</span>
+                <span>36px (Pill Soft)</span>
+              </div>
+            </div>
+
+            <!-- Animation & Motion Preference -->
+            <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col justify-between gap-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Motion & Transitions</h4>
+                  <p class="text-[11px] text-secondary">Spring curves & fluid scale physics.</p>
+                </div>
+                <span class="font-mono text-[11px] font-bold text-emerald-700 px-2 py-0.5 rounded-full bg-emerald-100">120Hz Fluid</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="setMotionMode('fluid')" id="motion-btn-fluid" class="flex-1 min-h-[44px] rounded-xl bg-primary-container text-white font-title text-[12px] font-bold shadow-sm">Expressive Springs</button>
+                <button onclick="setMotionMode('reduced')" id="motion-btn-reduced" class="flex-1 min-h-[44px] rounded-xl bg-surface-container-low text-secondary font-title text-[12px] font-medium hover:bg-surface-container">Reduced Motion</button>
+              </div>
+            </div>
+
+            <!-- Layout Density -->
+            <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col justify-between gap-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Layout Density</h4>
+                  <p class="text-[11px] text-secondary">Item padding in Library & Folders.</p>
+                </div>
+                <span class="font-mono text-[11px] font-bold text-primary px-2 py-0.5 rounded-full bg-secondary-container">Comfortable</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="flex-1 min-h-[44px] rounded-xl bg-primary-container text-white font-title text-[12px] font-bold shadow-sm">Comfortable (48dp)</button>
+                <button class="flex-1 min-h-[44px] rounded-xl bg-surface-container-low text-secondary font-title text-[12px] font-medium hover:bg-surface-container">Compact</button>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ========================================================
+             PANEL 2: PLAYBACK & GESTURES
+             ======================================================== -->
+        <section id="panel-playback" class="settings-panel hidden flex flex-col gap-6">
+          <div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm">
+            <h2 class="font-display text-[22px] font-bold text-on-surface tracking-tight">Playback & Gestures</h2>
+            <p class="text-[13px] text-secondary mt-1">Configure seeking gestures, touch locks, autoplay, and tablet touch controls.</p>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <!-- Autoplay Next Episode -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-surface-container text-primary flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">skip_next</span>
+                </div>
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Autoplay Next Episode</h4>
+                  <p class="text-[11px] text-secondary">Automatically queue next episode in TV Shows & Anime series.</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer"/>
+                <div class="w-12 h-7 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+              </label>
+            </div>
+
+            <!-- Resume Playback Preferences -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-surface-container text-primary flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">history</span>
+                </div>
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Auto-Resume at Saved Timestamp</h4>
+                  <p class="text-[11px] text-secondary">Resume from exact second without prompting if watched &gt; 2%.</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer"/>
+                <div class="w-12 h-7 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+              </label>
+            </div>
+
+            <!-- Double Tap Seek Duration -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-surface-container text-primary flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">touch_app</span>
+                </div>
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Double-Tap Seek Duration</h4>
+                  <p class="text-[11px] text-secondary">Seek offset when double-tapping left or right screen half.</p>
+                </div>
+              </div>
+              <select class="min-h-[44px] px-4 rounded-xl bg-surface-container-low border-0 text-on-surface font-title text-[12px] font-bold focus:ring-2 focus:ring-primary/20">
+                <option>5 seconds</option>
+                <option selected>10 seconds (Approved Default)</option>
+                <option>15 seconds</option>
+                <option>30 seconds</option>
+              </select>
+            </div>
+
+            <!-- Swipe Brightness & Volume Gestures -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-surface-container text-primary flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">swipe_vertical</span>
+                </div>
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Swipe HUD Gestures</h4>
+                  <p class="text-[11px] text-secondary">Left vertical swipe controls display brightness, right controls audio volume.</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer"/>
+                <div class="w-12 h-7 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+              </label>
+            </div>
+
+            <!-- Gesture Sensitivity -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex flex-col justify-between gap-3 shadow-sm">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Swipe Gesture Sensitivity</h4>
+                  <p class="text-[11px] text-secondary">Calibrated for Xiaomi Pad 5 120Hz digitizer & SmartPen.</p>
+                </div>
+                <span class="font-mono text-[12px] font-bold text-primary px-2.5 py-1 rounded-full bg-secondary-container">Standard (1.0×)</span>
+              </div>
+              <input type="range" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full accent-primary h-2 bg-surface-container rounded-lg cursor-pointer"/>
+            </div>
+
+            <!-- Default Aspect Ratio & Auto-Hide Duration -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 shadow-sm flex flex-col gap-2">
+                <h4 class="font-title text-[13px] font-bold text-on-surface">Default Aspect Ratio Mode</h4>
+                <select class="w-full min-h-[44px] px-3 rounded-xl bg-surface-container-low border-0 text-[12px] font-medium">
+                  <option selected>Fit Screen (Respect Cinema Letterboxing)</option>
+                  <option>Original Resolution (1:1)</option>
+                  <option>Fill Screen (Crop to 16:10)</option>
+                  <option>Stretch</option>
+                </select>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 shadow-sm flex flex-col gap-2">
+                <h4 class="font-title text-[13px] font-bold text-on-surface">Controls Auto-Hide Inactivity</h4>
+                <select class="w-full min-h-[44px] px-3 rounded-xl bg-surface-container-low border-0 text-[12px] font-medium">
+                  <option>2 seconds</option>
+                  <option selected>3.5 seconds (Standard)</option>
+                  <option>5 seconds</option>
+                  <option>Never auto-hide</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANEL 3: AUDIO
+             ======================================================== -->
+        <section id="panel-audio" class="settings-panel hidden flex flex-col gap-6">
+          <div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm">
+            <h2 class="font-display text-[22px] font-bold text-on-surface tracking-tight">Audio & Surround Downmix</h2>
+            <p class="text-[13px] text-secondary mt-1">Configure track priorities, Xiaomi Pad 5 quad-speaker stereo downmixing, and AC-3 passthrough.</p>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <!-- Preferred Audio Language -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              <div>
+                <h4 class="font-title text-[14px] font-bold text-on-surface">Preferred Audio Stream Language</h4>
+                <p class="text-[11px] text-secondary">Automatically selects this language when opening multi-track MKV/MP4 files.</p>
+              </div>
+              <select class="min-h-[44px] px-4 rounded-xl bg-surface-container-low border-0 font-title text-[12px] font-bold">
+                <option>Original Track (File Default)</option>
+                <option selected>Japanese (Anime priority)</option>
+                <option>English</option>
+                <option>Spanish</option>
+                <option>French</option>
+              </select>
+            </div>
+
+            <!-- Quad-Speaker Stereo Downmix -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between shadow-sm">
+              <div>
+                <h4 class="font-title text-[14px] font-bold text-on-surface">Dolby Digital 5.1 / 7.1 Downmix to Stereo</h4>
+                <p class="text-[11px] text-secondary">Balanced dialogue center-channel extraction for Pad 5 quad speakers.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer"/>
+                <div class="w-12 h-7 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+              </label>
+            </div>
+
+            <!-- Audio Delay Offset Nudge -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex flex-col justify-between gap-3 shadow-sm">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Bluetooth Audio Sync Offset (Latency Nudge)</h4>
+                  <p class="text-[11px] text-secondary">Compensate for wireless earbud latency in milliseconds.</p>
+                </div>
+                <span class="font-mono text-[12px] font-bold text-primary px-2.5 py-1 rounded-full bg-secondary-container">0 ms</span>
+              </div>
+              <input type="range" min="-500" max="500" step="25" value="0" class="w-full accent-primary h-2 bg-surface-container rounded-lg cursor-pointer"/>
+              <div class="flex justify-between text-[10px] text-outline font-mono">
+                <span>-500 ms (Audio Ahead)</span>
+                <span>0 ms (In Sync)</span>
+                <span>+500 ms (Audio Delayed)</span>
+              </div>
+            </div>
+
+            <!-- Verified Codec Support Note -->
+            <div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex items-start gap-3">
+              <span class="material-symbols-outlined text-primary text-[20px] flex-shrink-0 mt-0.5">info</span>
+              <div class="text-[12px] text-secondary leading-relaxed">
+                <strong class="text-on-surface font-semibold">Offline Audio Transparency:</strong> Jadzumi Video utilizes native Android <code class="font-mono text-primary font-bold">MediaCodec</code> and FFmpeg software decoders. Dolby AC-3, E-AC-3, and FLAC 24-bit are decoded offline. Unverified spatial or proprietary Atmos claims are never synthesized.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANEL 4: SUBTITLES
+             ======================================================== -->
+        <section id="panel-subtitles" class="settings-panel hidden flex flex-col gap-6">
+          <div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm">
+            <h2 class="font-display text-[22px] font-bold text-on-surface tracking-tight">Subtitle Engine & Styling</h2>
+            <p class="text-[13px] text-secondary mt-1">Configure libass styled ASS rendering, custom font sizes, colors, and external SRT sync.</p>
+          </div>
+
+          <!-- Subtitle Live Preview Box -->
+          <div class="p-5 rounded-3xl bg-slate-950 border border-slate-800 shadow-sm flex flex-col items-center justify-center min-h-[140px] text-center relative overflow-hidden">
+            <div class="absolute top-2.5 left-3 px-2 py-0.5 rounded bg-white/10 text-white/70 font-mono text-[10px]">SUBTITLE PREVIEW</div>
+            <p id="sub-live-text" class="text-white text-[18px] font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] px-4">
+              "Commander, gravitational flux exceeds standard tolerance by 14.8 percent."
+            </p>
+            <div class="mt-2 text-[11px] text-white/50 font-mono">Rendered via libass v0.17.1 GPU Blit</div>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <!-- Preserve Embedded ASS Styling Switch -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between shadow-sm">
+              <div>
+                <h4 class="font-title text-[14px] font-bold text-on-surface">Preserve Embedded ASS/SSA Styles</h4>
+                <p class="text-[11px] text-secondary">Keep original typeset anime fonts, positioning, and color styling from MKV.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer"/>
+                <div class="w-12 h-7 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+              </label>
+            </div>
+
+            <!-- Subtitle Font Size Slider -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex flex-col justify-between gap-3 shadow-sm">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-title text-[14px] font-bold text-on-surface">Default Subtitle Size</h4>
+                  <p class="text-[11px] text-secondary">Applies to SRT & plain subtitle tracks.</p>
+                </div>
+                <span id="sub-size-label" class="font-mono text-[12px] font-bold text-primary px-2.5 py-1 rounded-full bg-secondary-container">18px</span>
+              </div>
+              <input type="range" min="12" max="32" value="18" oninput="updateSubSize(this.value)" class="w-full accent-primary h-2 bg-surface-container rounded-lg cursor-pointer"/>
+            </div>
+
+            <!-- Subtitle Color Selection -->
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              <div>
+                <h4 class="font-title text-[14px] font-bold text-on-surface">Subtitle Color & Outline</h4>
+                <p class="text-[11px] text-secondary">High contrast text fill over bright cinematic video frames.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="setSubColor('#ffffff')" class="w-8 h-8 rounded-full bg-white border-2 border-primary shadow-sm" title="Classic White"></button>
+                <button onclick="setSubColor('#fef08a')" class="w-8 h-8 rounded-full bg-yellow-200 border-2 border-transparent hover:border-primary shadow-sm" title="Cinema Yellow"></button>
+                <button onclick="setSubColor('#93c5fd')" class="w-8 h-8 rounded-full bg-blue-300 border-2 border-transparent hover:border-primary shadow-sm" title="Cool Cyan"></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANEL 5: VIDEO & PERFORMANCE
+             ======================================================== -->
+        <section id="panel-performance" class="settings-panel hidden flex flex-col gap-6">
+          <div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm">
+            <h2 class="font-display text-[22px] font-bold text-on-surface tracking-tight">Video & Hardware Acceleration</h2>
+            <p class="text-[13px] text-secondary mt-1">Configure MediaCodec HW+ hardware decoding, 120Hz display refresh, and battery profiles.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Hardware Acceleration -->
+            <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col justify-between gap-4">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">RECOMMENDED</span>
+                  <h4 class="font-title text-[15px] font-bold text-on-surface mt-1">Hardware Acceleration (HW+)</h4>
+                  <p class="text-[11px] text-secondary mt-0.5 leading-relaxed">Direct Qualcomm MediaCodec decoding for H.265 (HEVC), H.264 (AVC), and VP9.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input type="checkbox" checked class="sr-only peer"/>
+                  <div class="w-12 h-7 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+                </label>
+              </div>
+              <div class="text-[11px] font-mono text-outline">Codec pipeline: c2.qti.hevc.decoder</div>
+            </div>
+
+            <!-- Software Fallback -->
+            <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col justify-between gap-4">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-bold text-[10px]">FAIL-SAFE</span>
+                  <h4 class="font-title text-[15px] font-bold text-on-surface mt-1">Software Decoder Fallback</h4>
+                  <p class="text-[11px] text-secondary mt-0.5 leading-relaxed">Seamlessly switch to CPU FFmpeg if exotic 10-bit color profile fails.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input type="checkbox" checked class="sr-only peer"/>
+                  <div class="w-12 h-7 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+                </label>
+              </div>
+              <div class="text-[11px] font-mono text-outline">Fallback: FFmpeg v6.1 libavcodec</div>
+            </div>
+          </div>
+
+          <!-- Refresh Rate Sync (120Hz on Xiaomi Pad 5) -->
+          <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div>
+              <h4 class="font-title text-[14px] font-bold text-on-surface">Xiaomi Pad 5 Refresh Rate Synchronization</h4>
+              <p class="text-[11px] text-secondary">Match tablet display refresh rate to video frame cadence (24Hz / 60Hz / 120Hz UI).</p>
+            </div>
+            <select class="min-h-[44px] px-4 rounded-xl bg-surface-container-low border-0 font-title text-[12px] font-bold">
+              <option selected>120Hz Fluid UI + Judder-Free 24p</option>
+              <option>Strict 60Hz (Battery Saver)</option>
+              <option>Follow System Default</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANEL 6: LIBRARY & STORAGE
+             ======================================================== -->
+        <section id="panel-library" class="settings-panel hidden flex flex-col gap-6">
+          <div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm">
+            <h2 class="font-display text-[22px] font-bold text-on-surface tracking-tight">Library & Offline Storage</h2>
+            <p class="text-[13px] text-secondary mt-1">Manage scanned local video folders, metadata cache, and thumbnail storage.</p>
+          </div>
+
+          <!-- Monitored Storage Folders -->
+          <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-title text-[15px] font-bold text-on-surface">Monitored Storage Folders</h3>
+              <button class="min-h-[40px] px-3.5 rounded-full bg-primary-fixed text-on-primary-fixed hover:bg-primary hover:text-white font-title text-[12px] font-bold flex items-center gap-1.5 transition-colors">
+                <span class="material-symbols-outlined text-[18px]">create_new_folder</span>
+                <span>Add Folder</span>
+              </button>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <div class="p-3 rounded-2xl bg-surface-container-low flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-primary text-[22px]">folder</span>
+                  <div>
+                    <div class="font-mono text-[12px] font-bold text-on-surface">/storage/emulated/0/Movies/4K/</div>
+                    <div class="text-[11px] text-secondary">14.2 GB • 8 Files Cached</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Active</span>
+              </div>
+
+              <div class="p-3 rounded-2xl bg-surface-container-low flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-primary text-[22px]">folder</span>
+                  <div>
+                    <div class="font-mono text-[12px] font-bold text-on-surface">/storage/emulated/0/Anime/Chrono_Shift/</div>
+                    <div class="text-[11px] text-secondary">18.4 GB • 24 Episodes</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Active</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Non-Destructive Cache Management -->
+          <div class="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+            <h3 class="font-title text-[15px] font-bold text-on-surface">Cache & Temp Management</h3>
+            <p class="text-[12px] text-secondary">Clear temporary poster artwork and generated scrubbing thumbnails without deleting original videos.</p>
+
+            <div class="flex flex-wrap items-center gap-3 pt-1">
+              <button onclick="alert('Metadata & artwork cache cleared. Original video files remain 100% untouched.')" class="min-h-[44px] px-4 rounded-full bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface font-title text-[12px] font-semibold flex items-center gap-2 transition-colors">
+                <span class="material-symbols-outlined text-[18px]">cleaning_services</span>
+                <span>Clear Poster Cache (142 MB)</span>
+              </button>
+              <button onclick="alert('Scrubbing thumbnail cache cleared.')" class="min-h-[44px] px-4 rounded-full bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface font-title text-[12px] font-semibold flex items-center gap-2 transition-colors">
+                <span class="material-symbols-outlined text-[18px]">image</span>
+                <span>Clear Scrubber Thumbnails (85 MB)</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANEL 7: PRIVACY & OFFLINE EXPERIENCE
+             ======================================================== -->
+        <section id="panel-privacy" class="settings-panel hidden flex flex-col gap-6">
+          <div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm">
+            <h2 class="font-display text-[22px] font-bold text-on-surface tracking-tight">Privacy & Offline Guarantee</h2>
+            <p class="text-[13px] text-secondary mt-1">Jadzumi Video is strictly offline-first. Your personal videos never leave your tablet.</p>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between shadow-sm">
+              <div>
+                <h4 class="font-title text-[14px] font-bold text-on-surface">Zero Telemetry & Analytics</h4>
+                <p class="text-[11px] text-secondary">No background analytics, crash reporting pings, or user tracking.</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">100% Offline</span>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between shadow-sm">
+              <div>
+                <h4 class="font-title text-[14px] font-bold text-on-surface">Optional Online Metadata (TMDB) Lookup</h4>
+                <p class="text-[11px] text-secondary">Only fetches posters and episode descriptions when explicitly requested by user.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer"/>
+                <div class="w-12 h-7 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+              </label>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between shadow-sm">
+              <div>
+                <h4 class="font-title text-[14px] font-bold text-on-surface">Local Playback History</h4>
+                <p class="text-[11px] text-secondary">Stored strictly in local SQLite database on internal UFS 3.1 storage.</p>
+              </div>
+              <button onclick="alert('Playback history cleared.')" class="min-h-[40px] px-3.5 rounded-full bg-surface-container-low hover:bg-surface-container text-secondary text-[12px] font-semibold">
+                Clear History
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANEL 8: ABOUT ME & CREDITS (DEDICATED HERO EXPERIENCE)
+             ======================================================== -->
+        <section id="panel-about" class="settings-panel hidden flex flex-col gap-6">
+          
+          <!-- Master Cinematic Hero Card: App Identity & Tagline -->
+          <div class="p-8 rounded-3xl bg-gradient-to-br from-surface-container-lowest via-secondary-container/40 to-primary-fixed/30 border border-outline-variant/30 shadow-md relative overflow-hidden">
+            <div class="absolute -right-8 -bottom-8 w-64 h-64 rounded-full bg-primary-container/10 blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div class="flex items-center gap-5">
+                <div class="w-20 h-20 rounded-3xl bg-primary-container flex items-center justify-center text-white shadow-[0_8px_32px_-4px_rgba(26,115,232,0.4)] flex-shrink-0">
+                  <span class="material-symbols-outlined text-[44px]">play_arrow</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="font-display text-[32px] font-bold text-on-surface tracking-tight leading-tight">Jadzumi Video</h2>
+                    <span class="px-2.5 py-0.5 rounded-full bg-primary text-white font-mono text-[11px] font-bold shadow-sm">v2.4.0</span>
+                  </div>
+                  <p class="font-display text-[17px] text-primary font-semibold tracking-tight mt-0.5">"Your Cinema. Your Space."</p>
+                  <p class="text-[12px] text-secondary mt-1">Flagship Offline Video Player for Android Tablets & Smartphones</p>
+                </div>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-center gap-2.5 flex-shrink-0">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-lowest text-on-surface text-[12px] font-bold shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>Build 2408-Production
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-lowest text-on-surface text-[12px] font-bold shadow-sm">
+                  <span class="material-symbols-outlined text-[16px] text-primary">verified</span>M3 Expressive
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PROMINENT CREATOR RECOGNITION (VISUAL CENTERPIECE) -->
+          <div class="p-8 rounded-3xl bg-surface-container-lowest border-2 border-primary/40 shadow-lg relative overflow-hidden ring-4 ring-primary/5">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              
+              <div class="flex items-center gap-5">
+                <!-- Creator Avatar Badge with Glow -->
+                <div class="relative flex-shrink-0">
+                  <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center text-white text-[24px] font-display font-extrabold shadow-md ring-4 ring-primary/20">
+                    OP
+                  </div>
+                  <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center shadow-sm" title="Lead Architect">
+                    <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span class="px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-title text-[11px] font-bold uppercase tracking-wider">Product Vision & Creative Direction</span>
+                  <h3 class="font-display text-[26px] font-bold text-on-surface tracking-tight mt-1">Created by Omkar Patil</h3>
+                  <p class="text-[13px] text-secondary max-w-lg mt-1 leading-relaxed">
+                    Concept, creative direction, product vision, design decisions, and development guidance.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Badges -->
+              <div class="flex flex-col gap-2 w-full md:w-auto">
+                <div class="px-4 py-2 rounded-2xl bg-surface-container-low text-center">
+                  <span class="text-[11px] text-secondary font-medium">Platform Focus</span>
+                  <div class="text-[13px] font-bold text-primary font-title">Android Tablet & Mobile UI</div>
+                </div>
+                <div class="px-4 py-2 rounded-2xl bg-surface-container-low text-center">
+                  <span class="text-[11px] text-secondary font-medium">Design Standard</span>
+                  <div class="text-[13px] font-bold text-on-surface font-title">Material 3 Expressive</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Creator's Personal Message Quote Box -->
+            <div class="mt-6 p-5 rounded-2xl bg-surface-container-low/80 border-l-4 border-primary flex items-start gap-3.5">
+              <span class="material-symbols-outlined text-primary text-[28px] flex-shrink-0 opacity-80">format_quote</span>
+              <div>
+                <p class="text-[14px] text-on-surface font-body italic leading-relaxed">
+                  "Jadzumi Video was created with a simple vision: to make offline entertainment feel beautiful, effortless, and personal. Every detail is designed to bring a premium cinema experience to Android, without unnecessary complexity."
+                </p>
+                <div class="mt-2 text-[12px] font-title font-bold text-primary">— Omkar Patil</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI DEVELOPMENT ACKNOWLEDGMENTS (CLEARLY DISTINGUISHED) -->
+          <div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[18px]">smart_toy</span>
+                </div>
+                <div>
+                  <h4 class="font-title text-[16px] font-bold text-on-surface">Built with AI Assistance</h4>
+                  <p class="text-[12px] text-secondary">Acknowledging the AI-assisted design and development tools utilized during creation.</p>
+                </div>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed text-[11px] font-bold">Collaborative AI</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+              <div class="p-4 rounded-2xl bg-surface-container-low flex items-start gap-3">
+                <span class="material-symbols-outlined text-primary text-[22px] flex-shrink-0 mt-0.5">neurology</span>
+                <div>
+                  <div class="font-title text-[13px] font-bold text-on-surface">OpenAI GPT-6 & ChatGPT Work</div>
+                  <p class="text-[11px] text-secondary mt-0.5 leading-relaxed">
+                    Assisted in algorithmic structuring, architectural layout prototyping, and frontend component refinement.
+                  </p>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-surface-container-low flex items-start gap-3">
+                <span class="material-symbols-outlined text-primary text-[22px] flex-shrink-0 mt-0.5">auto_awesome</span>
+                <div>
+                  <div class="font-title text-[13px] font-bold text-on-surface">Astra 6 AI Acceleration</div>
+                  <p class="text-[11px] text-secondary mt-0.5 leading-relaxed">
+                    Assisted in mathematical verification of timestamps, tablet viewport ergonomics, and responsive tokens.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-outline leading-relaxed px-1">
+              * Note: AI models provided design and code assistance under the creative direction and product vision of Omkar Patil. No official corporate sponsorship or endorsement is implied.
+            </div>
+          </div>
+
+          <!-- Open-Source Libraries & Third-Party Engines -->
+          <div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+            <h4 class="font-title text-[15px] font-bold text-on-surface">Open-Source Engines & Licenses</h4>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div class="p-3 rounded-xl bg-surface-container-low text-center">
+                <div class="font-mono text-[12px] font-bold text-on-surface">libass</div>
+                <div class="text-[10px] text-secondary">ISC License (v0.17.1)</div>
+              </div>
+              <div class="p-3 rounded-xl bg-surface-container-low text-center">
+                <div class="font-mono text-[12px] font-bold text-on-surface">FFmpeg</div>
+                <div class="text-[10px] text-secondary">LGPL v2.1+ (v6.1.1)</div>
+              </div>
+              <div class="p-3 rounded-xl bg-surface-container-low text-center">
+                <div class="font-mono text-[12px] font-bold text-on-surface">MediaCodec</div>
+                <div class="text-[10px] text-secondary">Android Open Source</div>
+              </div>
+              <div class="p-3 rounded-xl bg-surface-container-low text-center">
+                <div class="font-mono text-[12px] font-bold text-on-surface">Material Web</div>
+                <div class="text-[10px] text-secondary">Apache 2.0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Elegant Footer Signature -->
+          <div class="py-6 flex flex-col items-center justify-center gap-1.5 text-center">
+            <div class="flex items-center gap-1.5 text-[12px] font-medium text-secondary">
+              <span>Made with care for cinema lovers</span>
+              <span>•</span>
+              <span class="text-primary font-bold">Jadzumi App Family</span>
+            </div>
+            <div class="text-[11px] text-outline">
+              © 2024 Jadzumi Video. All rights reserved. Designed for Xiaomi Pad 5 and Android devices.
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Interactive Prototype Logic -->
+<script>
+  let currentCategory = 'appearance';
+
+  function switchCategory(catId) {
+    currentCategory = catId;
+    
+    // Update active nav button
+    document.querySelectorAll('.cat-nav-btn').forEach(btn => {
+      btn.className = 'cat-nav-btn w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all hover:bg-surface-container-low text-on-surface';
+      const iconBox = btn.querySelector('div:first-child');
+      if (iconBox) iconBox.className = 'w-9 h-9 rounded-xl flex items-center justify-center bg-surface-container text-primary flex-shrink-0';
+      const chevron = btn.querySelector('.material-symbols-outlined:last-child');
+      if (chevron) chevron.className = 'material-symbols-outlined text-[18px] text-outline';
+    });
+
+    const activeBtn = document.getElementById('nav-btn-' + catId);
+    if (activeBtn) {
+      activeBtn.className = 'cat-nav-btn w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-left transition-all bg-primary-container text-white shadow-sm font-semibold';
+      const iconBox = activeBtn.querySelector('div:first-child');
+      if (iconBox) iconBox.className = 'w-9 h-9 rounded-xl flex items-center justify-center bg-white/20 text-white flex-shrink-0';
+      const chevron = activeBtn.querySelector('.material-symbols-outlined:last-child');
+      if (chevron) chevron.className = 'material-symbols-outlined text-[18px] opacity-70';
+    }
+
+    // Toggle panels
+    document.querySelectorAll('.settings-panel').forEach(panel => {
+      panel.classList.add('hidden');
+    });
+
+    const targetPanel = document.getElementById('panel-' + catId);
+    if (targetPanel) {
+      targetPanel.classList.remove('hidden');
+    }
+
+    // Update breadcrumb text
+    const breadcrumbNames = {
+      appearance: 'Appearance & Personalization',
+      playback: 'Playback & Gestures',
+      audio: 'Audio & Output',
+      subtitles: 'Subtitles & libass',
+      performance: 'Video & Performance',
+      library: 'Library & Storage',
+      privacy: 'Privacy & Offline Data',
+      about: 'About Me & Credits'
+    };
+    const bcElem = document.getElementById('active-cat-breadcrumb');
+    if (bcElem) bcElem.textContent = breadcrumbNames[catId] || 'Settings';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function setThemeMode(mode) {
+    document.querySelectorAll('.theme-mode-btn').forEach(b => {
+      b.className = 'theme-mode-btn p-3.5 rounded-2xl border-2 border-transparent bg-surface-container-low text-on-surface flex flex-col items-center gap-2 hover:bg-surface-container transition-all';
+      const indicator = b.querySelector('span:last-child');
+      if (indicator) indicator.className = 'text-[10px] text-secondary';
+    });
+
+    const activeCard = document.getElementById('theme-card-' + mode);
+    if (activeCard) {
+      activeCard.className = 'theme-mode-btn p-3.5 rounded-2xl border-2 border-primary bg-primary-fixed/20 text-on-surface flex flex-col items-center gap-2 transition-all';
+      const indicator = activeCard.querySelector('span:last-child');
+      if (indicator) {
+        indicator.className = 'text-[10px] text-primary font-semibold';
+        indicator.textContent = 'Active Mode';
+      }
+    }
+
+    const html = document.documentElement;
+    if (mode === 'dark' || mode === 'amoled') {
+      html.classList.add('dark');
+      document.body.style.backgroundColor = mode === 'amoled' ? '#000000' : '#0f172a';
+    } else {
+      html.classList.remove('dark');
+      document.body.style.backgroundColor = '#f7f9fc';
+    }
+  }
+
+  function toggleDarkMode() {
+    const isDark = document.documentElement.classList.contains('dark');
+    setThemeMode(isDark ? 'light' : 'dark');
+    document.getElementById('theme-btn-icon').textContent = isDark ? 'dark_mode' : 'light_mode';
+  }
+
+  function setAccentColor(hex, name) {
+    document.querySelectorAll('.accent-btn').forEach(btn => {
+      btn.className = 'accent-btn flex items-center gap-2 px-3.5 py-2 rounded-full border-2 border-transparent bg-surface-container-low hover:bg-surface-container text-on-surface transition-all';
+      const dot = btn.querySelector('span:first-child');
+      if (dot) dot.innerHTML = '';
+    });
+
+    event.currentTarget.className = 'accent-btn flex items-center gap-2 px-3.5 py-2 rounded-full border-2 border-primary bg-primary-fixed/20 text-on-surface transition-all';
+    const activeDot = event.currentTarget.querySelector('span:first-child');
+    if (activeDot) activeDot.innerHTML = '✓';
+
+    // Update live preview elements
+    const previewBtn = document.getElementById('preview-btn-primary');
+    if (previewBtn) previewBtn.style.backgroundColor = hex;
+    const previewPill = document.getElementById('preview-pill');
+    if (previewPill) previewPill.style.backgroundColor = hex;
+  }
+
+  function updateGlassBlur(val) {
+    document.getElementById('glass-value-label').textContent = val + 'px';
+    const previewBox = document.getElementById('live-preview-box');
+    if (previewBox) {
+      previewBox.style.backdropFilter = `blur(${val}px)`;
+      previewBox.style.webkitBackdropFilter = `blur(${val}px)`;
+    }
+  }
+
+  function updateCornerRadius(val) {
+    document.getElementById('radius-value-label').textContent = `${val}px Radius`;
+    const previewBox = document.getElementById('live-preview-box');
+    if (previewBox) previewBox.style.borderRadius = `${val}px`;
+    const previewArt = document.getElementById('preview-art-box');
+    if (previewArt) previewArt.style.borderRadius = `${Math.max(8, val - 8)}px`;
+  }
+
+  function setMotionMode(mode) {
+    const fluidBtn = document.getElementById('motion-btn-fluid');
+    const reducedBtn = document.getElementById('motion-btn-reduced');
+    if (mode === 'fluid') {
+      fluidBtn.className = 'flex-1 min-h-[44px] rounded-xl bg-primary-container text-white font-title text-[12px] font-bold shadow-sm';
+      reducedBtn.className = 'flex-1 min-h-[44px] rounded-xl bg-surface-container-low text-secondary font-title text-[12px] font-medium hover:bg-surface-container';
+    } else {
+      reducedBtn.className = 'flex-1 min-h-[44px] rounded-xl bg-primary-container text-white font-title text-[12px] font-bold shadow-sm';
+      fluidBtn.className = 'flex-1 min-h-[44px] rounded-xl bg-surface-container-low text-secondary font-title text-[12px] font-medium hover:bg-surface-container';
+    }
+  }
+
+  function updateSubSize(val) {
+    document.getElementById('sub-size-label').textContent = val + 'px';
+    const subText = document.getElementById('sub-live-text');
+    if (subText) subText.style.fontSize = val + 'px';
+  }
+
+  function setSubColor(color) {
+    const subText = document.getElementById('sub-live-text');
+    if (subText) subText.style.color = color;
+  }
+
+  function resetSectionAppearance() {
+    setThemeMode('light');
+    setAccentColor('#1a73e8', 'Jadzumi Blue');
+    updateGlassBlur(24);
+    updateCornerRadius(28);
+    setMotionMode('fluid');
+    alert('Appearance settings restored to Material 3 Expressive defaults.');
+  }
+
+  function resetCurrentSettings() {
+    alert(`Reset all demonstration parameters in "${currentCategory}" to factory standards.`);
+  }
+
+  function filterSettings(query) {
+    if (!query) return;
+    const q = query.toLowerCase();
+    if (q.includes('about') || q.includes('omkar') || q.includes('credit')) {
+      switchCategory('about');
+    } else if (q.includes('audio') || q.includes('sound') || q.includes('speaker') || q.includes('delay')) {
+      switchCategory('audio');
+    } else if (q.includes('sub') || q.includes('ass') || q.includes('srt') || q.includes('font')) {
+      switchCategory('subtitles');
+    } else if (q.includes('play') || q.includes('gesture') || q.includes('seek') || q.includes('pip')) {
+      switchCategory('playback');
+    } else if (q.includes('perf') || q.includes('hw') || q.includes('codec') || q.includes('120hz')) {
+      switchCategory('performance');
+    } else if (q.includes('storage') || q.includes('cache') || q.includes('folder')) {
+      switchCategory('library');
+    } else if (q.includes('priv') || q.includes('offline') || q.includes('history')) {
+      switchCategory('privacy');
+    } else {
+      switchCategory('appearance');
+    }
+  }
+</script>
+</body>
+</html>

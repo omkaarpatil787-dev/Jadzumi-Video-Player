@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_dashboard" name="shell-type"/>
+<title>Jadzumi Tablet Folders &amp; Media Refined</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#005bbf",
+            "primary-container": "#1a73e8",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#ffffff",
+            "primary-fixed": "#d8e2ff",
+            "on-primary-fixed": "#001a41",
+            "secondary": "#4f6075",
+            "secondary-container": "#d0e1fa",
+            "on-secondary-fixed": "#0b1d2f",
+            "surface": "#f7f9fc",
+            "surface-dim": "#d8dadd",
+            "surface-bright": "#f7f9fc",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f2f4f7",
+            "surface-container": "#eceef1",
+            "surface-container-high": "#e6e8eb",
+            "surface-container-highest": "#e0e3e6",
+            "on-surface": "#191c1e",
+            "on-surface-variant": "#414754",
+            "outline": "#727785",
+            "outline-variant": "#c1c6d6",
+            "background": "#f7f9fc"
+          },
+          borderRadius: {
+            "DEFAULT": "1rem",
+            "lg": "1.5rem",
+            "xl": "2rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2rem"
+          },
+          fontFamily: {
+            "headline-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "headline-sm": ["Plus Jakarta Sans", "sans-serif"],
+            "title-md": ["Plus Jakarta Sans", "sans-serif"],
+            "body-md": ["Inter", "sans-serif"],
+            "body-sm": ["Inter", "sans-serif"],
+            "label-timecode": ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-background font-body-md text-on-surface antialiased selection:bg-secondary-container">
+<!-- M3 Expressive Tablet Navigation Rail (Cleaned: No duplicate storage indicator, no redundant offline pill) -->
+<aside class="fixed left-0 top-0 h-full w-24 bg-surface-container-lowest/90 backdrop-blur-xl z-50 flex flex-col justify-between py-6 px-2 shadow-[0_1px_12px_rgba(26,115,232,0.06)] border-r border-outline-variant/30">
+<!-- Top Branding & Navigation Items -->
+<div class="flex flex-col items-center gap-6">
+<div class="flex flex-col items-center gap-1.5 cursor-pointer">
+<div class="w-12 h-12 rounded-2xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-[0_4px_16px_-2px_rgba(26,115,232,0.25)] hover:scale-105 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[26px]">play_arrow</span>
+</div>
+<span class="font-title-md text-[13px] font-bold text-on-surface tracking-tight">Jadzumi</span>
+</div>
+<!-- Navigation Targets (48dp Minimum Touch Targets) -->
+<nav class="flex flex-col items-center gap-2.5 w-full">
+<a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" data-path="library" href="#" title="Library">
+<div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[24px]">video_library</span>
+</div>
+<span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Library</span>
+</a>
+<a aria-current="page" class="flex flex-col items-center justify-center min-h-[52px] py-1.5 w-full rounded-2xl" data-path="folders-storage" href="#" title="Folders">
+<div class="w-14 h-9 rounded-full bg-secondary-container text-on-secondary-fixed font-title-md flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[24px]">folder_open</span>
+</div>
+<span class="text-[11px] font-semibold text-primary">Folders</span>
+</a>
+<a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" data-path="playlists" href="#" title="Playlists">
+<div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[24px]">queue_music</span>
+</div>
+<span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Playlists</span>
+</a>
+<a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" data-path="now-playing" href="#" title="Player">
+<div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[24px]">slow_motion_video</span>
+</div>
+<span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Player</span>
+</a>
+</nav>
+</div>
+<!-- Bottom Settings (Cleaned: Single settings touchpoint, no redundant avatar) -->
+<div class="flex flex-col items-center w-full px-1">
+<a class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors active:scale-95" data-path="settings" href="#" title="Settings &amp; Playback Diagnostics">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+</a>
+</div>
+</aside>
+<!-- Main View Container -->
+<div class="flex flex-col min-h-screen" style="padding-left: 6rem;">
+<!-- Top Tablet App Header (Cleaned: Single user avatar profile, sleek search) -->
+<header class="fixed top-0 right-0 h-16 bg-surface/85 backdrop-blur-xl z-40 flex items-center justify-between px-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.03)] border-b border-outline-variant/20" style="left: 6rem;">
+<div class="flex-1 max-w-md">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline text-[20px] pointer-events-none">search</span>
+<input class="w-full h-11 pl-11 pr-space-md rounded-full bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-[13px] border-0 focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search offline videos and folders..." type="search"/>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Sync Offline Folders">
+<span class="material-symbols-outlined text-[22px]">sync</span>
+</button>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" id="theme-toggle-btn" title="Toggle Theme">
+<span class="material-symbols-outlined text-[22px]">dark_mode</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="w-full pt-20 pb-32 px-space-lg bg-surface flex-1">
+<div class="max-w-7xl mx-auto w-full flex flex-col gap-6">
+<!-- Header Section: Clean title & primary folder actions -->
+<div class="flex flex-col gap-4">
+<div class="flex flex-wrap items-center justify-between gap-3">
+<div>
+<h1 class="font-headline-lg text-[28px] font-bold text-on-surface tracking-tight">Folders &amp; Storage</h1>
+<p class="text-[13px] text-on-surface-variant mt-0.5">Browse indexed local videos and attached storage directories</p>
+</div>
+<!-- Action Buttons (Kept Scan Media and Add Folder; Cache cleanup moved to Settings) -->
+<div class="flex items-center gap-2.5">
+<button class="min-h-[48px] px-5 rounded-full bg-primary-container text-on-primary-container font-title-md text-[14px] font-semibold flex items-center gap-2 shadow-[0_4px_12px_rgba(26,115,232,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[20px]">video_file</span>
+<span>Scan Media</span>
+</button>
+<button class="min-h-[48px] px-4 rounded-full bg-surface-container-high text-on-surface font-title-md text-[14px] font-semibold flex items-center gap-2 hover:bg-surface-container-highest transition-colors active:scale-95">
+<span class="material-symbols-outlined text-[20px]">create_new_folder</span>
+<span>Add Folder</span>
+</button>
+</div>
+</div>
+<!-- Dynamic Storage Cards: Internal Flash + Conditional USB OTG drive card -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Internal Storage Card (Clean, realistic values) -->
+<div class="p-4 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant/30 flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary shadow-xs">
+<span class="material-symbols-outlined text-[22px]">tablet_android</span>
+</div>
+<div>
+<h2 class="font-title-md text-[15px] text-on-surface font-semibold">Internal Storage</h2>
+<p class="text-[12px] text-on-surface-variant">97 Videos • 53.2 GB free</p>
+</div>
+</div>
+<span class="text-[12px] font-medium text-secondary font-label-timecode">74.8 / 128 GB</span>
+</div>
+<div class="mt-3">
+<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full w-[58.4%] transition-all duration-500"></div>
+</div>
+<div class="flex items-center justify-between mt-2 text-[11px] text-outline font-medium">
+<span>58% used</span>
+<a class="text-primary hover:underline font-semibold flex items-center gap-0.5" href="#" title="Manage storage folders">
+<span>Manage</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</a>
+</div>
+</div>
+</div>
+<!-- External Storage Card: Displayed only when connected; includes safe unmount -->
+<div class="p-4 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant/30 flex flex-col justify-between hover:shadow-md transition-all" id="usb-storage-card"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-fixed shadow-xs"><span class="material-symbols-outlined text-[22px]">usb</span></div><div><div class="flex items-center gap-1.5"><h2 class="font-title-md text-[15px] text-on-surface font-semibold">USB Drive (Simulated)</h2><span class="w-2 h-2 rounded-full bg-emerald-500" id="otg-status-indicator" title="Simulated Connection Active"></span></div><p class="text-[12px] text-on-surface-variant" id="otg-status-text">SanDisk Extreme • 41.6 GB free</p></div></div><span class="text-[12px] font-medium text-secondary font-label-timecode" id="otg-capacity-text">22.4 / 64 GB</span></div><div class="mt-3"><div class="w-full h-2 bg-surface-container rounded-full overflow-hidden" id="otg-bar-container"><div class="h-full bg-primary rounded-full w-[35%] transition-all duration-500"></div></div><div class="flex items-center justify-between mt-2 text-[11px] text-outline font-medium"><span id="otg-percent-text">35% used • OTG Connected</span><button class="text-secondary hover:text-error transition-colors flex items-center gap-1 font-semibold min-h-[32px] px-1" id="unmount-otg-btn" title="Simulate disconnect/reconnect"><span class="material-symbols-outlined text-[14px]">eject</span><span>Unmount</span></button></div></div></div>
+</div>
+</div>
+<!-- 16:10 Dual Pane Media Explorer: Spacious, Cleaned, & Focused -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Left Pane: Media Folders (5 Cols) -->
+<div class="lg:col-span-5 flex flex-col gap-3">
+<div class="flex items-center justify-between px-1">
+<h2 class="font-title-md text-[16px] text-on-surface font-bold">Local Folders</h2>
+<span class="text-[12px] text-outline font-medium" id="folder-count-label">4 Folders</span>
+</div>
+<!-- Folder List (Cleaned: Private folder hidden by default until configured in Settings) -->
+<div class="flex flex-col gap-2.5" id="folder-list">
+<!-- Folder 1: Movies (Active) -->
+<div class="folder-row cursor-pointer min-h-[64px] p-3 rounded-2xl bg-surface-container-lowest shadow-sm ring-2 ring-primary flex items-center justify-between transition-all hover:scale-[1.008] active:scale-[0.992]" data-folder="movies">
+<div class="flex items-center gap-3.5 min-w-0">
+<div class="relative w-13 h-13 rounded-xl overflow-hidden bg-surface-container flex-shrink-0 shadow-xs">
+<img alt="Movies thumbnail" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIDXBsdBVZAW7ukDMpJv8TvvAZ5muMl9myLFJKBFGeszc9b1iK4EJVbk9Ia0e6YgRN8uXGJvbzca7k71jmJEBnRXjJB34fLgMeC7ARmrVmoAd9CyEa-QlzS87ZQzilap6kFEj3WRtvSD_Og9Mr3b31nlfKgRETN1nmavcnakh4ulOpe3nTaQc5UPa8ja4VJMO9ldr5RvaLgCjml2wTJihnZFhYk62uIxMCwRFfgql0kT8ThEQhXOvT"/>
+</div>
+<div class="min-w-0">
+<h3 class="font-title-md text-[15px] font-bold text-on-surface truncate">Movies (4K HDR)</h3>
+<p class="text-[12px] text-on-surface-variant">28 Videos • 54.2 GB</p>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[22px] chevron-icon">chevron_right</span>
+</div>
+</div>
+<!-- Folder 2: Anime & Series -->
+<div class="folder-row cursor-pointer min-h-[64px] p-3 rounded-2xl bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/30 shadow-xs flex items-center justify-between transition-all hover:scale-[1.008] active:scale-[0.992]" data-folder="anime">
+<div class="flex items-center gap-3.5 min-w-0">
+<div class="relative w-13 h-13 rounded-xl overflow-hidden bg-surface-container flex-shrink-0 shadow-xs">
+<img alt="Anime thumbnail" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6EPcoZi4I_lM3NBuXLs4mqhDat5K8qPuAgKCXixf9t8Z7KnGdi_jNplpJtAmweAnKYgkGTsBz4WmVkv09tL2_PHovlJvy9CdddJ8_v2s5ByTnf1fKl3gavSQ-3UjIk6ELlNlF6ccDvgvmJ2YCJ3do_Yl_szRM7LtI1GsRfq6u5hhYbxiRNp_-u97ObLsOne997hA5TE-ejkTwqRQRGolOw8gUjf9Eo4XkjsZeeoHbXwy8YkSNCO5l"/>
+</div>
+<div class="min-w-0">
+<h3 class="font-title-md text-[15px] font-semibold text-on-surface truncate">Anime &amp; Series</h3>
+<p class="text-[12px] text-on-surface-variant">114 Episodes • 86.4 GB</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[22px] chevron-icon mr-1">chevron_right</span>
+</div>
+<!-- Folder 3: Camera Recordings -->
+<div class="folder-row cursor-pointer min-h-[64px] p-3 rounded-2xl bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/30 shadow-xs flex items-center justify-between transition-all hover:scale-[1.008] active:scale-[0.992]" data-folder="camera">
+<div class="flex items-center gap-3.5 min-w-0">
+<div class="w-13 h-13 rounded-xl bg-surface-container flex-shrink-0 flex items-center justify-center text-on-surface-variant shadow-xs">
+<span class="material-symbols-outlined text-[24px]">videocam</span>
+</div>
+<div class="min-w-0">
+<h3 class="font-title-md text-[15px] font-semibold text-on-surface truncate">Camera &amp; Screen Records</h3>
+<p class="text-[12px] text-on-surface-variant">45 Clips • 12.1 GB</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[22px] chevron-icon mr-1">chevron_right</span>
+</div>
+<!-- Folder 4: Offline Downloads -->
+<div class="folder-row cursor-pointer min-h-[64px] p-3 rounded-2xl bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/30 shadow-xs flex items-center justify-between transition-all hover:scale-[1.008] active:scale-[0.992]" data-folder="downloads">
+<div class="flex items-center gap-3.5 min-w-0">
+<div class="w-13 h-13 rounded-xl bg-surface-container flex-shrink-0 flex items-center justify-center text-on-surface-variant shadow-xs">
+<span class="material-symbols-outlined text-[24px]">download</span>
+</div>
+<div class="min-w-0">
+<h3 class="font-title-md text-[15px] font-semibold text-on-surface truncate">Offline Downloads</h3>
+<p class="text-[12px] text-on-surface-variant">18 Files • 22.8 GB</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[22px] chevron-icon mr-1">chevron_right</span>
+</div>
+</div>
+<!-- Contextual note on Private Folder accessibility in Settings -->
+</div>
+<!-- Right Pane: Active Folder & Video Content (7 Cols) -->
+<div class="lg:col-span-7 flex flex-col gap-4">
+<!-- Folder Header Card: Single Play All action, clean path & stats -->
+<div class="p-5 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant/30 flex flex-col gap-3">
+<div class="flex flex-wrap items-start justify-between gap-3">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-2">
+<span class="font-label-timecode text-[11px] text-outline truncate" id="active-folder-path">/storage/usbotg/SanDisk_SSD/Movies_4K</span>
+</div>
+<h2 class="font-headline-lg text-[22px] text-on-surface font-bold mt-1" id="active-folder-title">Movies (4K HDR)</h2>
+<p class="text-[13px] text-on-surface-variant mt-0.5" id="active-folder-subtitle">28 Videos • 56.4 hrs watch time</p>
+</div>
+<!-- Single primary Play All action + Folder Options menu -->
+<div class="flex items-center gap-2">
+<button class="min-h-[48px] px-5 rounded-full bg-primary text-on-primary font-title-md text-[14px] font-semibold flex items-center gap-2 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span>Play All</span>
+</button>
+<button class="min-w-[48px] min-h-[48px] rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors" title="Folder Options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Video Items Section -->
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between px-1">
+<h3 class="font-title-md text-[15px] font-bold text-on-surface" id="folder-videos-heading">Videos in Collection (3)</h3>
+<div class="flex items-center gap-2">
+<span class="text-[12px] text-outline font-medium">Sort: Recent</span>
+<button class="min-w-[44px] min-h-[44px] rounded-full hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors" title="Change Sort Order">
+<span class="material-symbols-outlined text-[19px]">sort</span>
+</button>
+</div>
+</div>
+<!-- Container for video item cards -->
+<div class="flex flex-col gap-3" id="video-items-container">
+<!-- Video Item 1: In Progress with tactile progress bar -->
+<div class="p-3.5 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 hover:shadow-md transition-all flex flex-col sm:flex-row items-center gap-4 group">
+<div class="relative w-full sm:w-52 aspect-[16/9] rounded-xl overflow-hidden bg-surface-container flex-shrink-0 shadow-xs cursor-pointer">
+<img alt="Interstellar Horizons movie thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIDXBsdBVZAW7ukDMpJv8TvvAZ5muMl9myLFJKBFGeszc9b1iK4EJVbk9Ia0e6YgRN8uXGJvbzca7k71jmJEBnRXjJB34fLgMeC7ARmrVmoAd9CyEa-QlzS87ZQzilap6kFEj3WRtvSD_Og9Mr3b31nlfKgRETN1nmavcnakh4ulOpe3nTaQc5UPa8ja4VJMO9ldr5RvaLgCjml2wTJihnZFhYk62uIxMCwRFfgql0kT8ThEQhXOvT"/>
+<span class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/75 text-white text-[10px] font-label-timecode backdrop-blur-xs">02:34:10</span>
+<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-medium backdrop-blur-xs">01:24:58 left</span>
+<!-- Tactile Progress Bar -->
+<div class="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
+<div class="h-full bg-primary-container" style="width: 45%;"></div>
+</div>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<div class="w-11 h-11 rounded-full bg-surface-container-lowest/95 text-primary flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+</div>
+<div class="flex-1 min-w-0 w-full flex flex-col justify-between py-0.5">
+<div>
+<div class="flex items-start justify-between gap-2">
+<h4 class="font-title-md text-[15px] font-bold text-on-surface truncate">Interstellar Horizons: The Odyssey</h4>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-outline hover:text-on-surface transition-colors -mr-2 -mt-2" title="More options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<p class="text-[12px] text-on-surface-variant line-clamp-1 mt-0.5">Resume at 01:09:12 • 4K • HDR10 • 01:24:58 remaining</p>
+</div>
+<div class="flex items-center justify-between pt-2 mt-1 border-t border-outline-variant/15">
+<div class="flex items-center gap-2 text-[12px]">
+<span class="font-label-timecode text-primary font-semibold">14.2 GB</span>
+<span class="text-outline">•</span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px] text-primary">closed_caption</span> Subs (3)
+                        </span>
+</div>
+<button class="min-h-[48px] px-5 rounded-full bg-primary text-on-primary font-title-md text-[13px] font-semibold hover:bg-primary-container transition-all flex items-center gap-1.5 shadow-xs active:scale-95">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Resume</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Video Item 2: Unplayed video -->
+<div class="p-3.5 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 hover:shadow-md transition-all flex flex-col sm:flex-row items-center gap-4 group">
+<div class="relative w-full sm:w-52 aspect-[16/9] rounded-xl overflow-hidden bg-surface-container flex-shrink-0 shadow-xs cursor-pointer">
+<img alt="Architectural Monoliths thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6EPcoZi4I_lM3NBuXLs4mqhDat5K8qPuAgKCXixf9t8Z7KnGdi_jNplpJtAmweAnKYgkGTsBz4WmVkv09tL2_PHovlJvy9CdddJ8_v2s5ByTnf1fKl3gavSQ-3UjIk6ELlNlF6ccDvgvmJ2YCJ3do_Yl_szRM7LtI1GsRfq6u5hhYbxiRNp_-u97ObLsOne997hA5TE-ejkTwqRQRGolOw8gUjf9Eo4XkjsZeeoHbXwy8YkSNCO5l"/>
+<span class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/75 text-white text-[10px] font-label-timecode backdrop-blur-xs">01:48:22</span>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<div class="w-11 h-11 rounded-full bg-surface-container-lowest/95 text-primary flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+</div>
+<div class="flex-1 min-w-0 w-full flex flex-col justify-between py-0.5">
+<div>
+<div class="flex items-start justify-between gap-2">
+<h4 class="font-title-md text-[15px] font-bold text-on-surface truncate">Architectural Monoliths &amp; Light</h4>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-outline hover:text-on-surface transition-colors -mr-2 -mt-2" title="More options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<p class="text-[12px] text-on-surface-variant line-clamp-1 mt-0.5">1080p • Stereo AAC</p>
+</div>
+<div class="flex items-center justify-between pt-2 mt-1 border-t border-outline-variant/15">
+<div class="flex items-center gap-2 text-[12px]">
+<span class="font-label-timecode text-primary font-semibold">8.9 GB</span>
+<span class="text-outline">•</span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px]">closed_caption</span> EN
+                        </span>
+</div>
+<button class="min-h-[48px] px-5 rounded-full bg-secondary-container text-on-secondary-fixed font-title-md text-[13px] font-semibold hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center gap-1.5 shadow-xs active:scale-95">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Play</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Video Item 3: Documentaries -->
+<div class="p-3.5 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 hover:shadow-md transition-all flex flex-col sm:flex-row items-center gap-4 group">
+<div class="relative w-full sm:w-52 aspect-[16/9] rounded-xl overflow-hidden bg-surface-container flex-shrink-0 shadow-xs cursor-pointer">
+<img alt="Silent Deep thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuxzn1EzAXnMxFu5_a-OP8slaOieRjwc2dt6Z4QvPqEAmovhvbaFMw_kGhhojNV__qS_dZAxrQcwY--NcTNOdwjbDArjeE8m2ACy5wcTluJtWMNuMbxXVof_TDH2gColEd86zlmFGPvK2V3xoL02RDyyD2bp_NkBzP1o7Y65k50nBx8L18CUoKbUdLAXaGXS9ksdfNqf0frZy8J0Ll-LpePJ11ttik9mxapxy4wnmM6A9ludIhPGNW"/>
+<span class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/75 text-white text-[10px] font-label-timecode backdrop-blur-xs">00:54:10</span>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<div class="w-11 h-11 rounded-full bg-surface-container-lowest/95 text-primary flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+</div>
+<div class="flex-1 min-w-0 w-full flex flex-col justify-between py-0.5">
+<div>
+<div class="flex items-start justify-between gap-2">
+<h4 class="font-title-md text-[15px] font-bold text-on-surface truncate">Silent Deep: Pelagic Migrations</h4>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-outline hover:text-on-surface transition-colors -mr-2 -mt-2" title="More options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<p class="text-[12px] text-on-surface-variant line-clamp-1 mt-0.5">1080p 60fps • Dolby Digital</p>
+</div>
+<div class="flex items-center justify-between pt-2 mt-1 border-t border-outline-variant/15">
+<div class="flex items-center gap-2 text-[12px]">
+<span class="font-label-timecode text-primary font-semibold">6.4 GB</span>
+<span class="text-outline">•</span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px]">closed_caption</span> EN / DE
+                        </span>
+</div>
+<button class="min-h-[48px] px-5 rounded-full bg-secondary-container text-on-secondary-fixed font-title-md text-[13px] font-semibold hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center gap-1.5 shadow-xs active:scale-95">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Play</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Persistent Floating Mini-Player (Material 3 Expressive, Dismissible, Touch-friendly) -->
+<aside class="fixed bottom-4 left-28 right-6 z-40 flex justify-center pointer-events-none" id="floating-mini-player">
+<div class="pointer-events-auto max-w-xl w-full p-2 px-4 rounded-full bg-surface-container-lowest/90 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_-4px_rgba(26,115,232,0.18)] flex items-center justify-between gap-3">
+<!-- Thumbnail & Title -->
+<div class="flex items-center gap-3 min-w-0 flex-1">
+<div class="relative w-11 h-11 rounded-xl overflow-hidden bg-surface-container flex-shrink-0 shadow-xs">
+<img alt="Now playing video thumbnail" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIDXBsdBVZAW7ukDMpJv8TvvAZ5muMl9myLFJKBFGeszc9b1iK4EJVbk9Ia0e6YgRN8uXGJvbzca7k71jmJEBnRXjJB34fLgMeC7ARmrVmoAd9CyEa-QlzS87ZQzilap6kFEj3WRtvSD_Og9Mr3b31nlfKgRETN1nmavcnakh4ulOpe3nTaQc5UPa8ja4VJMO9ldr5RvaLgCjml2wTJihnZFhYk62uIxMCwRFfgql0kT8ThEQhXOvT"/>
+</div>
+<div class="min-w-0 flex-1">
+<h4 class="font-title-md text-[13px] font-bold text-on-surface truncate leading-tight">Cosmos: The Invisible Architecture</h4>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-timecode text-[11px] text-primary font-semibold">18:42</span>
+<div class="w-24 h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full w-[34%]"></div>
+</div>
+<span class="font-label-timecode text-[11px] text-outline">54:10</span>
+</div>
+</div>
+</div>
+<!-- Controls (48dp Minimum Touch Targets) -->
+<div class="flex items-center gap-1 flex-shrink-0">
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Rewind 10 seconds">
+<span class="material-symbols-outlined text-[20px]">replay_10</span>
+</button>
+<button class="min-w-[48px] min-h-[48px] rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all" id="mini-play-toggle" title="Pause / Play">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Forward 10 seconds">
+<span class="material-symbols-outlined text-[20px]">forward_10</span>
+</button>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Open Fullscreen Player">
+<span class="material-symbols-outlined text-[20px]">fullscreen</span>
+</button>
+<button class="min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container transition-colors ml-1" id="mini-dismiss-btn" title="Dismiss Player">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Dynamic folder data
+      const folderData = {
+        movies: {
+          title: "Movies (4K HDR)",
+          path: "/storage/usbotg/SanDisk_SSD/Movies_4K",
+          subtitle: "28 Videos • 56.4 hrs watch time",
+          videosCount: "Videos in Collection (3)",
+          videos: [
+            {
+              title: "Interstellar Horizons: The Odyssey",
+              duration: "02:34:10",
+              timeLeft: "01:24:58 left",
+              progress: "45%",
+              img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCIDXBsdBVZAW7ukDMpJv8TvvAZ5muMl9myLFJKBFGeszc9b1iK4EJVbk9Ia0e6YgRN8uXGJvbzca7k71jmJEBnRXjJB34fLgMeC7ARmrVmoAd9CyEa-QlzS87ZQzilap6kFEj3WRtvSD_Og9Mr3b31nlfKgRETN1nmavcnakh4ulOpe3nTaQc5UPa8ja4VJMO9ldr5RvaLgCjml2wTJihnZFhYk62uIxMCwRFfgql0kT8ThEQhXOvT",
+              meta: "Resume at 01:09:12 • 4K • HDR10 • 01:24:58 remaining",
+              size: "14.2 GB",
+              subs: "Subs (3)",
+              isResume: true
+            },
+            {
+              title: "Architectural Monoliths & Light",
+              duration: "01:48:22",
+              timeLeft: "",
+              progress: "0%",
+              img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB6EPcoZi4I_lM3NBuXLs4mqhDat5K8qPuAgKCXixf9t8Z7KnGdi_jNplpJtAmweAnKYgkGTsBz4WmVkv09tL2_PHovlJvy9CdddJ8_v2s5ByTnf1fKl3gavSQ-3UjIk6ELlNlF6ccDvgvmJ2YCJ3do_Yl_szRM7LtI1GsRfq6u5hhYbxiRNp_-u97ObLsOne997hA5TE-ejkTwqRQRGolOw8gUjf9Eo4XkjsZeeoHbXwy8YkSNCO5l",
+              meta: "1080p • Stereo AAC",
+              size: "8.9 GB",
+              subs: "EN",
+              isResume: false
+            },
+            {
+              title: "Silent Deep: Pelagic Migrations",
+              duration: "00:54:10",
+              timeLeft: "",
+              progress: "0%",
+              img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCuxzn1EzAXnMxFu5_a-OP8slaOieRjwc2dt6Z4QvPqEAmovhvbaFMw_kGhhojNV__qS_dZAxrQcwY--NcTNOdwjbDArjeE8m2ACy5wcTluJtWMNuMbxXVof_TDH2gColEd86zlmFGPvK2V3xoL02RDyyD2bp_NkBzP1o7Y65k50nBx8L18CUoKbUdLAXaGXS9ksdfNqf0frZy8J0Ll-LpePJ11ttik9mxapxy4wnmM6A9ludIhPGNW",
+              meta: "1080p 60fps • Dolby Digital",
+              size: "6.4 GB",
+              subs: "EN / DE",
+              isResume: false
+            }
+          ]
+        },
+        anime: {
+          title: "Anime & Series",
+          path: "/storage/emulated/0/Movies/Anime",
+          subtitle: "114 Episodes • 86.4 GB stored",
+          videosCount: "Episodes in Collection (2)",
+          videos: [
+            {
+              title: "Neon Cybernetic Knights: Episode 12 - Genesis",
+              duration: "00:24:18",
+              timeLeft: "11m left",
+              progress: "48%",
+              img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB6EPcoZi4I_lM3NBuXLs4mqhDat5K8qPuAgKCXixf9t8Z7KnGdi_jNplpJtAmweAnKYgkGTsBz4WmVkv09tL2_PHovlJvy9CdddJ8_v2s5ByTnf1fKl3gavSQ-3UjIk6ELlNlF6ccDvgvmJ2YCJ3do_Yl_szRM7LtI1GsRfq6u5hhYbxiRNp_-u97ObLsOne997hA5TE-ejkTwqRQRGolOw8gUjf9Eo4XkjsZeeoHbXwy8YkSNCO5l",
+              meta: "Resume at 13:09 • 1080p • Dual-Audio",
+              size: "1.4 GB",
+              subs: "JP / EN",
+              isResume: true
+            },
+            {
+              title: "Neon Cybernetic Knights: Episode 11 - The Rift",
+              duration: "00:23:45",
+              timeLeft: "",
+              progress: "100%",
+              img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCIDXBsdBVZAW7ukDMpJv8TvvAZ5muMl9myLFJKBFGeszc9b1iK4EJVbk9Ia0e6YgRN8uXGJvbzca7k71jmJEBnRXjJB34fLgMeC7ARmrVmoAd9CyEa-QlzS87ZQzilap6kFEj3WRtvSD_Og9Mr3b31nlfKgRETN1nmavcnakh4ulOpe3nTaQc5UPa8ja4VJMO9ldr5RvaLgCjml2wTJihnZFhYk62uIxMCwRFfgql0kT8ThEQhXOvT",
+              meta: "Completed • 1080p",
+              size: "1.3 GB",
+              subs: "JP / EN",
+              isResume: false
+            }
+          ]
+        },
+        camera: {
+          title: "Camera & Screen Records",
+          path: "/storage/emulated/0/DCIM/Camera",
+          subtitle: "45 Clips • 12.1 GB internal storage",
+          videosCount: "Recorded Clips (2)",
+          videos: [
+            {
+              title: "ScreenRecorder_20250224_Pad5_Gaming.mp4",
+              duration: "00:15:32",
+              timeLeft: "",
+              progress: "0%",
+              img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCuxzn1EzAXnMxFu5_a-OP8slaOieRjwc2dt6Z4QvPqEAmovhvbaFMw_kGhhojNV__qS_dZAxrQcwY--NcTNOdwjbDArjeE8m2ACy5wcTluJtWMNuMbxXVof_TDH2gColEd86zlmFGPvK2V3xoL02RDyyD2bp_NkBzP1o7Y65k50nBx8L18CUoKbUdLAXaGXS9ksdfNqf0frZy8J0Ll-LpePJ11ttik9mxapxy4wnmM6A9ludIhPGNW",
+              meta: "1080p 60fps • 20 Mbps",
+              size: "2.1 GB",
+              subs: "None",
+              isResume: false
+            },
+            {
+              title: "VID_20250220_143022_Landscape_Outdoor.mp4",
+              duration: "00:08:44",
+              timeLeft: "",
+              progress: "0%",
+              img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCIDXBsdBVZAW7ukDMpJv8TvvAZ5muMl9myLFJKBFGeszc9b1iK4EJVbk9Ia0e6YgRN8uXGJvbzca7k71jmJEBnRXjJB34fLgMeC7ARmrVmoAd9CyEa-QlzS87ZQzilap6kFEj3WRtvSD_Og9Mr3b31nlfKgRETN1nmavcnakh4ulOpe3nTaQc5UPa8ja4VJMO9ldr5RvaLgCjml2wTJihnZFhYk62uIxMCwRFfgql0kT8ThEQhXOvT",
+              meta: "4K 30fps • Stabilized",
+              size: "1.8 GB",
+              subs: "None",
+              isResume: false
+            }
+          ]
+        },
+        downloads: {
+          title: "Offline Downloads",
+          path: "/storage/emulated/0/Download/Jadzumi",
+          subtitle: "18 Files • 22.8 GB ready for offline playback",
+          videosCount: "Downloaded Files (2)",
+          videos: [
+            {
+              title: "Cosmos: The Invisible Architecture",
+              duration: "00:54:10",
+              timeLeft: "35m left",
+              progress: "34%",
+              img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCIDXBsdBVZAW7ukDMpJv8TvvAZ5muMl9myLFJKBFGeszc9b1iK4EJVbk9Ia0e6YgRN8uXGJvbzca7k71jmJEBnRXjJB34fLgMeC7ARmrVmoAd9CyEa-QlzS87ZQzilap6kFEj3WRtvSD_Og9Mr3b31nlfKgRETN1nmavcnakh4ulOpe3nTaQc5UPa8ja4VJMO9ldr5RvaLgCjml2wTJihnZFhYk62uIxMCwRFfgql0kT8ThEQhXOvT",
+              meta: "Now Playing in Mini Player • 4K",
+              size: "4.8 GB",
+              subs: "EN / ES",
+              isResume: true
+            },
+            {
+              title: "Deep Sea Frontiers: Pelagic Trenches",
+              duration: "00:45:00",
+              timeLeft: "",
+              progress: "0%",
+              img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCuxzn1EzAXnMxFu5_a-OP8slaOieRjwc2dt6Z4QvPqEAmovhvbaFMw_kGhhojNV__qS_dZAxrQcwY--NcTNOdwjbDArjeE8m2ACy5wcTluJtWMNuMbxXVof_TDH2gColEd86zlmFGPvK2V3xoL02RDyyD2bp_NkBzP1o7Y65k50nBx8L18CUoKbUdLAXaGXS9ksdfNqf0frZy8J0Ll-LpePJ11ttik9mxapxy4wnmM6A9ludIhPGNW",
+              meta: "1080p • Web Optimized",
+              size: "2.4 GB",
+              subs: "EN",
+              isResume: false
+            }
+          ]
+        }
+      };
+
+      const folderRows = document.querySelectorAll('.folder-row');
+      const titleElem = document.getElementById('active-folder-title');
+      const pathElem = document.getElementById('active-folder-path');
+      const subtitleElem = document.getElementById('active-folder-subtitle');
+      const countElem = document.getElementById('folder-videos-heading');
+      const containerElem = document.getElementById('video-items-container');
+
+      folderRows.forEach(row => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          const folderKey = row.dataset.folder;
+          
+          folderRows.forEach(r => {
+            r.classList.remove('ring-2', 'ring-primary', 'shadow-sm');
+            r.classList.add('border', 'border-outline-variant/30', 'shadow-xs');
+            const h = r.querySelector('h3');
+            if (h) h.classList.replace('font-bold', 'font-semibold');
+            const chev = r.querySelector('.chevron-icon');
+            if (chev) {
+              chev.classList.remove('text-primary');
+              chev.classList.add('text-outline');
+            }
+          });
+
+          row.classList.add('ring-2', 'ring-primary', 'shadow-sm');
+          row.classList.remove('border-outline-variant/30');
+          const h = row.querySelector('h3');
+          if (h) h.classList.replace('font-semibold', 'font-bold');
+          const chev = row.querySelector('.chevron-icon');
+          if (chev) {
+            chev.classList.remove('text-outline');
+            chev.classList.add('text-primary');
+          }
+
+          const data = folderData[folderKey];
+          if (!data) return;
+
+          titleElem.textContent = data.title;
+          pathElem.textContent = data.path;
+          subtitleElem.textContent = data.subtitle;
+          countElem.textContent = data.videosCount;
+
+          containerElem.innerHTML = data.videos.map(item => `
+            <div class="p-3.5 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 hover:shadow-md transition-all flex flex-col sm:flex-row items-center gap-4 group">
+              <div class="relative w-full sm:w-52 aspect-[16/9] rounded-xl overflow-hidden bg-surface-container flex-shrink-0 shadow-xs cursor-pointer">
+                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="${item.img}" alt="${item.title}"/>
+                <span class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/75 text-white text-[10px] font-label-timecode backdrop-blur-xs">${item.duration}</span>
+                ${item.timeLeft ? `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-medium backdrop-blur-xs">${item.timeLeft}</span>` : ''}
+                ${item.progress !== '0%' ? `
+                  <div class="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
+                    <div class="h-full bg-primary-container" style="width: ${item.progress}"></div>
+                  </div>
+                ` : ''}
+                <div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <div class="w-11 h-11 rounded-full bg-surface-container-lowest/95 text-primary flex items-center justify-center shadow-md">
+                    <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex-1 min-w-0 w-full flex flex-col justify-between py-0.5">
+                <div>
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="font-title-md text-[15px] font-bold text-on-surface truncate">${item.title}</h4>
+                    <button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-outline hover:text-on-surface transition-colors -mr-2 -mt-2" title="More options">
+                      <span class="material-symbols-outlined text-[20px]">more_vert</span>
+                    </button>
+                  </div>
+                  <p class="text-[12px] text-on-surface-variant line-clamp-1 mt-0.5">${item.meta}</p>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 mt-1 border-t border-outline-variant/15">
+                  <div class="flex items-center gap-2 text-[12px]">
+                    <span class="font-label-timecode text-primary font-semibold">${item.size}</span>
+                    <span class="text-outline">•</span>
+                    <span class="inline-flex items-center gap-1 text-on-surface-variant">
+                      <span class="material-symbols-outlined text-[15px] ${item.subs !== 'None' ? 'text-primary' : ''}">closed_caption</span> ${item.subs}
+                    </span>
+                  </div>
+                  <button class="min-h-[48px] px-5 rounded-full ${item.isResume ? 'bg-primary text-on-primary font-semibold' : 'bg-secondary-container text-on-secondary-fixed font-semibold hover:bg-primary-container hover:text-on-primary-container'} font-title-md text-[13px] transition-all flex items-center gap-1.5 shadow-xs active:scale-95">
+                    <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                    <span>${item.isResume ? 'Resume' : 'Play'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        });
+      });
+
+      // Safe OTG Unmount interaction
+      const unmountBtn = document.getElementById('unmount-otg-btn');
+      const usbCard = document.getElementById('usb-storage-card');
+      if (unmountBtn && usbCard) {
+        unmountBtn.addEventListener('click', () => {
+          usbCard.style.opacity = '0.5';
+          usbCard.style.pointerEvents = 'none';
+          setTimeout(() => {
+            usbCard.style.display = 'none';
+          }, 300);
+        });
+      }
+
+      // Mini-Player Play/Pause Toggle
+      const playPauseBtn = document.getElementById('mini-play-toggle');
+      if (playPauseBtn) {
+        let isPlaying = true;
+        playPauseBtn.addEventListener('click', () => {
+          isPlaying = !isPlaying;
+          const icon = playPauseBtn.querySelector('.material-symbols-outlined');
+          if (icon) {
+            icon.textContent = isPlaying ? 'pause' : 'play_arrow';
+          }
+        });
+      }
+
+      // Mini-Player Dismiss Button
+      const dismissBtn = document.getElementById('mini-dismiss-btn');
+      const miniPlayer = document.getElementById('floating-mini-player');
+      if (dismissBtn && miniPlayer) {
+        dismissBtn.addEventListener('click', () => {
+          miniPlayer.style.display = 'none';
+        });
+      }
+    });
+  </script>
+</body></html>

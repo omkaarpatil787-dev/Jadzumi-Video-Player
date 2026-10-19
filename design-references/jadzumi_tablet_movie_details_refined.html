@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "inverse-primary": "#adc7ff", "on-error-container": "#93000a", "on-secondary-fixed": "#0b1d2f", "on-secondary": "#ffffff", "on-tertiary-container": "#000416", "outline-variant": "#c1c6d6", "on-secondary-fixed-variant": "#38485c", "tertiary-fixed": "#d9e2ff", "surface-container-high": "#e6e8eb", "on-secondary-container": "#546479", "error": "#ba1a1a", "on-surface-variant": "#414754", "on-error": "#ffffff", "surface-container": "#eceef1", "secondary": "#4f6075", "on-surface": "#191c1e", "secondary-container": "#d0e1fa", "primary-container": "#1a73e8", "primary": "#005bbf", "surface": "#f7f9fc", "surface-container-low": "#f2f4f7", "tertiary": "#2b5ab5", "on-primary-container": "#ffffff", "on-primary-fixed": "#001a41", "on-primary-fixed-variant": "#004493", "surface-container-lowest": "#ffffff", "secondary-fixed-dim": "#b7c8e0", "primary-fixed-dim": "#adc7ff", "inverse-on-surface": "#eff1f4", "surface-bright": "#f7f9fc", "inverse-surface": "#2d3133", "surface-dim": "#d8dadd", "surface-variant": "#e0e3e6", "on-tertiary": "#ffffff", "on-background": "#191c1e", "surface-container-highest": "#e0e3e6", "primary-fixed": "#d8e2ff", "secondary-fixed": "#d3e4fd", "surface-tint": "#005bc0", "tertiary-container": "#4974d0", "on-tertiary-fixed-variant": "#00429c", "outline": "#727785", "tertiary-fixed-dim": "#b0c6ff", "on-primary": "#ffffff", "on-tertiary-fixed": "#001945", "error-container": "#ffdad6", "background": "#f7f9fc" }, "borderRadius": { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "space-sm": "0.5rem", "margin": "1rem", "space-xl": "2.5rem", "margin-desktop": "3rem", "gutter-desktop": "1.5rem", "margin-tablet": "2rem", "gutter": "1rem", "space-md": "1rem", "space-lg": "1.5rem" }, "fontFamily": { "display-lg": [ "Plus Jakarta Sans" ], "headline-sm": [ "Plus Jakarta Sans" ], "headline-lg-mobile": [ "Plus Jakarta Sans" ], "label-badge": [ "Plus Jakarta Sans" ], "display-md": [ "Plus Jakarta Sans" ], "headline-lg": [ "Plus Jakarta Sans" ], "title-md": [ "Plus Jakarta Sans" ], "body-md": [ "Inter" ], "label-timecode": [ "JetBrains Mono" ], "body-sm": [ "Inter" ], "body-lg": [ "Inter" ] }, "fontSize": { "display-lg": [ "44px", { "lineHeight": "52px", "fontWeight": "700" } ], "headline-sm": [ "20px", { "lineHeight": "28px", "fontWeight": "600" } ], "headline-lg-mobile": [ "26px", { "lineHeight": "34px", "fontWeight": "600" } ], "label-badge": [ "11px", { "lineHeight": "14px", "fontWeight": "700" } ], "display-md": [ "36px", { "lineHeight": "44px", "fontWeight": "700" } ], "headline-lg": [ "32px", { "lineHeight": "40px", "fontWeight": "600" } ], "title-md": [ "16px", { "lineHeight": "24px", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "fontWeight": "400" } ], "label-timecode": [ "13px", { "lineHeight": "16px", "fontWeight": "500" } ], "body-sm": [ "12px", { "lineHeight": "16px", "fontWeight": "400" } ], "body-lg": [ "16px", { "lineHeight": "24px", "fontWeight": "400" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-24 bg-surface-container-lowest/90 backdrop-blur-xl z-50 flex flex-col justify-between py-6 px-2 shadow-[0_1px_12px_rgba(26,115,232,0.06)] border-r border-outline-variant/30">
+<!-- Top Branding & Nav Items -->
+<div class="flex flex-col items-center gap-6">
+<!-- App Icon & Offline Badge -->
+<div class="flex flex-col items-center gap-1.5">
+<div class="w-12 h-12 rounded-2xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-[0_4px_16px_-2px_rgba(26,115,232,0.25)] hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[26px]">play_arrow</span>
+</div>
+<span class="font-title-md text-[13px] font-bold text-on-surface tracking-tight">Jadzumi</span>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed text-[10px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Offline
+      </span>
+</div>
+<!-- M3 Expressive Vertical Navigation Rail (48dp Touch Targets) -->
+<nav class="flex flex-col items-center gap-2.5 w-full"><a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" data-path="library" href="#"><div class="w-14 h-9 rounded-full bg-secondary-container text-on-secondary-fixed font-title-md flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">video_library</span></div><span class="text-[11px] font-semibold text-primary">Library</span></a><a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" data-path="folders-storage" href="#"><div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all"><span class="material-symbols-outlined text-[24px]">folder_open</span></div><span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Folders</span></a><a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" data-path="playlists" href="#"><div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all"><span class="material-symbols-outlined text-[24px]">queue_music</span></div><span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Playlists</span></a><a class="flex flex-col items-center justify-center min-h-[52px] group py-1.5 w-full rounded-2xl hover:bg-surface-container-high transition-colors" data-path="now-playing" href="#"><div class="w-14 h-9 rounded-full flex items-center justify-center text-on-surface-variant group-hover:text-on-surface transition-all"><span class="material-symbols-outlined text-[24px]">slow_motion_video</span></div><span class="text-[11px] font-medium text-on-surface-variant group-hover:text-on-surface">Player</span></a></nav>
+</div>
+<!-- Bottom Rail Actions: Storage Indicator & Settings (Accurate Xiaomi Pad 5 internal storage) -->
+<div class="flex flex-col items-center gap-3.5 w-full px-1"><div class="flex flex-col items-center w-full min-h-[48px] p-2 rounded-2xl bg-surface-container-low text-center shadow-sm" title="Internal UFS 3.1: 53.2 GB Free"><span class="material-symbols-outlined text-[19px] text-primary">tablet_android</span><span class="text-[10px] font-bold text-primary mt-0.5">53.2 GB</span><span class="text-[9px] text-outline font-medium">Free</span></div><a class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings" href="#" title="Settings"><span class="material-symbols-outlined text-[22px]">settings</span></a></div>
+</aside><div class="flex flex-col min-h-screen" style="padding-left: 6rem;"><header class="fixed top-0 right-0 h-16 bg-surface/85 backdrop-blur-xl z-40 flex items-center justify-between px-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.03)]" style="left: 6rem;"><div class="flex-1 max-w-lg"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-space-md text-outline text-[20px]">search</span><input class="w-full h-11 pl-11 pr-space-md rounded-full bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search Jadzumi video library, offline files..." type="search"/></div></div><div class="flex items-center gap-space-sm"><button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Sync Offline Metadata"><span class="material-symbols-outlined text-[22px]">sync_saved_locally</span></button><button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Toggle Theme"><span class="material-symbols-outlined text-[22px]">dark_mode</span></button><div class="min-w-[40px] min-h-[40px] rounded-full bg-primary flex items-center justify-center ml-space-xs text-on-primary"><span class="material-symbols-outlined text-[20px]">person</span></div></div></header><main class="w-full pt-16 pb-32 px-space-lg bg-surface flex-1"><div class="flex flex-col w-full">
+<!-- Top Navigation & Breadcrumbs Bar -->
+<div class="w-full flex items-center justify-between pb-space-md">
+<div class="flex items-center gap-space-sm min-w-0">
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center bg-surface-container-low text-on-surface hover:bg-surface-container-high active:scale-95 transition-all shadow-sm" onclick="history.back()" title="Back to Library">
+<span class="material-symbols-outlined text-[22px]">arrow_back</span>
+</button>
+<nav aria-label="Breadcrumb" class="flex items-center gap-2 truncate pl-1">
+<a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[18px]">video_library</span>
+<span>Library</span>
+</a>
+<span class="text-outline-variant font-label-timecode">/</span>
+<a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors" href="#">Movies</a>
+<span class="text-outline-variant font-label-timecode">•</span>
+<span class="font-label-badge text-label-badge uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed">Sci-Fi</span>
+<span class="text-outline-variant font-label-timecode">/</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">Interstellar Horizons: The Odyssey (2024)</span>
+</nav>
+</div>
+<div class="flex items-center gap-space-xs flex-shrink-0">
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-secondary hover:text-primary hover:bg-surface-container-low transition-colors" onclick="showIntegrityToast()" title="Check File Integrity">
+<span class="material-symbols-outlined text-[20px]">verified</span>
+</button>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-secondary hover:text-primary hover:bg-surface-container-low transition-colors" title="Manage External Subtitles (.ass/.srt)">
+<span class="material-symbols-outlined text-[20px]">subtitles</span>
+</button>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-secondary hover:text-primary hover:bg-surface-container-low transition-colors" title="Storage Path Details">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-secondary hover:text-primary hover:bg-surface-container-low transition-colors" title="More Options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Integrity Flash Notification Toast (Hidden by Default) -->
+<div class="hidden fixed top-20 right-8 z-50 bg-surface-container-lowest/95 backdrop-blur-xl px-5 py-3.5 rounded-2xl shadow-[0_8px_24px_-4px_rgba(26,115,232,0.22)] flex items-center gap-3 transition-all duration-300 transform translate-y-0" id="integrity-toast">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-body-md font-semibold text-on-surface">SHA-256 Checksum Verified</span>
+<span class="font-label-timecode text-body-sm text-secondary">Matroska v4 valid • Zero corrupted bitstream blocks</span>
+</div>
+</div>
+<!-- Cinematic Hero Stage Container -->
+<section class="relative w-full rounded-3xl overflow-hidden bg-surface-container-lowest shadow-sm mb-space-lg">
+<!-- Hero Backdrop Canvas with Soft Gradient Fade -->
+<div class="relative w-full h-80 sm:h-96 overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" data-alt="An expansive, photorealistic cinematic cosmic wormhole and iridescent deep space nebula. Luminous aquamarine, sapphire blues, and soft starlight reflecting off cosmic dust ribbons. Ultra-wide cinematic aspect ratio, deep contrast, ethereal glow, cinematic lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCS9h-wTEac4W1WgjjjFBLVYUIPTinWu5WTGNgbw8Urw-6Bj4LdZAvYD7UHz8tJsrXDk_6Ic09OyfJEBVx00YrUCRoG4YD0B8EcC17w5ZKHEa-k4Wj4dCFaVrah2k458iL9R2SopHoZVyHSkVhwUwxxhPrsB1QspVZ7fid8SCDVWbMFIU5CPJw62vLfXTWJ1VRuHbbnEq8_xHlXTxU3IdHpfugGXNlyFtgdHkcg1UUpW2SCTncM2_dx')">
+</div>
+<!-- Surface Color Blending Mask -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/60 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest/80 via-transparent to-surface-container-lowest/40"></div>
+<!-- Quick Resolution Tag Overlay (Top Right Hero) -->
+<div class="absolute top-4 right-4 flex items-center gap-2">
+<span class="px-3 py-1 rounded-full bg-surface-container-lowest/85 backdrop-blur-md font-label-badge text-label-badge text-primary shadow-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">videocam</span> 4K UHD • HDR10+
+        </span>
+<span class="px-3 py-1 rounded-full bg-surface-container-lowest/85 backdrop-blur-md font-label-badge text-label-badge text-secondary shadow-sm">
+          14.2 GB • MKV
+        </span>
+</div>
+</div>
+<!-- Overlapping Poster, Title & Metadata Stack -->
+<div class="px-space-lg pb-space-lg -mt-36 sm:-mt-44 relative z-10 flex flex-col md:flex-row gap-6 lg:gap-8 items-start">
+<!-- 2:3 Vertical Movie Poster Card -->
+<div class="relative flex-shrink-0 w-44 sm:w-56 aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_12px_32px_-6px_rgba(26,115,232,0.25)] bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A solitary astronaut explorer in a sleek technical white and cobalt spacesuit gazing into an immense spherical gravitational singularity and cosmic horizon. Cinematic cinematic poster art, volumetric light beams, photorealistic rendering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxXfcZW_5Vf5c6ethCiNeJlWQyDX5MdadADBlVk9dYHtzETcC2OKoRC6UeP9Dn37qHnUmHm9cb462Yf4vpoTAgz4kG0vgRQ8Nz6Zhdtep3Pp9yUdahZAoQEd9xEcL6-ry3Kr4wUDX9eX-CqEQoG4wVkPbVRqBWE5V1MIwjJQ5lW38IqUAty_5aCbyDBOOFIerbHiYtIa2HaOHHrHdWwQraLb-IM7i1RRA0_fJXy9HQ8Q3BAZWtZZmA"/>
+<!-- Quality Badges Pinned to Poster Corners -->
+<div class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-badge text-label-badge">
+          PG-13
+        </div>
+<div class="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 rounded-md bg-primary text-on-primary font-label-badge text-label-badge flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[13px]">hdr_on</span> HEVC 10b
+        </div>
+</div>
+<!-- Title, Badges, Summary and Primary Actions -->
+<div class="flex-1 min-w-0 pt-2 sm:pt-14">
+<!-- Badge Metadata Row -->
+<div class="flex flex-wrap items-center gap-2 mb-2">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-label-badge uppercase tracking-wider font-semibold">
+            Featured Film
+          </span>
+<div class="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-title-md text-body-sm font-semibold">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>8.6</span>
+<span class="text-outline text-body-sm font-normal">(TMDB Cached)</span>
+</div>
+<span class="text-secondary font-label-timecode text-body-sm">2024</span>
+<span class="text-outline-variant font-label-timecode">•</span>
+<span class="text-secondary font-label-timecode text-body-sm">2h 34m 18s</span>
+<span class="text-outline-variant font-label-timecode">•</span>
+<span class="text-secondary font-body-md text-body-sm">Sci-Fi, Adventure, Cosmic Mystery</span>
+</div>
+<!-- Movie Main Title -->
+<h1 class="font-display-md text-display-md text-on-surface tracking-tight leading-tight mb-2.5">
+          Interstellar Horizons: <span class="text-primary">The Odyssey</span>
+</h1>
+<!-- Synopsis with Expandable Toggle -->
+<div class="max-w-3xl mb-space-md">
+<p class="font-body-md text-body-md text-secondary line-clamp-2 transition-all duration-200" id="synopsis-text">
+            When an unstable hyper-dimensional gravitational rift manifests on the outer perimeter of Jupiter's magnetosphere, Commander Elena Vance and an international flight crew launch an unverified deep-space exploration mission into the event horizon. Guided by synthetic telemetry and fragmented signals from an expedition lost twenty years prior, they confront spacetime dilation, quantum anomalies, and the remnants of an invisible civilization.
+          </p>
+<button class="mt-1 text-primary hover:text-on-primary-fixed-variant font-title-md text-body-sm font-semibold inline-flex items-center gap-1" id="synopsis-toggle" onclick="toggleSynopsis()">
+<span id="synopsis-toggle-label">Read Full Synopsis</span>
+<span class="material-symbols-outlined text-[18px]" id="synopsis-toggle-icon">expand_more</span>
+</button>
+</div>
+<!-- Primary Action Center: Resume & Secondary Utilities -->
+<div class="flex flex-wrap items-center gap-3 pt-1">
+<!-- Main Resume Button with Live Mathematical Progress -->
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center bg-primary-container hover:bg-primary active:scale-[0.98] transition-all rounded-full p-1.5 pr-6 shadow-[0_8px_24px_-4px_rgba(26,115,232,0.3)] group cursor-pointer" onclick="alert('Launching playback at 01:09:12...')">
+<div class="w-12 h-12 rounded-full bg-white text-primary flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+<div class="pl-3.5 pr-2 py-1 text-left">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md font-bold text-on-primary">Resume from 01:09:12</span>
+<span class="px-2 py-0.5 rounded-full bg-white/20 text-white font-label-badge text-label-badge">Ch. 04</span>
+</div>
+<div class="flex items-center gap-2.5 mt-0.5">
+<div class="w-24 h-1.5 bg-white/30 rounded-full overflow-hidden">
+<div class="w-[45%] h-full bg-white rounded-full"></div>
+</div>
+<span class="font-label-timecode text-body-sm text-white/90">45% • 1h 25m 06s remaining</span>
+</div>
+</div>
+</div>
+<!-- Play from Beginning Button (48dp height minimum) -->
+<button class="min-h-[48px] px-5 rounded-full bg-surface-container text-on-surface hover:bg-surface-container-high active:scale-95 transition-all flex items-center gap-2 font-title-md text-body-md font-semibold shadow-sm" onclick="alert('Starting video from 00:00:00')">
+<span class="material-symbols-outlined text-[20px]">replay</span>
+<span>From Beginning</span>
+</button>
+<!-- Interactive Favorite Toggle Button -->
+<button class="min-w-[48px] min-h-[48px] px-4 rounded-full bg-surface-container text-secondary hover:text-on-surface hover:bg-surface-container-high active:scale-95 transition-all flex items-center gap-2 font-title-md text-body-md font-semibold" id="favorite-btn" onclick="toggleFavorite()" title="Add to Favorites">
+<span class="material-symbols-outlined text-[22px] text-primary" id="favorite-icon" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+<span class="text-on-surface" id="favorite-label">Favorited</span>
+</button>
+<!-- Add to Playlist CTA -->
+<button class="min-w-[48px] min-h-[48px] px-4 rounded-full bg-surface-container text-secondary hover:text-on-surface hover:bg-surface-container-high active:scale-95 transition-all flex items-center gap-2 font-title-md text-body-md font-semibold" title="Add to Playlist">
+<span class="material-symbols-outlined text-[20px]">playlist_add</span>
+<span>Playlist</span>
+</button>
+<!-- Mark Watched Button -->
+<button class="min-w-[48px] min-h-[48px] w-12 rounded-full bg-surface-container text-secondary hover:text-on-surface hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center" title="Mark as Finished">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</button>
+<!-- Folder Shortcut Indicator Pill -->
+<div class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface-container-low text-secondary font-label-timecode text-body-sm ml-auto">
+<span class="material-symbols-outlined text-[16px] text-primary">folder</span>
+<span>/Movies/4K/</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Two-Column Refined Split Layout (Col-8 Left Content, Col-4 Right Inspector) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg w-full items-start">
+<!-- LEFT MAIN COLUMN (8 Columns) -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg">
+<!-- Section 1: Chapters & Scene Markers Card -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-3">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Chapters &amp; Timestamps</h2>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-badge text-label-badge">
+              16 Timed Markers
+            </span>
+</div>
+<span class="font-label-timecode text-body-sm text-outline">Embedded Matroska Chunks</span>
+</div>
+<!-- Chapters List with Active Indication and Fast Jump -->
+<div class="flex flex-col gap-2.5">
+<!-- Chapter 1 -->
+<div class="group flex items-center justify-between p-2.5 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-center gap-3.5 min-w-0">
+<div class="relative w-24 aspect-video rounded-xl overflow-hidden bg-surface-container-high flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Futuristic space station orbital launch bay with colossal thrusters engaging over planet Earth in high orbit, realistic photorealistic sci-fi." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUzzluUnGef4PGAvShUjNeYMBJVhukgTUcyp-Xyffi3mRHwo-v95sIb2t2tD3LshXuBYkn1xxXUnPUpGh-kHK_iG67w289cpRh2-7IYQjljD0InWdaEJ7PstQi26F4DF2K4Csp4SybCRq4zSD57f5WXSWBzP0IlvwtVCLaLlpPsjpCDRJT_2w1ui7aeg4h6_cqvFegX2yi-nAOV5cKehPqh_0UBtVsGH-mTy4f1aX8u7aVf4-q8W90"/>
+<span class="absolute bottom-1 right-1 font-label-timecode text-body-sm px-1.5 py-0.2 rounded bg-black/75 text-white">00:00:00</span>
+</div>
+<div class="min-w-0">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-outline font-semibold">Chapter 01</span>
+<h3 class="font-title-md text-title-md text-on-surface font-semibold truncate group-hover:text-primary transition-colors">Event Horizon Launch Sequence</h3>
+<span class="font-body-sm text-body-sm text-secondary">Pre-orbital departure &amp; orbital sling maneuver</span>
+</div>
+</div>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-outline group-hover:text-primary transition-colors" title="Play from Chapter 01">
+<span class="material-symbols-outlined text-[22px]">play_circle</span>
+</button>
+</div>
+<!-- Chapter 4 (Active Chapter Indicator) -->
+<div class="group flex items-center justify-between p-2.5 rounded-2xl bg-primary-fixed/30 hover:bg-primary-fixed/40 transition-all shadow-sm">
+<div class="flex items-center gap-3.5 min-w-0">
+<div class="relative w-24 aspect-video rounded-xl overflow-hidden bg-surface-container-high flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Spacecraft navigating through shimmering translucent gravitational lensing distortions near cosmic vortex, iridescent color shifts, high cinema fidelity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1uR_3o1wpB37nfBXSCaZ4hksigXxCpXLCoCUs_-q4dd0AsTnPPq2rN0vFHH3OQdf7z_RM_sEcKCcnV7BRa8iZ0YcX5BEJ9UxdtjGkIBLgoqmRGGZMeyt9k31XcZpEK7b90vFyxl1r-YRaoWI9OLHa2MwTOgQrZVAByCxFFmVsuGn7a3KNjA95LMJ9UopfVucTARlKttLwZhidksNMyoPxzhLpmMVDJWw8LMRwPvIVNYEPHX1i8AaY"/>
+<div class="absolute inset-0 bg-primary/20 flex items-center justify-center">
+<span class="w-3 h-3 rounded-full bg-primary animate-ping"></span>
+</div>
+<span class="absolute bottom-1 right-1 font-label-timecode text-body-sm px-1.5 py-0.2 rounded bg-primary text-white font-bold">01:09:12</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-primary font-bold">Current Playback</span>
+<span class="px-2 py-0.2 rounded-full bg-primary text-white font-label-badge text-label-badge font-semibold">Active</span>
+</div>
+<h3 class="font-title-md text-title-md text-primary font-bold truncate">Chapter 04: Gravitational Transit Core</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Singularity boundary crossings &amp; time slip calculation</span>
+</div>
+</div>
+<button class="min-w-[48px] min-h-[48px] rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md active:scale-95 transition-all" title="Resume Playback">
+<span class="material-symbols-outlined text-[24px]">play_arrow</span>
+</button>
+</div>
+<!-- Chapter 7 -->
+<div class="group flex items-center justify-between p-2.5 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-center gap-3.5 min-w-0">
+<div class="relative w-24 aspect-video rounded-xl overflow-hidden bg-surface-container-high flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Glowing hyper-dimensional geometric tesseract structure surrounded by cosmic plasma fields in deep space, photorealistic rendering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCmRRwrMUh1RO8RWpkOGAHJsByMFXgmzXszv0Bp025e6fl_z9HNZrZ9aLPKwKMVjtQ22tzkcgMuo7cKfKMj95j24yjoa7GFoC33ATYnJLDMrH-PtXT2Fv6Aw56Pt0r6-jwnryu1pSa7jAQKthUCD1SDxIDknszBfuu-18C_xhy7S_0mm-W3pdmAgSIFJKnShQZ8oYMjV-V1eF45jSurC9-aSgf9ztb5srTbqhWP-OlgBxt1RLkpIwu"/>
+<span class="absolute bottom-1 right-1 font-label-timecode text-body-sm px-1.5 py-0.2 rounded bg-black/75 text-white">01:42:30</span>
+</div>
+<div class="min-w-0">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-outline font-semibold">Chapter 07</span>
+<h3 class="font-title-md text-title-md text-on-surface font-semibold truncate group-hover:text-primary transition-colors">The Singularity Chamber Revelation</h3>
+<span class="font-body-sm text-body-sm text-secondary">Synthetic consciousness synthesis &amp; encrypted transmissions</span>
+</div>
+</div>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-outline group-hover:text-primary transition-colors" title="Play from Chapter 07">
+<span class="material-symbols-outlined text-[22px]">play_circle</span>
+</button>
+</div>
+<!-- Chapter 12 -->
+<div class="group flex items-center justify-between p-2.5 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-center gap-3.5 min-w-0">
+<div class="relative w-24 aspect-video rounded-xl overflow-hidden bg-surface-container-high flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Expansive panoramic view of alien star systems viewed through a spacecraft observation dome, crystalline stars and blue atmospheric aura." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpPv4PjWinA71Te3EzFMwWalA5L8H12TDFrJWw3jwyylziNuC1Ek5hBHFb5ZkqioOUYG6C0UKjW57iZ4i6mP4FeMkogJvCJbNvseIGm1KH73EVWDOYnKg9sO5WdxSScsU5qEiFPFDCjcRnOPFsLDRabZjodyrFKIP7TQoZSTPMNekDmo-n_3d-sZ-PkJIZq0fqP0mxHkuvyfL1r6axNPxVk_oI7ufYP3dBcggchy4v3L1-cwNbJctr"/>
+<span class="absolute bottom-1 right-1 font-label-timecode text-body-sm px-1.5 py-0.2 rounded bg-black/75 text-white">02:18:05</span>
+</div>
+<div class="min-w-0">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-outline font-semibold">Chapter 12</span>
+<h3 class="font-title-md text-title-md text-on-surface font-semibold truncate group-hover:text-primary transition-colors">Echoes Across Dimensions (Finale)</h3>
+<span class="font-body-sm text-body-sm text-secondary">Return trajectory vectoring &amp; final telemetry logs</span>
+</div>
+</div>
+<button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-outline group-hover:text-primary transition-colors" title="Play from Chapter 12">
+<span class="material-symbols-outlined text-[22px]">play_circle</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Section 2: Cast & Key Crew Roster -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight mb-space-md">Cast &amp; Filmmakers</h2>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+<!-- Director -->
+<div class="flex items-center gap-3 p-2.5 rounded-2xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Headshot of distinguished female film director in modern attire against neutral studio backdrop, soft cinematic key lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUhMRDMtMFn6XAhOL8cGvoWmSC4H2ciohNb5ZnEq59R_DfGQ_J1SAAATwyv-4UFjxgJVEYJ3keE1hCcXuOdHMq3tDOGGdVg4pvxBnoMKN_iPonoZLSUb7cYm9wNYIdAX63vgfHc2dio5UViGmD68bvEOfFsRim_LqN0eDghMuiOIxXWTC5qhJe9s8-i5sQA9lhvhzgbHCdjTskaR5bAKagKVUjs8LIMtxtCOSHNB7oIALPohxG_KaY"/>
+</div>
+<div class="min-w-0">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold truncate">Elena Vance</h4>
+<p class="font-body-sm text-body-sm text-primary font-medium">Director / Writer</p>
+</div>
+</div>
+<!-- Actor 1 -->
+<div class="flex items-center gap-3 p-2.5 rounded-2xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Studio portrait of male actor with intense focused expression, clean dramatic studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjzr337CZJ3pb7jTaQnwx3ojSNyjQFLc3Ml3edFSj-8QFudrZQOmH_svdwCWETKfJ2HyBuBf6z8D0gBdWyzktsouJaY1UHM3jsLRc3mM-47wXs0oevaXCr4gjyCTIGshHXQoFBAnunFrgWPz7U1fiqHsNXPLeBHXtuXRsJbVXc7seKMxqZ20_PjCzFP8v9drbDl7cn4vIj5IWg3PP4DZGy5f7CWiHbqHJD6Ho1BvXPYlUSbEuseQOb"/>
+</div>
+<div class="min-w-0">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold truncate">Kaelen Cross</h4>
+<p class="font-body-sm text-body-sm text-secondary truncate">Cmdr. Sean Mercer</p>
+</div>
+</div>
+<!-- Actor 2 -->
+<div class="flex items-center gap-3 p-2.5 rounded-2xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait of senior astrophysicist character actor with silver hair, warm intelligent expression, soft directional light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSn8_YCcNTkUk9DFtxnvCYhGRsCdcesxeDU7Oy2Lb7kR8UOVXYROiRqUkTxhN5LpujWpghZFiFIWI-yNksEbWxREf7GdK4lKd_4L5LnXWL2eokAKqW99wlsIRf8Q5DKAX0n274FhWPnK_g6vj5cOMdAQrZnvFC89EOUxXbRyMAKR7j87OJyCCE9R3I_8PPw3d19b7Z_qW_MyYPpXFXIHiAJ37yGVA3RpOewNVBOsbVu7U6eQ4NH6BB"/>
+</div>
+<div class="min-w-0">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold truncate">Dr. Aris Thorne</h4>
+<p class="font-body-sm text-body-sm text-secondary truncate">Prof. Julian Rhodes</p>
+</div>
+</div>
+<!-- Actor 3 -->
+<div class="flex items-center gap-3 p-2.5 rounded-2xl bg-surface-container-low">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait of young Asian female astronaut pilot actress in casual studio portrait, confident smile, natural lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3exuGGeB2hSKZN_aKjrDSfobRE9YL-Qwrywc5ghQPuy0Sf1ia-TLQWdHArmEJQ8UOz5JUgm5E8Ffe9-laVXZoGoIsn5mfUuIG8g_hWnY-UqB9M_czz-KS8jiqcejn-MctiGvGt_RQaKuPH1n7lu8ggR16wk_g0wuT1YPxmIo00yWLxhZnjDJANWrbu1YO2T1hRHSlLf4g5QeXfc_M61RYdVTfVeYjZA-kSRhrtr8lnnDV9wuz7CwO"/>
+</div>
+<div class="min-w-0">
+<h4 class="font-title-md text-title-md text-on-surface font-semibold truncate">Maya Lin</h4>
+<p class="font-body-sm text-body-sm text-secondary truncate">Lt. Nora Sun</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 3: "Related in Your Offline Library" Horizontal Carousel -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">offline_pin</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Related in Your Offline Library</h2>
+</div>
+<span class="font-body-sm text-body-sm text-secondary">4 Similar Local Files</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+<!-- Offline Movie 1 -->
+<div class="group flex flex-col gap-2 cursor-pointer">
+<div class="relative aspect-[2/3] rounded-2xl overflow-hidden bg-surface-container-high shadow-sm group-hover:shadow-md transition-shadow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Vertical movie poster of a rain-soaked futuristic cyberpunk metropolis with towering holograms and neon lights, dark moody atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWSXNFqakvyIeFE8aOh0sutTrFTxrHoNcAC0ec1YxYNOeehhGnVPl34DrwOi6qNYD3hFNXmXESbbARbTvPb_sSBJ4Y8T84meCwUjwydnBOWcyuGOjvKRhzZ5v0t7YaDhxlIkYVramQ6kqzVCaqxWOvl69da0d6Z1u0jKAFCLryQy0pcqNmrDi5THwb5UIyuWlJI98V5XshMdBTNmB5ocBFZfq7omx3rOVUOxRn2z4DVaTAD6GJ-wEQ"/>
+<span class="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 text-white font-label-badge text-label-badge">8.4 GB</span>
+<span class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-primary text-white font-label-badge text-label-badge">4K</span>
+</div>
+<div>
+<h4 class="font-title-md text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Neon Cyberpunk 2088</h4>
+<p class="font-label-timecode text-body-sm text-secondary">MKV • 1h 58m</p>
+</div>
+</div>
+<!-- Offline Movie 2 -->
+<div class="group flex flex-col gap-2 cursor-pointer">
+<div class="relative aspect-[2/3] rounded-2xl overflow-hidden bg-surface-container-high shadow-sm group-hover:shadow-md transition-shadow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Vertical poster of deep underwater exploration submersible exploring an oceanic trench glowing bioluminescent abyssal creatures, deep marine palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHfbEZZgBq32YvoFEz3WFhVdbaIE0CdiUPJ3tworjj0DnpJMoeFhW6-xBpxv0TmVO9ilCa2L4yiZ52DDD0ZUdKCQa7VVeUeD5hn-LodcZn6PvxDhow5bEQfIifs4RAtSdPA25pbSWf0TmS9uuXIVPaVr9qhnxccxQWvxHmcYZq-jYgfqqyjFiPchacmwZuhldhJEJ4SoVfZAzZzlmhkU2j3FEsaWjKJqcdvxHqdDztkkYQpUPDswRD"/>
+<span class="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 text-white font-label-badge text-label-badge">5.8 GB</span>
+<span class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-label-badge text-label-badge">1080p</span>
+</div>
+<div>
+<h4 class="font-title-md text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Silent Deep: Mariana</h4>
+<p class="font-label-timecode text-body-sm text-secondary">MP4 • 2h 12m</p>
+</div>
+</div>
+<!-- Offline Movie 3 -->
+<div class="group flex flex-col gap-2 cursor-pointer">
+<div class="relative aspect-[2/3] rounded-2xl overflow-hidden bg-surface-container-high shadow-sm group-hover:shadow-md transition-shadow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Vertical movie poster showing an alien sun rising above a planetary rings system with deep gold and violet hues, epic celestial scale." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXVbG5HFSPwNFwx30l6caNoju0f789azKO8oFvaT7uM2MgMLk2uAo2oJ3gV3-ouE1t6SeVag88R8eNoPB5ypg6xVunQlIW8YYE7wPpD_jUc1nMZV_xAkcnd7yjUkfQrC-9hGXMZRfnmJnMf7iO6-EqIW1PAs9vyZwh68Wa2gWzFVrfOKC1GDm3-Oe7nGBeOKss8TwWhbOi4ebs_GIvYxR9kbYBcVUO07FZCxbTAIvNtBATLUPzRSUz"/>
+<span class="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 text-white font-label-badge text-label-badge">11.4 GB</span>
+<span class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-primary text-white font-label-badge text-label-badge">4K HDR</span>
+</div>
+<div>
+<h4 class="font-title-md text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Solaris Rebirth</h4>
+<p class="font-label-timecode text-body-sm text-secondary">MKV • 2h 45m</p>
+</div>
+</div>
+<!-- Offline Movie 4 -->
+<div class="group flex flex-col gap-2 cursor-pointer">
+<div class="relative aspect-[2/3] rounded-2xl overflow-hidden bg-surface-container-high shadow-sm group-hover:shadow-md transition-shadow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Vertical documentary poster of dramatic snow-covered jagged alpine peak under starry night skies, crisp photorealistic mountain photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8g8vqTkQvXMgWiZBKuPYAXFcjHFuEFdFvBqzeHbG4gXu6CFNPZG11py9uhCfvnY4zmWaJrPqjMV36tX0Yqy9kBps1ZOHNBYQy72vJjPrcH8R5FCGo4nWiy51nFYYutm5e0jaBviNJl0fHY_Elzm-4pivZfeMl4D_TRlXdUnahxCMBbHZ44WG7fR99uxLzZUEKBSwe9IFIHAdicBuQ2jA7PasMm1H9p3ouPg45vhZrCERuNR0uybAb"/>
+<span class="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 text-white font-label-badge text-label-badge">9.1 GB</span>
+<span class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-primary text-white font-label-badge text-label-badge">4K 60fps</span>
+</div>
+<div>
+<h4 class="font-title-md text-body-md font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Matterhorn Expedition</h4>
+<p class="font-label-timecode text-body-sm text-secondary">MKV • 1h 44m</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT SIDEBAR COLUMN (4 Columns) -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- 1. Local File & Storage Inspector Card -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">hard_drive</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Storage Footprint</h3>
+</div>
+<span class="font-label-timecode text-body-sm font-semibold text-primary">14.2 GB</span>
+</div>
+<!-- Physical File Path in Xiaomi Pad 5 Internal Storage -->
+<div class="p-3 rounded-2xl bg-surface-container-low mb-4">
+<span class="font-label-badge text-label-badge text-outline uppercase block mb-1">Local Storage Target</span>
+<p class="font-label-timecode text-body-sm text-on-surface break-all select-all font-mono">
+            /storage/emulated/0/Movies/4K/Interstellar_Horizons_2024.mkv
+          </p>
+</div>
+<!-- Xiaomi Pad 5 UFS 3.1 Capacity Gauge -->
+<div class="space-y-1.5 mb-5">
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-secondary">Pad 5 UFS 3.1: 14.2 GB of 128 GB</span>
+<span class="font-semibold text-on-surface">53.2 GB Free</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container overflow-hidden flex">
+<div class="h-full bg-secondary" style="width: 48%" title="Other Apps &amp; System"></div>
+<div class="h-full bg-primary" style="width: 11%" title="This Movie (14.2 GB)"></div>
+<div class="h-full bg-surface-container-high" style="width: 41%" title="Remaining Free"></div>
+</div>
+<div class="flex items-center justify-between text-[11px] font-label-timecode text-outline pt-0.5">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> This File</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-secondary"></span> Other Media</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-surface-container-high"></span> 53.2 GB Available</span>
+</div>
+</div>
+<!-- Non-destructive Safe Local Actions -->
+<div class="flex flex-col gap-2">
+<button class="w-full min-h-[48px] px-4 rounded-full bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center justify-between font-title-md text-body-md font-semibold">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px] text-primary">tune</span>
+<span>Offline Playback Settings</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+</button>
+<button class="w-full min-h-[48px] px-4 rounded-full bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center justify-between font-title-md text-body-md font-semibold">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px] text-primary">closed_caption</span>
+<span>Manage Subtitle Tracks</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+</button>
+<button class="w-full min-h-[48px] px-4 rounded-full bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center justify-between font-title-md text-body-md font-semibold">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px] text-primary">share</span>
+<span>Export .m3u8 Playlist</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- 2. Audio & Subtitle Stream Controls Card -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface font-bold mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">graphic_eq</span>
+<span>Stream Multiplex Controls</span>
+</h3>
+<!-- Audio Stream Selector -->
+<div class="mb-4">
+<label class="font-label-badge text-label-badge text-outline uppercase block mb-2 font-semibold">Active Audio Track</label>
+<div class="space-y-1.5">
+<label class="flex items-center justify-between p-3 rounded-2xl bg-secondary-container/40 text-on-surface cursor-pointer border border-primary/20">
+<div class="flex items-center gap-2.5 min-w-0">
+<input checked="" class="text-primary focus:ring-primary w-4 h-4" name="audio-track" type="radio"/>
+<div class="min-w-0">
+<p class="font-title-md text-body-md font-semibold truncate">Track 1: English (TrueHD / Atmos)</p>
+<p class="font-label-timecode text-body-sm text-secondary">Dolby Digital Plus 5.1 • 640 kbps</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-primary text-white font-label-badge text-label-badge">Default</span>
+</label>
+<label class="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low text-on-surface hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-2.5 min-w-0">
+<input class="text-primary focus:ring-primary w-4 h-4" name="audio-track" type="radio"/>
+<div class="min-w-0">
+<p class="font-title-md text-body-md font-semibold truncate">Track 2: Japanese Dub</p>
+<p class="font-label-timecode text-body-sm text-secondary">AAC 2.0 Stereo • 192 kbps</p>
+</div>
+</div>
+</label>
+<label class="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low text-on-surface hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-2.5 min-w-0">
+<input class="text-primary focus:ring-primary w-4 h-4" name="audio-track" type="radio"/>
+<div class="min-w-0">
+<p class="font-title-md text-body-md font-semibold truncate">Track 3: Director Commentary</p>
+<p class="font-label-timecode text-body-sm text-secondary">Elena Vance &amp; DoP • AAC 128 kbps</p>
+</div>
+</div>
+</label>
+</div>
+</div>
+<!-- Subtitle Stream Selector -->
+<div>
+<label class="font-label-badge text-label-badge text-outline uppercase block mb-2 font-semibold">Subtitle Rendering</label>
+<div class="space-y-1.5">
+<label class="flex items-center justify-between p-3 rounded-2xl bg-secondary-container/40 text-on-surface cursor-pointer border border-primary/20">
+<div class="flex items-center gap-2.5 min-w-0">
+<input checked="" class="text-primary focus:ring-primary w-4 h-4" name="sub-track" type="radio"/>
+<div class="min-w-0">
+<p class="font-title-md text-body-md font-semibold truncate">Track 1: English [Styled ASS]</p>
+<p class="font-label-timecode text-body-sm text-secondary">Signs, Dialogues &amp; On-screen Text</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-label-badge font-semibold">libass HW</span>
+</label>
+<label class="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low text-on-surface hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-2.5 min-w-0">
+<input class="text-primary focus:ring-primary w-4 h-4" name="sub-track" type="radio"/>
+<div class="min-w-0">
+<p class="font-title-md text-body-md font-semibold truncate">Track 2: English SDH (.srt)</p>
+<p class="font-label-timecode text-body-sm text-secondary">Hearing Impaired Captions</p>
+</div>
+</div>
+</label>
+<label class="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low text-on-surface hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-2.5 min-w-0">
+<input class="text-primary focus:ring-primary w-4 h-4" name="sub-track" type="radio"/>
+<div class="min-w-0">
+<p class="font-title-md text-body-md font-semibold truncate">Subtitles Disabled</p>
+<p class="font-label-timecode text-body-sm text-secondary">No text overlay</p>
+</div>
+</div>
+</label>
+</div>
+</div>
+</div>
+<!-- 3. Collapsible Codec & Hardware Decoder Telemetry Accordion -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm">
+<button class="w-full flex items-center justify-between text-left group" onclick="toggleDiagnostics()">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">memory</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Hardware Decoder &amp; Telemetry</h3>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-badge text-label-badge px-2 py-0.5 rounded bg-surface-container text-primary font-semibold">HW+</span>
+<span class="material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-transform" id="diagnostics-chevron">expand_more</span>
+</div>
+</button>
+<!-- Collapsible Content -->
+<div class="mt-4 pt-3 space-y-2.5 text-body-sm font-body-sm" id="diagnostics-content">
+<div class="flex justify-between items-center py-1">
+<span class="text-secondary">Container Format</span>
+<span class="font-label-timecode text-on-surface font-semibold">Matroska (.mkv v4)</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-secondary">Video Codec</span>
+<span class="font-label-timecode text-on-surface font-semibold">HEVC (H.265) Main 10 @ L5.1</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-secondary">Pixel Resolution</span>
+<span class="font-label-timecode text-on-surface font-semibold">3840 × 2160 (16:9 DCI)</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-secondary">Color Matrix</span>
+<span class="font-label-timecode text-on-surface font-semibold">BT.2020 / 10-bit YUV420p</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-secondary">Framerate &amp; Bitrate</span>
+<span class="font-label-timecode text-on-surface font-semibold">23.976 fps • 24.2 Mbps</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-secondary">Android Hardware Decoder</span>
+<span class="font-label-timecode text-primary font-bold">MediaCodec (Snapdragon 860 HW+)</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-secondary">Subtitle Render Engine</span>
+<span class="font-label-timecode text-on-surface font-semibold">libass v0.17.1 (GPU Blit)</span>
+</div>
+</div>
+</div>
+<!-- 4. Offline Ready Indicator Card -->
+<div class="w-full bg-secondary-container/50 rounded-3xl p-4 flex items-center gap-3.5 shadow-sm">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">cloud_done</span>
+</div>
+<div class="min-w-0">
+<h4 class="font-title-md text-body-md font-bold text-on-surface">100% Offline Ready</h4>
+<p class="font-body-sm text-body-sm text-secondary">Zero-network operation • TMDB posters &amp; metadata cached locally</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Client-Side Micro-interactions & Accordion Logic -->
+<script>
+    function toggleSynopsis() {
+      const synopsis = document.getElementById('synopsis-text');
+      const label = document.getElementById('synopsis-toggle-label');
+      const icon = document.getElementById('synopsis-toggle-icon');
+
+      if (synopsis.classList.contains('line-clamp-2')) {
+        synopsis.classList.remove('line-clamp-2');
+        label.textContent = 'Collapse Synopsis';
+        icon.textContent = 'expand_less';
+      } else {
+        synopsis.classList.add('line-clamp-2');
+        label.textContent = 'Read Full Synopsis';
+        icon.textContent = 'expand_more';
+      }
+    }
+
+    function toggleFavorite() {
+      const btn = document.getElementById('favorite-btn');
+      const icon = document.getElementById('favorite-icon');
+      const label = document.getElementById('favorite-label');
+
+      if (label.textContent === 'Favorited') {
+        label.textContent = 'Favorite';
+        icon.style.fontVariationSettings = "'FILL' 0";
+        icon.classList.remove('text-primary');
+        icon.classList.add('text-secondary');
+      } else {
+        label.textContent = 'Favorited';
+        icon.style.fontVariationSettings = "'FILL' 1";
+        icon.classList.add('text-primary');
+        icon.classList.remove('text-secondary');
+      }
+    }
+
+    function toggleDiagnostics() {
+      const content = document.getElementById('diagnostics-content');
+      const chevron = document.getElementById('diagnostics-chevron');
+
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        chevron.textContent = 'expand_more';
+      } else {
+        content.classList.add('hidden');
+        chevron.textContent = 'chevron_right';
+      }
+    }
+
+    function showIntegrityToast() {
+      const toast = document.getElementById('integrity-toast');
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 4000);
+    }
+  </script>
+</div></main><aside class="fixed bottom-4 left-28 right-6 z-40 flex justify-center pointer-events-none"><div class="pointer-events-auto max-w-xl w-full p-2 px-4 rounded-full bg-surface-container-lowest/90 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_-4px_rgba(26,115,232,0.18)] flex items-center justify-between gap-3"><div class="flex items-center gap-3 min-w-0 flex-1"><div class="relative w-11 h-11 rounded-xl overflow-hidden bg-surface-container-high flex-shrink-0 shadow-sm"><img alt="Current video thumbnail" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIDXBsdBVZAW7ukDMpJv8TvvAZ5muMl9myLFJKBFGeszc9b1iK4EJVbk9Ia0e6YgRN8uXGJvbzca7k71jmJEBnRXjJB34fLgMeC7ARmrVmoAd9CyEa-QlzS87ZQzilap6kFEj3WRtvSD_Og9Mr3b31nlfKgRETN1nmavcnakh4ulOpe3nTaQc5UPa8ja4VJMO9ldr5RvaLgCjml2wTJihnZFhYk62uIxMCwRFfgql0kT8ThEQhXOvT"/><span class="absolute bottom-0.5 right-0.5 text-[8px] font-bold px-1 rounded bg-black/80 text-white">4K</span></div><div class="min-w-0 flex-1"><h4 class="font-title-md text-[13px] font-bold text-on-surface truncate leading-tight">Cosmos: The Invisible Architecture</h4><div class="flex items-center gap-2 mt-0.5"><span class="font-label-timecode text-[11px] text-primary font-semibold">18:42</span><div class="w-24 h-1.5 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-primary-container rounded-full w-[34%]"></div></div><span class="font-label-timecode text-[11px] text-outline">54:10</span></div></div></div><div class="flex items-center gap-1 flex-shrink-0"><button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Rewind 10s"><span class="material-symbols-outlined text-[20px]">replay_10</span></button><button class="min-w-[48px] min-h-[48px] rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all" id="mini-play-toggle" title="Pause / Play"><span class="material-symbols-outlined text-[24px]">pause</span></button><button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Forward 10s"><span class="material-symbols-outlined text-[20px]">forward_10</span></button><button class="min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Full Screen Cinema Player"><span class="material-symbols-outlined text-[20px]">fullscreen</span></button><button class="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container transition-colors" onclick="this.closest('aside').style.display='none'" title="Dismiss Player"><span class="material-symbols-outlined text-[18px]">close</span></button></div></div></aside></div></body></html>

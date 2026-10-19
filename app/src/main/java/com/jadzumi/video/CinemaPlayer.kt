@@ -1,0 +1,178 @@
+package com.jadzumi.video
+
+import android.graphics.Rect
+import android.media.AudioManager
+import android.content.Context
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.PlayerView
+import androidx.media3.ui.AspectRatioFrameLayout
+import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
+
+@androidx.annotation.OptIn(markerClass=[UnstableApi::class])
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable fun CinemaPlayer(playback:PlaybackController,reducedMotion:Boolean) {
+    val video=playback.video ?: return
+    val activity=LocalActivity.current as? MainActivity ?: return
+    val previousBrightness=remember(activity) { activity.window.attributes.screenBrightness }
+    var controls by remember(video.identity) { mutableStateOf(true) }
+    var menu by remember(video.identity) { mutableStateOf(false) }
+    var speedMenu by remember(video.identity) { mutableStateOf(false) }
+    var scrub by remember(video.identity) { mutableStateOf<Float?>(null) }
+    var message by remember(video.identity) { mutableStateOf<String?>(null) }
+    var interaction by remember(video.identity) { mutableIntStateOf(0) }
+    DisposableEffect(activity) {
+        onDispose { activity.videoBounds=null;activity.updatePip() }
+    }
+    val full=playback.fullscreen || playback.inPip
+    BackHandler(full && !playback.inPip) { if(playback.locked) {controls=true;interaction++} else playback.fullscreen=false }
+    LaunchedEffect(controls,playback.playing,interaction,playback.locked,menu,speedMenu,scrub!=null) {
+        if(controls && playback.playing && !menu && !speedMenu && scrub==null) { delay(3500);controls=false }
+    }
+    LaunchedEffect(message) { if(message!=null) { delay(1500);message=null } }
+    LaunchedEffect(full) { controls=true;interaction++ }
+    LaunchedEffect(playback.inPip) { if(playback.inPip) { menu=false;speedMenu=false;scrub=null;controls=false } }
+    DisposableEffect(full,playback.inPip) {
+        val controller=WindowCompat.getInsetsController(activity.window,activity.window.decorView)
+        if(full && !playback.inPip) { controller.systemBarsBehavior=WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE;controller.hide(WindowInsetsCompat.Type.systemBars()) }
+        else controller.show(WindowInsetsCompat.Type.systemBars())
+        onDispose { controller.show(WindowInsetsCompat.Type.systemBars());activity.window.attributes=activity.window.attributes.apply { screenBrightness=previousBrightness } }
+    }
+    LaunchedEffect(playback.playing,playback.playRequested,playback.seekable,playback.aspect,playback.resizeMode,full) { activity.updatePip() }
+    Box(Modifier.fillMaxSize(),contentAlignment=if(full) Alignment.Center else Alignment.BottomEnd) {
+        val frame=if(full) Modifier.fillMaxSize() else Modifier.safeDrawingPadding().padding(end=24.dp,bottom=100.dp).width(320.dp).aspectRatio(16f/9f).clip(RoundedCornerShape(24.dp))
+        Box(frame.background(Color.Black)) {
+            // Keep this AndroidView at one composition location for full/mini/PiP transitions.
+            AndroidView(factory={ context -> PlayerView(context).apply { useController=false;setKeepContentOnPlayerReset(true) } },
+                modifier=Modifier.fillMaxSize().onGloballyPositioned {
+                    val bounds=it.boundsInWindow()
+                    activity.videoBounds=Rect(bounds.left.roundToInt(),bounds.top.roundToInt(),bounds.right.roundToInt(),bounds.bottom.roundToInt())
+                    activity.updatePip()
+                },
+                update={ view ->
+                    if(view.player!==playback.player) view.player=playback.player
+                    view.resizeMode=playback.resizeMode;view.keepScreenOn=playback.playRequested
+                },onReset=null,onRelease={it.player=null})
+            if(!playback.inPip) {
+                val audio=remember { activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+                Box(Modifier.fillMaxSize()
+                    .pointerInput(video.identity,playback.locked,full) {
+                        detectTapGestures(onTap={ if(!full) playback.fullscreen=true else controls=!controls;interaction++ },onDoubleTap={ offset ->
+                            if(!playback.locked && full) { playback.skip(if(offset.x<size.width/2) -10000 else 10000);message=if(offset.x<size.width/2) "−10 seconds" else "+10 seconds";interaction++ }
+                        })
+                    }
+                    .pointerInput(video.identity,playback.locked,full) {
+                        var left=false;var level=0f
+                        detectVerticalDragGestures(onDragStart={ offset ->
+                            left=offset.x<size.width/2
+                            level=if(left) activity.window.attributes.screenBrightness.takeIf { it>=0 } ?: 0.5f else audio.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()/audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+                        }) { change,amount ->
+                            if(!playback.locked && full) {
+                                change.consume();level=(level-amount/size.height.coerceAtLeast(1)).coerceIn(if(left) 0.05f else 0f,1f)
+                                if(left) activity.window.attributes=activity.window.attributes.apply { screenBrightness=level }
+                                else audio.setStreamVolume(AudioManager.STREAM_MUSIC,(level*audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)).toInt(),0)
+                                message="${if(left) "Brightness" else "Volume"} ${(level*100).toInt()}%";interaction++
+                            }
+                        }
+                    })
+                if(playback.buffering) CircularProgressIndicator(Modifier.align(Alignment.Center),color=Color.White)
+                if(full) {
+                    AnimatedVisibility(visible=controls && !playback.locked,enter=fadeIn(tween(if(reducedMotion) 0 else 160)),exit=fadeOut(tween(if(reducedMotion) 0 else 160))) {
+                        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Black.copy(alpha=0.55f),Color.Transparent,Color.Black.copy(alpha=0.65f)))).safeDrawingPadding().padding(20.dp)) {
+                            Row(Modifier.align(Alignment.TopCenter).fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+                                CinemaIcon("Back to library",{playback.fullscreen=false}) { Icon(Icons.AutoMirrored.Rounded.ArrowBack,null) }
+                                Text(video.title,Modifier.weight(1f).padding(horizontal=16.dp),color=Color.White,maxLines=1,overflow=TextOverflow.Ellipsis)
+                                Box {
+                                    CinemaIcon("Playback options",{menu=true;interaction++}) { Icon(Icons.Rounded.MoreVert,null) }
+                                    DropdownMenu(menu,{menu=false}) {
+                                        DropdownMenuItem(text={Text("Fit to screen")},onClick={playback.resizeMode=AspectRatioFrameLayout.RESIZE_MODE_FIT;menu=false})
+                                        DropdownMenuItem(text={Text("Crop to fill")},onClick={playback.resizeMode=AspectRatioFrameLayout.RESIZE_MODE_ZOOM;menu=false})
+                                        DropdownMenuItem(text={Text("Stretch")},onClick={playback.resizeMode=AspectRatioFrameLayout.RESIZE_MODE_FILL;menu=false})
+                                        DropdownMenuItem(text={Text("Restart video")},onClick={playback.seekTo(0);menu=false})
+                                        DropdownMenuItem(text={Text("Close video")},onClick={playback.close();menu=false})
+                                    }
+                                }
+                            }
+                            Row(Modifier.align(Alignment.Center),horizontalArrangement=Arrangement.spacedBy(24.dp),verticalAlignment=Alignment.CenterVertically) {
+                                CinemaIcon("Back 10 seconds",{playback.skip(-10000);interaction++},enabled=playback.seekable) { Icon(Icons.Rounded.Replay10,null,Modifier.size(32.dp)) }
+                                FilledIconButton(onClick={playback.toggle();interaction++},modifier=Modifier.size(72.dp),colors=IconButtonDefaults.filledIconButtonColors(containerColor=Color.White.copy(alpha=0.22f),contentColor=Color.White)) {
+                                    PlayPauseMorph(playback.playRequested,reducedMotion,Modifier.size(40.dp))
+                                }
+                                CinemaIcon("Forward 10 seconds",{playback.skip(10000);interaction++},enabled=playback.seekable) { Icon(Icons.Rounded.Forward10,null,Modifier.size(32.dp)) }
+                            }
+                            Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+                                scrub?.let { Box(Modifier.fillMaxWidth(),contentAlignment=Alignment.Center) { ScrubPreview(video,(it*playback.duration).toLong()) } }
+                                Slider(value=scrub ?: if(playback.duration>0) (playback.position.toFloat()/playback.duration).coerceIn(0f,1f) else 0f,
+                                    onValueChange={scrub=it;interaction++},onValueChangeFinished={scrub?.let { playback.seekTo((it*playback.duration).toLong()) };scrub=null},enabled=playback.seekable && playback.duration>0,
+                                    track={ state -> SliderDefaults.Track(sliderState=state,modifier=Modifier.height(3.dp)) },
+                                    colors=SliderDefaults.colors(thumbColor=Color.White,activeTrackColor=Color(0xFFB5D5FF),inactiveTrackColor=Color.White.copy(alpha=0.25f)))
+                                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+                                    Text("${timecode((scrub?.let { (it*playback.duration).toLong() } ?: playback.position)/1000)} / ${if(playback.duration>0) timecode(playback.duration/1000) else "—"}",color=Color.White,style=MaterialTheme.typography.labelLarge)
+                                    Spacer(Modifier.weight(1f))
+                                    Box {
+                                        TextButton(onClick={speedMenu=true;interaction++}) { Text("${playback.speed}×",color=Color.White) }
+                                        DropdownMenu(speedMenu,{speedMenu=false}) { listOf(0.5f,0.75f,1f,1.25f,1.5f,2f).forEach { rate -> DropdownMenuItem(text={Text("${rate}×")},onClick={playback.changeSpeed(rate);speedMenu=false}) } }
+                                    }
+                                    CinemaIcon("Lock controls",{playback.locked=true;controls=false}) { Icon(Icons.Rounded.LockOpen,null) }
+                                    if(activity.supportsPip()) CinemaIcon("Picture in picture",{ if(!activity.enterCinemaPip()) message="Picture in picture is unavailable right now" }) { Icon(Icons.Rounded.PictureInPictureAlt,null) }
+                                    CinemaIcon("Mini-player",{playback.fullscreen=false}) { Icon(Icons.Rounded.FullscreenExit,null) }
+                                }
+                            }
+                        }
+                    }
+                    if(playback.locked && controls) CinemaIcon("Unlock controls",{playback.locked=false;controls=true;interaction++},Modifier.align(Alignment.CenterStart).safeDrawingPadding().padding(24.dp)) { Icon(Icons.Rounded.Lock,null) }
+                } else {
+                    Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color.Black.copy(alpha=0.5f)),verticalAlignment=Alignment.CenterVertically) {
+                        Text(video.title,Modifier.weight(1f).padding(start=12.dp),color=Color.White,maxLines=1,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.labelMedium)
+                        CinemaIcon(if(playback.playRequested) "Pause" else "Play",{playback.toggle()}) { Icon(if(playback.playRequested) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,null) }
+                        CinemaIcon("Close mini-player",playback::close) { Icon(Icons.Rounded.Close,null) }
+                    }
+                }
+                message?.let { Surface(Modifier.align(Alignment.TopCenter).padding(top=80.dp),shape=RoundedCornerShape(20.dp),color=Color.Black.copy(alpha=0.7f),contentColor=Color.White) { Text(it,Modifier.padding(16.dp)) } }
+                playback.error?.let { error ->
+                    Surface(Modifier.align(Alignment.Center).padding(24.dp).widthIn(max=520.dp),shape=RoundedCornerShape(24.dp)) {
+                        Column(Modifier.padding(24.dp)) { Text(if(full) error else "Playback unavailable");Row { TextButton(onClick=playback::retry) { Text("Retry") };TextButton(onClick=playback::close) { Text("Close") } } }
+                    }
+                }
+            }
+        }
+    }
+}
+@Composable private fun CinemaIcon(label:String,action:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,icon:@Composable ()->Unit) {
+    IconButton(onClick=action,modifier=modifier.size(48.dp).semantics { contentDescription=label },enabled=enabled,colors=IconButtonDefaults.iconButtonColors(contentColor=Color.White,disabledContentColor=Color.White.copy(alpha=0.3f))) {
+        icon()
+    }
+}
