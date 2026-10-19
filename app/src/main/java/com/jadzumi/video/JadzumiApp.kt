@@ -1,9 +1,8 @@
 package com.jadzumi.video
 
-import androidx.core.content.edit
-import androidx.activity.compose.BackHandler
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -51,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.edit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import kotlinx.coroutines.launch
@@ -94,18 +94,13 @@ private val destinations = listOf(
     Canvas(Modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
-
+        val bgColors = if (darkSurface) listOf(Color(0xFF1E293B), Color(0xFF0F172A))
+        else listOf(Color(0xFFFFFFFF), Color(0xFFE8F1FF), Color(0xFFD3E3FD))
         drawRoundRect(
-            brush = Brush.linearGradient(
-                colors = if (darkSurface) listOf(Color(0xFF1E293B), Color(0xFF0F172A))
-                else listOf(Color(0xFFFFFFFF), Color(0xFFE8F1FF), Color(0xFFD3E3FD)),
-                start = Offset(0f, 0f),
-                end = Offset(w, h)
-            ),
+            brush = Brush.linearGradient(bgColors, Offset.Zero, Offset(w, h)),
             size = Size(w, h),
             cornerRadius = CornerRadius(w * 0.24f, h * 0.24f)
         )
-
         val backWing = Path().apply {
             moveTo(w * 0.40f, h * 0.21f)
             lineTo(w * 0.80f, h * 0.41f)
@@ -116,12 +111,11 @@ private val destinations = listOf(
         drawPath(
             path = backWing,
             brush = Brush.linearGradient(
-                colors = listOf(Color(0xFF3B82F6), Color(0xFF0B57D0), Color(0xFF1D4ED8)),
-                start = Offset(w * 0.4f, h * 0.2f),
-                end = Offset(w * 0.8f, h * 0.75f)
+                listOf(Color(0xFF3B82F6), Color(0xFF0B57D0), Color(0xFF1D4ED8)),
+                Offset(w * 0.4f, h * 0.2f),
+                Offset(w * 0.8f, h * 0.75f)
             )
         )
-
         val frontPlay = Path().apply {
             moveTo(w * 0.26f, h * 0.29f)
             lineTo(w * 0.66f, h * 0.50f)
@@ -131,9 +125,9 @@ private val destinations = listOf(
         drawPath(
             path = frontPlay,
             brush = Brush.linearGradient(
-                colors = listOf(Color.White, Color(0xFFEFF6FF), Color(0xFFBFDBFE)),
-                start = Offset(w * 0.26f, h * 0.29f),
-                end = Offset(w * 0.66f, h * 0.71f)
+                listOf(Color.White, Color(0xFFEFF6FF), Color(0xFFBFDBFE)),
+                Offset(w * 0.26f, h * 0.29f),
+                Offset(w * 0.66f, h * 0.71f)
             )
         )
     }
@@ -159,13 +153,12 @@ private val destinations = listOf(
     var bloomOriginColor by remember { mutableStateOf<Color?>(null) }
 
     val sysDark = isSystemInDarkTheme()
-    fun schemeFor(t: String) = when (t) {
+    val colors = when (theme) {
         "Dark" -> Dark
         "AMOLED" -> Dark.copy(background = Color.Black, surface = Color(0xFF0A0A0C), surfaceVariant = Color(0xFF141418))
         "System" -> if (sysDark) Dark else Light
         else -> Light
     }
-    val colors = schemeFor(theme)
 
     fun switchThemeWithBloom(newTheme: String) {
         if (newTheme == theme) return
@@ -176,10 +169,7 @@ private val destinations = listOf(
             bloomOriginColor = oldBg
             scope.launch {
                 bloomProgress.snapTo(0f)
-                bloomProgress.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(durationMillis = 580, easing = FastOutSlowInEasing)
-                )
+                bloomProgress.animateTo(1f, tween(580, easing = FastOutSlowInEasing))
                 bloomOriginColor = null
             }
         }
@@ -298,7 +288,14 @@ private val destinations = listOf(
                                         onNavigateFolders = { route = "Folders" }
                                     )
                                     "Playlists" -> EmptyPage(Icons.AutoMirrored.Rounded.QueueMusic, "Your collections, together", "Playlist creation is planned for a later update.")
-                                    else -> if (playback.video != null) Column(Modifier.padding(28.dp)) { Text("${playback.video?.title}", style = MaterialTheme.typography.titleLarge); Button(onClick = { playback.fullscreen = true }) { Text("Open player") } } else EmptyPage(Icons.Rounded.PlayCircle, "Your cinema is ready", "Choose an imported video from your library, then tap Play.")
+                                    else -> if (playback.video != null) {
+                                        Column(Modifier.padding(28.dp)) {
+                                            Text("${playback.video?.title}", style = MaterialTheme.typography.titleLarge)
+                                            Button(onClick = { playback.fullscreen = true }) { Text("Open player") }
+                                        }
+                                    } else {
+                                        EmptyPage(Icons.Rounded.PlayCircle, "Your cinema is ready", "Choose an imported video from your library, then tap Play.")
+                                    }
                                 }
                             }
 
@@ -339,10 +336,7 @@ private val destinations = listOf(
 
 @Composable private fun AppRail(route: String, darkSurface: Boolean, navigate: (String)->Unit) {
     Surface(color = MaterialTheme.colorScheme.surface) {
-        Column(
-            Modifier.width(96.dp).fillMaxHeight().padding(vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(Modifier.width(96.dp).fillMaxHeight().padding(vertical = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.clickable { navigate("Settings") }) {
                 JadzumiLogo(size = 48.dp, darkSurface = darkSurface)
             }
@@ -400,17 +394,8 @@ private val destinations = listOf(
                     )
                 }
             }
-
-            Surface(
-                color = Color(0xFFECFDF5),
-                border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
-                shape = RoundedCornerShape(999.dp)
-            ) {
-                Row(
-                    Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
+            Surface(color = Color(0xFFECFDF5), border = BorderStroke(1.dp, Color(0xFFA7F3D0)), shape = RoundedCornerShape(999.dp)) {
+                Row(Modifier.padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF10B981)))
                     Text("Fully Local & Private", color = Color(0xFF047857), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
@@ -418,11 +403,7 @@ private val destinations = listOf(
         }
 
         statusNotice?.let { msg ->
-            Surface(
-                Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
+            Surface(Modifier.fillMaxWidth().padding(bottom = 12.dp), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.primaryContainer) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(msg, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     TextButton(onClick = { statusNotice = null }) { Text("Dismiss") }
@@ -434,64 +415,26 @@ private val destinations = listOf(
             "Privacy & About" -> {
                 if (wide) {
                     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                        LazyColumn(
-                            Modifier.weight(0.58f).fillMaxHeight(),
-                            contentPadding = PaddingValues(bottom = 32.dp),
-                            verticalArrangement = Arrangement.spacedBy(20.dp)
-                        ) {
-                            item {
-                                PrivacyLeftPane(
-                                    localState = localState,
-                                    playback = playback,
-                                    onAddDirectory = addFolder,
-                                    onManagePermissions = onNavigateFolders,
-                                    onStatus = { statusNotice = it }
-                                )
-                            }
+                        LazyColumn(Modifier.weight(0.58f).fillMaxHeight(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                            item { PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it } }
                         }
-                        LazyColumn(
-                            Modifier.weight(0.42f).fillMaxHeight(),
-                            contentPadding = PaddingValues(bottom = 32.dp),
-                            verticalArrangement = Arrangement.spacedBy(20.dp)
-                        ) {
-                            item {
-                                AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED")
-                            }
+                        LazyColumn(Modifier.weight(0.42f).fillMaxHeight(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                            item { AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED") }
                         }
                     }
                 } else {
-                    LazyColumn(
-                        Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 32.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        item {
-                            PrivacyLeftPane(
-                                localState = localState,
-                                playback = playback,
-                                onAddDirectory = addFolder,
-                                onManagePermissions = onNavigateFolders,
-                                onStatus = { statusNotice = it }
-                            )
-                        }
-                        item {
-                            AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED")
-                        }
+                    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        item { PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it } }
+                        item { AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED") }
                     }
                 }
             }
-
             "Appearance & Themes" -> {
-                LazyColumn(
-                    Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     item {
                         Panel {
                             Text("Base Theme & Display Mode", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                             Text("Switch between airy light, deep dark slate, or 0% pixel-draw AMOLED black.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 16.dp))
-
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 listOf(
                                     Triple("Light", "Airy Pale-Blue", Icons.Rounded.LightMode),
@@ -500,20 +443,10 @@ private val destinations = listOf(
                                     Triple("System", "Auto Sync", Icons.Rounded.Devices)
                                 ).forEach { (mode, subtitle, icon) ->
                                     val selected = theme == mode
-                                    Card(
-                                        onClick = { onTheme(mode) },
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(20.dp),
-                                        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                                        )
-                                    ) {
-                                        Column(
-                                            Modifier.fillMaxWidth().padding(16.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
+                                    val border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                    val bg = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                    Card(onClick = { onTheme(mode) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(20.dp), border = border, colors = CardDefaults.cardColors(containerColor = bg)) {
+                                        Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                             Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
                                             Text(mode, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                             Text(if (selected) "Active" else subtitle, fontSize = 11.sp, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
@@ -523,7 +456,6 @@ private val destinations = listOf(
                             }
                         }
                     }
-
                     item {
                         Panel {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -545,35 +477,25 @@ private val destinations = listOf(
                     }
                 }
             }
-
             "Playback & Audio" -> {
-                LazyColumn(
-                    Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     item {
                         Panel {
                             Text("Double-Tap Seek Interval", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                            Text("Choose how many seconds to jump when double-tapping left or right in the cinema player.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+                            Text("Choose how many seconds to jump when double-tapping in the player.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 listOf(5, 10, 15, 30).forEach { sec ->
-                                    FilterChip(
-                                        selected = playback.seekIncrementSeconds == sec,
-                                        onClick = { playback.updateSeekSeconds(sec) },
-                                        label = { Text("$sec seconds") }
-                                    )
+                                    FilterChip(selected = playback.seekIncrementSeconds == sec, onClick = { playback.updateSeekSeconds(sec) }, label = { Text("$sec seconds") })
                                 }
                             }
                         }
                     }
-
                     item {
                         Panel {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                 Column(Modifier.weight(1f)) {
                                     Text("Vertical Swipe HUD Gestures", fontWeight = FontWeight.Bold)
-                                    Text("Left vertical swipe controls display brightness; right controls audio volume.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("Left vertical swipe controls brightness; right controls volume.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 Switch(checked = playback.swipeGesturesEnabled, onCheckedChange = { playback.updateSwipeGestures(it) })
                             }
@@ -581,7 +503,7 @@ private val destinations = listOf(
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                 Column(Modifier.weight(1f)) {
                                     Text("Screen-Off Background Audio", fontWeight = FontWeight.Bold)
-                                    Text("Keep playing audio with lock-screen controls when the screen is turned off.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("Keep playing audio with lock-screen controls when screen is off.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
                             }
@@ -623,38 +545,23 @@ private val destinations = listOf(
                         modifier = Modifier.padding(top = 6.dp)
                     )
                 }
-                FilledTonalButton(
-                    onClick = onAddDirectory,
-                    shape = RoundedCornerShape(14.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-                ) {
+                FilledTonalButton(onClick = onAddDirectory, shape = RoundedCornerShape(14.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
                     Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("Add Directory", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
-
             Spacer(Modifier.height(16.dp))
             Text("ACTIVE INTERNAL DIRECTORIES", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
-
             if (localState.folders.isEmpty()) {
-                Surface(
-                    Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ) {
+                Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
                     Text("No directories added yet. Tap Add Directory to grant folder access.", Modifier.padding(14.dp), style = MaterialTheme.typography.bodySmall)
                 }
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     localState.folders.forEach { folder ->
-                        Surface(
-                            Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                        ) {
+                        Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                             Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Rounded.Folder, null, tint = Color(0xFFF59E0B), modifier = Modifier.size(20.dp))
@@ -666,7 +573,6 @@ private val destinations = listOf(
                     }
                 }
             }
-
             HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Modify or revoke media directory permissions at any time", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
@@ -681,13 +587,7 @@ private val destinations = listOf(
                 Icon(Icons.Rounded.History, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Text("Watch History & Playback", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
-            Text(
-                "Playback state, resume points, and preferences are kept exclusively on this device.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
-            )
-
+            Text("Playback state, resume points, and preferences are kept exclusively on this device.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
@@ -696,7 +596,6 @@ private val destinations = listOf(
                 }
                 Switch(checked = playback.rememberProgress, onCheckedChange = { playback.updateRememberProgress(it) })
             }
-
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
@@ -705,7 +604,6 @@ private val destinations = listOf(
                 }
                 Switch(checked = playback.saveTrackPrefs, onCheckedChange = { playback.updateSaveTrackPrefs(it) })
             }
-
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.End) {
                 FilledTonalButton(
@@ -713,10 +611,7 @@ private val destinations = listOf(
                         playback.clearWatchHistory()
                         onStatus("All saved watch history and resume positions have been cleared.")
                     },
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color(0xFFFFF1F2),
-                        contentColor = Color(0xFFE11D48)
-                    ),
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFFFFF1F2), contentColor = Color(0xFFE11D48)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(Icons.Rounded.DeleteSweep, null, Modifier.size(16.dp))
@@ -731,12 +626,7 @@ private val destinations = listOf(
                 Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Text("App Data & Cache", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
-            Text(
-                "All metadata and playback logs remain stored strictly on-device. Optional online metadata fetching is disabled by default.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 6.dp, bottom = 14.dp)
-            )
+            Text("All metadata and playback logs remain stored strictly on-device. Optional online metadata fetching is disabled by default.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
                     onClick = {
@@ -750,9 +640,7 @@ private val destinations = listOf(
                     Text("Clear Cache", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
                 OutlinedButton(
-                    onClick = {
-                        onStatus("App settings snapshot verified locally (${localState.folders.size} folders, ${localState.videos.size} indexed titles).")
-                    },
+                    onClick = { onStatus("App settings snapshot verified locally (${localState.folders.size} folders, ${localState.videos.size} indexed titles).") },
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(Icons.Rounded.FileDownload, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
@@ -780,17 +668,8 @@ private val destinations = listOf(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text("Jadzumi", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                        Surface(
-                            shape = RoundedCornerShape(999.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                        ) {
-                            Text(
-                                "Version ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                        Surface(shape = RoundedCornerShape(999.dp), color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                            Text("Version ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})", modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                     Text("Your movies. Your space.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
@@ -805,15 +684,157 @@ private val destinations = listOf(
                     Text("Omkar Patil", fontSize = 17.sp, fontWeight = FontWeight.Bold)
                     Text("Creator · Product & Design Direction", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
                 }
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
-                ) {
-                    Row(
-                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
+                Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))) {
+                    Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
-                        Text("AI-assisted development", fontSize = 11.sp, fontWeigh
+                        Text("AI-assisted development", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                }
+            }
+        }
+
+        Panel {
+            Text("PHILOSOPHY", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "Crafted to deliver uncompromised video playback with fluid gesture controls, accurate color rendering, and complete privacy. No background telemetry, no ads, no trackers.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        Text(
+            "\"No popcorn included. Sorry.\"",
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            textAlign = TextAlign.Center,
+            fontStyle = FontStyle.Italic,
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable private fun LibraryPage(query: String, demo: Boolean, onDemo: (Boolean)->Unit, onSelect: (String)->Unit) {
+    var category by rememberSaveable { mutableStateOf("All videos") }
+    val filtered = filterVideos(if (demo) previewVideos else emptyList(), query, category)
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(28.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        item {
+            Column {
+                Text("Your cinema,\nat home.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                Text("A quiet space for the stories you keep.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+            }
+        }
+        item {
+            Panel {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Design preview", fontWeight = FontWeight.SemiBold)
+                        Text("Sample titles only · no videos imported", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Switch(demo, onDemo, modifier = Modifier.semantics { contentDescription = "Show sample titles" })
+                }
+            }
+        }
+        item {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(listOf("All videos", "Movies", "TV & Anime")) { c ->
+                    FilterChip(selected = category == c, onClick = { category = c }, label = { Text(c) })
+                }
+            }
+        }
+        if (filtered.isEmpty()) {
+            item { EmptyPage(Icons.Rounded.VideoLibrary, if (demo) "No matching titles" else "Make room for your stories", "Try another title or category.") }
+        }
+        if (filtered.isNotEmpty()) {
+            item { Hero(filtered.first(), onSelect) }
+            item { Text("Continue watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
+            items(filtered, key = { it.id }) { video -> VideoRow(video) { onSelect(video.id) } }
+        }
+    }
+}
+
+@Composable private fun Art(video: PreviewVideo, modifier: Modifier = Modifier) {
+    val id = when (video.artwork) { "anime" -> R.drawable.anime; "cosmos" -> R.drawable.cosmos; else -> R.drawable.hero }
+    Image(painterResource(id), contentDescription = null, modifier = modifier, contentScale = ContentScale.Crop)
+}
+
+@Composable private fun Hero(video: PreviewVideo, onSelect: (String)->Unit) {
+    Card(onClick = { onSelect(video.id) }, shape = RoundedCornerShape(28.dp)) {
+        Box(Modifier.fillMaxWidth().heightIn(min = 280.dp)) {
+            Art(video, Modifier.matchParentSize())
+            Box(Modifier.matchParentSize().background(Brush.horizontalGradient(listOf(Color(0xF0102034), Color(0x550F2038)))))
+            Column(Modifier.padding(28.dp).widthIn(max = 580.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text("FEATURED · SAMPLE ${video.category.uppercase()}", color = Color(0xFFADC7FF), style = MaterialTheme.typography.labelMedium)
+                Text(video.title, color = Color.White, fontSize = 32.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
+                Text("Pick up where the story left off.", color = Color.White.copy(alpha = 0.85f))
+                Button(onClick = { onSelect(video.id) }) { Icon(Icons.Rounded.Movie, null); Spacer(Modifier.width(8.dp)); Text("Explore details") }
+            }
+        }
+    }
+}
+
+@Composable private fun VideoRow(video: PreviewVideo, onSelect: ()->Unit) {
+    Card(onClick = onSelect, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(24.dp)) {
+        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            Art(video, Modifier.size(100.dp, 76.dp).clip(RoundedCornerShape(16.dp)))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Text(video.title, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("${timecode(video.positionSeconds)} / ${timecode(video.durationSeconds)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LinearProgressIndicator(progress = { video.progress }, modifier = Modifier.fillMaxWidth().height(4.dp))
+            }
+            Icon(Icons.Rounded.ChevronRight, "View details")
+        }
+    }
+}
+
+@Composable private fun DetailPage(video: PreviewVideo) {
+    var favorite by rememberSaveable(video.id) { mutableStateOf(false) }
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(28.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        item {
+            Box(Modifier.fillMaxWidth().height(260.dp).clip(RoundedCornerShape(28.dp))) {
+                Art(video, Modifier.fillMaxSize())
+                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xD9101C30)))))
+                Text(video.title, Modifier.align(Alignment.BottomStart).padding(24.dp), color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        item {
+            Panel {
+                Text("SAMPLE ${video.category.uppercase()}", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+                Text("A story waiting to be rediscovered in your personal cinema.", modifier = Modifier.padding(vertical = 12.dp))
+                Text("${timecode(video.remainingSeconds)} remaining · ${(video.progress * 100).toInt()}% watched (sample)")
+                LinearProgressIndicator(progress = { video.progress }, modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(onClick = {}, enabled = false) { Text("Sample preview only") }
+                    IconToggleButton(checked = favorite, onCheckedChange = { favorite = it }) {
+                        Icon(if (favorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder, "Favorite")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
+    Surface(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(Modifier.padding(24.dp), content = content)
+    }
+}
+
+@Composable private fun EmptyPage(icon: ImageVector, title: String, body: String) {
+    Column(
+        Modifier.fillMaxWidth().padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(icon, null, Modifier.size(56.dp), tint = MaterialTheme.colorScheme.primary)
+        Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+// END OF FILE
