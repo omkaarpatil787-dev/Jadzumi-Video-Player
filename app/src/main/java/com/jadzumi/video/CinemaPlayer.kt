@@ -157,17 +157,6 @@ import kotlin.math.roundToInt
                         }
                 )
 
-                // Format / HDR Badge in Top Right Corner
-                playback.videoCodecBadge?.let { badge ->
-                    Surface(
-                        Modifier.align(Alignment.TopEnd).safeDrawingPadding().padding(top = 16.dp, end = 24.dp),
-                        color = Color.Black.copy(alpha = 0.65f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(badge, Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = Color(0xFF70B5FF), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-
                 if (playback.buffering) CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.White)
 
                 if (full) {
@@ -180,8 +169,7 @@ import kotlin.math.roundToInt
                             Row(Modifier.align(Alignment.TopCenter).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 CinemaIcon("Back to library", { playback.fullscreen = false }) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, null) }
                                 Text(video.title, Modifier.weight(1f).padding(horizontal = 16.dp), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                
-                                // Audio & Subs Trigger
+
                                 TextButton(
                                     onClick = { tracksDrawer = true; interaction++ },
                                     colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
@@ -243,12 +231,11 @@ import kotlin.math.roundToInt
                 } else {
                     Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color.Black.copy(alpha = 0.5f)), verticalAlignment = Alignment.CenterVertically) {
                         Text(video.title, Modifier.weight(1f).padding(start=12.dp), color=Color.White, maxLines=1, overflow=TextOverflow.Ellipsis, style=MaterialTheme.typography.labelMedium)
-                        CinemaIcon(if(playback.playRequested) "Pause" else "Play", { playback.toggle() }) { Icon(if (playback.playRequested) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, null) }
+                        CinemaIcon(if (playback.playRequested) "Pause" else "Play", { playback.toggle() }) { Icon(if (playback.playRequested) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, null) }
                         CinemaIcon("Close mini-player", playback::close) { Icon(Icons.Rounded.Close, null) }
                     }
                 }
 
-                // Audio & Subtitle Streams Drawer (Reference Mockup)
                 if (tracksDrawer) {
                     AudioSubsDrawer(
                         playback = playback,
@@ -316,7 +303,6 @@ import kotlin.math.roundToInt
                         }
                     }
 
-                    // Pad 5 Quad Speakers Downmix Note (from Design Reference)
                     Surface(
                         Modifier.fillMaxWidth().padding(top = 12.dp),
                         shape = RoundedCornerShape(16.dp),
