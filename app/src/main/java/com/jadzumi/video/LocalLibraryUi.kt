@@ -42,7 +42,6 @@ import kotlinx.coroutines.sync.withPermit
         val uri = result.data?.data
         if (result.resultCode == android.app.Activity.RESULT_OK && uri != null) {
             try {
-                // Request both read & write persistable permissions so user-initiated deletion is supported
                 val flags = result.data?.flags ?: 0
                 val takeFlags = (flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION))
                     .takeIf { it != 0 } ?: Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -358,9 +357,13 @@ import kotlinx.coroutines.sync.withPermit
     }
 }
 
-private object ThumbnailMemory {
+internal object ThumbnailMemory {
     val cache = object : LruCache<String, Bitmap>(12 * 1024 * 1024) { override fun sizeOf(key: String, value: Bitmap) = value.byteCount }
     val permits = Semaphore(2)
+}
+
+fun clearThumbnailMemoryCache() {
+    ThumbnailMemory.cache.evictAll()
 }
 
 @Composable private fun LocalThumbnail(video: LocalVideo, modifier: Modifier) {
