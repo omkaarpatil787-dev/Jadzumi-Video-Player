@@ -1,6 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application android:name=".JadzumiApplication" android:label="Jadzumi Video" android:icon="@drawable/ic_launcher" android:theme="@style/Theme.Jadzumi" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:supportsRtl="true">
-        <activity android:name=".MainActivity" android:exported="true" android:supportsPictureInPicture="true" android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden">
+
+    <!-- Allows playback controls on lock screen and notification shade on Android 13–16 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".JadzumiApplication"
+        android:allowBackup="false"
+        android:icon="@drawable/ic_launcher"
+        android:label="Jadzumi Video"
+        android:roundIcon="@drawable/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.JadzumiVideo">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
