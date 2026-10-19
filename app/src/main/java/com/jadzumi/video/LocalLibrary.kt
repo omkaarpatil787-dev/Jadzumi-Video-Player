@@ -92,7 +92,7 @@ class LocalLibrary internal constructor(private val context: Context) {
     private fun work(silent: Boolean = false, block: () -> String?) {
         if (mutable.value.busy) return
         if (!silent) {
-            mutable.value = mutable.value.copy(busy = true, message = "Refreshing your library…")
+            mutable.value = mutable.value.copy(busy = true, message = "Working on your library…")
         } else {
             mutable.value = mutable.value.copy(busy = true)
         }
@@ -141,7 +141,6 @@ class LocalLibrary internal constructor(private val context: Context) {
         if (messages.any { it != null }) "Some folders had issues during full rescan." else "Full library rescan complete."
     }
 
-    /** Automatically checks for additions/deletions when returning to the app (debounced to 30s) */
     fun autoRefreshOnResume() {
         val now = System.currentTimeMillis()
         if (now - lastAutoRefreshTime > 30_000 && !mutable.value.busy && mutable.value.folders.isNotEmpty()) {
@@ -150,6 +149,28 @@ class LocalLibrary internal constructor(private val context: Context) {
                 mutable.value.folders.forEach { if (!stopped.get()) scan(it, force = false) }
                 null
             }
+        }
+    }
+
+    /** Milestone 3C: User-initiated permanent deletion using scoped SAF Document API */
+    fun deleteVideo(video: LocalVideo) = work {
+        val docUri = video.uri.toUri()
+        val deleted = try {
+            Docs.deleteDocument(context.contentResolver, docUri)
+        } catch (_: SecurityException) {
+            false
+        } catch (_: Exception) {
+            false
+        }
+
+        if (deleted) {
+            val db = database.writableDatabase
+            db.transaction {
+                delete("videos", "uri=?", arrayOf(video.uri))
+            }
+            "Deleted \"${video.name}\" from storage."
+        } else {
+            "Could not delete \"${video.name}\". If this folder was added before M3C, remove and re-add the folder to grant write access."
         }
     }
 
@@ -162,7 +183,7 @@ class LocalLibrary internal constructor(private val context: Context) {
         runCatching {
             context.contentResolver.releasePersistableUriPermission(
                 folder.uri.toUri(),
-                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
         }
         "Folder removed from library. Your files were not changed."
@@ -212,7 +233,6 @@ class LocalLibrary internal constructor(private val context: Context) {
                             val modified = if (c.isNull(4)) 0 else c.getLong(4)
                             val old = previous[uri.toString()]
 
-                            // Incremental optimization: skip re-decoding metadata if file hasn't changed
                             val video = if (!force && old != null && modified > 0 && old.modified == modified && old.bytes == size) {
                                 old.copy(folder = folder.uri, name = name, mime = mime)
                             } else {
