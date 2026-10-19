@@ -1,0 +1,113 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig
+> Task :app:checkDebugAarMetadata FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:checkDebugAarMetadata'.
+> Could not resolve all files for configuration ':app:debugRuntimeClasspath'.
+   > Could not resolve org.jetbrains.kotlin:kotlin-stdlib:2.2.10.
+     Required by:
+         project :app
+      > Could not resolve org.jetbrains.kotlin:kotlin-stdlib:2.2.10.
+         > Could not get resource 'https://dl.google.com/dl/android/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.10/kotlin-stdlib-2.2.10.pom'.
+            > Could not GET 'https://dl.google.com/dl/android/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.10/kotlin-stdlib-2.2.10.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+      > Could not resolve org.jetbrains.kotlin:kotlin-stdlib:2.2.10.
+         > Could not get resource 'https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.10/kotlin-stdlib-2.2.10.pom'.
+            > Could not GET 'https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.10/kotlin-stdlib-2.2.10.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+   > Could not resolve androidx.media3:media3-exoplayer:1.11.1.
+     Required by:
+         project :app
+      > Could not resolve androidx.media3:media3-exoplayer:1.11.1.
+         > Could not get resource 'https://dl.google.com/dl/android/maven2/androidx/media3/media3-exoplayer/1.11.1/media3-exoplayer-1.11.1.pom'.
+            > Could not GET 'https://dl.google.com/dl/android/maven2/androidx/media3/media3-exoplayer/1.11.1/media3-exoplayer-1.11.1.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+      > Could not resolve androidx.media3:media3-exoplayer:1.11.1.
+         > Could not get resource 'https://repo.maven.apache.org/maven2/androidx/media3/media3-exoplayer/1.11.1/media3-exoplayer-1.11.1.pom'.
+            > Could not GET 'https://repo.maven.apache.org/maven2/androidx/media3/media3-exoplayer/1.11.1/media3-exoplayer-1.11.1.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+   > Could not resolve androidx.media3:media3-ui:1.11.1.
+     Required by:
+         project :app
+      > Could not resolve androidx.media3:media3-ui:1.11.1.
+         > Could not get resource 'https://dl.google.com/dl/android/maven2/androidx/media3/media3-ui/1.11.1/media3-ui-1.11.1.pom'.
+            > Could not GET 'https://dl.google.com/dl/android/maven2/androidx/media3/media3-ui/1.11.1/media3-ui-1.11.1.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+      > Could not resolve androidx.media3:media3-ui:1.11.1.
+         > Could not get resource 'https://repo.maven.apache.org/maven2/androidx/media3/media3-ui/1.11.1/media3-ui-1.11.1.pom'.
+            > Could not GET 'https://repo.maven.apache.org/maven2/androidx/media3/media3-ui/1.11.1/media3-ui-1.11.1.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+   > Could not resolve androidx.media3:media3-session:1.11.1.
+     Required by:
+         project :app
+      > Could not resolve androidx.media3:media3-session:1.11.1.
+         > Could not get resource 'https://dl.google.com/dl/android/maven2/androidx/media3/media3-session/1.11.1/media3-session-1.11.1.pom'.
+            > Could not GET 'https://dl.google.com/dl/android/maven2/androidx/media3/media3-session/1.11.1/media3-session-1.11.1.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+      > Could not resolve androidx.media3:media3-session:1.11.1.
+         > Could not get resource 'https://repo.maven.apache.org/maven2/androidx/media3/media3-session/1.11.1/media3-session-1.11.1.pom'.
+            > Could not GET 'https://repo.maven.apache.org/maven2/androidx/media3/media3-session/1.11.1/media3-session-1.11.1.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+   > Could not resolve androidx.compose:compose-bom:2025.04.01.
+     Required by:
+         project :app
+      > Could not resolve androidx.compose:compose-bom:2025.04.01.
+         > Could not get resource 'https://dl.google.com/dl/android/maven2/androidx/compose/compose-bom/2025.04.01/compose-bom-2025.04.01.pom'.
+            > Could not GET 'https://dl.google.com/dl/android/maven2/androidx/compose/compose-bom/2025.04.01/compose-bom-2025.04.01.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+      > Could not resolve androidx.compose:compose-bom:2025.04.01.
+         > Could not get resource 'https://repo.maven.apache.org/maven2/androidx/compose/compose-bom/2025.04.01/compose-bom-2025.04.01.pom'.
+            > Could not GET 'https://repo.maven.apache.org/maven2/androidx/compose/compose-bom/2025.04.01/compose-bom-2025.04.01.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+   > Could not resolve androidx.activity:activity-compose:1.10.1.
+     Required by:
+         project :app
+      > Could not resolve androidx.activity:activity-compose:1.10.1.
+         > Could not get resource 'https://dl.google.com/dl/android/maven2/androidx/activity/activity-compose/1.10.1/activity-compose-1.10.1.pom'.
+            > Could not GET 'https://dl.google.com/dl/android/maven2/androidx/activity/activity-compose/1.10.1/activity-compose-1.10.1.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+      > Could not resolve androidx.activity:activity-compose:1.10.1.
+         > Could not get resource 'https://repo.maven.apache.org/maven2/androidx/activity/activity-compose/1.10.1/activity-compose-1.10.1.pom'.
+            > Could not GET 'https://repo.maven.apache.org/maven2/androidx/activity/activity-compose/1.10.1/activity-compose-1.10.1.pom'.
+               > Got socket exception during request. It might be caused by SSL misconfiguration
+                  > Connect to 127.0.0.1:33531 [/127.0.0.1] failed: Connection refused
+   > Could not find androidx.compose.ui:ui:.
+     Required by:
+         project :app
+   > Could not find androidx.compose.foundation:foundation:.
+     Required by:
+         project :app
+   > Could not find androidx.compose.material3:material3:.
+     Required by:
+         project :app
+   > Could not find androidx.compose.material:material-icons-extended:.
+     Required by:
+         project :app
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 43s
+2 actionable tasks: 2 executed

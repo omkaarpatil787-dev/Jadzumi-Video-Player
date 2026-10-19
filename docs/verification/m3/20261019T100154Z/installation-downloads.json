@@ -1,0 +1,19 @@
+[
+  {
+    "file": "android-commandlinetools.zip",
+    "url": "https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip",
+    "redirects_followed": false,
+    "status": 200,
+    "bytes": 164760899,
+    "success": true
+  },
+  {
+    "file": "gradle-8.11.1-bin.zip",
+    "url": "https://services.gradle.org/distributions/gradle-8.11.1-bin.zip",
+    "redirects_followed": false,
+    "status": 307,
+    "location": "https://github.com/gradle/gradle-distributions/releases/download/v8.11.1/gradle-8.11.1-bin.zip",
+    "error": "HTTP Error 307: Temporary Redirect",
+    "success": false
+  }
+]

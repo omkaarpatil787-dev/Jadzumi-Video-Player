@@ -1,0 +1,1 @@
+PASS: final M2 APK and original M1 APK use the same SHA-256 signer certificate.

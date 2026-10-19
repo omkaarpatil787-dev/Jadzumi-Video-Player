@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/workspace/scratch/a2b20457baed/toolchain/android-sdk/cmdline-tools/latest/bin/sdkmanager",
+    "--sdk_root=/workspace/scratch/a2b20457baed/toolchain/android-sdk",
+    "platforms;android-36",
+    "build-tools;35.0.0",
+    "platform-tools"
+  ],
+  "exit_code": 0,
+  "seconds": 22.9,
+  "installed": {
+    "platforms/android-36/android.jar": true,
+    "build-tools/35.0.0/aapt": true,
+    "build-tools/35.0.0/apksigner": true,
+    "platform-tools/adb": true
+  }
+}

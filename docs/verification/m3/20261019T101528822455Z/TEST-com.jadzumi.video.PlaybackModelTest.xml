@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.jadzumi.video.PlaybackModelTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-19T10:16:25" hostname="e28a935a3d9c" time="0.005">
+  <properties/>
+  <testcase name="landscapeVideoExcludesTabletLetterboxing" classname="com.jadzumi.video.PlaybackModelTest" time="0.001"/>
+  <testcase name="seekPreservesExactIntegerPosition" classname="com.jadzumi.video.PlaybackModelTest" time="0.0"/>
+  <testcase name="seekClampsBothEnds" classname="com.jadzumi.video.PlaybackModelTest" time="0.001"/>
+  <testcase name="resumePreservesUnfinishedEndingAndResetsCompletedVideo" classname="com.jadzumi.video.PlaybackModelTest" time="0.0"/>
+  <testcase name="portraitVideoExcludesPillarboxing" classname="com.jadzumi.video.PlaybackModelTest" time="0.002"/>
+  <testcase name="cropAndStretchUseEntirePlayerBounds" classname="com.jadzumi.video.PlaybackModelTest" time="0.0"/>
+  <testcase name="extremeSeekDoesNotOverflowIntoNegativePosition" classname="com.jadzumi.video.PlaybackModelTest" time="0.0"/>
+  <testcase name="unknownOrInvalidVideoSizeHasSafeBounds" classname="com.jadzumi.video.PlaybackModelTest" time="0.0"/>
+  <testcase name="unknownDurationDoesNotBecomeNegative" classname="com.jadzumi.video.PlaybackModelTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

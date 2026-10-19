@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.jadzumi.video.LocalLibraryTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-18T19:21:24" hostname="7d68f6688d64" time="0.028">
+  <properties/>
+  <testcase name="recognizesSeasonEpisodePatterns" classname="com.jadzumi.video.LocalLibraryTest" time="0.006"/>
+  <testcase name="avoidsAmbiguousNumbers" classname="com.jadzumi.video.LocalLibraryTest" time="0.001"/>
+  <testcase name="acceptsVideoMimeOrKnownExtension" classname="com.jadzumi.video.LocalLibraryTest" time="0.021"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

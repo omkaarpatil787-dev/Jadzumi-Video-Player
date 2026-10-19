@@ -1,0 +1,57 @@
+{
+  "utc": "20261019T095903Z",
+  "manifest_entries": 82,
+  "manifest_mismatches": [],
+  "checks": [
+    {
+      "endpoint": "android_tools",
+      "url": "https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip",
+      "method": "HEAD",
+      "redirects_followed": false,
+      "status": 200,
+      "location": null
+    },
+    {
+      "endpoint": "google_maven",
+      "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/8.10.1/gradle-8.10.1.pom",
+      "method": "HEAD",
+      "redirects_followed": false,
+      "status": 200,
+      "location": null
+    },
+    {
+      "endpoint": "maven_central",
+      "url": "https://repo.maven.apache.org/maven2/junit/junit/4.13.2/junit-4.13.2.pom",
+      "method": "HEAD",
+      "redirects_followed": false,
+      "status": 200,
+      "location": null
+    },
+    {
+      "endpoint": "gradle_plugins",
+      "url": "https://plugins.gradle.org/m2/org/jetbrains/kotlin/android/org.jetbrains.kotlin.android.gradle.plugin/2.2.10/org.jetbrains.kotlin.android.gradle.plugin-2.2.10.pom",
+      "method": "HEAD",
+      "redirects_followed": false,
+      "status": 200,
+      "location": null
+    },
+    {
+      "endpoint": "gradle_distribution",
+      "url": "https://services.gradle.org/distributions/gradle-8.11.1-bin.zip",
+      "method": "HEAD",
+      "redirects_followed": false,
+      "status": 307,
+      "location": "https://github.com/gradle/gradle-distributions/releases/download/v8.11.1/gradle-8.11.1-bin.zip",
+      "error": "HTTP Error 307: Temporary Redirect"
+    },
+    {
+      "endpoint": "gradle_direct_distribution",
+      "url": "https://downloads.gradle.org/distributions/gradle-8.11.1-bin.zip",
+      "method": "HEAD",
+      "redirects_followed": false,
+      "status": 307,
+      "location": "https://github.com/gradle/gradle-distributions/releases/download/v8.11.1/gradle-8.11.1-bin.zip",
+      "error": "HTTP Error 307: Temporary Redirect"
+    }
+  ]
+}

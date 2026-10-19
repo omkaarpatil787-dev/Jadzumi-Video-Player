@@ -1,0 +1,1 @@
+PASS: all six approved HTML reference files match the original SHA-256 manifest.

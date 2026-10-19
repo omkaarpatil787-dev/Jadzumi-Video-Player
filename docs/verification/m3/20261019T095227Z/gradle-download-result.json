@@ -1,0 +1,10 @@
+{
+  "url": "https://downloads.gradle.org/distributions/gradle-8.11.1-bin.zip",
+  "attempt_type": "single download request after successful redirect response; no redirects followed",
+  "http_status": "307",
+  "exit_code": 0,
+  "redirect_host": "github.com",
+  "redirect_url": "https://github.com/gradle/gradle-distributions/releases/download/v8.11.1/gradle-8.11.1-bin.zip",
+  "error": "",
+  "github_accessed": false
+}

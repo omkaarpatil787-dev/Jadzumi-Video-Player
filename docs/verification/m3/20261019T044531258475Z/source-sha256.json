@@ -1,0 +1,19 @@
+{
+  "app/build.gradle.kts": "42ca5ad774583c25e2d7b84e4981cde90b06acca5031e8672a1de861589489e1",
+  "app/src/main/AndroidManifest.xml": "a659c11ebe3c5f3ff1f92cb523762b7876cc247954547cac2fefb07d4eba9860",
+  "app/src/main/java/com/jadzumi/video/CinemaPlayer.kt": "aa546e69354285b3b56ea770e8257a930b646fa1483390e05cfb6f3d28ba10fc",
+  "app/src/main/java/com/jadzumi/video/JadzumiApp.kt": "4c76185a9e3c2fd57f9379282cc7bc1ca383d1c6b7ed3ebdc5cb3e6f6108bfd0",
+  "app/src/main/java/com/jadzumi/video/LibraryModel.kt": "205678aa8ad4f95ce340a7d45d20b26d064d77e1bd45d885f7e95ed5fbee7274",
+  "app/src/main/java/com/jadzumi/video/LocalLibrary.kt": "e6d30f52b666a2fd75fa2cc79954ce64e98b32c75ba6b0c42135d3485954bc5f",
+  "app/src/main/java/com/jadzumi/video/LocalLibraryUi.kt": "b8c97d4010a508730aef1deb07c45eeabadce4b6e9c7a9cd89d64553853948fc",
+  "app/src/main/java/com/jadzumi/video/MainActivity.kt": "98a8d379fb3545f6c2b3f933503172194457e0761496705b81d525346e3f7f42",
+  "app/src/main/java/com/jadzumi/video/PlayPauseMorph.kt": "461b4a093d8336b996c4b4d9e3243893f8a078390b0b650cfdb1b4f3c5d99810",
+  "app/src/main/java/com/jadzumi/video/PlaybackController.kt": "596bd918320d223c62002472e9227b7ce9cda69a0c56c696f072cdd403c0e13b",
+  "app/src/main/java/com/jadzumi/video/PlaybackModel.kt": "80a65fe17442490a9c129d297f2a5a51c3e40d3aa02205bc92f9647947e961e5",
+  "app/src/main/java/com/jadzumi/video/ScrubPreview.kt": "e314f0f76a744f1bd1ce9041ced82f3381cac9b59913275795c285913c105bc9",
+  "app/src/test/java/com/jadzumi/video/LibraryModelTest.kt": "235583798a099207bd8f9f9ea80839426e0c1cfcca5d4585d9be309aa64e5770",
+  "app/src/test/java/com/jadzumi/video/LocalLibraryTest.kt": "12b6ada2ce078941e2ef4a692ba0621fe6c140d493cb16225f7998969982d6fe",
+  "app/src/test/java/com/jadzumi/video/PlaybackModelTest.kt": "80600a20426ad24f86c4957adcf56e793d85c092f12e4c98a41370b83c429eda",
+  "build.gradle.kts": "4ebcb4367893a0d4b2e3d295792bbf7582b1156469b745f072144586273dca45",
+  "settings.gradle.kts": "15f0773e1e9121a527996a374dc02b8e4b9d2715b4d8823f0b62e1b6866edbb2"
+}

@@ -1,0 +1,11 @@
+{
+  "timestamp_utc": "20261019T044531632152Z",
+  "status": "blocked",
+  "checks": [
+    "design-references: 6 hashes match",
+    "artifacts: 2 hashes match",
+    "Source manifest parses; no requested permissions; backup disabled; PiP declared"
+  ],
+  "tests_executed": 0,
+  "message": "Set ANDROID_HOME to an installed Android SDK with platform 36 and build-tools 35.0.0"
+}

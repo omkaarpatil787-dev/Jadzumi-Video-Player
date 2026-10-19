@@ -1,0 +1,14 @@
+--- checkpoint/tools/verify_m3.py
++++ current/tools/verify_m3.py
+@@ -72,6 +72,11 @@
+             return finish("blocked", "JDK 17 is required", 2)
+         if not re.search(r'version "17[.\"]', (evidence / "java.txt").read_text()):
+             return finish("blocked", "Use JDK 17 for this checkpoint", 2)
++        javac = str(Path(java_home) / "bin/javac") if java_home else shutil.which("javac")
++        if not javac or not Path(javac).is_file() or run([javac, "-version"], "javac.txt") != 0:
++            return finish("blocked", "A full JDK 17 with javac is required; a Java runtime alone cannot compile the app", 2)
++        if not re.search(r'javac 17(?:\.|\s|$)', (evidence / "javac.txt").read_text()):
++            return finish("blocked", "Use the Java 17 compiler for this checkpoint", 2)
+         sdk_value = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
+         if not sdk_value:
+             return finish("blocked", "Set ANDROID_HOME to an installed Android SDK with platform 36 and build-tools 35.0.0", 2)

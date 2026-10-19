@@ -1,0 +1,11 @@
+{
+  "timestamp_utc": "20261019T044531258475Z",
+  "status": "source_checks_passed",
+  "checks": [
+    "design-references: 6 hashes match",
+    "artifacts: 2 hashes match",
+    "Source manifest parses; no requested permissions; backup disabled; PiP declared"
+  ],
+  "tests_executed": 0,
+  "message": "Source checks only; Kotlin, Gradle tests, lint and runtime NOT executed"
+}

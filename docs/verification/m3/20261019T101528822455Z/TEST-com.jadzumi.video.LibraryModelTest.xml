@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.jadzumi.video.LibraryModelTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-19T10:16:25" hostname="e28a935a3d9c" time="0.082">
+  <properties/>
+  <testcase name="progressUsesOneConsistentDuration" classname="com.jadzumi.video.LibraryModelTest" time="0.047"/>
+  <testcase name="corruptPositionsStayBounded" classname="com.jadzumi.video.LibraryModelTest" time="0.0"/>
+  <testcase name="searchAndCategoryWorkTogether" classname="com.jadzumi.video.LibraryModelTest" time="0.034"/>
+  <testcase name="durationFormattingHandlesLongAndNegativeValues" classname="com.jadzumi.video.LibraryModelTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

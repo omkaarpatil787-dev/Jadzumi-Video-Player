@@ -1,0 +1,5 @@
+package: com.jadzumi.video
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='android.permission.WAKE_LOCK'
+permission: com.jadzumi.video.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+uses-permission: name='com.jadzumi.video.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'

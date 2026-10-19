@@ -1,0 +1,27 @@
+--- checkpoint/app/src/main/java/com/jadzumi/video/CinemaPlayer.kt
++++ current/app/src/main/java/com/jadzumi/video/CinemaPlayer.kt
+@@ -4,6 +4,7 @@
+ import android.media.AudioManager
+ import android.content.Context
+ import androidx.activity.compose.BackHandler
++import androidx.activity.compose.LocalActivity
+ import androidx.compose.animation.AnimatedVisibility
+ import androidx.compose.animation.fadeIn
+ import androidx.compose.animation.fadeOut
+@@ -27,7 +28,6 @@
+ import androidx.compose.ui.input.pointer.pointerInput
+ import androidx.compose.ui.layout.onGloballyPositioned
+ import androidx.compose.ui.layout.boundsInWindow
+-import androidx.compose.ui.platform.LocalContext
+ import androidx.compose.ui.text.style.TextOverflow
+ import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.viewinterop.AndroidView
+@@ -46,7 +46,7 @@
+ @OptIn(ExperimentalMaterial3Api::class)
+ @Composable fun CinemaPlayer(playback:PlaybackController,reducedMotion:Boolean) {
+     val video=playback.video ?: return
+-    val activity=LocalContext.current as MainActivity
++    val activity=LocalActivity.current as? MainActivity ?: return
+     val previousBrightness=remember(activity) { activity.window.attributes.screenBrightness }
+     var controls by remember(video.identity) { mutableStateOf(true) }
+     var menu by remember(video.identity) { mutableStateOf(false) }

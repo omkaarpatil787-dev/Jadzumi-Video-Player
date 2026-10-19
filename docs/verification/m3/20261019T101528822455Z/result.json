@@ -1,0 +1,18 @@
+{
+  "timestamp_utc": "20261019T101528822455Z",
+  "status": "build_checks_passed",
+  "checks": [
+    "design-references: 6 hashes match",
+    "artifacts: 2 hashes match",
+    "Source manifest parses; no requested permissions; backup disabled; PiP declared"
+  ],
+  "tests_executed": 16,
+  "gradle_tasks": [
+    ":app:assembleDebug",
+    ":app:testDebugUnitTest",
+    ":app:lintDebug"
+  ],
+  "lint_warnings": 2,
+  "apk_sha256": "0d72734372fe7d0272106b8da34fbc632a68f3c9decd2aeadb854faccbb413a7",
+  "message": "Debug APK built, tests/lint/signature checks passed; Pad 5 runtime testing still required"
+}

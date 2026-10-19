@@ -1,0 +1,52 @@
+{
+  "checked_utc": "2026-10-19T09:52:27.956000+00:00",
+  "policy": "One bounded attempt per required endpoint; no redirects followed, no retries, no GitHub accessed",
+  "installed": {
+    "java": "/usr/bin/java",
+    "gradle": null,
+    "sdkmanager": null
+  },
+  "sdk_env_configured": false,
+  "results": [
+    {
+      "name": "android_sdk",
+      "url": "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip",
+      "attempts": 1,
+      "exit_code": 0,
+      "http_status": "200",
+      "error": ""
+    },
+    {
+      "name": "gradle_8_11_1",
+      "url": "https://downloads.gradle.org/distributions/gradle-8.11.1-bin.zip",
+      "attempts": 1,
+      "exit_code": 0,
+      "http_status": "307",
+      "error": ""
+    },
+    {
+      "name": "google_maven",
+      "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/8.10.1/gradle-8.10.1.pom",
+      "attempts": 1,
+      "exit_code": 0,
+      "http_status": "200",
+      "error": ""
+    },
+    {
+      "name": "maven_central",
+      "url": "https://repo.maven.apache.org/maven2/junit/junit/4.13.2/junit-4.13.2.pom",
+      "attempts": 1,
+      "exit_code": 0,
+      "http_status": "200",
+      "error": ""
+    },
+    {
+      "name": "gradle_plugin_portal",
+      "url": "https://plugins.gradle.org/m2/org/jetbrains/kotlin/android/org.jetbrains.kotlin.android.gradle.plugin/2.2.10/org.jetbrains.kotlin.android.gradle.plugin-2.2.10.pom",
+      "attempts": 1,
+      "exit_code": 0,
+      "http_status": "200",
+      "error": ""
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugAarMetadata
+> Task :app:generateDebugResValues
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:mergeDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:javaPreCompileDebug
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:processDebugResources
+> Task :app:checkDebugDuplicateClasses
+> Task :app:compileDebugKotlin
+w: file:///workspace/scratch/a2b20457baed/work/Jadzumi-Video/app/src/main/java/com/jadzumi/video/MainActivity.kt:67:48 The corresponding parameter in the supertype 'ComponentActivity' is named 'isInPictureInPictureMode'. This may cause problems when calling this function with named arguments.
+
+> Task :app:mergeExtDexDebug
+> Task :app:compileDebugJavaWithJavac
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics
+> Task :app:processDebugJavaRes
+> Task :app:mergeLibDexDebug
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeDebugNativeLibs
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:testDebugUnitTest
+> Task :app:extractProguardFiles
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugUnitTest
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///workspace/scratch/a2b20457baed/work/Jadzumi-Video/app/build/reports/lint-results-debug.html
+Lint found 1 error and 2 warnings. First failure:
+/workspace/scratch/a2b20457baed/work/Jadzumi-Video/app/src/main/java/com/jadzumi/video/CinemaPlayer.kt:49: Error: LocalContext should not be cast to Activity, use LocalActivity instead [ContextCastToActivity from androidx.activity.compose]
+    val activity=LocalContext.current as MainActivity
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+> Task :app:lintDebug FAILED
+Lint found 1 error, 2 warnings. First failure:
+
+/workspace/scratch/a2b20457baed/work/Jadzumi-Video/app/src/main/java/com/jadzumi/video/CinemaPlayer.kt:49: Error: LocalContext should not be cast to Activity, use LocalActivity instead [ContextCastToActivity from androidx.activity.compose]
+    val activity=LocalContext.current as MainActivity
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "ContextCastToActivity":
+   Casting Context to Activity is an error as Contexts are not always
+   Activities. Use LocalActivity instead
+
+   Vendor: Jetpack Activity Compose
+   Identifier: androidx.activity.compose
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+
+The full lint text report is located at:
+  /workspace/scratch/a2b20457baed/work/Jadzumi-Video/app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:lintDebug'.
+> Lint found errors in the project; aborting build.
+  
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+  
+  Lint found 1 error, 2 warnings. First failure:
+  
+  /workspace/scratch/a2b20457baed/work/Jadzumi-Video/app/src/main/java/com/jadzumi/video/CinemaPlayer.kt:49: Error: LocalContext should not be cast to Activity, use LocalActivity instead [ContextCastToActivity from androidx.activity.compose]
+      val activity=LocalContext.current as MainActivity
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+     Explanation for issues of type "ContextCastToActivity":
+     Casting Context to Activity is an error as Contexts are not always
+     Activities. Use LocalActivity instead
+  
+     Vendor: Jetpack Activity Compose
+     Identifier: androidx.activity.compose
+     Feedback: https://issuetracker.google.com/issues/new?component=612128
+  
+  
+  The full lint text report is located at:
+    /workspace/scratch/a2b20457baed/work/Jadzumi-Video/app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 5m 6s
+53 actionable tasks: 52 executed, 1 up-to-date

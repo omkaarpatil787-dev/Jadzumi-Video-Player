@@ -1,0 +1,3 @@
+package: com.jadzumi.video
+permission: com.jadzumi.video.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+uses-permission: name='com.jadzumi.video.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'

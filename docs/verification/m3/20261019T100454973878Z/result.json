@@ -1,0 +1,16 @@
+{
+  "timestamp_utc": "20261019T100454973878Z",
+  "status": "build_failed",
+  "checks": [
+    "design-references: 6 hashes match",
+    "artifacts: 2 hashes match",
+    "Source manifest parses; no requested permissions; backup disabled; PiP declared"
+  ],
+  "tests_executed": 0,
+  "gradle_tasks": [
+    ":app:assembleDebug",
+    ":app:testDebugUnitTest",
+    ":app:lintDebug"
+  ],
+  "message": "Gradle exit code 1; inspect gradle.log"
+}
