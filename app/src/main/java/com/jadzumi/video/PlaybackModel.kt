@@ -37,31 +37,52 @@ fun videoContentBounds(width: Int, height: Int, aspect: Float, fit: Boolean): Vi
 fun formatChannelLayout(channelCount: Int): String = when (channelCount) {
     1 -> "Mono (1.0)"
     2 -> "Stereo (2.0)"
-    6 -> "5.1 Surround (6 Ch)"
-    8 -> "7.1 Surround (8 Ch)"
-    else -> if (channelCount > 0) "$channelCount Channels" else "Unknown layout"
+    6 -> "5.1 Surround"
+    8 -> "7.1 Surround"
+    else -> if (channelCount > 0) "$channelCount Ch" else "Stereo"
 }
 
 fun formatAudioCodec(mimeType: String?): String = when (mimeType) {
-    "audio/ac3" -> "Dolby Digital (AC-3)"
-    "audio/eac3" -> "Dolby Digital Plus (E-AC-3)"
-    "audio/eac3-joc" -> "Dolby Atmos (E-AC-3 JOC)"
-    "audio/mp4a-latm" -> "AAC Stereo"
-    "audio/flac" -> "FLAC Lossless"
-    "audio/vorbis" -> "Ogg Vorbis"
+    "audio/ac3" -> "AC-3"
+    "audio/eac3" -> "E-AC-3"
+    "audio/eac3-joc" -> "E-AC-3 JOC"
+    "audio/mp4a-latm" -> "AAC"
+    "audio/flac" -> "FLAC"
+    "audio/vorbis" -> "Vorbis"
     "audio/opus" -> "Opus"
-    "audio/true-hd" -> "Dolby TrueHD"
-    else -> mimeType?.substringAfter('/')?.uppercase(Locale.ROOT) ?: "Audio Stream"
+    "audio/true-hd" -> "TrueHD"
+    else -> mimeType?.substringAfter('/')?.uppercase(Locale.ROOT) ?: "Audio"
 }
 
 fun formatSubtitleFormat(mimeType: String?): String = when (mimeType) {
-    "text/x-ssa", "text/ssa", "application/x-ass" -> "Styled ASS/SSA"
-    "application/x-subrip", "text/vtt" -> "SubRip (.srt / .vtt)"
-    else -> "Text Subtitle"
+    "text/x-ssa", "text/ssa", "application/x-ass" -> "ASS"
+    "application/x-subrip" -> "SRT"
+    "text/vtt" -> "VTT"
+    else -> "SUB"
 }
 
 fun isHdrFormat(colorTransfer: Int): Boolean =
     colorTransfer == C.COLOR_TRANSFER_ST2084 || colorTransfer == C.COLOR_TRANSFER_HLG
+
+/** Formats duration in "2h 49m" or "54m" for the top info bar (Panel 1 & 4) */
+fun formatCompactRuntime(durationMs: Long): String? {
+    if (durationMs <= 0L) return null
+    val totalMinutes = (durationMs / 60_000L).toInt()
+    if (totalMinutes <= 0) return null
+    val hours = totalMinutes / 60
+    val mins = totalMinutes % 60
+    return if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
+}
+
+/** Compact timecode: "1:02:15" or "25:35" matching Panel 1 & 3 */
+fun compactTimecode(seconds: Long): String {
+    val safe = seconds.coerceAtLeast(0)
+    val h = safe / 3600
+    val m = (safe / 60) % 60
+    val s = safe % 60
+    return if (h > 0) String.format(Locale.ROOT, "%d:%02d:%02d", h, m, s)
+    else String.format(Locale.ROOT, "%02d:%02d", m, s)
+}
 
 data class CleanPlayerHeading(val primaryTitle: String, val secondaryMeta: String?)
 
@@ -72,21 +93,22 @@ private val techStopToken = Regex(
     "(?i)(?:^|[ ._\\-\\[(])(2160p|1080p|720p|480p|4k|uhd|webrip|web-dl|webdl|bluray|bdrip|hdrip|dvdrip|x264|x265|h264|h265|hevc|avc|10bit|8bit|hdr|hdr10|dv|ddp|aac|ac3|eac3|6ch|2ch|dual|multi|org|esub|subs|repack|proper)(?=$|[ ._\\-\\])])"
 )
 
-/**
- * Formats raw filenames into clean cinema titles:
- * e.g. "Castle Rock (2018) S01E01 1080p..." -> "Castle Rock · S01E01" ("2018 · Season 1, Episode 1 · 1080p")
- * e.g. "Animals.2026.1080p.10bit.WEBRip..." -> "Animals" ("2026 · 1080p")
- */
-fun formatCleanPlayerTitle(rawName: String, width: Int = 0, height: Int = 0): CleanPlayerHeading {
+fun formatCleanPlayerTitle(
+    rawName: String,
+    width: Int = 0,
+    height: Int = 0,
+    durationMs: Long = 0L
+): CleanPlayerHeading {
     val base = rawName.substringBeforeLast('.', rawName).trim()
     val epMatch = epRegexSxxExx.find(base) ?: epRegexNxNN.find(base)
     val yearMatch = yearRegex.find(base)
     val year = yearMatch?.groupValues?.getOrNull(1)
+    val runtime = formatCompactRuntime(durationMs)
 
     val resLabel = when {
-        width >= 3840 || height >= 2160 -> "4K UHD"
-        width >= 1920 || height >= 1080 -> "1080p"
-        width >= 1280 || height >= 720 -> "720p"
+        width >= 3840 || height >= 2160 || base.contains("2160p", true) || base.contains("4k", true) -> "4K"
+        width >= 1920 || height >= 1080 || base.contains("1080p", true) -> "1080p"
+        width >= 1280 || height >= 720 || base.contains("720p", true) -> "720p"
         else -> null
     }
 
@@ -102,10 +124,10 @@ fun formatCleanPlayerTitle(rawName: String, width: Int = 0, height: Int = 0): Cl
             .replace(Regex("\\s+"), " ")
             .trim(' ', '-', '·', '[', ']')
         val showTitle = rawShow.ifEmpty { base.replace('_', ' ') }
-        val metaParts = listOfNotNull(year, "Season $season, Episode $episode", resLabel)
+        val metaParts = listOfNotNull(year, runtime, resLabel)
         return CleanPlayerHeading(
             primaryTitle = "$showTitle · $code",
-            secondaryMeta = metaParts.joinToString(" • ").ifEmpty { null }
+            secondaryMeta = metaParts.joinToString(" · ").ifEmpty { null }
         )
     }
 
@@ -121,10 +143,10 @@ fun formatCleanPlayerTitle(rawName: String, width: Int = 0, height: Int = 0): Cl
         .trim(' ', '-', '·', '(', '[')
         .ifEmpty { base.replace('.', ' ').replace('_', ' ').trim() }
 
-    val metaParts = listOfNotNull(year, resLabel)
+    val metaParts = listOfNotNull(year, runtime, resLabel)
     return CleanPlayerHeading(
         primaryTitle = cleanedMovie,
-        secondaryMeta = metaParts.joinToString(" • ").ifEmpty { null }
+        secondaryMeta = metaParts.joinToString(" · ").ifEmpty { null }
     )
 }
 
