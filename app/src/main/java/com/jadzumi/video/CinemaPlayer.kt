@@ -6,9 +6,11 @@ import android.media.AudioManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -160,33 +162,34 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 
         var dragX by remember(video.identity) { mutableFloatStateOf(defaultX) }
         var dragY by remember(video.identity) { mutableFloatStateOf(defaultY) }
+        var isDragging by remember(video.identity) { mutableStateOf(false) }
 
         val targetX = if (full) 0f else dragX.coerceIn(minDragX, maxDragX)
         val targetY = if (full) 0f else dragY.coerceIn(minDragY, maxDragY)
 
         val animX by animateFloatAsState(
             targetValue = targetX,
-            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            animationSpec = if (isDragging) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "animX"
         )
         val animY by animateFloatAsState(
             targetValue = targetY,
-            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            animationSpec = if (isDragging) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "animY"
         )
         val animW by animateDpAsState(
             targetValue = if (full) totalWidth else miniW,
-            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "animW"
         )
         val animH by animateDpAsState(
             targetValue = if (full) totalHeight else miniH,
-            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "animH"
         )
         val cornerRadius by animateDpAsState(
             targetValue = if (full) 0.dp else 22.dp,
-            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "cornerRadius"
         )
 
@@ -207,11 +210,16 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                 .background(Color.Black)
                 .pointerInput(full) {
                     if (!full) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            dragX = (dragX + dragAmount.x).coerceIn(minDragX, maxDragX)
-                            dragY = (dragY + dragAmount.y).coerceIn(minDragY, maxDragY)
-                        }
+                        detectDragGestures(
+                            onDragStart = { isDragging = true },
+                            onDragEnd = { isDragging = false },
+                            onDragCancel = { isDragging = false },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                dragX = (dragX + dragAmount.x).coerceIn(minDragX, maxDragX)
+                                dragY = (dragY + dragAmount.y).coerceIn(minDragY, maxDragY)
+                            }
+                        )
                     }
                 }
         ) {
@@ -254,17 +262,24 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             )
                         }
                         .pointerInput(video.identity, playback.locked, full, playback.swipeGesturesEnabled) {
-                            var left = false; var level = 0f
+                            var left = false; var level = 0f; var isGestureValid = false
                             detectVerticalDragGestures(
                                 onDragStart = { offset ->
-                                    left = offset.x < size.width / 2
-                                    val maxVol = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
-                                    level = if (left) activity.window.attributes.screenBrightness.takeIf { it >= 0 } ?: 0.5f
-                                    else audio.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / maxVol
+                                    val inVerticalZone = offset.y >= size.height * 0.18f && offset.y <= size.height * 0.82f
+                                    val inLeftZone = offset.x <= size.width * 0.38f
+                                    val inRightZone = offset.x >= size.width * 0.62f
+                                    isGestureValid = inVerticalZone && (inLeftZone || inRightZone)
+                                    if (isGestureValid) {
+                                        left = inLeftZone
+                                        val maxVol = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+                                        level = if (left) activity.window.attributes.screenBrightness.takeIf { it >= 0 } ?: 0.5f
+                                        else audio.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / maxVol
+                                    }
                                 },
-                                onDragEnd = { hudSide = null }
+                                onDragEnd = { hudSide = null; isGestureValid = false },
+                                onDragCancel = { hudSide = null; isGestureValid = false }
                             ) { change, amount ->
-                                if (!playback.locked && full && playback.swipeGesturesEnabled) {
+                                if (isGestureValid && !playback.locked && full && playback.swipeGesturesEnabled) {
                                     change.consume()
                                     level = (level - amount / size.height.coerceAtLeast(1)).coerceIn(if (left) 0.05f else 0f, 1f)
                                     if (left) activity.window.attributes = activity.window.attributes.apply { screenBrightness = level }
@@ -281,41 +296,52 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     CircularProgressIndicator(Modifier.align(Alignment.Center).size(42.dp), color = Color.White, strokeWidth = 2.5.dp)
                 }
 
-                // Vertical Swipe Brightness / Volume HUD
+                // Horizontal Swipe Brightness / Volume Capsule HUD
                 hudSide?.let { side ->
                     val isBright = side == "Brightness"
                     Surface(
                         modifier = Modifier
-                            .align(if (isBright) Alignment.CenterStart else Alignment.CenterEnd)
+                            .align(Alignment.TopCenter)
                             .safeDrawingPadding()
-                            .padding(horizontal = 28.dp),
+                            .padding(top = 74.dp),
                         color = QuickMenuBg,
                         border = BorderStroke(1.dp, FrostedCircleRim),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(999.dp),
+                        shadowElevation = 16.dp
                     ) {
-                        Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             Icon(
                                 if (isBright) Icons.Rounded.Brightness6 else Icons.Rounded.VolumeUp,
                                 null,
                                 tint = Color.White,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(20.dp)
                             )
-                            Column(Modifier.width(100.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text(side, color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                                    Text("${(hudValue * 100).roundToInt()}%", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                                LinearProgressIndicator(
-                                    progress = { hudValue.coerceIn(0f, 1f) },
-                                    modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
-                                    color = TimelineAccent,
-                                    trackColor = Color.White.copy(alpha = 0.2f)
-                                )
-                            }
+                            Text(
+                                side,
+                                color = Color.White.copy(alpha = 0.90f),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            LinearProgressIndicator(
+                                progress = { hudValue.coerceIn(0f, 1f) },
+                                modifier = Modifier.width(110.dp).height(5.dp).clip(CircleShape),
+                                color = TimelineAccent,
+                                trackColor = Color.White.copy(alpha = 0.22f)
+                            )
+                            Text(
+                                "${(hudValue * 100).roundToInt()}%",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.widthIn(min = 34.dp)
+                            )
                         }
                     }
                 }
-
                 if (full) {
                     val enterAnim = if (reducedMotion) EnterTransition.None else fadeIn(spring(stiffness = Spring.StiffnessMediumLow))
                     val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(tween(180))

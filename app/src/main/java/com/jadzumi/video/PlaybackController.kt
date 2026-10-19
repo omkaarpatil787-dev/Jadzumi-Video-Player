@@ -21,6 +21,7 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultRenderersFactory
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.CommandButton
@@ -228,9 +229,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .setPrioritizeTimeOverSizeThresholds(true)
                 .build()
 
-            val renderersFactory = DefaultRenderersFactory(app)
+            val renderersFactory = NextRenderersFactory(app)
                 .setEnableDecoderFallback(true)
-                .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+                .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
 
             val p = ExoPlayer.Builder(app, renderersFactory)
                 .setMediaSourceFactory(source)
@@ -321,6 +322,16 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                         p.pause()
                         save()
                         cancelNotification()
+                        return
+                    }
+
+                    if (exception.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED) {
+                        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+                            .clearOverridesOfType(C.TRACK_TYPE_AUDIO)
+                            .build()
+                        error = null
+                        p.prepare()
+                        p.play()
                         return
                     }
 
