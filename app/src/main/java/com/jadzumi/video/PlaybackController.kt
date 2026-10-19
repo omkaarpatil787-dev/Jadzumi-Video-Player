@@ -10,8 +10,10 @@ import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.ContentDataSource
 import androidx.media3.datasource.DataSource
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -40,7 +42,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var locked by mutableStateOf(false)
     var seekable by mutableStateOf(false); private set
 
-    // Milestone 3A.2: Cinema Formats State
     var audioTracks by mutableStateOf<List<AudioTrackInfo>>(emptyList()); private set
     var subtitleTracks by mutableStateOf<List<SubtitleTrackInfo>>(emptyList()); private set
     var isHdr by mutableStateOf(false); private set
@@ -57,7 +58,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 delay(500)
                 player?.let { p ->
                     if (mediaItemAssigned) position = p.currentPosition.coerceAtLeast(0)
-                    duration = p.duration.takeIf { it > 0 } ?: 0
+                    // Preserve known video duration so it never resets to 0 or '—'
+                    val currentDur = p.duration.takeIf { it > 0 } ?: video?.duration?.takeIf { it > 0 } ?: 0
+                    if (currentDur > 0) duration = currentDur
                     if (++pollCount % 10 == 0) save()
                 }
             }
@@ -99,12 +102,27 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             require(v.uri.toUri().scheme == "content")
             val app = getApplication<Application>()
             val source = DefaultMediaSourceFactory(DataSource.Factory { ContentDataSource(app) })
-            
-            // Enable decoder fallback & media audio attributes for Xiaomi Pad 5 Dolby Atmos stereo routing
+
+            // Instant local buffer tuning: Starts playing after only 250ms buffer instead of 2500ms
+            val fastLoadControl = DefaultLoadControl.Builder()
+                .setBufferDurationsMs(
+                    /* minBufferMs = */ 2_500,
+                    /* maxBufferMs = */ 10_000,
+                    /* bufferForPlaybackMs = */ 250,
+                    /* bufferForPlaybackAfterRebufferMs = */ 500
+                )
+                .setPrioritizeTimeOverSizeThresholds(true)
+                .build()
+
             val p = ExoPlayer.Builder(app, DefaultRenderersFactory(app).setEnableDecoderFallback(true))
-                .setMediaSourceFactory(source).build()
+                .setMediaSourceFactory(source)
+                .setLoadControl(fastLoadControl)
+                .build()
             player = p
-            
+
+            // Snap immediately to keyframe on resume instead of decoding 250 hidden frames
+            p.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+
             p.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
@@ -141,7 +159,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     if (format != null) {
                         isHdr = isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR)
                         videoCodecBadge = when {
-                            format.sampleMimeType == MimeTypes.VIDEO_H265 -> if (isHdr) "4K HDR10" else "HEVC Main"
+                            format.sampleMimeType == MimeTypes.VIDEO_H265 -> if (isHdr) "4K HDR10" else "HEVC Main10"
                             format.sampleMimeType == MimeTypes.VIDEO_H264 -> "1080p AVC"
                             else -> if (isHdr) "HDR" else null
                         }
