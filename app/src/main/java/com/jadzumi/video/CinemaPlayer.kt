@@ -57,6 +57,7 @@ import kotlin.math.roundToInt
     var scrub by remember(video.identity) { mutableStateOf<Float?>(null) }
     var message by remember(video.identity) { mutableStateOf<String?>(null) }
     var interaction by remember(video.identity) { mutableIntStateOf(0) }
+    val seekDeltaMs = playback.seekIncrementSeconds * 1000L
 
     DisposableEffect(activity) {
         onDispose { activity.videoBounds = null; activity.updatePip() }
@@ -126,26 +127,27 @@ import kotlin.math.roundToInt
                 val audio = remember { activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
                 Box(
                     Modifier.fillMaxSize()
-                        .pointerInput(video.identity, playback.locked, full) {
+                        .pointerInput(video.identity, playback.locked, full, seekDeltaMs) {
                             detectTapGestures(
                                 onTap = { if (!full) playback.fullscreen = true else controls = !controls; interaction++ },
                                 onDoubleTap = { offset ->
                                     if (!playback.locked && full) {
-                                        playback.skip(if (offset.x < size.width / 2) -10000 else 10000)
-                                        message = if (offset.x < size.width / 2) "−10 seconds" else "+10 seconds"
+                                        val isLeft = offset.x < size.width / 2
+                                        playback.skip(if (isLeft) -seekDeltaMs else seekDeltaMs)
+                                        message = if (isLeft) "−${playback.seekIncrementSeconds} seconds" else "+${playback.seekIncrementSeconds} seconds"
                                         interaction++
                                     }
                                 }
                             )
                         }
-                        .pointerInput(video.identity, playback.locked, full) {
+                        .pointerInput(video.identity, playback.locked, full, playback.swipeGesturesEnabled) {
                             var left = false; var level = 0f
                             detectVerticalDragGestures(onDragStart = { offset ->
                                 left = offset.x < size.width / 2
                                 level = if (left) activity.window.attributes.screenBrightness.takeIf { it >= 0 } ?: 0.5f
                                 else audio.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
                             }) { change, amount ->
-                                if (!playback.locked && full) {
+                                if (!playback.locked && full && playback.swipeGesturesEnabled) {
                                     change.consume()
                                     level = (level - amount / size.height.coerceAtLeast(1)).coerceIn(if (left) 0.05f else 0f, 1f)
                                     if (left) activity.window.attributes = activity.window.attributes.apply { screenBrightness = level }
@@ -200,7 +202,7 @@ import kotlin.math.roundToInt
                             }
 
                             Row(Modifier.align(Alignment.Center), horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.CenterVertically) {
-                                CinemaIcon("Back 10 seconds", { playback.skip(-10000); interaction++ }, enabled = playback.seekable) { Icon(Icons.Rounded.Replay10, null, Modifier.size(32.dp)) }
+                                CinemaIcon("Back ${playback.seekIncrementSeconds} seconds", { playback.skip(-seekDeltaMs); interaction++ }, enabled = playback.seekable) { Icon(Icons.Rounded.Replay10, null, Modifier.size(32.dp)) }
                                 FilledIconButton(
                                     onClick = { playback.toggle(); interaction++ },
                                     modifier = Modifier.size(72.dp),
@@ -208,7 +210,7 @@ import kotlin.math.roundToInt
                                 ) {
                                     PlayPauseMorph(playback.playRequested, reducedMotion, Modifier.size(40.dp))
                                 }
-                                CinemaIcon("Forward 10 seconds", { playback.skip(10000); interaction++ }, enabled = playback.seekable) { Icon(Icons.Rounded.Forward10, null, Modifier.size(32.dp)) }
+                                CinemaIcon("Forward ${playback.seekIncrementSeconds} seconds", { playback.skip(seekDeltaMs); interaction++ }, enabled = playback.seekable) { Icon(Icons.Rounded.Forward10, null, Modifier.size(32.dp)) }
                             }
 
                             Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
@@ -344,32 +346,4 @@ import kotlin.math.roundToInt
                                 shape = RoundedCornerShape(16.dp)
                             ) {
                                 Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    Icon(if (track.isSelected) Icons.Rounded.CheckCircle else Icons.Rounded.Subtitles, null, tint = if (track.isSelected) Color(0xFF70B5FF) else Color.White.copy(alpha = 0.6f))
-                                    Column(Modifier.weight(1f)) {
-                                        Text(track.label, color = Color.White, fontWeight = FontWeight.SemiBold)
-                                        Text("${track.language} • ${track.format}", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8))
-                ) {
-                    Text("Done")
-                }
-            }
-        }
-    }
-}
-
-@Composable private fun CinemaIcon(label: String, action: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, icon: @Composable () -> Unit) {
-    IconButton(onClick = action, modifier = modifier.size(48.dp).semantics { contentDescription = label }, enabled = enabled, colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White, disabledContentColor = Color.White.copy(alpha = 0.3f))) {
-        icon()
-    }
-}
+                                    Icon(if (track.isSelected) Icons.Rounded.CheckCircle else Icons.Rounded.Subtitles, null, tint = if (track.isSelected) Color(0xFF70B5FF) else Color.White.copy(alp
