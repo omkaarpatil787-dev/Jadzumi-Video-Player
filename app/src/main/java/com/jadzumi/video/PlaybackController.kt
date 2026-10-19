@@ -251,6 +251,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             p.setHandleAudioBecomingNoisy(true)
 
             p.addListener(object : Player.Listener {
+                override fun onTracksChanged(tracks: Tracks) {
+                    if (this@PlaybackController.player !== p) return
+                    updateTracks(tracks)
+                }
+
                 override fun onEvents(player: Player, events: Player.Events) {
                     if (this@PlaybackController.player !== player) return
                     playing = player.isPlaying
@@ -526,6 +531,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         session?.release(); session = null
         oldPlayer?.release()
         playing = false; playRequested = false; buffering = false; seekable = false
+        audioTracks = emptyList(); subtitleTracks = emptyList()
     }
 
     override fun onCleared() {
