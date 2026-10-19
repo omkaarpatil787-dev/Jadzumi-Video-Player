@@ -1,8 +1,15 @@
 package com.jadzumi.video
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.compose.runtime.*
+import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
@@ -18,6 +25,7 @@ import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
+import androidx.media3.session.MediaStyleNotificationHelper
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -48,12 +56,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var locked by mutableStateOf(false)
     var seekable by mutableStateOf(false); private set
 
-    // Milestone 3A.2 & 3A.3 State
     var audioTracks by mutableStateOf<List<AudioTrackInfo>>(emptyList()); private set
     var subtitleTracks by mutableStateOf<List<SubtitleTrackInfo>>(emptyList()); private set
     var isHdr by mutableStateOf(false); private set
     var videoCodecBadge by mutableStateOf<String?>(null); private set
     var backgroundAudioEnabled by mutableStateOf(prefs.getBoolean("bg_audio", false))
+
+    private val channelId = "playback_channel"
+    private val notificationId = 1001
+    private val notificationManager = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     private var completed by mutableStateOf(false)
     private var suspendedPosition = 0L
@@ -61,6 +72,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     private var pollCount = 0
 
     init {
+        createNotificationChannel()
         viewModelScope.launch {
             while (true) {
                 delay(500)
@@ -72,6 +84,52 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 }
             }
         }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Media Playback Controls",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Shows player controls on lock screen and notification shade"
+                setShowBadge(false)
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun updateNotification() {
+        val s = session ?: return
+        val v = video ?: return
+        val app = getApplication<Application>()
+
+        val openIntent = PendingIntent.getActivity(
+            app, 0,
+            Intent(app, MainActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(app, channelId)
+            .setSmallIcon(R.drawable.ic_launcher)
+            .setContentTitle(v.title)
+            .setContentText("Jadzumi Cinema Player")
+            .setContentIntent(openIntent)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setOngoing(playing)
+            .setStyle(MediaStyleNotificationHelper.MediaStyle(s))
+            .build()
+
+        try {
+            notificationManager.notify(notificationId, notification)
+        } catch (_: SecurityException) {
+            // Handled when user denies notification permission
+        }
+    }
+
+    private fun cancelNotification() {
+        notificationManager.cancel(notificationId)
     }
 
     private fun key(v: LocalVideo): String = MessageDigest.getInstance("SHA-256")
@@ -130,6 +188,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
             p.setSeekParameters(SeekParameters.CLOSEST_SYNC)
 
+            // Essential for A16 Custom ROM: keeps CPU awake during screen-off audio playback
+            p.setWakeMode(C.WAKE_MODE_LOCAL)
+
             p.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
@@ -175,12 +236,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     if (player.playbackState == Player.STATE_READY || player.playbackState == Player.STATE_BUFFERING) error = null
                     if (player.playbackState == Player.STATE_ENDED) { completed = true; save() }
                     else if (events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED) || events.contains(Player.EVENT_POSITION_DISCONTINUITY)) save()
+
+                    updateNotification()
                 }
 
                 override fun onPlayerError(exception: PlaybackException) {
                     if (player !== p) return
                     error = "Could not play this file (${exception.errorCodeName}). Verify folder access or check if this codec requires fallback."
                     playing = false; playRequested = false; buffering = false; save()
+                    cancelNotification()
                 }
             })
 
@@ -204,7 +268,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             mediaItemAssigned = true
             p.setPlaybackSpeed(speed)
 
-            // Setup System MediaSession with -10s / +10s interactive buttons
             val rewindCmd = SessionCommand("ACTION_REWIND_10", Bundle.EMPTY)
             val forwardCmd = SessionCommand("ACTION_FORWARD_10", Bundle.EMPTY)
 
@@ -246,6 +309,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .build()
 
             p.playWhenReady = autoplay
+            updateNotification()
         } catch (_: Exception) {
             error = "The player could not open this video. Try refreshing its folder and opening it again."
             release()
@@ -328,6 +392,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         else if (p.playbackState == Player.STATE_ENDED) { completed = false; p.seekTo(0); p.play() }
         else if (p.playWhenReady) p.pause() else p.play()
         save()
+        updateNotification()
     }
 
     fun seekTo(value: Long) {
@@ -336,6 +401,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             player?.seekTo(boundedPosition(value, duration))
             position = boundedPosition(value, duration)
             save()
+            updateNotification()
         }
     }
 
@@ -360,12 +426,14 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         if (!backgroundAudioEnabled) {
             save()
             release()
+            cancelNotification()
         }
     }
 
     fun restoreVisible() { if (video != null && player == null && error == null) prepare(false) }
     fun close() {
         release()
+        cancelNotification()
         video = null; fullscreen = false; locked = false; error = null
         position = 0; duration = 0; completed = false
         audioTracks = emptyList(); subtitleTracks = emptyList()
@@ -380,5 +448,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         playing = false; playRequested = false; buffering = false; seekable = false
     }
 
-    override fun onCleared() { release(); super.onCleared() }
+    override fun onCleared() {
+        release()
+        cancelNotification()
+        super.onCleared()
+    }
 }
