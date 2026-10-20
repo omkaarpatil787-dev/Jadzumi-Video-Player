@@ -31,12 +31,17 @@ data class LocalVideo(
 data class LocalLibraryState(
     val folders: List<LocalFolder> = emptyList(),
     val videos: List<LocalVideo> = emptyList(),
+    val sidecars: Map<String, List<LocalSidecar>> = emptyMap(),
     val busy: Boolean = true,
     val message: String? = null
-)
+) {
+    val tvSeries: List<TvSeries> get() = clusterVideosIntoSeries(videos, sidecars)
+}
 
 data class EpisodeHint(val season: Int, val episode: Int)
 fun parseEpisode(name: String): EpisodeHint? {
+    val info = EpisodePatterns.parse(name)
+    if (info != null) return EpisodeHint(info.season, info.episode)
     val match = Regex("(?i)(?:^|[ ._\\-])s(\\d{1,2})e(\\d{1,3})(?=$|[^0-9])").find(name)
         ?: Regex("(?i)(?:^|[ ._\\-])(\\d{1,2})x(\\d{1,3})(?=$|[^0-9])").find(name)
     return match?.let { EpisodeHint(it.groupValues[1].toInt(), it.groupValues[2].toInt()) }
@@ -47,12 +52,24 @@ fun isVideoFile(name: String, mime: String): Boolean = mime.startsWith("video/")
             "mkv", "mp4", "m4v", "webm", "avi", "mov", "ts", "m2ts", "mpeg", "mpg", "3gp", "vob"
         )
 
-private class LibraryDb(context: Context) : SQLiteOpenHelper(context, "library.db", null, 1) {
+fun isSidecarFile(name: String, mime: String): Boolean {
+    val ext = name.substringAfterLast('.', "").lowercase()
+    return ext in setOf("jpg", "jpeg", "png", "webp", "nfo") ||
+            mime.startsWith("image/") ||
+            (mime == "text/plain" && ext == "nfo")
+}
+
+private class LibraryDb(context: Context) : SQLiteOpenHelper(context, "library.db", null, 2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE folders(uri TEXT PRIMARY KEY, name TEXT NOT NULL, status TEXT NOT NULL)")
         db.execSQL("CREATE TABLE videos(uri TEXT NOT NULL, folder TEXT NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL, bytes INTEGER, modified INTEGER, duration INTEGER, width INTEGER, height INTEGER, PRIMARY KEY(uri,folder))")
+        db.execSQL("CREATE TABLE IF NOT EXISTS sidecars(parent_id TEXT NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL, uri TEXT NOT NULL, PRIMARY KEY(parent_id, name))")
     }
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS sidecars(parent_id TEXT NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL, uri TEXT NOT NULL, PRIMARY KEY(parent_id, name))")
+        }
+    }
 }
 
 class LocalLibrary internal constructor(private val context: Context) {
@@ -86,7 +103,18 @@ class LocalLibrary internal constructor(private val context: Context) {
                 c.getLong(4), c.getLong(5), c.getLong(6), c.getInt(7), c.getInt(8)
             )
         }
-        mutable.value = LocalLibraryState(folders, videos, false, message)
+        val sidecarsMap = mutableMapOf<String, MutableList<LocalSidecar>>()
+        try {
+            db.rawQuery("SELECT parent_id,name,mime,uri FROM sidecars", null).use { c ->
+                while (c.moveToNext()) {
+                    val parent = c.getString(0)
+                    sidecarsMap.getOrPut(parent) { mutableListOf() }.add(
+                        LocalSidecar(parent, c.getString(1), c.getString(2), c.getString(3))
+                    )
+                }
+            }
+        } catch (_: Exception) { }
+        mutable.value = LocalLibraryState(folders, videos, sidecarsMap, false, message)
     }
 
     private fun work(silent: Boolean = false, block: () -> String?) {
@@ -152,7 +180,7 @@ class LocalLibrary internal constructor(private val context: Context) {
         }
     }
 
-    /** Milestone 3C: User-initiated permanent deletion using scoped SAF Document API */
+    /** User-initiated permanent deletion using scoped SAF Document API */
     fun deleteVideo(video: LocalVideo) = work {
         val docUri = video.uri.toUri()
         val deleted = try {
@@ -170,7 +198,7 @@ class LocalLibrary internal constructor(private val context: Context) {
             }
             "Deleted \"${video.name}\" from storage."
         } else {
-            "Could not delete \"${video.name}\". If this folder was added before M3C, remove and re-add the folder to grant write access."
+            "Could not delete \"${video.name}\". If this folder was added before, remove and re-add the folder to grant write access."
         }
     }
 
@@ -178,6 +206,7 @@ class LocalLibrary internal constructor(private val context: Context) {
         val db = database.writableDatabase
         db.transaction {
             delete("videos", "folder=?", arrayOf(folder.uri))
+            delete("sidecars", "parent_id=?", arrayOf(folder.uri))
             delete("folders", "uri=?", arrayOf(folder.uri))
         }
         runCatching {
@@ -198,6 +227,7 @@ class LocalLibrary internal constructor(private val context: Context) {
             val queue = ArrayDeque<String>()
             val visited = HashSet<String>()
             val found = mutableListOf<LocalVideo>()
+            val foundSidecars = mutableListOf<LocalSidecar>()
             val previous = mutable.value.videos.associateBy { it.uri }
             queue.add(Docs.getTreeDocumentId(tree))
             var entries = 0
@@ -242,6 +272,9 @@ class LocalLibrary internal constructor(private val context: Context) {
                             if (found.size % 20 == 0) {
                                 mutable.value = mutable.value.copy(message = "Indexing ${folder.name} · ${found.size} videos")
                             }
+                        } else if (isSidecarFile(name, mime)) {
+                            val uri = Docs.buildDocumentUriUsingTree(tree, id).toString()
+                            foundSidecars += LocalSidecar(folder.uri, name, mime, uri)
                         }
                     }
                     if (c.extras.containsKey(Docs.EXTRA_ERROR)) throw IllegalStateException("Provider error")
@@ -251,6 +284,7 @@ class LocalLibrary internal constructor(private val context: Context) {
             if (stopped.get()) throw CancellationException()
             db.transaction {
                 db.delete("videos", "folder=?", arrayOf(folder.uri))
+                db.delete("sidecars", "parent_id=?", arrayOf(folder.uri))
                 found.forEach { v ->
                     db.insertOrThrow("videos", null, ContentValues().apply {
                         put("uri", v.uri)
@@ -263,6 +297,14 @@ class LocalLibrary internal constructor(private val context: Context) {
                         put("width", v.width)
                         put("height", v.height)
                     })
+                }
+                foundSidecars.forEach { s ->
+                    db.insertWithOnConflict("sidecars", null, ContentValues().apply {
+                        put("parent_id", s.parentId)
+                        put("name", s.name)
+                        put("mime", s.mime)
+                        put("uri", s.uri)
+                    }, SQLiteDatabase.CONFLICT_REPLACE)
                 }
             }
         } catch (_: CancellationException) {

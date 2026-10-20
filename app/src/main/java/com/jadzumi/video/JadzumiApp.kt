@@ -315,7 +315,20 @@ private val destinations = listOf(
                                 ) { current ->
                                     val video = previewVideos.find { it.id == current }
                                     val localVideo = localState.videos.find { it.uri == current }
-                                    if (localVideo != null) LocalDetailPage(localVideo, localState, playback)
+                                    if (current?.startsWith("series:") == true) {
+                                        val seriesId = current.removePrefix("series:")
+                                        val series = localState.tvSeries.find { it.id == seriesId }
+                                        if (series != null) {
+                                            TvShowDetailsPage(
+                                                series = series,
+                                                library = library,
+                                                playback = playback,
+                                                onBack = { selectedId = null }
+                                            )
+                                        } else {
+                                            LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "TV Shows")
+                                        }
+                                    } else if (localVideo != null) LocalDetailPage(localVideo, localState, playback)
                                     else if (video != null) DetailPage(video)
                                     else when (current) {
                                         "Home", "Library" -> if (demo) LibraryPage(query, demo, { demo = it }) { selectedId = it } else LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true })
@@ -978,6 +991,69 @@ private val settingsCategories = listOf(
                             }
                             item {
                                 PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it }
+                            }
+                            item {
+                                var scanSidecars by rememberSaveable { mutableStateOf(prefs.getBoolean("scan_sidecars", true)) }
+                                var onlineMetadata by rememberSaveable { mutableStateOf(prefs.getBoolean("online_metadata", false)) }
+
+                                Panel {
+                                    Text("Local Artwork & Metadata (Milestone 5B)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text(
+                                        "Configure offline sidecar scraping (.nfo, poster.jpg, fanart.jpg) and optional online metadata.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
+                                    )
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    // 1. Scan Local Sidecars
+                                    Row(
+                                        Modifier.fillMaxWidth().padding(vertical = 14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Scan Local Sidecar Files", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text(
+                                                "100% Offline — Automatically discovers poster.jpg, fanart.jpg, and Kodi/Jellyfin .nfo files in your media folders.",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Switch(
+                                            checked = scanSidecars,
+                                            onCheckedChange = {
+                                                scanSidecars = it
+                                                prefs.edit { putBoolean("scan_sidecars", it) }
+                                            }
+                                        )
+                                    }
+
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    // 2. Optional Online Metadata (Opt-In only, disabled by default)
+                                    Row(
+                                        Modifier.fillMaxWidth().padding(vertical = 14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Fetch Online Metadata (Opt-In)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text(
+                                                "Disabled by default. When enabled, optionally fetches missing plot summaries and poster art from the web, strictly cached locally.",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Switch(
+                                            checked = onlineMetadata,
+                                            onCheckedChange = {
+                                                onlineMetadata = it
+                                                prefs.edit { putBoolean("online_metadata", it) }
+                                            }
+                                        )
+                                    }
+                                }
                             }
                             item {
                                 AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED")

@@ -10,8 +10,8 @@ android {
         applicationId = "com.jadzumi.video"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "0.4.0-m6"
+        versionCode = 8
+        versionName = "0.5.0-m5"
         ndk { abiFilters += "arm64-v8a" }
     }
     buildFeatures { compose = true; buildConfig = true }

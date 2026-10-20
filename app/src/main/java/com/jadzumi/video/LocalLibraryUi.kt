@@ -489,8 +489,9 @@ fun StorageSummaryCard(
     var category by rememberSaveable { mutableStateOf(defaultCategory) }
     val allVideos = remember(state.videos) { state.videos.distinctBy { it.identity } }
 
+    val seriesList = remember(state.videos, state.sidecars) { state.tvSeries }
     val moviesCount = remember(allVideos) { allVideos.count { it.episode == null } }
-    val showsCount = remember(allVideos) { allVideos.count { it.episode != null } }
+    val showsCount = remember(seriesList, allVideos) { seriesList.size.takeIf { it > 0 } ?: allVideos.count { it.episode != null } }
     val animeCount = remember(allVideos) { allVideos.count { it.name.contains("anime", true) || it.folder.contains("anime", true) } }
     val recentCount = remember(allVideos) { allVideos.size }
 
@@ -512,28 +513,51 @@ fun StorageSummaryCard(
         allVideos.filter { playback.savedPosition(it) > 0 }
     }
 
-    val heroItems = remember(allVideos, continueWatching) {
+    val heroItems = remember(allVideos, continueWatching, seriesList) {
         if (allVideos.isNotEmpty()) {
             val topVideos = mutableListOf<LocalVideo>()
             topVideos.addAll(continueWatching.take(2))
+
+            // Milestone 5A: Spotlight TV Series "Up Next" episode
+            val upNextEpisodes = seriesList.mapNotNull { it.nextUnwatchedEpisode(playback) }
+            upNextEpisodes.forEach { ep ->
+                if (topVideos.size < 5 && topVideos.none { it.uri == ep.uri }) {
+                    topVideos.add(ep)
+                }
+            }
+
             allVideos.forEach { v ->
                 if (topVideos.size < 5 && topVideos.none { it.uri == v.uri }) {
                     topVideos.add(v)
                 }
             }
             topVideos.map { v ->
+                val epInfo = EpisodePatterns.parse(v.name)
                 val durStr = if (v.duration > 0) timecode(v.duration / 1000) else "Feature Film"
                 val resStr = if (v.width > 0 && v.height > 0) "${v.width}x${v.height}" else "4K"
+                val subtitle = if (epInfo != null) {
+                    "Up Next: S%02dE%02d · %s".format(epInfo.season, epInfo.episode, epInfo.episodeTitle ?: durStr)
+                } else {
+                    "2024 · $durStr · $resStr · Dolby Audio"
+                }
+
                 HeroItem(
                     id = v.uri,
-                    title = v.title,
-                    subtitle = "2024 · $durStr · $resStr · Dolby Audio",
+                    title = epInfo?.seriesTitle ?: v.title,
+                    subtitle = subtitle,
                     localVideo = v,
                     onPlay = {
                         playback.open(v)
                         playback.fullscreen = true
                     },
-                    onInfo = { select(v.uri) }
+                    onInfo = {
+                        if (epInfo != null) {
+                            val matchedSeries = seriesList.find { it.title.equals(epInfo.seriesTitle, ignoreCase = true) }
+                            if (matchedSeries != null) select("series:${matchedSeries.id}") else select(v.uri)
+                        } else {
+                            select(v.uri)
+                        }
+                    }
                 )
             }
         } else {
@@ -662,53 +686,94 @@ fun StorageSummaryCard(
                     }
                 }
 
-                // 4. Videos List / Empty State
-                if (videos.isEmpty()) {
-                    item {
-                        LocalPanel {
-                            Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
-                            Text(
-                                if (allVideos.isEmpty()) "Make room for your stories" else "No matching videos",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                if (state.folders.isEmpty()) "Connect a folder using Android's file picker to populate your library."
-                                else "Pull down to refresh or tap another category.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (state.folders.isEmpty()) {
-                                Spacer(Modifier.height(4.dp))
-                                Button(onClick = add, shape = RoundedCornerShape(20.dp)) {
-                                    Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("Add your first folder")
-                                }
+                if (category == "TV Shows") {
+                    val filteredSeries = remember(seriesList, query) {
+                        seriesList.filter { it.title.contains(query.trim(), true) }
+                    }
+                    if (filteredSeries.isEmpty()) {
+                        item {
+                            LocalPanel {
+                                Icon(Icons.Rounded.Tv, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                Text("No TV Series Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Text(
+                                    "Videos with episode naming patterns (e.g. S01E01, 1x04, Episode 12) will automatically be organized into dedicated series pages.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
-                    }
-                } else {
-                    item {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                if (category == "All videos") "All Indexed Videos (${videos.size})" else "$category (${videos.size})",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            if (category != "All videos") {
+                    } else {
+                        item {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "TV Series (${filteredSeries.size})",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
                                 TextButton(onClick = { category = "All videos" }) { Text("Show all") }
                             }
                         }
-                    }
-                }
 
-                items(videos, key = { it.uri }) { video ->
-                    LocalVideoCard(video) { select(video.uri) }
+                        item {
+                            TvSeriesCardGrid(
+                                seriesList = filteredSeries,
+                                playback = playback,
+                                onSelect = { select("series:${it.id}") }
+                            )
+                        }
+                    }
+                } else {
+                    if (videos.isEmpty()) {
+                        item {
+                            LocalPanel {
+                                Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    if (allVideos.isEmpty()) "Make room for your stories" else "No matching videos",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    if (state.folders.isEmpty()) "Connect a folder using Android's file picker to populate your library."
+                                    else "Pull down to refresh or tap another category.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (state.folders.isEmpty()) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Button(onClick = add, shape = RoundedCornerShape(20.dp)) {
+                                        Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Add your first folder")
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        item {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    if (category == "All videos") "All Indexed Videos (${videos.size})" else "$category (${videos.size})",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                if (category != "All videos") {
+                                    TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                }
+                            }
+                        }
+
+                        items(videos, key = { it.uri }) { video ->
+                            LocalVideoCard(video) { select(video.uri) }
+                        }
+                    }
                 }
 
                 item {
@@ -927,6 +992,148 @@ fun StorageSummaryCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+fun TvSeriesCardGrid(
+    seriesList: List<TvSeries>,
+    playback: PlaybackController,
+    onSelect: (TvSeries) -> Unit
+) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val columns = when {
+            maxWidth >= 1000.dp -> 4
+            maxWidth >= 680.dp -> 3
+            else -> 2
+        }
+        val rows = seriesList.chunked(columns)
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            rows.forEach { rowSeries ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    rowSeries.forEach { series ->
+                        Box(Modifier.weight(1f)) {
+                            TvSeriesSummaryCard(
+                                series = series,
+                                playback = playback,
+                                onClick = { onSelect(series) }
+                            )
+                        }
+                    }
+                    val missing = columns - rowSeries.size
+                    repeat(missing) {
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TvSeriesSummaryCard(
+    series: TvSeries,
+    playback: PlaybackController,
+    onClick: () -> Unit
+) {
+    val watched = remember(series, playback.historyVersion) { series.watchedCount(playback) }
+    val total = series.totalEpisodes
+    val progress = if (total > 0) (watched.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        shadowElevation = 2.dp
+    ) {
+        Column {
+            // Poster / Backdrop Thumbnail
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 10f)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                val firstEp = series.seasons.values.firstOrNull()?.firstOrNull()
+                if (firstEp != null) {
+                    LocalThumbnail(video = firstEp, modifier = Modifier.fillMaxSize())
+                } else {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.Tv, null, Modifier.size(36.dp), tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+
+                // Seasons badge
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.75f),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                ) {
+                    Text(
+                        "${series.seasonCount} Season${if (series.seasonCount > 1) "s" else ""}",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                // Progress Line at bottom of thumbnail
+                if (progress > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth(progress)
+                            .height(3.5.dp)
+                            .background(if (progress >= 1f) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
+                    )
+                }
+            }
+
+            // Info Section
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = series.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = "${series.totalEpisodes} Episodes · ${series.year ?: "2024"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(Modifier.height(2.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (progress >= 1f) {
+                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(13.dp), tint = Color(0xFF1E8E3E))
+                        Text("All Watched", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E8E3E))
+                    } else if (watched > 0) {
+                        Text("$watched/$total Watched", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                    } else {
+                        Text("Unwatched", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
+                    }
+                }
+            }
         }
     }
 }

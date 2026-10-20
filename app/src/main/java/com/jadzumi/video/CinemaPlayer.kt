@@ -538,6 +538,25 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     }
                 }
 
+                // Milestone 5A: 10-Second Next-Episode Autoplay Countdown Banner
+                val nextEp = playback.nextEpisode
+                val countdown = playback.nextEpisodeCountdown
+                AnimatedVisibility(
+                    visible = nextEp != null && countdown != null && !playback.locked && !playback.inPip,
+                    enter = fadeIn(tween(if (reducedMotion) 0 else 250)) + slideInVertically(tween(if (reducedMotion) 0 else 300)) { it / 2 },
+                    exit = fadeOut(tween(if (reducedMotion) 0 else 200)) + slideOutVertically(tween(if (reducedMotion) 0 else 250)) { it / 2 },
+                    modifier = Modifier.align(Alignment.BottomEnd).safeDrawingPadding().padding(bottom = 100.dp, end = 24.dp)
+                ) {
+                    if (nextEp != null && countdown != null) {
+                        NextEpisodeAutoplayBanner(
+                            nextEpisode = nextEp,
+                            countdownSeconds = countdown,
+                            onPlayNow = { playback.playNextEpisode() },
+                            onCancel = { playback.dismissNextEpisodeCountdown() }
+                        )
+                    }
+                }
+
                 message?.let { msg ->
                     Surface(
                         Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 74.dp),
@@ -993,6 +1012,155 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         colors = colors
     ) {
         icon()
+    }
+}
+
+@Composable
+private fun NextEpisodeAutoplayBanner(
+    nextEpisode: LocalVideo,
+    countdownSeconds: Int,
+    onPlayNow: () -> Unit,
+    onCancel: () -> Unit
+) {
+    val epInfo = remember(nextEpisode.name) { EpisodePatterns.parse(nextEpisode.name) }
+    val title = epInfo?.episodeTitle ?: nextEpisode.title
+    val epLabel = if (epInfo != null) "S%02dE%02d".format(epInfo.season, epInfo.episode) else "Next Episode"
+
+    Surface(
+        modifier = Modifier.widthIn(max = 380.dp),
+        shape = RoundedCornerShape(22.dp),
+        color = Color(0xF0131922),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
+        shadowElevation = 8.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Header Row: Countdown badge + Cancel (X)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .background(Color(0xFF388E3C), CircleShape)
+                    )
+                    Text(
+                        "Up next in ${countdownSeconds}s",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                IconButton(
+                    onClick = onCancel,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        Icons.Rounded.Close,
+                        contentDescription = "Cancel",
+                        tint = Color.White.copy(alpha = 0.7f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+
+            // Thumbnail + Title
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(76.dp)
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.1f))
+                ) {
+                    LocalThumbnail(video = nextEpisode, modifier = Modifier.fillMaxSize())
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = TimelineAccent.copy(alpha = 0.25f)
+                    ) {
+                        Text(
+                            epLabel,
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TimelineAccent
+                        )
+                    }
+                    Text(
+                        title,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            // Linear Countdown Progress Line
+            val progress = (countdownSeconds / 10f).coerceIn(0f, 1f)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(2.dp))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(progress)
+                        .fillMaxHeight()
+                        .background(
+                            Brush.horizontalGradient(listOf(Color(0xFF1687F7), Color(0xFF71D8FF))),
+                            RoundedCornerShape(2.dp)
+                        )
+                )
+            }
+
+            // Action Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = onPlayNow,
+                    modifier = Modifier.weight(1f),
+                    shape = CircleShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = TimelineAccent)
+                ) {
+                    Icon(Icons.Rounded.PlayArrow, null, Modifier.size(16.dp), tint = Color.White)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Play Now", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+
+                OutlinedButton(
+                    onClick = onCancel,
+                    modifier = Modifier.weight(1f),
+                    shape = CircleShape,
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
+                ) {
+                    Text("Cancel", fontSize = 12.sp, color = Color.White)
+                }
+            }
+        }
     }
 }
 // END OF FILE

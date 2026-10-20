@@ -62,6 +62,23 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var isHdr by mutableStateOf(false); private set
     var videoCodecBadge by mutableStateOf<String?>(null); private set
 
+    // Milestone 5A: Queue, Next Episode Continuity & Autoplay
+    var currentQueue by mutableStateOf<List<LocalVideo>>(emptyList()); private set
+    var nextEpisodeCountdown by mutableStateOf<Int?>(null); private set
+    var countdownDismissedForVideo by mutableStateOf<String?>(null); private set
+
+    val nextEpisode: LocalVideo?
+        get() {
+            val current = video ?: return null
+            if (currentQueue.isNotEmpty()) {
+                val idx = currentQueue.indexOfFirst { it.identity == current.identity }
+                if (idx != -1 && idx + 1 < currentQueue.size) {
+                    return currentQueue[idx + 1]
+                }
+            }
+            return null
+        }
+
     // Milestone 4 Privacy & Playback Settings
     var backgroundAudioEnabled by mutableStateOf(prefs.getBoolean("bg_audio", false))
     var brightnessBoost by mutableStateOf(prefs.getBoolean("brightness_boost", false))
@@ -90,6 +107,24 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     val currentDur = p.duration.takeIf { it > 0 } ?: video?.duration?.takeIf { it > 0 } ?: 0
                     if (currentDur > 0) duration = currentDur
                     if (++pollCount % 10 == 0) save()
+
+                    // Milestone 5A: 10-Second Next-Episode Autoplay Countdown
+                    val next = nextEpisode
+                    if (next != null && countdownDismissedForVideo != video?.identity && currentDur > 30_000) {
+                        val remMs = currentDur - position
+                        if (remMs in 500..15_000 && p.isPlaying) {
+                            val seconds = ((remMs + 500) / 1000).toInt().coerceIn(1, 10)
+                            nextEpisodeCountdown = seconds
+                        } else if (remMs <= 500 && p.isPlaying) {
+                            playNextEpisode()
+                        } else if (remMs > 15_000) {
+                            if (nextEpisodeCountdown != null) nextEpisodeCountdown = null
+                        }
+                    } else {
+                        if (nextEpisodeCountdown != null && p.playbackState != Player.STATE_ENDED) {
+                            nextEpisodeCountdown = null
+                        }
+                    }
                 }
             }
         }
@@ -203,7 +238,71 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         historyVersion++
     }
 
-    fun open(v: LocalVideo) {
+    fun markEpisodeWatched(v: LocalVideo, watched: Boolean) {
+        val k = key(v)
+        val dur = v.duration.takeIf { it > 0 } ?: 1000L
+        prefs.edit {
+            if (watched) {
+                putLong(k, dur)
+                putBoolean("$k.done", true)
+            } else {
+                remove(k)
+                remove("$k.done")
+            }
+        }
+        historyVersion++
+    }
+
+    fun markSeasonWatched(videos: List<LocalVideo>, watched: Boolean) {
+        prefs.edit {
+            videos.forEach { v ->
+                val k = key(v)
+                val dur = v.duration.takeIf { it > 0 } ?: 1000L
+                if (watched) {
+                    putLong(k, dur)
+                    putBoolean("$k.done", true)
+                } else {
+                    remove(k)
+                    remove("$k.done")
+                }
+            }
+        }
+        historyVersion++
+    }
+
+    fun dismissNextEpisodeCountdown() {
+        nextEpisodeCountdown = null
+        countdownDismissedForVideo = video?.identity
+    }
+
+    fun playNextEpisode() {
+        val next = nextEpisode ?: return
+        nextEpisodeCountdown = null
+        open(next, currentQueue)
+    }
+
+    fun open(v: LocalVideo, queue: List<LocalVideo> = emptyList()) {
+        if (queue.isNotEmpty()) {
+            currentQueue = queue
+        } else {
+            // Automatically discover sibling episodes if part of a TV series
+            val app = getApplication<Application>() as? JadzumiApplication
+            val allVideos = app?.library?.state?.value?.videos ?: emptyList()
+            val info = EpisodePatterns.parse(v.name)
+            if (info != null && allVideos.isNotEmpty()) {
+                val seriesEpisodes = allVideos.filter {
+                    val other = EpisodePatterns.parse(it.name)
+                    other != null && other.seriesTitle.equals(info.seriesTitle, ignoreCase = true) && other.season == info.season
+                }.sortedBy { EpisodePatterns.parse(it.name)?.episode ?: 0 }
+                currentQueue = if (seriesEpisodes.isNotEmpty()) seriesEpisodes else listOf(v)
+            } else if (currentQueue.none { it.identity == v.identity }) {
+                currentQueue = listOf(v)
+            }
+        }
+
+        nextEpisodeCountdown = null
+        countdownDismissedForVideo = null
+
         if (video?.identity == v.identity && player != null) {
             fullscreen = true; locked = false
             if (error != null) retry() else {
@@ -302,6 +401,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                         playing = false
                         playRequested = false
                         save()
+                        // Autoplay next episode if available and not dismissed
+                        if (nextEpisode != null && countdownDismissedForVideo != video?.identity) {
+                            playNextEpisode()
+                        }
                     } else if (events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED) || events.contains(Player.EVENT_POSITION_DISCONTINUITY)) {
                         save()
                     }
@@ -328,6 +431,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                         p.pause()
                         save()
                         cancelNotification()
+                        if (nextEpisode != null && countdownDismissedForVideo != video?.identity) {
+                            playNextEpisode()
+                        }
                         return
                     }
 
@@ -399,7 +505,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
             val forwardButton = CommandButton.Builder()
                 .setDisplayName("Forward ${seekIncrementSeconds}s")
-                .setIconResId(android.R.drawable.ic_media_ff)
+                .setIconResId(android.R.drawable.ic_media_ffwd)
                 .setSessionCommand(forwardCmd)
                 .build()
 
@@ -408,12 +514,16 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .setCustomLayout(listOf(rewindButton, forwardButton))
                 .build()
 
-            p.playWhenReady = autoplay
+            if (autoplay) p.play()
             updateNotification()
         } catch (_: Exception) {
-            error = "The player could not open this video. Try refreshing its folder and opening it again."
+            error = "Could not initialize media session or renderer."
             release()
         }
+    }
+
+    private fun isHdrFormat(colorTransfer: Int): Boolean {
+        return colorTransfer == C.COLOR_TRANSFER_ST2084 || colorTransfer == C.COLOR_TRANSFER_HLG
     }
 
     private fun updateTracks(tracks: Tracks) {
@@ -422,12 +532,12 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
         for (g in 0 until tracks.groups.size) {
             val group = tracks.groups[g]
+            val type = group.type
             for (t in 0 until group.length) {
                 val f = group.getTrackFormat(t)
-                val langTag = f.language ?: ""
-                val langDisplay = if (langTag.isNotEmpty()) Locale.forLanguageTag(langTag).displayLanguage.ifEmpty { langTag } else "Unknown"
-
-                when (group.type) {
+                val lang = f.language
+                val langDisplay = if (lang != null) Locale.forLanguageTag(lang).displayLanguage.ifBlank { "Unknown" } else "Unknown"
+                when (type) {
                     C.TRACK_TYPE_AUDIO -> {
                         val mime = f.sampleMimeType ?: f.containerMimeType
                         val name = f.label ?: if (langDisplay != "Unknown") langDisplay else "Audio Track ${audioList.size + 1}"
@@ -468,6 +578,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
             .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, track.trackIndex))
             .build()
+        if (saveTrackPrefs && track.language.isNotEmpty() && track.language != "Unknown") {
+            prefs.edit { putString("preferred_audio_lang", track.language) }
+        }
     }
 
     fun selectSubtitleTrack(track: SubtitleTrackInfo?) {
@@ -476,12 +589,16 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
                 .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
                 .build()
+            if (saveTrackPrefs) prefs.edit { putString("preferred_sub_lang", "none") }
         } else {
             val group = p.currentTracks.groups.getOrNull(track.groupIndex) ?: return
             p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
                 .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
                 .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, track.trackIndex))
                 .build()
+            if (saveTrackPrefs && track.language.isNotEmpty() && track.language != "Unknown") {
+                prefs.edit { putString("preferred_sub_lang", track.language) }
+            }
         }
     }
 
@@ -539,6 +656,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         video = null; fullscreen = false; locked = false; error = null
         position = 0; duration = 0; completed = false
         audioTracks = emptyList(); subtitleTracks = emptyList()
+        currentQueue = emptyList()
+        nextEpisodeCountdown = null
     }
 
     private fun release() {
