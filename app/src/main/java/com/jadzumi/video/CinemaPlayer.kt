@@ -1,6 +1,7 @@
 package com.jadzumi.video
 
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.Rect
 import android.media.AudioManager
 import androidx.activity.compose.BackHandler
@@ -146,6 +147,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         onDispose {
             controller.show(WindowInsetsCompat.Type.systemBars())
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = previousBrightness }
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
             activity.updateHdrColorMode()
         }
     }
@@ -486,6 +488,25 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
+                                        CinemaIcon("Rotate orientation", {
+                                            val current = activity.requestedOrientation
+                                            val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                                            } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                                                ActivityInfo.SCREEN_ORIENTATION_USER
+                                            } else {
+                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                            }
+                                            activity.requestedOrientation = next
+                                            message = when (next) {
+                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
+                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
+                                                else -> "Orientation: Auto (Sensor)"
+                                            }
+                                            interaction++
+                                        }, modifier = Modifier.size(36.dp)) {
+                                            Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
+                                        }
                                         CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
                                             Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
                                         }
@@ -700,17 +721,26 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     val subSummary = activeSub?.let { "${it.label} (${it.format})" } ?: "Off"
     val sleepSummary = if (sleepTimerMinutes > 0) "${sleepTimerMinutes}m" else "Off"
 
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)).clickable(onClick = onDismiss)) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)).clickable(onClick = onDismiss)) {
+        val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
         Surface(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .safeDrawingPadding()
-                .padding(end = 24.dp, top = 24.dp, bottom = 24.dp)
-                .widthIn(min = 300.dp, max = 350.dp)
-                .clickable(enabled = false) {},
+            modifier = if (isPhonePortrait) {
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .clickable(enabled = false) {}
+            } else {
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .safeDrawingPadding()
+                    .padding(end = 24.dp, top = 24.dp, bottom = 24.dp)
+                    .widthIn(min = 300.dp, max = 350.dp)
+                    .clickable(enabled = false) {}
+            },
             color = QuickMenuBg,
             border = BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
-            shape = RoundedCornerShape(22.dp),
+            shape = if (isPhonePortrait) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(22.dp),
             shadowElevation = 24.dp
         ) {
             when (section) {

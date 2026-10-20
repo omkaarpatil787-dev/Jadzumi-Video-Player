@@ -8,6 +8,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -188,157 +191,254 @@ private val destinations = listOf(
                         if (showRail) AppRail(route, colors != Light) { route = it; selectedId = null }
                         BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
                             val contentWidth = maxWidth
+                            val isPhone = contentWidth < 600.dp
                             val topPad = if (contentWidth >= 720.dp) 24.dp else 16.dp
 
-                            Column(Modifier.fillMaxSize()) {
-                                Row(
-                                    Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                                ) {
-                                    if (selectedId != null) {
-                                        IconButton(onClick = { selectedId = null }) {
-                                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library")
-                                        }
-                                        Text(
-                                            "Library / Details",
-                                            Modifier.weight(1f),
-                                            style = MaterialTheme.typography.titleLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    } else if (route == "Home" || route == "Library") {
-                                        Column(Modifier.weight(1f)) {
-                                            val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-                                            val greeting = when (hour) { in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; in 17..21 -> "Good evening"; else -> "Good night" }
-                                            Text(greeting, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                                            Text("Your movies. Your space.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                    } else {
-                                        Text(
-                                            route,
-                                            Modifier.weight(1f),
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-
-                                    Surface(
-                                        modifier = Modifier
-                                            .widthIn(min = 220.dp, max = 340.dp)
-                                            .height(42.dp),
-                                        shape = RoundedCornerShape(21.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                                    ) {
-                                        Row(
-                                            Modifier
-                                                .fillMaxSize()
-                                                .padding(horizontal = 14.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Icon(
-                                                Icons.Rounded.Search,
-                                                contentDescription = "Search",
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                                                if (query.isEmpty()) {
+                            Box(Modifier.fillMaxSize()) {
+                                Column(Modifier.fillMaxSize()) {
+                                    if (isPhone && selectedId == null) {
+                                        // Adaptive Phone Top Bar (Greeting + Actions, Full-width frosted search capsule)
+                                        Column(Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 6.dp)) {
+                                            Row(
+                                                Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                if (route == "Home" || route == "Library") {
+                                                    Column(Modifier.weight(1f)) {
+                                                        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                                                        val greeting = when (hour) { in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; in 17..21 -> "Good evening"; else -> "Good night" }
+                                                        Text(greeting, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                                        Text("Your movies. Your space.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                    }
+                                                } else {
                                                     Text(
-                                                        "Search videos, shows...",
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                                        fontSize = 13.sp,
+                                                        route,
+                                                        Modifier.weight(1f),
+                                                        style = MaterialTheme.typography.titleLarge,
+                                                        fontWeight = FontWeight.Bold,
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis
                                                     )
                                                 }
-                                                BasicTextField(
-                                                    value = query,
-                                                    onValueChange = { query = it },
-                                                    singleLine = true,
-                                                    textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                                        color = MaterialTheme.colorScheme.onSurface,
-                                                        fontSize = 13.sp
-                                                    ),
-                                                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                                                    modifier = Modifier.fillMaxWidth()
-                                                )
+
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    IconButton(
+                                                        onClick = { library.rescan() },
+                                                        enabled = !localState.busy && localState.folders.isNotEmpty()
+                                                    ) {
+                                                        if (localState.busy) {
+                                                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                                        } else {
+                                                            Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                                                        }
+                                                    }
+
+                                                    Surface(
+                                                        onClick = { route = "Settings"; selectedId = null },
+                                                        shape = CircleShape,
+                                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                                        modifier = Modifier.size(36.dp)
+                                                    ) {
+                                                        Box(contentAlignment = Alignment.Center) {
+                                                            Icon(Icons.Rounded.Person, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                                        }
+                                                    }
+                                                }
                                             }
-                                            if (query.isNotEmpty()) {
-                                                IconButton(
-                                                    onClick = { query = "" },
-                                                    modifier = Modifier.size(24.dp)
+
+                                            Spacer(Modifier.height(6.dp))
+
+                                            Surface(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(42.dp),
+                                                shape = RoundedCornerShape(21.dp),
+                                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                            ) {
+                                                Row(
+                                                    Modifier.fillMaxSize().padding(horizontal = 14.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                                 ) {
                                                     Icon(
-                                                        Icons.Rounded.Close,
-                                                        contentDescription = "Clear search",
+                                                        Icons.Rounded.Search,
+                                                        contentDescription = "Search",
                                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.size(16.dp)
+                                                        modifier = Modifier.size(18.dp)
                                                     )
+                                                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                                                        if (query.isEmpty()) {
+                                                            Text(
+                                                                "Search videos, shows...",
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                                fontSize = 13.sp,
+                                                                maxLines = 1,
+                                                                overflow = TextOverflow.Ellipsis
+                                                            )
+                                                        }
+                                                        BasicTextField(
+                                                            value = query,
+                                                            onValueChange = { query = it },
+                                                            singleLine = true,
+                                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                                                color = MaterialTheme.colorScheme.onSurface,
+                                                                fontSize = 13.sp
+                                                            ),
+                                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        )
+                                                    }
+                                                    if (query.isNotEmpty()) {
+                                                        IconButton(
+                                                            onClick = { query = "" },
+                                                            modifier = Modifier.size(24.dp)
+                                                        ) {
+                                                            Icon(
+                                                                Icons.Rounded.Close,
+                                                                contentDescription = "Clear search",
+                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        Row(
+                                            Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                        ) {
+                                            if (selectedId != null) {
+                                                IconButton(onClick = { selectedId = null }) {
+                                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library")
+                                                }
+                                                Text(
+                                                    "Library / Details",
+                                                    Modifier.weight(1f),
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            } else if (route == "Home" || route == "Library") {
+                                                Column(Modifier.weight(1f)) {
+                                                    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                                                    val greeting = when (hour) { in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; in 17..21 -> "Good evening"; else -> "Good night" }
+                                                    Text(greeting, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                                    Text("Your movies. Your space.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                }
+                                            } else {
+                                                Text(
+                                                    route,
+                                                    Modifier.weight(1f),
+                                                    style = MaterialTheme.typography.headlineMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+
+                                            Surface(
+                                                modifier = Modifier
+                                                    .widthIn(min = 220.dp, max = 340.dp)
+                                                    .height(42.dp),
+                                                shape = RoundedCornerShape(21.dp),
+                                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                            ) {
+                                                Row(
+                                                    Modifier
+                                                        .fillMaxSize()
+                                                        .padding(horizontal = 14.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Rounded.Search,
+                                                        contentDescription = "Search",
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                                                        if (query.isEmpty()) {
+                                                            Text(
+                                                                "Search videos, shows...",
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                                fontSize = 13.sp,
+                                                                maxLines = 1,
+                                                                overflow = TextOverflow.Ellipsis
+                                                            )
+                                                        }
+                                                        BasicTextField(
+                                                            value = query,
+                                                            onValueChange = { query = it },
+                                                            singleLine = true,
+                                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                                                color = MaterialTheme.colorScheme.onSurface,
+                                                                fontSize = 13.sp
+                                                            ),
+                                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        )
+                                                    }
+                                                    if (query.isNotEmpty()) {
+                                                        IconButton(
+                                                            onClick = { query = "" },
+                                                            modifier = Modifier.size(24.dp)
+                                                        ) {
+                                                            Icon(
+                                                                Icons.Rounded.Close,
+                                                                contentDescription = "Clear search",
+                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            IconButton(
+                                                onClick = { library.rescan() },
+                                                enabled = !localState.busy && localState.folders.isNotEmpty()
+                                            ) {
+                                                if (localState.busy) {
+                                                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                                                } else {
+                                                    Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
+                                                }
+                                            }
+
+                                            Surface(
+                                                onClick = { route = "Settings"; selectedId = null },
+                                                shape = CircleShape,
+                                                color = MaterialTheme.colorScheme.primaryContainer,
+                                                modifier = Modifier.size(40.dp)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Icon(Icons.Rounded.Person, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                                                 }
                                             }
                                         }
                                     }
 
-                                    IconButton(
-                                        onClick = { library.rescan() },
-                                        enabled = !localState.busy && localState.folders.isNotEmpty()
-                                    ) {
-                                        if (localState.busy) {
-                                            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                                        } else {
-                                            Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
-                                        }
-                                    }
-
-                                    Surface(
-                                        onClick = { route = "Settings"; selectedId = null },
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                        modifier = Modifier.size(40.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Rounded.Person, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-                                        }
-                                    }
-                                }
-
-                                Crossfade(
-                                    targetState = selectedId ?: route,
-                                    animationSpec = tween(if (reducedMotion) 0 else 220),
-                                    modifier = Modifier.weight(1f),
-                                    label = "screen"
-                                ) { current ->
-                                    val video = previewVideos.find { it.id == current }
-                                    val localVideo = localState.videos.find { it.uri == current }
-                                    if (current?.startsWith("series:") == true) {
-                                        val seriesId = current.removePrefix("series:")
-                                        val series = localState.tvSeries.find { it.id == seriesId }
-                                        if (series != null) {
-                                            TvShowDetailsPage(
-                                                series = series,
-                                                library = library,
-                                                playback = playback,
-                                                onBack = { selectedId = null }
-                                            )
-                                        } else {
-                                            LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
-                                        }
-                                    } else if (localVideo != null) {
-                                        if (localVideo.episode == null) {
-                                            MovieDetailsPage(
-                                                video = localVideo,
-                                                state = localState,
-                                                playback = playback,
-                                                onBack = { selectedId = null }
-                                            )
-                                        } else {
-                                            val series = localState.tvSeries.find { it.seasons.values.any { eps -> eps.any { ep -> ep.identity == localVideo.identity } } }
+                                    Crossfade(
+                                        targetState = selectedId ?: route,
+                                        animationSpec = tween(if (reducedMotion) 0 else 220),
+                                        modifier = Modifier.weight(1f),
+                                        label = "screen"
+                                    ) { current ->
+                                        val video = previewVideos.find { it.id == current }
+                                        val localVideo = localState.videos.find { it.uri == current }
+                                        if (current?.startsWith("series:") == true) {
+                                            val seriesId = current.removePrefix("series:")
+                                            val series = localState.tvSeries.find { it.id == seriesId }
                                             if (series != null) {
                                                 TvShowDetailsPage(
                                                     series = series,
@@ -347,61 +447,81 @@ private val destinations = listOf(
                                                     onBack = { selectedId = null }
                                                 )
                                             } else {
+                                                LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
+                                            }
+                                        } else if (localVideo != null) {
+                                            if (localVideo.episode == null) {
                                                 MovieDetailsPage(
                                                     video = localVideo,
                                                     state = localState,
                                                     playback = playback,
                                                     onBack = { selectedId = null }
                                                 )
+                                            } else {
+                                                val series = localState.tvSeries.find { it.seasons.values.any { eps -> eps.any { ep -> ep.identity == localVideo.identity } } }
+                                                if (series != null) {
+                                                    TvShowDetailsPage(
+                                                        series = series,
+                                                        library = library,
+                                                        playback = playback,
+                                                        onBack = { selectedId = null }
+                                                    )
+                                                } else {
+                                                    MovieDetailsPage(
+                                                        video = localVideo,
+                                                        state = localState,
+                                                        playback = playback,
+                                                        onBack = { selectedId = null }
+                                                    )
+                                                }
                                             }
-                                        }
-                                    } else if (video != null) DetailPage(video)
-                                    else when (current) {
-                                        "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it })
-                                        "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies")
-                                        "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
-                                        "Folders" -> LocalFoldersPage(localState, library, contentWidth >= 840.dp) { selectedId = it }
-                                        "Settings" -> UnifiedSettingsAndPrivacyScreen(
-                                            theme = theme,
-                                            onTheme = ::switchThemeWithBloom,
-                                            themeBloom = themeBloomEnabled,
-                                            onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
-                                            reduced = reducedMotion,
-                                            onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
-                                            cornerStyle = cornerStyle,
-                                            onCornerStyle = {
-                                                cornerStyle = it
-                                                prefs.edit { putString("cornerStyle", it) }
-                                            },
-                                            onReplaySplash = { showSplash = true },
-                                            localState = localState,
-                                            library = library,
-                                            playback = playback,
-                                            onNavigateFolders = { route = "Folders" }
-                                        )
-                                        "Playlists" -> EmptyPage(Icons.AutoMirrored.Rounded.QueueMusic, "Your collections, together", "Playlist creation is planned for a later update.")
-                                        else -> if (playback.video != null) {
-                                            Column(Modifier.padding(28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                                Text("${playback.video?.title}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                                Button(onClick = { playback.fullscreen = true }) { Text("Open player") }
+                                        } else if (video != null) DetailPage(video)
+                                        else when (current) {
+                                            "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it })
+                                            "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies")
+                                            "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
+                                            "Folders" -> LocalFoldersPage(localState, library, contentWidth >= 840.dp) { selectedId = it }
+                                            "Settings" -> UnifiedSettingsAndPrivacyScreen(
+                                                theme = theme,
+                                                onTheme = ::switchThemeWithBloom,
+                                                themeBloom = themeBloomEnabled,
+                                                onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
+                                                reduced = reducedMotion,
+                                                onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
+                                                cornerStyle = cornerStyle,
+                                                onCornerStyle = {
+                                                    cornerStyle = it
+                                                    prefs.edit { putString("cornerStyle", it) }
+                                                },
+                                                onReplaySplash = { showSplash = true },
+                                                localState = localState,
+                                                library = library,
+                                                playback = playback,
+                                                onNavigateFolders = { route = "Folders" }
+                                            )
+                                            "Playlists" -> EmptyPage(Icons.AutoMirrored.Rounded.QueueMusic, "Your collections, together", "Playlist creation is planned for a later update.")
+                                            else -> if (playback.video != null) {
+                                                Column(Modifier.padding(28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                    Text("${playback.video?.title}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                                    Button(onClick = { playback.fullscreen = true }) { Text("Open player") }
+                                                }
+                                            } else {
+                                                EmptyPage(Icons.Rounded.PlayCircle, "Your cinema is ready", "Choose an imported video from your library, then tap Play.")
                                             }
-                                        } else {
-                                            EmptyPage(Icons.Rounded.PlayCircle, "Your cinema is ready", "Choose an imported video from your library, then tap Play.")
                                         }
                                     }
                                 }
 
-                                if (!showRail) {
-                                    NavigationBar {
-                                        destinations.forEach { d ->
-                                            NavigationBarItem(
-                                                selected = route == d.name,
-                                                onClick = { route = d.name; selectedId = null },
-                                                icon = { Icon(d.icon, d.name) },
-                                                label = { Text(d.name, maxLines = 1, fontSize = 10.sp) }
-                                            )
-                                        }
-                                    }
+                                // Floating Frosted Glass Bottom Navigation Bar (Phones & narrow layouts)
+                                if (!showRail && selectedId == null) {
+                                    FloatingFrostedBottomBar(
+                                        route = route,
+                                        darkSurface = colors != Light,
+                                        onNavigate = { route = it; selectedId = null },
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .padding(bottom = 6.dp)
+                                    )
                                 }
                             }
                         }
@@ -476,6 +596,101 @@ private val destinations = listOf(
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
+        }
+    }
+}
+
+@Composable private fun FloatingFrostedBottomBar(
+    route: String,
+    darkSurface: Boolean,
+    onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val navDestinations = remember {
+        listOf(
+            Destination("Home", Icons.Rounded.Home),
+            Destination("Movies", Icons.Rounded.Movie),
+            Destination("TV Shows", Icons.Rounded.Tv),
+            Destination("Folders", Icons.Rounded.Folder),
+            Destination("Settings", Icons.Rounded.Settings)
+        )
+    }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp, vertical = 6.dp)
+            .height(64.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = if (darkSurface) Color(0xD9101827) else Color(0xEBFFFFFF),
+        border = BorderStroke(
+            1.dp,
+            if (darkSurface) Color.White.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.70f)
+        ),
+        shadowElevation = 14.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            navDestinations.forEach { d ->
+                val isSelected = route == d.name || (d.name == "Home" && route == "Library")
+                val activeColor = MaterialTheme.colorScheme.primary
+                val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+
+                val pillWidth by animateDpAsState(
+                    targetValue = if (isSelected) 46.dp else 0.dp,
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    label = "pill"
+                )
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable { onNavigate(d.name) }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .height(28.dp)
+                                .widthIn(min = 36.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .width(pillWidth.coerceAtLeast(36.dp))
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
+                                )
+                            }
+                            Icon(
+                                imageVector = d.icon,
+                                contentDescription = d.name,
+                                tint = if (isSelected) activeColor else inactiveColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Text(
+                            text = d.name,
+                            fontSize = 10.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) activeColor else inactiveColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -107,7 +107,9 @@ fun TvShowDetailsPage(
                             text = "TV Shows  ›  ${series.title}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -119,7 +121,7 @@ fun TvShowDetailsPage(
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
                             Icon(
                                 Icons.Rounded.CloudDone,
@@ -128,7 +130,7 @@ fun TvShowDetailsPage(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                "100% Offline Local Metadata",
+                                if (isTablet) "100% Offline Local Metadata" else "Offline",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -321,25 +323,31 @@ private fun ShowHeroCard(
     onPlayNext: () -> Unit,
     onMarkSeasonWatched: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-    ) {
-        Row(
-            modifier = Modifier.padding(22.dp),
-            horizontalArrangement = Arrangement.spacedBy(22.dp),
-            verticalAlignment = Alignment.CenterVertically
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val isTablet = maxWidth >= 600.dp
+        val heroPad = if (isTablet) 22.dp else 14.dp
+        val heroGap = if (isTablet) 22.dp else 14.dp
+        val posterWidth = if (isTablet) 135.dp else 105.dp
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLowest,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
-            // Poster Image
-            Box(
-                modifier = Modifier
-                    .width(135.dp)
-                    .aspectRatio(2f / 3f)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            Row(
+                modifier = Modifier.padding(heroPad),
+                horizontalArrangement = Arrangement.spacedBy(heroGap),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Poster Image
+                Box(
+                    modifier = Modifier
+                        .width(posterWidth)
+                        .aspectRatio(2f / 3f)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                ) {
                 SidecarImage(
                     uri = series.posterUri,
                     fallbackVideo = nextUnwatched ?: series.seasons.values.firstOrNull()?.firstOrNull(),
@@ -441,6 +449,7 @@ private fun ShowHeroCard(
             }
         }
     }
+}
 }
 
 @Composable

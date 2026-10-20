@@ -1,8 +1,8 @@
 # Jadzumi Video / Jadzumi Player — Active Development Checkpoint
 
 Updated: 2026-10-20  
-Version: 1.0.0 (Release)  
-Target: Universal Android Tablets & Large Screens (16:10, 16:9, 4:3, Foldables; Android 8.0–16, ARM64-v8a)  
+Version: 1.1.0 (Release)  
+Target: Universal Android Devices — Handheld Phones, Tablets & Large Screens (16:10, 16:9, 19.5:9, 20:9, 4:3, Foldables; Android 8.0–16, ARM64-v8a)  
 
 ## Milestone Status Summary
 
@@ -28,3 +28,9 @@ Target: Universal Android Tablets & Large Screens (16:10, 16:9, 4:3, Foldables; 
   - Upgraded to `versionCode = 9`, `versionName = "1.0.0"`.
   - Modernized Kotlin compilerOptions DSL (`JvmTarget.JVM_17`).
   - Automated CI build for both Release and Debug APKs.
+- **Milestone 9 — Universal Phone Adaptation & Glassmorphic Polish (v1.1.0):** [COMPLETED & PACKAGED]
+  - Floating frosted glass bottom navigation bar with animated indicator pill for mobile displays (`< 600dp`).
+  - Adaptive 2-row header with full-width search capsule and 2x2 responsive category quick cards.
+  - Mobile Cinema Player: one-tap orientation toggle (Landscape/Portrait/Sensor) and responsive bottom sheet Quick Menu in phone portrait.
+  - Thumb-friendly bottom padding and universal "device's internal storage" dialog cleanups.
+  - Upgraded to `versionCode = 10`, `versionName = "1.1.0"`.

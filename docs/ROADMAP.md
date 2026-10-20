@@ -1,6 +1,6 @@
 # Official Jadzumi Video Player Roadmap
 
-> **Target Platform:** Universal Android Tablets & Large Screens (16:10, 16:9, 4:3, Foldables; optimized for 120Hz/144Hz, Android 8.0–16, ARM64-v8a)  
+> **Target Platform:** Universal Android Devices — Handheld Phones, Tablets & Foldables (16:10, 16:9, 19.5:9, 20:9, 4:3; optimized for 60Hz/90Hz/120Hz/144Hz, Android 8.0–16, ARM64-v8a)  
 > **Core Philosophy:** 100% Offline-First by default, Native Jetpack Compose (no WebViews), Material 3 Expressive UI, Hardware-Accelerated Playback, Zero Tracking.
 
 ---
@@ -43,15 +43,29 @@
 - **Responsive Layout & Ergonomics**: Adaptive 16:10 landscape, portrait, and split-screen layouts across all library, details, folder, and player screens.
 - **Production Standalone UI**: Removed legacy "View original design samples" demo buttons and test triggers across all tabs.
 
-### Milestone 8 — Production Hardening, Binary Security & v1.0 Official Release (Completed)
-- **R8 / ProGuard Code Shrinking & Obfuscation**:
-  - `isMinifyEnabled = true` and `isShrinkResources = true` enabled for production release builds.
-  - Comprehensive keep-rules for NextLib FFmpeg native JNI methods, AndroidX Media3 / ExoPlayer, Jetpack Compose runtime, and Jadzumi model data classes.
-- **Seamless Upgrade & Keystore Continuity**:
-  - Configured `release` signing with development keystore, guaranteeing in-place updates over existing tablet installs with zero data loss or watched progress reset.
-- **Modernized Toolchain**:
-  - Migrated Kotlin Gradle compilerOptions to type-safe DSL (`JvmTarget.JVM_17`), eliminating deprecation warnings.
-- **Multi-Build CI Automation**:
-  - Updated GitHub Actions workflow to run unit tests and package both `v1.0.0-Release` (optimized & shrunk) and `v1.0.0-Debug` APKs as workflow artifacts.
-- **Version Stamp**:
-  - Officially tagged as `versionCode = 9`, `versionName = "1.0.0"`.
+### Milestone 8 — Production Hardening, Binary Security & v1.0 Official Release (Approved)
+- **R8 / ProGuard Code Shrinking & Obfuscation**: Enabled minification, resource shrinking, and native JNI keep rules for Release builds.
+- **Keystore Alignment**: Maintained development keystore compatibility for seamless in-place updates without data wipe.
+- **Toolchain Modernization**: Migrated to `JvmTarget.JVM_17` compilerOptions DSL.
+
+---
+
+## Current Milestone
+
+### Milestone 9 (v1.1.0) — Universal Phone Adaptation & Glassmorphic Polish (Completed)
+- **Floating Frosted Glass Bottom Navigation Bar**:
+  - Dynamically activates for phone form factors (`< 600dp`), floating gracefully with a translucent frosted container, specular white border, and animated indicator pill.
+  - Seamlessly keeps the 96dp navigation rail on tablets and foldables.
+- **Phone Ergonomics & Layout Optimization**:
+  - Adaptive two-row phone top bar: Greeting/Title header + full-width frosted search capsule.
+  - Responsive 2×2 quick category filter cards on phones (1×4 on tablets).
+  - Scaled hero banner card height (220dp on phones, 260dp on tablets) with thumb-safe bottom content padding.
+- **Phone Cinema Player Upgrades**:
+  - One-tap screen orientation toggle (Landscape / Portrait / Sensor Auto).
+  - Quick Menu automatically transforms into a frosted bottom sheet on portrait phone displays.
+  - Automatic orientation reset to sensor preference upon closing player.
+  - Centered bottom alignment for the 10-second next-episode autoplay banner.
+- **Refined Glassmorphism & UI Consistency**:
+  - Polished specular highlights, frosted borders, and high-translucency surfaces.
+  - Universal "device's internal storage" localization across all confirmation dialogs.
+- **Version Tag**: `versionCode = 10`, `versionName = "1.1.0"`.

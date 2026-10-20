@@ -110,12 +110,12 @@ private data class HeroItem(
 )
 
 @Composable
-private fun HeroMoviePager(items: List<HeroItem>) {
+private fun HeroMoviePager(items: List<HeroItem>, isPhone: Boolean = false) {
     if (items.isEmpty()) return
     val pagerState = rememberPagerState(pageCount = { items.size })
 
     Card(
-        modifier = Modifier.fillMaxWidth().height(260.dp),
+        modifier = Modifier.fillMaxWidth().height(if (isPhone) 220.dp else 260.dp),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Black)
     ) {
@@ -591,6 +591,8 @@ fun StorageSummaryCard(
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
+        val isPhone = maxWidth < 600.dp
+        val bottomPad = if (isPhone) 88.dp else 24.dp
         PullToRefreshBox(
             isRefreshing = state.busy,
             onRefresh = { library.rescan() },
@@ -598,13 +600,13 @@ fun StorageSummaryCard(
         ) {
             LazyColumn(
                 Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(pad),
+                contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
                 // 1. Hero Movie Banner Pager
                 if (heroItems.isNotEmpty()) {
                     item {
-                        HeroMoviePager(items = heroItems)
+                        HeroMoviePager(items = heroItems, isPhone = isPhone)
                     }
                 }
 
@@ -663,44 +665,85 @@ fun StorageSummaryCard(
                     }
                 }
 
-                // 3. Category Quick Filter Cards Row
+                // 3. Category Quick Filter Cards (Adaptive 2x2 on phones, 1x4 on tablets)
                 item {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        CategoryQuickCard(
-                            title = "Recently Added",
-                            countText = "$recentCount videos",
-                            icon = Icons.Rounded.AccessTime,
-                            selected = category == "Recently Added",
-                            onClick = { category = if (category == "Recently Added") "All videos" else "Recently Added" },
-                            modifier = Modifier.weight(1f)
-                        )
-                        CategoryQuickCard(
-                            title = "Movies",
-                            countText = "$moviesCount videos",
-                            icon = Icons.Rounded.Movie,
-                            selected = category == "Movies",
-                            onClick = { category = if (category == "Movies") "All videos" else "Movies" },
-                            modifier = Modifier.weight(1f)
-                        )
-                        CategoryQuickCard(
-                            title = "TV Shows",
-                            countText = "$showsCount shows",
-                            icon = Icons.Rounded.Tv,
-                            selected = category == "TV Shows",
-                            onClick = { category = if (category == "TV Shows") "All videos" else "TV Shows" },
-                            modifier = Modifier.weight(1f)
-                        )
-                        CategoryQuickCard(
-                            title = "Anime",
-                            countText = "$animeCount shows",
-                            icon = Icons.Rounded.Bolt,
-                            selected = category == "Anime",
-                            onClick = { category = if (category == "Anime") "All videos" else "Anime" },
-                            modifier = Modifier.weight(1f)
-                        )
+                    if (isPhone) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                CategoryQuickCard(
+                                    title = "Recently Added",
+                                    countText = "$recentCount videos",
+                                    icon = Icons.Rounded.AccessTime,
+                                    selected = category == "Recently Added",
+                                    onClick = { category = if (category == "Recently Added") "All videos" else "Recently Added" },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                CategoryQuickCard(
+                                    title = "Movies",
+                                    countText = "$moviesCount videos",
+                                    icon = Icons.Rounded.Movie,
+                                    selected = category == "Movies",
+                                    onClick = { category = if (category == "Movies") "All videos" else "Movies" },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                CategoryQuickCard(
+                                    title = "TV Shows",
+                                    countText = "$showsCount shows",
+                                    icon = Icons.Rounded.Tv,
+                                    selected = category == "TV Shows",
+                                    onClick = { category = if (category == "TV Shows") "All videos" else "TV Shows" },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                CategoryQuickCard(
+                                    title = "Anime",
+                                    countText = "$animeCount shows",
+                                    icon = Icons.Rounded.Bolt,
+                                    selected = category == "Anime",
+                                    onClick = { category = if (category == "Anime") "All videos" else "Anime" },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    } else {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CategoryQuickCard(
+                                title = "Recently Added",
+                                countText = "$recentCount videos",
+                                icon = Icons.Rounded.AccessTime,
+                                selected = category == "Recently Added",
+                                onClick = { category = if (category == "Recently Added") "All videos" else "Recently Added" },
+                                modifier = Modifier.weight(1f)
+                            )
+                            CategoryQuickCard(
+                                title = "Movies",
+                                countText = "$moviesCount videos",
+                                icon = Icons.Rounded.Movie,
+                                selected = category == "Movies",
+                                onClick = { category = if (category == "Movies") "All videos" else "Movies" },
+                                modifier = Modifier.weight(1f)
+                            )
+                            CategoryQuickCard(
+                                title = "TV Shows",
+                                countText = "$showsCount shows",
+                                icon = Icons.Rounded.Tv,
+                                selected = category == "TV Shows",
+                                onClick = { category = if (category == "TV Shows") "All videos" else "TV Shows" },
+                                modifier = Modifier.weight(1f)
+                            )
+                            CategoryQuickCard(
+                                title = "Anime",
+                                countText = "$animeCount shows",
+                                icon = Icons.Rounded.Bolt,
+                                selected = category == "Anime",
+                                onClick = { category = if (category == "Anime") "All videos" else "Anime" },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
 
@@ -893,9 +936,11 @@ fun StorageSummaryCard(
             }
         } else {
             // Single-column stacked layout for portrait / split-screen so video rows have 100% width
+            val isPhone = maxWidth < 600.dp
+            val bottomPad = if (isPhone) 88.dp else 24.dp
             LazyColumn(
                 Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(pad),
+                contentPadding = PaddingValues(start = pad, end = pad, top = pad, bottom = bottomPad),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 item {
@@ -942,7 +987,7 @@ fun StorageSummaryCard(
             onDismissRequest = { videoToDelete = null },
             icon = { Icon(Icons.Rounded.DeleteForever, null, tint = MaterialTheme.colorScheme.error) },
             title = { Text("Permanently delete video?") },
-            text = { Text("This will permanently delete \"${video.name}\" ($sizeStr) from your tablet's internal storage. This action cannot be undone.") },
+            text = { Text("This will permanently delete \"${video.name}\" ($sizeStr) from your device's internal storage. This action cannot be undone.") },
             confirmButton = {
                 Button(
                     onClick = { library.deleteVideo(video); videoToDelete = null },
@@ -1534,7 +1579,7 @@ fun TvSeriesSummaryCard(
             onDismissRequest = { confirmDelete = false },
             icon = { Icon(Icons.Rounded.DeleteForever, null, tint = MaterialTheme.colorScheme.error) },
             title = { Text("Permanently delete video?") },
-            text = { Text("This will permanently delete \"${video.name}\" ($sizeStr) from your tablet's internal storage. This action cannot be undone.") },
+            text = { Text("This will permanently delete \"${video.name}\" ($sizeStr) from your device's internal storage. This action cannot be undone.") },
             confirmButton = {
                 Button(
                     onClick = {

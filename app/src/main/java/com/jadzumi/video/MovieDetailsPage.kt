@@ -81,7 +81,9 @@ fun MovieDetailsPage(
                             text = "Movies  ›  ${metadata.title}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -102,7 +104,7 @@ fun MovieDetailsPage(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                "100% Offline Local Metadata",
+                                if (isTablet) "100% Offline Local Metadata" else "Offline",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -121,15 +123,19 @@ fun MovieDetailsPage(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
                     shadowElevation = 2.dp
                 ) {
+                    val heroPad = if (isTablet) 22.dp else 14.dp
+                    val heroGap = if (isTablet) 22.dp else 14.dp
+                    val posterWidth = if (isTablet) 140.dp else 105.dp
+
                     Row(
-                        modifier = Modifier.padding(22.dp),
-                        horizontalArrangement = Arrangement.spacedBy(22.dp),
+                        modifier = Modifier.padding(heroPad),
+                        horizontalArrangement = Arrangement.spacedBy(heroGap),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Poster Thumbnail (2:3 aspect ratio)
                         Box(
                             modifier = Modifier
-                                .width(140.dp)
+                                .width(posterWidth)
                                 .aspectRatio(2f / 3f)
                                 .clip(RoundedCornerShape(18.dp))
                                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -227,7 +233,7 @@ fun MovieDetailsPage(
 
                             // Synopsis
                             val fullSynopsis = metadata.synopsis
-                                ?: "Offline Feature Film stored in your tablet library. High-efficiency playback with hardware-accelerated MediaCodec decoding."
+                                ?: "Offline Feature Film stored in your local library. High-efficiency playback with hardware-accelerated MediaCodec decoding."
 
                             Text(
                                 text = fullSynopsis,
