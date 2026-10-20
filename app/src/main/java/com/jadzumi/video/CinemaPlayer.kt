@@ -131,9 +131,11 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         if (playback.inPip) { quickMenuSection = null; scrub = null; controls = false }
     }
 
-    LaunchedEffect(playback.brightnessBoost) {
-        if (playback.brightnessBoost) {
+    LaunchedEffect(playback.brightnessBoost, playback.isHdr) {
+        if (playback.brightnessBoost || playback.isHdr) {
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = 1.0f }
+        } else {
+            activity.window.attributes = activity.window.attributes.apply { screenBrightness = previousBrightness }
         }
         activity.updateHdrColorMode()
     }
@@ -522,17 +524,18 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             if (isPhonePortrait) {
                                 Column(
                                     Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    // Row 1: Glassy Time Capsule Pill
+                                    // Row 1: Glassy Time Capsule Pill (Centered & adaptively padded)
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
                                         color = FrostedCircleBg,
                                         border = BorderStroke(1.dp, FrostedCircleRim),
-                                        modifier = Modifier.align(Alignment.Start)
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
                                     ) {
                                         Row(
-                                            Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
@@ -557,7 +560,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                             ) {
                                                 Text(
                                                     "-${compactTimecode(remSec)} remaining",
-                                                    Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                    Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
                                                     color = Color.White.copy(alpha = 0.92f),
                                                     fontSize = 10.sp,
                                                     fontWeight = FontWeight.Medium
@@ -566,12 +569,12 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                         }
                                     }
 
-                                    // Row 2: Glassy Actions Dock
+                                    // Row 2: Glassy Actions Dock (Centered & aligned with time pill)
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
                                         color = FrostedCircleBg,
                                         border = BorderStroke(1.dp, FrostedCircleRim),
-                                        modifier = Modifier.align(Alignment.End)
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
                                     ) {
                                         Row(
                                             Modifier.padding(horizontal = 6.dp, vertical = 4.dp),

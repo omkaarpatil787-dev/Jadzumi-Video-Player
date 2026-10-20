@@ -139,6 +139,9 @@ private val destinations = listOf(
     val localState by library.state.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
     var cornerStyle by rememberSaveable { mutableStateOf(prefs.getString("cornerStyle", "Rounded") ?: "Rounded") }
+    var bottomBarStyle by rememberSaveable { mutableStateOf(prefs.getString("bottomBarStyle", "Icons and labels") ?: "Icons and labels") }
+    var dockAutoMinimize by rememberSaveable { mutableStateOf(prefs.getBoolean("dockAutoMinimize", true)) }
+    var isDockMinimized by rememberSaveable { mutableStateOf(false) }
     val cornerRadiusDp = when (cornerStyle) {
         "Compact" -> 14.dp
         "Sharp" -> 0.dp
@@ -494,9 +497,9 @@ private val destinations = listOf(
                                             }
                                         } else if (video != null) DetailPage(video)
                                         else when (current) {
-                                            "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it })
-                                            "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies")
-                                            "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
+                                            "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, onScrollActive = { if (dockAutoMinimize) isDockMinimized = true })
+                                            "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies", onScrollActive = { if (dockAutoMinimize) isDockMinimized = true })
+                                            "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { if (dockAutoMinimize) isDockMinimized = true })
                                             "Folders" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
                                                 onTheme = ::switchThemeWithBloom,
@@ -510,6 +513,16 @@ private val destinations = listOf(
                                                 onCornerStyle = {
                                                     cornerStyle = it
                                                     prefs.edit { putString("cornerStyle", it) }
+                                                },
+                                                bottomBarStyle = bottomBarStyle,
+                                                onBottomBarStyle = {
+                                                    bottomBarStyle = it
+                                                    prefs.edit { putString("bottomBarStyle", it) }
+                                                },
+                                                dockAutoMinimize = dockAutoMinimize,
+                                                onDockAutoMinimize = {
+                                                    dockAutoMinimize = it
+                                                    prefs.edit { putBoolean("dockAutoMinimize", it) }
                                                 },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
@@ -530,6 +543,16 @@ private val destinations = listOf(
                                                 onCornerStyle = {
                                                     cornerStyle = it
                                                     prefs.edit { putString("cornerStyle", it) }
+                                                },
+                                                bottomBarStyle = bottomBarStyle,
+                                                onBottomBarStyle = {
+                                                    bottomBarStyle = it
+                                                    prefs.edit { putString("bottomBarStyle", it) }
+                                                },
+                                                dockAutoMinimize = dockAutoMinimize,
+                                                onDockAutoMinimize = {
+                                                    dockAutoMinimize = it
+                                                    prefs.edit { putBoolean("dockAutoMinimize", it) }
                                                 },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
@@ -554,7 +577,18 @@ private val destinations = listOf(
                                     FloatingFrostedBottomBar(
                                         route = route,
                                         darkSurface = colors != Light,
-                                        onNavigate = { route = it; selectedId = null },
+                                        bottomBarStyle = bottomBarStyle,
+                                        isMinimized = isDockMinimized,
+                                        onToggleMinimize = { isDockMinimized = !isDockMinimized },
+                                        onNavigate = {
+                                            if (isDockMinimized) {
+                                                isDockMinimized = false
+                                            } else if (route == it) {
+                                                isDockMinimized = true
+                                            }
+                                            route = it
+                                            selectedId = null
+                                        },
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
                                             .padding(bottom = 6.dp)
@@ -640,6 +674,9 @@ private val destinations = listOf(
 @Composable private fun FloatingFrostedBottomBar(
     route: String,
     darkSurface: Boolean,
+    bottomBarStyle: String,
+    isMinimized: Boolean,
+    onToggleMinimize: () -> Unit,
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -652,78 +689,164 @@ private val destinations = listOf(
         )
     }
 
+    val isIconsOnly = bottomBarStyle == "Icons only"
+    val activeDestination = navDestinations.firstOrNull { it.name == route || (it.name == "Home" && route == "Library") }
+        ?: navDestinations.first()
+
+    // Fluid bouncy animations
+    val dockHeight by animateDpAsState(
+        targetValue = when {
+            isMinimized -> 52.dp
+            isIconsOnly -> 54.dp
+            else -> 64.dp
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "dockHeight"
+    )
+
+    val dockWidth by animateDpAsState(
+        targetValue = if (isMinimized) 68.dp else 460.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "dockWidth"
+    )
+
+    val cornerRadius by animateDpAsState(
+        targetValue = if (isMinimized) 26.dp else 32.dp,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "dockCorner"
+    )
+
     Surface(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 6.dp)
-            .height(64.dp),
-        shape = RoundedCornerShape(32.dp),
+            .widthIn(max = dockWidth)
+            .then(if (!isMinimized) Modifier.fillMaxWidth() else Modifier.width(dockWidth))
+            .padding(horizontal = if (isMinimized) 0.dp else 18.dp, vertical = 4.dp)
+            .height(dockHeight)
+            .clip(RoundedCornerShape(cornerRadius)),
+        shape = RoundedCornerShape(cornerRadius),
         color = if (darkSurface) Color(0xD9101827) else Color(0xEBFFFFFF),
         border = BorderStroke(
             1.dp,
             if (darkSurface) Color.White.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.70f)
         ),
-        shadowElevation = 14.dp
+        shadowElevation = if (isMinimized) 18.dp else 14.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            navDestinations.forEach { d ->
-                val isSelected = route == d.name || (d.name == "Home" && route == "Library")
-                val activeColor = MaterialTheme.colorScheme.primary
-                val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-
-                val pillWidth by animateDpAsState(
-                    targetValue = if (isSelected) 46.dp else 0.dp,
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                    label = "pill"
+        if (isMinimized) {
+            // Minimized Floating Pill: Tap to expand with fluid bouncy pop
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(onClick = onToggleMinimize),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = activeDestination.icon,
+                    contentDescription = "Expand navigation",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
                 )
+            }
+        } else {
+            // Full Floating Frosted Dock: Icons with text labels OR Icons only
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                navDestinations.forEach { d ->
+                    val isSelected = route == d.name || (d.name == "Home" && route == "Library")
+                    val activeColor = MaterialTheme.colorScheme.primary
+                    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
 
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .clickable { onNavigate(d.name) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    val pillWidth by animateDpAsState(
+                        targetValue = if (isSelected) (if (isIconsOnly) 52.dp else 46.dp) else 0.dp,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
+                        label = "pill"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable {
+                                if (isSelected) {
+                                    onToggleMinimize()
+                                } else {
+                                    onNavigate(d.name)
+                                }
+                            }
+                            .padding(horizontal = 8.dp, vertical = if (isIconsOnly) 6.dp else 4.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .height(28.dp)
-                                .widthIn(min = 36.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (isSelected) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .width(pillWidth.coerceAtLeast(36.dp))
-                                        .clip(RoundedCornerShape(14.dp))
-                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
+                        if (isIconsOnly) {
+                            // Ultra-sleek Icons Only Mode
+                            Box(
+                                modifier = Modifier
+                                    .height(38.dp)
+                                    .widthIn(min = 44.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isSelected) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .width(pillWidth.coerceAtLeast(44.dp))
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
+                                    )
+                                }
+                                Icon(
+                                    imageVector = d.icon,
+                                    contentDescription = d.name,
+                                    tint = if (isSelected) activeColor else inactiveColor,
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
-                            Icon(
-                                imageVector = d.icon,
-                                contentDescription = d.name,
-                                tint = if (isSelected) activeColor else inactiveColor,
-                                modifier = Modifier.size(20.dp)
-                            )
+                        } else {
+                            // Default Icons + Labels Mode
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .height(28.dp)
+                                        .widthIn(min = 36.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (isSelected) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .width(pillWidth.coerceAtLeast(36.dp))
+                                                .clip(RoundedCornerShape(14.dp))
+                                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
+                                        )
+                                    }
+                                    Icon(
+                                        imageVector = d.icon,
+                                        contentDescription = d.name,
+                                        tint = if (isSelected) activeColor else inactiveColor,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Text(
+                                    text = d.name,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) activeColor else inactiveColor,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
-                        Text(
-                            text = d.name,
-                            fontSize = 10.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) activeColor else inactiveColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
                     }
                 }
             }
@@ -754,6 +877,10 @@ private val settingsCategories = listOf(
     onLivelyAnimations: (Boolean) -> Unit = {},
     cornerStyle: String,
     onCornerStyle: (String) -> Unit,
+    bottomBarStyle: String = "Icons and labels",
+    onBottomBarStyle: (String) -> Unit = {},
+    dockAutoMinimize: Boolean = true,
+    onDockAutoMinimize: (Boolean) -> Unit = {},
     onReplaySplash: () -> Unit,
     localState: LocalLibraryState,
     library: LocalLibrary,
@@ -1245,6 +1372,42 @@ private val settingsCategories = listOf(
                                                 }
                                             }
                                         }
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Text("Bottom Navigation Dock Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text("Choose between classic icons with text labels or ultra-compact icons only", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(Modifier.height(10.dp))
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        listOf(
+                                            Triple("Icons and labels", "Default", Icons.Rounded.Splitscreen),
+                                            Triple("Icons only", "Ultra-sleek", Icons.Rounded.ViewSidebar)
+                                        ).forEach { (style, subtitle, icon) ->
+                                            val isSel = bottomBarStyle == style
+                                            Surface(
+                                                modifier = Modifier.weight(1f).clickable { onBottomBarStyle(style) },
+                                                shape = RoundedCornerShape(14.dp),
+                                                color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                                border = BorderStroke(if (isSel) 2.dp else 1.dp, if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
+                                            ) {
+                                                Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
+                                                    Spacer(Modifier.height(4.dp))
+                                                    Text(style, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                                    Text(subtitle, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Auto-Minimize Dock on Scroll", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Smoothly collapse floating navigation into a bouncy mini-pill while scrolling movies or browsing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = dockAutoMinimize, onCheckedChange = onDockAutoMinimize)
                                     }
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)

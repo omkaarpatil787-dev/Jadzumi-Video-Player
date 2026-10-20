@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -587,9 +588,16 @@ fun StorageSummaryCard(
     query: String,
     select: (String) -> Unit,
     preview: () -> Unit = {},
-    defaultCategory: String = "All videos"
+    defaultCategory: String = "All videos",
+    onScrollActive: ((Boolean) -> Unit)? = null
 ) {
     val add = rememberFolderPicker(library)
+    val listState = rememberLazyListState()
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress) {
+            onScrollActive?.invoke(true)
+        }
+    }
     var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
     val allVideos = remember(state.videos) { state.videos.distinctBy { it.identity } }
 
@@ -691,7 +699,8 @@ fun StorageSummaryCard(
             modifier = Modifier.fillMaxSize()
         ) {
             LazyColumn(
-                Modifier.fillMaxSize(),
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
@@ -1635,6 +1644,82 @@ fun clearThumbnailMemoryCache() {
     ThumbnailMemory.cache.evictAll()
 }
 
+@Composable
+internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modifier = Modifier) {
+    val cleanTitle = remember(title, name) {
+        val t = if (title.isNotBlank()) title else name.substringBeforeLast('.')
+        t.replace(Regex("(?i)\\b(1080p|2160p|4k|uhd|hdr|hdr10|bluray|hevc|x265|x264|dvdrip|web-dl|webrip|ddp|aac|remux)\\b"), "")
+            .replace(Regex("[-._]+"), " ")
+            .trim()
+            .ifEmpty { "Cinema" }
+    }
+    val lower = remember(title, name) { "$title $name".lowercase() }
+    val gradientColors = remember(lower) {
+        when {
+            lower.contains("horror") || lower.contains("conjuring") || lower.contains("insidious") || lower.contains("halloween") || lower.contains("evil") || lower.contains("zombie") || lower.contains("scream") || lower.contains("quiet place") ->
+                listOf(Color(0xFF2E0A0A), Color(0xFF1A0505), Color(0xFF0D0202))
+            lower.contains("sci-fi") || lower.contains("interstellar") || lower.contains("inception") || lower.contains("dune") || lower.contains("matrix") || lower.contains("star") || lower.contains("avatar") ->
+                listOf(Color(0xFF0C253D), Color(0xFF051525), Color(0xFF020C17))
+            lower.contains("avengers") || lower.contains("marvel") || lower.contains("batman") || lower.contains("action") || lower.contains("mission") || lower.contains("wick") ->
+                listOf(Color(0xFF102033), Color(0xFF1B283D), Color(0xFF0B1421))
+            lower.contains("animation") || lower.contains("toy") || lower.contains("shrek") || lower.contains("disney") || lower.contains("pixar") ->
+                listOf(Color(0xFF27153D), Color(0xFF160B24), Color(0xFF0A0314))
+            else ->
+                listOf(Color(0xFF182233), Color(0xFF101724), Color(0xFF080C14))
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(gradientColors)),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color.White.copy(alpha = 0.08f), Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(size.width * 0.5f, size.height * 0.4f),
+                    radius = size.width * 0.6f
+                )
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = Color.White.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f)),
+                modifier = Modifier.size(38.dp)
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Rounded.Movie,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = cleanTitle,
+                color = Color.White.copy(alpha = 0.95f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
 @Composable internal fun LocalThumbnail(video: LocalVideo, modifier: Modifier) {
     val context = LocalContext.current.applicationContext
     val key = "${video.uri}:${video.modified}:${video.bytes}"
@@ -1643,22 +1728,52 @@ fun clearThumbnailMemoryCache() {
         value = withContext(Dispatchers.IO) {
             ThumbnailMemory.permits.withPermit {
                 ThumbnailMemory.cache.get(key) ?: run {
-                    val retriever = MediaMetadataRetriever()
-                    try {
-                        retriever.setDataSource(context, video.uri.toUri())
-                        if (Build.VERSION.SDK_INT >= 27) {
-                            retriever.getScaledFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
-                                ?.also { ThumbnailMemory.cache.put(key, it) }
-                        } else null
-                    } catch (_: Exception) { null } finally { runCatching { retriever.release() } }
+                    var bmp: Bitmap? = null
+                    // 1. On Android 10+, request cached system thumbnail from ContentResolver
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        runCatching {
+                            bmp = context.contentResolver.loadThumbnail(video.uri.toUri(), android.util.Size(480, 270), null)
+                        }
+                    }
+                    // 2. Sample frame at 12% into the movie (or 15s in) to bypass black intro frames
+                    if (bmp == null) {
+                        val retriever = MediaMetadataRetriever()
+                        try {
+                            retriever.setDataSource(context, video.uri.toUri())
+                            val sampleTimeUs = if (video.duration > 0) {
+                                (video.duration * 1000L * 0.12f).toLong().coerceIn(10_000_000L, 180_000_000L)
+                            } else {
+                                15_000_000L
+                            }
+                            if (Build.VERSION.SDK_INT >= 27) {
+                                bmp = retriever.getScaledFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                if (bmp == null) {
+                                    bmp = retriever.getScaledFrameAtTime(sampleTimeUs / 2, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                }
+                                if (bmp == null) {
+                                    bmp = retriever.getScaledFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                }
+                            }
+                            if (bmp == null) {
+                                bmp = retriever.getFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                                    ?: retriever.getFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                            }
+                        } catch (_: Exception) { } finally {
+                            runCatching { retriever.release() }
+                        }
+                    }
+                    bmp?.also { ThumbnailMemory.cache.put(key, it) }
                 }
             }
         }
     }
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceVariant) {
         val frame = bitmap
-        if (frame != null) Image(frame.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Movie, null, Modifier.size(36.dp), tint = MaterialTheme.colorScheme.primary) }
+        if (frame != null) {
+            Image(frame.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        } else {
+            CinematicFallbackPoster(title = video.title, name = video.name)
+        }
     }
 }
 // END OF FILE

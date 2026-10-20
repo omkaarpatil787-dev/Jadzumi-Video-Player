@@ -362,6 +362,13 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         }
         release()
         video = v; fullscreen = true; locked = false; error = null; completed = false; aspect = 16f / 9f
+        isHdr = v.name.let {
+            it.contains("hdr", ignoreCase = true) ||
+            it.contains("10bit", ignoreCase = true) ||
+            it.contains("dovi", ignoreCase = true) ||
+            it.contains("dv", ignoreCase = true) ||
+            it.contains("hlg", ignoreCase = true)
+        }
         position = persistedPosition(v); suspendedPosition = position; duration = v.duration
         prepare(autoplay = true)
     }
@@ -437,7 +444,14 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
                     val format = player.videoFormat
                     if (format != null) {
-                        isHdr = isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR)
+                        val nameHdr = video?.name?.let {
+                            it.contains("hdr", ignoreCase = true) ||
+                            it.contains("10bit", ignoreCase = true) ||
+                            it.contains("dovi", ignoreCase = true) ||
+                            it.contains("dv", ignoreCase = true) ||
+                            it.contains("hlg", ignoreCase = true)
+                        } ?: false
+                        isHdr = isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR) || nameHdr
                         videoCodecBadge = when {
                             format.sampleMimeType == MimeTypes.VIDEO_H265 -> if (isHdr) "4K HDR10" else "HEVC Main10"
                             format.sampleMimeType == MimeTypes.VIDEO_H264 -> "1080p AVC"

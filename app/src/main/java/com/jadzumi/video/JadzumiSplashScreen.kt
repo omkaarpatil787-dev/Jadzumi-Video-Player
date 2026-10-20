@@ -92,7 +92,8 @@ private fun AuroraAmbientBackground(
     modifier: Modifier = Modifier
 ) {
     val isAmoled = theme == "AMOLED"
-    val isDark = theme == "Dark" || isAmoled
+    // Cinema Aurora is always deep dark cinematic palette
+    val isDark = true
 
     Canvas(modifier = modifier) {
         val w = size.width
@@ -233,7 +234,8 @@ fun JadzumiSplashScreen(
     onFinished: () -> Unit
 ) {
     val isAmoled = theme == "AMOLED"
-    val isDark = theme == "Dark" || isAmoled
+    // Cinematic Splash is always dark cinematic palette
+    val isDark = true
 
     val inkColor = if (isDark) Color(0xFFE9F2FF) else Color(0xFF16346B)
     val mutedColor = if (isDark) Color(0xFF9CB9D9) else Color(0xFF6682A9)

@@ -341,12 +341,17 @@ fun clusterVideosIntoSeries(
             seasons = sortedSeasons,
             posterUri = poster,
             backdropUri = backdrop,
-            synopsis = nfoMetadata?.plot,
+            synopsis = nfoMetadata?.plot ?: detectMovieSynopsis(firstInfo.seriesTitle, detectMovieGenres(firstInfo.seriesTitle, pool.firstOrNull()?.name ?: "")),
             year = nfoMetadata?.year ?: "2024",
             rating = nfoMetadata?.rating ?: "8.8",
             mpaa = nfoMetadata?.mpaa ?: "TV-14",
-            genres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() } ?: listOf("Sci-Fi", "Drama"),
-            studio = nfoMetadata?.studio ?: "Aethelgard Studios"
+            genres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() } ?: detectMovieGenres(firstInfo.seriesTitle, pool.firstOrNull()?.name ?: ""),
+            studio = nfoMetadata?.studio ?: when {
+                firstInfo.seriesTitle.containsAny("marvel", "disney", "mandalorian", "star wars") -> "Lucasfilm / Marvel Studios"
+                firstInfo.seriesTitle.containsAny("hbo", "game of thrones", "dragon", "last of us", "succession") -> "HBO Originals"
+                firstInfo.seriesTitle.containsAny("netflix", "stranger things", "witcher", "wednesday") -> "Netflix Originals"
+                else -> "Television Production"
+            }
         )
     }.sortedBy { it.title }
 }
@@ -365,7 +370,140 @@ data class MovieMetadata(
     val backdropUri: String? = null
 )
 
-private val YEAR_REGEX = Regex("\\b((?:19|20)\\d{2})\\b")
+private fun CharSequence.containsAny(vararg keywords: String): Boolean {
+    val s = this.toString()
+    for (k in keywords) {
+        if (s.contains(k, ignoreCase = true)) return true
+    }
+    return false
+}
+
+/**
+ * Intelligent genre detector that inspects movie/show title and filename keywords
+ */
+fun detectMovieGenres(title: String, filename: String): List<String> {
+    val text = "$title $filename".lowercase()
+    return when {
+        text.containsAny(
+            "horror", "conjuring", "insidious", "halloween", "exorcist", "dracula", "zombie",
+            "evil dead", "saw", "scream", "paranormal", "quiet place", "hereditary", "midsommar",
+            "annabelle", "nun", "ring", "grudge", "alien", "nightmare", "chucky", "babadook",
+            "sinister", "witch", "terrifier", "nosferatu", "smile", "talk to me", "boogeyman",
+            "shining", "psycho", "get out", "us", "nope", "creepy", "slasher", "haunted"
+        ) -> listOf("Horror", "Mystery", "Thriller")
+
+        text.containsAny(
+            "avengers", "endgame", "infinity war", "iron man", "captain america", "thor", "spider-man",
+            "spiderman", "batman", "superman", "guardians of the galaxy", "deadpool", "wolverine",
+            "black panther", "justice league", "aquaman", "wonder woman", "x-men", "ant-man",
+            "doctor strange", "hulk", "marvel", "dc"
+        ) -> listOf("Action", "Adventure", "Sci-Fi")
+
+        text.containsAny(
+            "interstellar", "inception", "dune", "matrix", "star wars", "star trek", "blade runner",
+            "avatar", "terminator", "arrival", "gravity", "martian", "tenet", "jurassic",
+            "predator", "planet of the apes", "transformers", "godzilla", "kong", "ex machina"
+        ) -> listOf("Sci-Fi", "Adventure", "Action")
+
+        text.containsAny(
+            "wick", "mission impossible", "fast and furious", "top gun", "gladiator", "mad max",
+            "die hard", "007", "james bond", "bourne", "taken", "equalizer", "bullet train",
+            "expendables", "kill bill", "heat", "sicario", "nobody"
+        ) -> listOf("Action", "Thriller", "Crime")
+
+        text.containsAny(
+            "toy story", "shrek", "frozen", "moana", "finding nemo", "lion king", "spider-verse",
+            "incredibles", "coco", "inside out", "despicable", "minions", "how to train your dragon",
+            "kung fu panda", "ratatouille", "up", "wall-e", "monsters", "zootopia", "encanto",
+            "cars", "ice age", "sing", "madagascar", "anime", "ghibli", "spirited away"
+        ) -> listOf("Animation", "Family", "Adventure")
+
+        text.containsAny(
+            "hangover", "superbad", "ted", "barbie", "mean girls", "jump street", "ghostbusters",
+            "step brothers", "dumb and dumber", "anchorman", "borat", "tropic thunder", "comedy"
+        ) -> listOf("Comedy", "Drama")
+
+        text.containsAny(
+            "godfather", "dark knight", "pulp fiction", "fight club", "se7en", "silence of the lambs",
+            "shutter island", "zodiac", "departed", "goodfellas", "joker", "knives out", "scarface",
+            "casino", "irishman", "fargo", "prison", "detective"
+        ) -> listOf("Crime", "Drama", "Thriller")
+
+        text.containsAny(
+            "oppenheimer", "titanic", "forrest gump", "shawshank", "schindler", "parasite",
+            "whiplash", "la la land", "green mile", "social network", "1917", "saving private ryan",
+            "dunkirk", "hacksaw ridge", "biography", "historical"
+        ) -> listOf("Drama", "History", "Biography")
+
+        text.containsAny(
+            "lord of the rings", "hobbit", "harry potter", "fantastic beasts", "percy jackson",
+            "narnia", "pirates of the caribbean", "chronicles", "witcher"
+        ) -> listOf("Fantasy", "Adventure", "Action")
+
+        else -> {
+            val detected = mutableListOf<String>()
+            if (text.contains("action")) detected.add("Action")
+            if (text.contains("adventure")) detected.add("Adventure")
+            if (text.contains("comedy")) detected.add("Comedy")
+            if (text.contains("drama")) detected.add("Drama")
+            if (text.contains("thriller") || text.contains("suspense")) detected.add("Thriller")
+            if (text.contains("crime")) detected.add("Crime")
+            if (text.contains("sci-fi") || text.contains("scifi") || text.contains("space")) detected.add("Sci-Fi")
+            if (text.contains("romance") || text.contains("romantic")) detected.add("Romance")
+            if (text.contains("fantasy")) detected.add("Fantasy")
+            if (text.contains("family") || text.contains("kids")) detected.add("Family")
+            if (text.contains("mystery")) detected.add("Mystery")
+            if (detected.isEmpty()) listOf("Feature Film", "Cinema") else detected.take(3)
+        }
+    }
+}
+
+/**
+ * Provides an authentic synopsis for cataloged films, or generates an intelligent contextual synopsis
+ */
+fun detectMovieSynopsis(title: String, genres: List<String>): String {
+    val lower = title.lowercase()
+    return when {
+        lower.contains("endgame") ->
+            "After the devastating events of Infinity War, the universe lies in ruins. With the help of remaining allies, the Avengers assemble once more in order to reverse Thanos' actions and restore balance to the cosmos."
+        lower.contains("infinity war") ->
+            "The Avengers and their allies must be willing to sacrifice all in an attempt to defeat the powerful Thanos before his blitz of devastation puts an end to the universe."
+        lower.contains("interstellar") ->
+            "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans."
+        lower.contains("inception") ->
+            "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project."
+        lower.contains("dark knight") ->
+            "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice."
+        lower.contains("dune") ->
+            "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family, striving to prevent a terrible future only he can foresee."
+        lower.contains("oppenheimer") ->
+            "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II, exploring the profound moral consequences of humanity's greatest weapon."
+        lower.contains("conjuring") ->
+            "Paranormal investigators Ed and Lorraine Warren work to help a family terrorized by a dark presence in their secluded farmhouse, confronting a malevolent entity of unprecedented terror."
+        lower.contains("quiet place") ->
+            "A family struggles for survival in a post-apocalyptic world inhabited by blind extraterrestrial creatures with an ultra-sensitive sense of hearing that hunt anything that makes a sound."
+        lower.contains("john wick") ->
+            "Legendary assassin John Wick uncovers a path to defeating the High Table, facing off against ruthless adversaries across globe-spanning battles with lethal precision."
+        lower.contains("gladiator") ->
+            "A former Roman General sets out to exact vengeance against the corrupt emperor who murdered his family and sent him into slavery, rising through the arena as a champion of freedom."
+        lower.contains("matrix") ->
+            "When a beautiful stranger leads computer hacker Neo to a forbidding underworld, he discovers the shocking truth: his life is an elaborate deception of an evil cyber-intelligence."
+        lower.contains("spider-man") || lower.contains("spiderman") ->
+            "Peter Parker seeks help from Stephen Strange to make people forget his identity as Spider-Man, which accidentally unleashes dangerous multiversal foes from alternate realities."
+        genres.contains("Horror") ->
+            "An intense, chilling cinematic experience exploring psychological tension and unsettling supernatural dread. Rendered in high-fidelity lossless video directly from your device storage."
+        genres.contains("Action") ->
+            "An adrenaline-fueled cinematic journey packed with breathtaking set pieces, exhilarating stunts, and relentless momentum, fully decoded with hardware-accelerated MediaCodec."
+        genres.contains("Sci-Fi") ->
+            "A visionary journey into the frontiers of technology, space, and human destiny, featuring stunning visual fidelity and immersive multi-channel sound."
+        genres.contains("Animation") ->
+            "A visually enchanting animated spectacle bursting with vibrant artistry, heartwarming charm, and unforgettable characters crafted for audiences of all ages."
+        genres.contains("Crime") || genres.contains("Thriller") ->
+            "A suspenseful, high-stakes psychological puzzle filled with unexpected twists, morally complex loyalties, and gripping dramatic tension."
+        else ->
+            "A feature film stored in your offline library. High-efficiency playback with hardware-accelerated MediaCodec decoding and studio-grade audio fidelity."
+    }
+}
 
 /**
  * Extracts rich metadata for a standalone movie from local sidecars and filename patterns
@@ -430,17 +568,24 @@ fun extractMovieMetadata(
     val rawTitle = if (yearMatch != null) baseName.substring(0, yearMatch.range.first) else baseName
     val cleanedTitle = rawTitle
         .replace(EpisodePatterns.RELEASE_TAGS, " ")
-        .replace(Regex("[-._]+"), " ")
+        .replace(Regex("[\\[\\(]"), " ")
+        .replace(Regex("[-._()]+"), " ")
         .trim()
         .ifEmpty { video.title }
+
+    val detectedGenres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() }
+        ?: detectMovieGenres(cleanedTitle, video.name)
+
+    val detectedSynopsis = nfoMetadata?.plot
+        ?: detectMovieSynopsis(cleanedTitle, detectedGenres)
 
     return MovieMetadata(
         title = nfoMetadata?.title ?: cleanedTitle,
         year = nfoMetadata?.year ?: parsedYear ?: "2024",
         rating = nfoMetadata?.rating ?: "8.6",
         mpaa = nfoMetadata?.mpaa ?: "PG-13",
-        synopsis = nfoMetadata?.plot,
-        genres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() } ?: listOf("Sci-Fi", "Adventure", "Feature Film"),
+        synopsis = detectedSynopsis,
+        genres = detectedGenres,
         posterUri = poster,
         backdropUri = backdrop
     )
