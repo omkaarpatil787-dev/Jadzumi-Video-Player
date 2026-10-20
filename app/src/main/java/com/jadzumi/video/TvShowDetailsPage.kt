@@ -87,11 +87,12 @@ fun TvShowDetailsPage(
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         val isTablet = maxWidth >= 840.dp
         val horizontalPad = if (isTablet) 28.dp else 16.dp
+        val topPad = if (isTablet) 20.dp else 12.dp
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = horizontalPad, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(22.dp)
+            contentPadding = PaddingValues(horizontal = horizontalPad, top = topPad, bottom = if (isTablet) 24.dp else 88.dp),
+            verticalArrangement = Arrangement.spacedBy(if (isTablet) 22.dp else 16.dp)
         ) {
             // 1. Top Breadcrumb & 100% Offline Badge
             item {
@@ -104,6 +105,7 @@ fun TvShowDetailsPage(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier
+                            .weight(1f, fill = false)
                             .clip(CircleShape)
                             .clickable(onClick = onBack)
                             .padding(horizontal = 8.dp, vertical = 6.dp)
@@ -160,6 +162,7 @@ fun TvShowDetailsPage(
                     nextUnwatched = nextUnwatched,
                     totalWatched = totalWatchedInSeries,
                     onlineShow = onlineShow,
+                    isTablet = isTablet,
                     onPlayNext = {
                         val epToPlay = nextUnwatched ?: currentSeasonEpisodes.firstOrNull()
                         if (epToPlay != null) {
@@ -337,6 +340,7 @@ private fun ShowHeroCard(
     nextUnwatched: LocalVideo?,
     totalWatched: Int,
     onlineShow: OnlineMediaMetadata?,
+    isTablet: Boolean,
     onPlayNext: () -> Unit,
     onMarkSeasonWatched: () -> Unit
 ) {
@@ -355,24 +359,22 @@ private fun ShowHeroCard(
     val displayYear = onlineShow?.year ?: series.year ?: "2024"
     val displayGenres = (onlineShow?.genres?.takeIf { it.isNotEmpty() } ?: series.genres).filter { it != "Cinema" && it != "Feature Film" }
 
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val isTablet = maxWidth >= 600.dp
-        val heroPad = if (isTablet) 22.dp else 16.dp
-        val posterWidth = if (isTablet) 140.dp else 102.dp
+    val heroPad = if (isTablet) 22.dp else 16.dp
+    val posterWidth = if (isTablet) 140.dp else 102.dp
 
-        val nextInfo = nextUnwatched?.let { EpisodePatterns.parse(it.name) }
-        val buttonText = when {
-            nextInfo != null -> "Play S%02dE%02d".format(nextInfo.season, nextInfo.episode)
-            else -> "Start Series"
-        }
+    val nextInfo = nextUnwatched?.let { EpisodePatterns.parse(it.name) }
+    val buttonText = when {
+        nextInfo != null -> "Play S%02dE%02d".format(nextInfo.season, nextInfo.episode)
+        else -> "Start Series"
+    }
 
-        val glassIntensity = LocalGlassIntensity.current
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
-        ) {
+    val glassIntensity = LocalGlassIntensity.current
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
+    ) {
             Column(
                 modifier = Modifier.padding(heroPad),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -596,7 +598,6 @@ private fun ShowHeroCard(
                 }
             }
         }
-    }
 }
 
 @Composable

@@ -15,11 +15,14 @@
 ### 📱 1. Universal Phone & Tablet Ergonomics
 - 🫧 **Snapchat-Style Pure Dock & Tablet Rail**: Ultra-clean, alive navigation icons with natural spring scaling (`1.15x`) and vibrant primary tints. No intrusive bounding shapes or squished glow capsules when auto-minimizing on tablets or phones!
 - 🎛️ **Dock Style Toggle**: Choose between **Icons & labels** (default) or **Icons only** (ultra-sleek 54dp dock / 64dp tablet rail) under Settings › Display.
-- 📐 **Balanced Mobile Portrait Cinema Player**: Symmetrically centered timecode capsule pill and player actions dock in portrait orientation. Streamlined top bar keeps focus on immersion with subtitles directly accessible via Cinema Settings.
-- 🎬 **Unified Design Parity (Home, Movies & TV Shows)**: Pixel-perfect parity across hero cards, genre subtitles, click-to-expand synopses, rating stars, and single-surface styling without elevation tinting or two-tone borders.
+- 📐 **Mobile Portrait TV Show & Movie Alignment Parity**: Pixel-perfect layout alignment on phones without empty black gaps. Binds breadcrumbs with strict `.weight(1f, fill = false)` constraints and optimized `topPad (12dp)` for seamless, immediate content flow.
+- 🎴 **Tab-Focused Clean Collections**: Top featured swiping cards are exclusively showcased on the Home tab, keeping the Movies and TV Shows tabs uncluttered, focused directly on Continue Watching and collection grids.
+- 🌟 **Interactive Alive Cinema Greeting**: Upper-left Home greeting dynamically tracks your recent episodes and movies (*"Good afternoon · Back to Dragon Ball Super?"* / *"Watching S01E02 · Tap to cycle fun facts 🍿"*), featuring interactive click-to-cycle cinema trivia and a lively presence indicator.
+- 🪗 **Auto-Minimizing Live Suggestions Carousel**: Home swiping cards intelligently curate real-time "Up Next" episodes and resume recommendations, naturally minimizing into a sleek 74dp live bar as you scroll, blooming back with organic spring physics on return.
+- 🎬 **Unified Single-Surface Design**: Pixel-perfect parity across hero cards, genre subtitles, click-to-expand synopses, rating stars, and single-surface styling without elevation tinting or two-tone borders.
 - 🏷️ **FlowRow Audio & Subtitle Chips**: Modern badge chips for Multi-channel 5.1 passthrough, FFmpeg 6.1 libavcodec, libass, and PGS/SRT formats that never clip or wrap awkwardly on portrait phones.
 - 🔄 **One-Tap Orientation Switcher**: In-player button instantly cycles between **Landscape**, **Portrait**, and **Auto-Sensor** rotation.
-- ✨ **Shared-Axis Premium Tab Transitions**: Replaces fast flickering crossfades with directional horizontal parallax (`slideIn/Out` + overlapping fade) for a continuous, silky-smooth 120 FPS navigation feel.
+- ✨ **Shared-Axis Premium Tab Transitions**: Directional horizontal parallax (`slideIn/Out` + overlapping fade) for a continuous, silky-smooth 120 FPS navigation feel.
 
 ---
 

@@ -245,12 +245,12 @@ private val destinations = listOf(
                                                 horizontalArrangement = Arrangement.SpaceBetween
                                             ) {
                                                 if (route == "Home" || route == "Library") {
-                                                    Column(Modifier.weight(1f)) {
-                                                        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-                                                        val greeting = when (hour) { in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; in 17..21 -> "Good evening"; else -> "Good night" }
-                                                        Text(greeting, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                                        Text("Your movies. Your space.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                    }
+                                                    InteractiveCinemaGreeting(
+                                                        localState = localState,
+                                                        playback = playback,
+                                                        isPhone = true,
+                                                        modifier = Modifier.weight(1f)
+                                                    )
                                                 } else {
                                                     Text(
                                                         route,
@@ -365,12 +365,12 @@ private val destinations = listOf(
                                                     overflow = TextOverflow.Ellipsis
                                                 )
                                             } else if (route == "Home" || route == "Library") {
-                                                Column(Modifier.weight(1f)) {
-                                                    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-                                                    val greeting = when (hour) { in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; in 17..21 -> "Good evening"; else -> "Good night" }
-                                                    Text(greeting, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                                                    Text("Your movies. Your space.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                }
+                                                InteractiveCinemaGreeting(
+                                                    localState = localState,
+                                                    playback = playback,
+                                                    isPhone = false,
+                                                    modifier = Modifier.weight(1f)
+                                                )
                                             } else {
                                                 Text(
                                                     route,
@@ -686,6 +686,105 @@ private val destinations = listOf(
                 )
             }
         }
+        }
+    }
+}
+
+@Composable
+private fun InteractiveCinemaGreeting(
+    localState: LocalLibraryState,
+    playback: PlaybackController,
+    isPhone: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    val baseGreeting = when (hour) {
+        in 5..11 -> "Good morning"
+        in 12..16 -> "Good afternoon"
+        in 17..21 -> "Good evening"
+        else -> "Good night"
+    }
+
+    var factIndex by rememberSaveable { mutableStateOf(0) }
+
+    val cinemaFacts = remember {
+        listOf(
+            "💡 Fun fact: Akira Kurosawa dyed rain with ink to film epic downpours.",
+            "🎬 Cinema trivia: The 24fps motion picture standard was born in 1927.",
+            "🍿 Pro tip: MediaCodec 10-bit HEVC decoding saves 60% battery life.",
+            "✨ Fun fact: 2001: A Space Odyssey used 0 CGI — 100% physical models.",
+            "🎧 Studio audio: NextLib FFmpeg powers true 5.1 & 7.1 discrete surround sound.",
+            "🎥 Trivia: The iconic Jurassic Park T-Rex roar was mixed from a baby elephant & alligator.",
+            "🎞️ Fun fact: The iconic green falling code in The Matrix is actually sushi recipes.",
+            "🛡️ Pure privacy: 100% offline cinema vault, zero telemetry."
+        )
+    }
+
+    // Check recent watch history
+    val inProgressEpisode = remember(localState.videos, localState.tvSeries, playback.historyVersion) {
+        localState.videos.filter { it.episode != null && playback.savedPosition(it) > 0 }.maxByOrNull { playback.savedPosition(it) }
+    }
+    val inProgressMovie = remember(localState.videos, playback.historyVersion) {
+        localState.videos.filter { it.episode == null && playback.savedPosition(it) > 0 }.maxByOrNull { playback.savedPosition(it) }
+    }
+
+    val epInfo = inProgressEpisode?.let { EpisodePatterns.parse(it.name) }
+    val series = inProgressEpisode?.let { ep ->
+        localState.tvSeries.find { it.seasons.values.any { list -> list.any { v -> v.identity == ep.identity } } }
+    }
+
+    val currentFact = cinemaFacts[factIndex % cinemaFacts.size]
+
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { factIndex++ }
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(
+                Modifier
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(if (inProgressEpisode != null || inProgressMovie != null) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
+            )
+            Text(
+                text = when {
+                    factIndex > 0 -> "$baseGreeting, Cinephile"
+                    series != null && epInfo != null -> "$baseGreeting · ${series.title}"
+                    inProgressMovie != null -> "$baseGreeting · ${inProgressMovie.title}"
+                    else -> baseGreeting
+                },
+                style = if (isPhone) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Spacer(Modifier.height(1.dp))
+
+        AnimatedContent(
+            targetState = when {
+                factIndex > 0 -> currentFact
+                series != null && epInfo != null -> "Watching S%02dE%02d · Tap to cycle fun facts 🍿".format(epInfo.season, epInfo.episode)
+                inProgressMovie != null -> "Resume from ${timecode(playback.savedPosition(inProgressMovie) / 1000)} · Tap for cinema facts 🎬"
+                else -> currentFact
+            },
+            transitionSpec = {
+                fadeIn(animationSpec = tween(180)) togetherWith fadeOut(animationSpec = tween(140))
+            },
+            label = "greetingSubtitle"
+        ) { text ->
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

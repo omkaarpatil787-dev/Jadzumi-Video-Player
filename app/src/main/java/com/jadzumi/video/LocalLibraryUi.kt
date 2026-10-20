@@ -12,9 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -170,6 +168,7 @@ private data class HeroItem(
     val id: String,
     val title: String,
     val subtitle: String,
+    val badge: String? = null,
     val localVideo: LocalVideo? = null,
     val previewArtwork: String = "hero",
     val onPlay: () -> Unit,
@@ -177,131 +176,242 @@ private data class HeroItem(
 )
 
 @Composable
-private fun HeroMoviePager(items: List<HeroItem>, isPhone: Boolean = false) {
+private fun HeroMoviePager(
+    items: List<HeroItem>,
+    isPhone: Boolean = false,
+    isMinimized: Boolean = false
+) {
     if (items.isEmpty()) return
     val pagerState = rememberPagerState(pageCount = { items.size })
 
+    val fullHeight = if (isPhone) 220.dp else 260.dp
+    val minHeight = if (isPhone) 74.dp else 84.dp
+
+    val animatedHeight by animateDpAsState(
+        targetValue = if (isMinimized) minHeight else fullHeight,
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "heroHeight"
+    )
+
     Card(
-        modifier = Modifier.fillMaxWidth().height(if (isPhone) 220.dp else 260.dp),
-        shape = RoundedCornerShape(26.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(animatedHeight),
+        shape = RoundedCornerShape(if (isMinimized) 20.dp else 26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Black)
     ) {
         Box(Modifier.fillMaxSize()) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize()
-            ) { page ->
-                val item = items[page]
-                Box(Modifier.fillMaxSize()) {
-                    if (item.localVideo != null) {
-                        LocalThumbnail(item.localVideo, Modifier.fillMaxSize())
-                    } else {
-                        val res = when (item.previewArtwork) {
-                            "anime" -> R.drawable.anime
-                            "cosmos" -> R.drawable.cosmos
-                            else -> R.drawable.hero
-                        }
-                        Image(
-                            painter = painterResource(res),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
+            if (isMinimized) {
+                val currentItem = items[pagerState.currentPage.coerceIn(0, items.size - 1)]
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
                     Box(
-                        Modifier.fillMaxSize().background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Black.copy(alpha = 0.2f),
-                                    Color.Black.copy(alpha = 0.55f),
-                                    Color.Black.copy(alpha = 0.94f)
-                                )
-                            )
-                        )
-                    )
-                    Column(
-                        Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
-                        verticalArrangement = Arrangement.Bottom
+                        modifier = Modifier
+                            .width(if (isPhone) 80.dp else 100.dp)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     ) {
+                        if (currentItem.localVideo != null) {
+                            LocalThumbnail(currentItem.localVideo, Modifier.fillMaxSize())
+                        } else {
+                            val res = when (currentItem.previewArtwork) {
+                                "anime" -> R.drawable.anime
+                                "cosmos" -> R.drawable.cosmos
+                                else -> R.drawable.hero
+                            }
+                            Image(
+                                painter = painterResource(res),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        if (currentItem.badge != null) {
+                            Text(
+                                currentItem.badge,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1
+                            )
+                        }
                         Text(
-                            item.title,
+                            currentItem.title,
                             color = Color.White,
-                            fontSize = 28.sp,
+                            fontSize = if (isPhone) 15.sp else 17.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(Modifier.height(4.dp))
                         Text(
-                            item.subtitle,
-                            color = Color.White.copy(alpha = 0.78f),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
+                            currentItem.subtitle,
+                            color = Color.White.copy(alpha = 0.72f),
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(Modifier.height(14.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Button(
-                                onClick = item.onPlay,
-                                shape = CircleShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
-                                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
-                            ) {
-                                Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    }
+
+                    Surface(
+                        onClick = currentItem.onPlay,
+                        shape = CircleShape,
+                        color = Color(0xFF0B57D0),
+                        modifier = Modifier.size(if (isPhone) 40.dp else 44.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Rounded.PlayArrow,
+                                contentDescription = "Play",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
+                }
+            } else {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize()
+                ) { page ->
+                    val item = items[page]
+                    Box(Modifier.fillMaxSize()) {
+                        if (item.localVideo != null) {
+                            LocalThumbnail(item.localVideo, Modifier.fillMaxSize())
+                        } else {
+                            val res = when (item.previewArtwork) {
+                                "anime" -> R.drawable.anime
+                                "cosmos" -> R.drawable.cosmos
+                                else -> R.drawable.hero
                             }
-                            Surface(
-                                onClick = item.onPlay,
-                                shape = CircleShape,
-                                color = Color.White.copy(alpha = 0.18f),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Rounded.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                            Image(
+                                painter = painterResource(res),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        Box(
+                            Modifier.fillMaxSize().background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Black.copy(alpha = 0.2f),
+                                        Color.Black.copy(alpha = 0.55f),
+                                        Color.Black.copy(alpha = 0.94f)
+                                    )
+                                )
+                            )
+                        )
+                        Column(
+                            Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
+                            verticalArrangement = Arrangement.Bottom
+                        ) {
+                            if (item.badge != null) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(0xFF0B57D0).copy(alpha = 0.85f),
+                                    modifier = Modifier.padding(bottom = 6.dp)
+                                ) {
+                                    Text(
+                                        item.badge,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
                                 }
                             }
-                            Surface(
-                                onClick = item.onInfo,
-                                shape = CircleShape,
-                                color = Color.White.copy(alpha = 0.18f),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                                modifier = Modifier.size(42.dp)
+                            Text(
+                                item.title,
+                                color = Color.White,
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                item.subtitle,
+                                color = Color.White.copy(alpha = 0.78f),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(Modifier.height(14.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Rounded.Info, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                Button(
+                                    onClick = item.onPlay,
+                                    shape = CircleShape,
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
+                                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                                ) {
+                                    Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                                Surface(
+                                    onClick = item.onPlay,
+                                    shape = CircleShape,
+                                    color = Color.White.copy(alpha = 0.18f),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                                    modifier = Modifier.size(42.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Rounded.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                    }
+                                }
+                                Surface(
+                                    onClick = item.onInfo,
+                                    shape = CircleShape,
+                                    color = Color.White.copy(alpha = 0.18f),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                                    modifier = Modifier.size(42.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Rounded.Info, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if (items.size > 1) {
-                Row(
-                    Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    repeat(items.size) { idx ->
-                        val isSelected = pagerState.currentPage == idx
-                        val dotWidth by animateDpAsState(
-                            targetValue = if (isSelected) 22.dp else 5.dp,
-                            label = "dotWidth"
-                        )
-                        val dotAlpha by animateFloatAsState(
-                            targetValue = if (isSelected) 1f else 0.45f,
-                            label = "dotAlpha"
-                        )
-                        Box(
-                            Modifier
-                                .size(width = dotWidth, height = 5.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = dotAlpha))
-                        )
+                if (items.size > 1) {
+                    Row(
+                        Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        repeat(items.size) { idx ->
+                            val isSelected = pagerState.currentPage == idx
+                            val dotWidth by animateDpAsState(
+                                targetValue = if (isSelected) 22.dp else 5.dp,
+                                label = "dotWidth"
+                            )
+                            val dotAlpha by animateFloatAsState(
+                                targetValue = if (isSelected) 1f else 0.45f,
+                                label = "dotAlpha"
+                            )
+                            Box(
+                                Modifier
+                                    .size(width = dotWidth, height = 5.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = dotAlpha))
+                            )
+                        }
                     }
                 }
             }
@@ -626,6 +736,11 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
 ) {
     val add = rememberFolderPicker(library)
     val listState = rememberLazyListState()
+    val isHeroMinimized by remember(listState) {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 30
+        }
+    }
     LaunchedEffect(listState.isScrollInProgress) {
         if (listState.isScrollInProgress) {
             onScrollActive?.invoke(true)
@@ -716,57 +831,97 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         candidateVideos.filter { playback.savedPosition(it) > 0 }
     }
 
-    val heroItems = remember(candidateVideos, continueWatching, seriesList, category) {
-        if (candidateVideos.isNotEmpty()) {
-            val topVideos = mutableListOf<LocalVideo>()
-            topVideos.addAll(continueWatching.take(2))
-
-            // TV Series "Up Next" spotlight only for TV Shows or All videos (NEVER in Movies tab)
-            if (category != "Movies") {
-                val upNextEpisodes = seriesList.mapNotNull { it.nextUnwatchedEpisode(playback) }
-                upNextEpisodes.forEach { ep ->
-                    if (topVideos.size < 5 && topVideos.none { it.uri == ep.uri }) {
-                        topVideos.add(ep)
-                    }
-                }
-            }
-
-            candidateVideos.forEach { v ->
-                if (topVideos.size < 5 && topVideos.none { it.uri == v.uri }) {
-                    topVideos.add(v)
-                }
-            }
-            topVideos.map { v ->
-                val epInfo = EpisodePatterns.parse(v.name)
-                val durStr = if (v.duration > 0) timecode(v.duration / 1000) else "Feature Film"
-                val resStr = if (v.width > 0 && v.height > 0) "${v.width}x${v.height}" else "4K"
-                val subtitle = if (epInfo != null) {
-                    "Up Next: S%02dE%02d · %s".format(epInfo.season, epInfo.episode, epInfo.episodeTitle ?: durStr)
-                } else {
-                    "2024 · $durStr · $resStr · Dolby Audio"
-                }
-
-                HeroItem(
-                    id = v.uri,
-                    title = epInfo?.seriesTitle ?: v.title,
-                    subtitle = subtitle,
-                    localVideo = v,
-                    onPlay = {
-                        playback.open(v)
-                        playback.fullscreen = true
-                    },
-                    onInfo = {
-                        if (epInfo != null) {
-                            val matchedSeries = seriesList.find { it.title.equals(epInfo.seriesTitle, ignoreCase = true) }
-                            if (matchedSeries != null) select("series:${matchedSeries.id}") else select(v.uri)
-                        } else {
-                            select(v.uri)
-                        }
-                    }
-                )
-            }
-        } else {
+    val isHomeTab = category == "All videos" || category == "Home"
+    val heroItems = remember(candidateVideos, continueWatching, seriesList, category, playback.historyVersion) {
+        if (!isHomeTab || candidateVideos.isEmpty()) {
             emptyList()
+        } else {
+            val suggestions = mutableListOf<HeroItem>()
+
+            // 1. Real-time "Up Next" episode for active series
+            val activeSeries = seriesList.filter { s ->
+                s.seasons.values.flatten().any { playback.savedPosition(it) > 0 }
+            }
+            activeSeries.forEach { series ->
+                val nextEp = series.nextUnwatchedEpisode(playback)
+                if (nextEp != null && suggestions.size < 2) {
+                    val epInfo = EpisodePatterns.parse(nextEp.name)
+                    val sNum = epInfo?.season ?: 1
+                    val eNum = epInfo?.episode ?: 1
+                    suggestions.add(
+                        HeroItem(
+                            id = nextEp.uri,
+                            title = series.title,
+                            subtitle = "Up Next: S%02dE%02d · %s".format(sNum, eNum, epInfo?.episodeTitle ?: nextEp.title),
+                            badge = "▶ UP NEXT · S%02dE%02d".format(sNum, eNum),
+                            localVideo = nextEp,
+                            onPlay = {
+                                playback.open(nextEp)
+                                playback.fullscreen = true
+                            },
+                            onInfo = {
+                                select("series:${series.id}")
+                            }
+                        )
+                    )
+                }
+            }
+
+            // 2. Real-time Continue Watching in-progress movie
+            continueWatching.filter { it.episode == null }.take(2).forEach { movie ->
+                if (suggestions.none { it.id == movie.uri } && suggestions.size < 4) {
+                    val pos = playback.savedPosition(movie)
+                    val dur = movie.duration.takeIf { it > 0 } ?: 1000L
+                    suggestions.add(
+                        HeroItem(
+                            id = movie.uri,
+                            title = movie.title,
+                            subtitle = "Resume from ${timecode(pos / 1000)} · ${timecode((dur - pos).coerceAtLeast(0) / 1000)} left",
+                            badge = "⏱ RESUME WATCHING",
+                            localVideo = movie,
+                            onPlay = {
+                                playback.open(movie)
+                                playback.fullscreen = true
+                            },
+                            onInfo = {
+                                select(movie.uri)
+                            }
+                        )
+                    )
+                }
+            }
+
+            // 3. Unwatched spotlight recommendations from library
+            candidateVideos.filter { playback.savedPosition(it) == 0L }.take(3).forEach { video ->
+                if (suggestions.none { it.id == video.uri } && suggestions.size < 6) {
+                    val epInfo = EpisodePatterns.parse(video.name)
+                    val durStr = if (video.duration > 0) timecode(video.duration / 1000) else "Feature Film"
+                    val resStr = if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else "1080p FHD"
+                    suggestions.add(
+                        HeroItem(
+                            id = video.uri,
+                            title = epInfo?.seriesTitle ?: video.title,
+                            subtitle = "$durStr · $resStr · Dolby Audio",
+                            badge = if (epInfo != null) "✨ TV SERIES SPOTLIGHT" else "★ RECOMMENDED CINEMA",
+                            localVideo = video,
+                            onPlay = {
+                                playback.open(video)
+                                playback.fullscreen = true
+                            },
+                            onInfo = {
+                                if (epInfo != null) {
+                                    val matched = seriesList.find { it.title.equals(epInfo.seriesTitle, ignoreCase = true) }
+                                    if (matched != null) select("series:${matched.id}") else select(video.uri)
+                                } else {
+                                    select(video.uri)
+                                }
+                            }
+                        )
+                    )
+                }
+            }
+
+            suggestions
         }
     }
 
@@ -900,10 +1055,14 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                         }
                     }
 
-                    // 1. Hero Movie Banner Pager (only shown if real indexed videos exist)
-                    if (heroItems.isNotEmpty()) {
+                    // 1. Hero Movie Banner Pager (only shown on Home tab and if real indexed videos exist)
+                    if (heroItems.isNotEmpty() && (category == "All videos" || category == "Home")) {
                         item {
-                            HeroMoviePager(items = heroItems, isPhone = isPhone)
+                            HeroMoviePager(
+                                items = heroItems,
+                                isPhone = isPhone,
+                                isMinimized = isHeroMinimized
+                            )
                         }
                     }
 

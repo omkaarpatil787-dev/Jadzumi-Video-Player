@@ -79,11 +79,12 @@ fun MovieDetailsPage(
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         val isTablet = maxWidth >= 840.dp
         val horizontalPad = if (isTablet) 28.dp else 16.dp
+        val topPad = if (isTablet) 20.dp else 12.dp
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = horizontalPad, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(22.dp)
+            contentPadding = PaddingValues(horizontal = horizontalPad, top = topPad, bottom = if (isTablet) 24.dp else 88.dp),
+            verticalArrangement = Arrangement.spacedBy(if (isTablet) 22.dp else 16.dp)
         ) {
             // 1. Top Breadcrumb & Offline Status Badge
             item {
