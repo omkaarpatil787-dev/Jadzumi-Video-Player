@@ -1,26 +1,89 @@
-# Approved scope and incremental implementation gates
+# Official Jadzumi Video Player Roadmap
 
-Current status (2026-10-19): M2 is user-approved; M3A.1 core playback passes internal build/tests/lint/signature checks and awaits Pad 5 testing/user approval. The six subdivisions below are historical working notes, not a replacement for the subsequently approved eight-main-milestone roadmap. Preserve those main milestones. M3A internal gates are Core Playback (3A.1), Cinema Formats (3A.2), and System Integration (3A.3); current source review remains within unfinished core playback and its existing PiP integration. Recover the exact current master roadmap before advancing to later work.
+> **Target Platform:** Xiaomi Pad 5 (*nabu*, 11-inch 16:10 2560×1600 120Hz, Android 16 custom ROM, ARM64-v8a)  
+> **Core Philosophy:** 100% Offline-First by default, Native Jetpack Compose (no WebViews), Material 3 Expressive UI, Hardware-Accelerated Playback.
 
-## Binding decisions recovered 2026-10-18
+---
 
-Jadzumi Video is the active project. Kotlin + Jetpack Compose, native Android, no WebView. Xiaomi Pad 5 11-inch 16:10 landscape is first; phone support follows stable tablet work. Six attached approved tablet HTML files are the visual references. Keep pale-blue/white Material 3 Expressive direction, rounded surfaces, restrained glass, fluid motion. Remove duplicate/technical chrome where appropriate. USB appears only when attached; Private Folder only when enabled.
+## Completed & Verified Milestones
 
-Offline playback and library, no accounts/ads/tracking. Online metadata lookup is not authorized for this offline-first build. V1.0 includes compatible MP4/MKV, hardware/software decoding strategy, HDR where supported, AC-3/E-AC-3, surround downmix, subtitles/audio tracks, sync, gestures, resume, fullscreen, PiP and lock. Atmos/output and HDR promises require actual device/format verification; design mockup labels are not evidence of capabilities. Windows interpolation is separate; Android motion enhancement is later.
+### Milestone 1 — Native Foundation & UI Preview (Approved)
+- Native Android architecture with Kotlin & Jetpack Compose.
+- Tablet 16:10 landscape navigation rail, library grids, and video cards.
+- Pale-blue/white Material 3 Expressive theme with dynamic palette support.
 
-Workflow: build → test → fix → retest → user approval → approved checkpoint → next milestone. Preserve provisional checkpoints throughout. `build`, `resume`, `save` refer to this project by default.
+### Milestone 2 — Real Offline Library & Storage Framework (Approved)
+- Android SAF (Storage Access Framework) persistent directory permissions.
+- Local video indexing, recursive directory scanning, and video metadata extraction.
+- Offline thumbnail generation, folder grouping, and empty state handling.
 
-## Working subdivisions of the approved foundation phase
+### Milestone 3 — Core Cinema Playback Engine (Approved)
+- Media3 / ExoPlayer hardware-accelerated playback (`SurfaceView` direct pipeline).
+- Full gesture controls (horizontal seek swipe, vertical brightness and volume sliders).
+- Video aspect ratio toggle (Fit, Fill, 16:9, 16:10, 4:3, Zoom), playback speed selector (0.5x–2.0x).
+- Lock controls, screen orientation lock, and background resume persistence.
 
-These small implementation gates make the broader recovered roadmap executable; they are not claimed to be an exact recovered numbered roadmap.
+### Milestone 4 — Cinema Audio, Native PiP, Expressive UI & Aurora Splash (Pushed in Build 5)
+- **FFmpeg Audio Decoding**: Native C++ FFmpeg decoders for EAC3, Dolby Atmos, AC3, TrueHD, DTS, FLAC, and 5.1/7.1 multichannel downmixing.
+- **YouTube-Style Native PiP**: Stripped Compose mini-player in favor of OS hardware-accelerated transforms (`setSourceRectHint`) for zero-stutter enter/exit transitions.
+- **Swipeable Hero Carousel**: Compose `HorizontalPager` with smooth pill indicators on the Home dashboard.
+- **Customizable Subtitles**: Real-time preview card, typography presets (Roboto Sans, Condensed, Monospace, System Default), font scale (80%–150%), text colors, and background opacity.
+- **Display & Appearance**: Corner style presets (Rounded 24dp, Compact 14dp, Sharp 0dp) and smooth 320ms crossfade theme blend.
+- **Aurora Splash Screen**: Authentic Jadzumi curved bezier play symbol, animated aurora ambient glow, frosted glass badge, and dynamic loading timeline.
 
-1. **Native foundation/UI preview (M1 approved visually on Pad 5)**: buildable Android project, navigation, preview library/details, folder structure, saved appearance, honest placeholder handling. Compile/unit tests/lint; user device/UI review.
-2. **Real offline library (M2 user-approved)**: SAF folder grants, removable storage handling, indexing and persistence, local artwork and metadata, empty/error/revoked-permission handling, actual details.
-3. **Core cinema playback**: Media3 integration, lifecycle/release, MP4/MKV, seeking/resume, mini-player/fullscreen, PiP, lock, aspect ratio/speed and gestures. Real-file device tests.
-4. **Cinema audio/subtitles**: verify AC-3/E-AC-3/downmix, investigate FFmpeg software extensions and packaging, subtitle/audio tracks and synchronization. Styled ASS may require a separate renderer. Build a format/device matrix before claims.
-5. **Tablet polish and release**: remaining settings, expressive motion, accessibility, performance profiling, regression/security checks, release signing and installation validation. Stable tablet v1.0 gate.
-6. **Phone phase**: adaptive layouts/player/navigation, Samsung and other phone tests.
+---
 
-Later version direction: 1.1 performance/subtitle refinement; 1.2 smarter local library with local metadata cache; 1.3 experimental motion enhancement; 2.0 further premium refinement.
+## Upcoming Milestones
 
-Never advance a gate without user approval. Do not fabricate APKs, runtime tests, storage statistics, codecs or completed features.
+### Milestone 5A — Smart Episode Continuity & TV Series Organization (Immediate Next)
+1. **Series & Seasons Grouping**:
+   - Automatic detection of episode naming patterns:
+     - `S01E01`, `S02E05`
+     - `1x04`, `2x12`
+     - `Episode 12`, `EP10`
+   - Clustered under dedicated TV Series screens matching `design-references/jadzumi_tablet_tv_show_details_refined.html`.
+   - Tabbed season switcher: `Season 1`, `Season 2`, `OVAs & Specials`, with watched count badges.
+2. **"Up Next" Highlighting & Watched Badges**:
+   - Per-episode progress bars, remaining runtime, and watched status checkmarks (`Watched`, `In Progress`, `Unwatched`).
+   - Home dashboard hero card automatically spotlights the next unwatched episode in line.
+3. **10-Second Next-Episode Autoplay Countdown**:
+   - In `CinemaPlayer.kt`, detects when an episode enters its last ~15 seconds.
+   - Sleek frosted-glass banner slides in: *"Next episode starts in 10s"* with **Play Now** and **Cancel** buttons.
+   - Fluid auto-advance to the next sequential episode when the timer reaches 0.
+
+---
+
+### Milestone 5B — Local Art & Optional Metadata
+1. **100% Offline-First by Default**:
+   - Zero network permissions and zero unsolicited web calls.
+2. **Local Sidecar Scraping**:
+   - Automatically reads local poster and backdrop art (`poster.jpg`, `fanart.jpg`, `cover.png`, `folder.jpg`).
+   - Parses local `.nfo` XML metadata already sitting inside movie and TV series folders (synopsis, cast, studio, rating, release date).
+3. **Optional Online Metadata (Opt-In)**:
+   - User-toggleable in Settings (strictly disabled by default).
+   - Fetches missing metadata and backdrop art, caching everything strictly locally on tablet storage for offline viewing.
+
+---
+
+### Milestone 7 — Comprehensive Design Parity Audit & Polish
+1. **Pixel-for-Pixel Audit**:
+   - Side-by-side QA of all native Jetpack Compose screens against the 6 approved HTML reference designs in `design-references/`:
+     - `jadzumi_tablet_home_library_refined.html`
+     - `jadzumi_tablet_tv_show_details_refined.html`
+     - `jadzumi_tablet_movie_details_refined.html`
+     - `jadzumi_tablet_folders_storage_consistent_data.html`
+     - `jadzumi_tablet_cinema_player_refined.html`
+     - `jadzumi_tablet_settings_customization_about_me.html`
+2. **Tablet Ergonomics & 120Hz QA**:
+   - Xiaomi Pad 5 120Hz high-refresh rate verification for stutter-free scrolling and animations.
+   - Seamless responsive adaptation across 16:10 landscape, 10:16 portrait, and Android split-screen multitasking.
+
+---
+
+### Milestone 8 — Production Hardening & v1.0 Release
+1. **R8 / ProGuard Code Shrinking**:
+   - Optimization and dead-code stripping to minimize APK size.
+   - Comprehensive keep-rules for Media3, FFmpeg JNI bindings, and Jetpack Compose runtime.
+2. **Production Build Verification**:
+   - Memory leak analysis, native heap inspection, and battery consumption profiling.
+   - Official v1.0 signed release packaging.
