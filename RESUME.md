@@ -51,16 +51,23 @@
 - 🎞️ **Anti-Black Frame Fallback**: Samples local video frames at 12% runtime (`10s`–`180s`) to ensure local thumbnails never display black intros.
 
 ### 🎛️ 4. Glassify UI Elements Intensity Slider
-- 🧪 **Adjustable Glass Translucency**: Interactive slider in **Settings › Display** adjusting frosted glass intensity from **20% (Solid)** to **100% (Deep Glass)**.
-- 💎 **Live UI Adaptation**: Dynamically modulates background opacity and specular frosted rims across the floating dock, sheets, and player seek ripples.
+- 🧪 **Adjustable Glass Translucency**: Interactive slider in **Settings › Display** adjusting frosted glass intensity from **0% (Solid)** to **100% (Deep Glass)**.
+- 💎 **Universal Live UI Engine (`GlassTheme`)**: Dynamically modulates background opacity and specular frosted rims across the floating dock, tablet rail, search capsules, settings panels, and CinemaPlayer overlay pills and controls.
+- 🌓 **Full Tri-Theme Fidelity**: Calibrated for **Light** (frosted white crystal), **Dark** (frosted obsidian navy), and **AMOLED** (pure pitch black scaling into sapphire dark glass).
 
-### 🌌 5. Adaptive Glowing Aurora Splash Screen
-- 🎨 **App Icon Color Gradient**: Ethereal liquid aurora blending Electric Cyan (`#64DCFF`), Sapphire Azure (`#188AF5`), and Royal Blue (`#1659D9`).
+### 🌌 5. Final Aurora Splash Screen
+- 🎨 **HTML-Spec Accurate Aurora**: Ethereal liquid aurora based on `jadzumi_player_splash_final.html`, blending Electric Cyan (`#64DCFF`), Sapphire Azure (`#188AF5`), and Royal Blue (`#1659D9`).
+- 📱 **Adaptive Screen Sizing**: Dynamically scales glass tile and logo dimensions across compact phones (<680dp), standard phones, and large-screen tablets.
 - 🌓 **Adaptive Display Palettes**:
-  - 🌙 **Dark Mode**: Deep obsidian navy with diffused aurora waves and soft ambient halo.
-  - 🖤 **AMOLED Mode**: Pure `#000000` pitch black background for zero power consumption on OLED panels.
-  - ☀️ **Light Mode**: Luminous morning sky gradient with airy azure lighting and dark ink typography.
-- ✨ **Zero Harsh Artifacts**: Seamless multi-stop radial dissipation with zero circular edge cutoffs.
+  - 🌙 **Dark Mode**: Deep obsidian navy (`#091628`) with ambient radial ellipses and screen-blend floating blobs.
+  - 🖤 **AMOLED Mode**: Pure `#000000` pitch black background for zero OLED battery consumption with a soft ambient sapphire aura.
+  - ☀️ **Light Mode**: Luminous morning sky gradient (`#EAF4FF`) with airy azure floating blobs and diagonal specular sheen.
+- ✨ **Levitating Glass Tile & SVG Logo**: Levitating frosted tile (`translateY(-6px)`) with breathing radial aura, 120x120 vector play symbol, and 3dp gradient loading track with dynamic status text (*"Preparing your cinema…"* ➔ *"Loading your library…"*) and 1.09x smooth zoom exit.
+
+### 📱 6. Mobile Portrait TV Show & Episode Card Ergonomics
+- 🏷️ **Adaptive Audio & Subtitle Badges**: FlowRow layout preventing horizontal compression or single-letter vertical stretching on narrow phone displays.
+- 🎞️ **Responsive Episode Cards**: Responsive thumbnail dimensions (`116dp` on narrow phones vs `156dp` on tablets) with wrapped specs and status text for clean readability.
+- ⚡ **Zero-Flash Dock Selection**: Fluid single-action tap selection with unified bounded ripple, smooth indicator fade/scale animations, and instant 120 FPS tab crossfades.
 
 ### 🎮 6. Studio Player Gestures & Seek Controls
 - 💫 **YouTube-Style 54dp Seek Ripples**: Proportioned double-tap seek ripple overlay (`54dp` matching seek control buttons) with dynamic chevrons (`«««` / `»»»`), seek accumulator, and smooth circular clipping.
