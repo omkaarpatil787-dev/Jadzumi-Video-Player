@@ -6,7 +6,7 @@
 
 ## 🎯 Executive Summary
 
-**Jadzumi Video** is a modern, privacy-first cinema and TV media player engineered for Android. Built from the ground up with **Kotlin**, **Jetpack Compose**, and **NextLib Media3 (ExoPlayer + FFmpeg JNI C++ decoders)**, the application provides an offline-first cinema experience with adaptive ergonomics, hardware inspection, audiophile DSP enhancements, and fluid gesture navigation.
+**Jadzumi Video** is a modern, privacy-first cinema and TV media player engineered for Android. Built from the ground up with **Kotlin**, **Jetpack Compose**, and **NextLib Media3 (ExoPlayer + FFmpeg JNI C++ decoders)**, the application delivers an offline-first cinema experience with adaptive ergonomics, hardware inspection, audiophile DSP enhancements, and fluid gesture navigation.
 
 ---
 
@@ -25,45 +25,62 @@
 | **Milestone 8 — Production Hardening (v1.0.0)** | R8 code shrinking, resource shrinking, FFmpeg ProGuard rules, reproducible signing | `COMPLETED` |
 | **Milestone 9 — Phone Ergonomics (v1.1.0)** | Floating frosted glass bottom bar, adaptive 2-row mobile headers, in-player rotation | `COMPLETED` |
 | **Milestone 10 — Hardware & DSP Overhaul (v1.2.0)** | Dynamic hardware inspector, Audiophile DSP, seek ripples, unified storage in settings | `COMPLETED` |
+| **Milestone 11 — Mobile Refinements & HDR (v1.2.0+)** | Centered portrait player pills, auto-minimizing dock, movie page redesign, auto HDR peak brightness, non-black thumbnails | `COMPLETED` |
 
 ---
 
 ## 🚀 Key Features in Current Version (v1.2.0)
 
-### ⚡ 1. Dynamic Hardware & Display Inspection
-- **SoC & Processor Detection**: Dynamically inspects device model and processor chipset (`Build.SOC_MODEL` / `Build.HARDWARE` / `Build.BOARD`) via `DeviceHardwareInspector.kt`.
-- **Universal Aspect Ratio Measurement**: Calculates real-time display metrics (`19.5:9`, `20:9`, `21:9` for phones, `16:10` / `4:3` for tablets) alongside resolution metrics.
-- **Hardware HDR Probing**: Queries `Display.hdrCapabilities` for **HDR10**, **HDR10+**, **HLG**, and **Dolby Vision** rendering capabilities with SDR tone mapping.
-- **Universal Audio Downmixing**: Multi-speaker downmixing optimized universally for device stereo speakers, earpieces, and headphones.
+### 📱 1. Universal Phone & Tablet Ergonomics
+- 🫧 **Auto-Minimizing Floating Dock**: Bouncy spring animation (`Spring.DampingRatioMediumBouncy`) smoothly collapses the bottom navigation into a sleek 52dp floating capsule while scrolling movies and TV shows; tap to expand.
+- 🎛️ **Bottom Dock Style Toggle**: Select between **Icons and labels** (default) or **Icons only** (ultra-sleek 54dp bar) in Settings › Display.
+- 📐 **Centered Mobile Portrait Player Pills**: Balanced, centered layout for both the glassy timecode pill and player actions dock on phone portrait screens.
+- 🎬 **Mobile-Optimized Movie Details**: Full-width title header (no bracket truncation), genre subtitle, side-by-side 2:3 poster with responsive metadata pills (`MovieBadgesFlow`), expandable synopsis, and symmetrical 44dp pill action buttons.
+- 🔄 **In-Player Orientation Switcher**: One-tap rotation between **Landscape**, **Portrait**, and **Auto-Sensor**.
 
-### 🔊 2. Audiophile & Late-Night Cinema DSP
-- **Night Mode / Dialogue Voice Boost**: Real-time speech clarity enhancement via Android `LoudnessEnhancer` dynamic range compression.
-- **Bluetooth Lip-Sync Calibration**: Fine-tune wireless audio synchronization offset (`±500ms` in 50ms increments).
-- **In-Player Subtitle Delay Calibration**: Instant on-the-fly subtitle timing adjustments (`±10s` in 100ms increments).
-- **Bundled NextLib FFmpeg Decoders**: High-fidelity playback for **Dolby Atmos**, **E-AC-3**, **AC-3**, **TrueHD**, **DTS-HD**, **FLAC**, and **AAC**.
-- **Screen-Off Background Playback**: Seamless background audio when screen is turned off or device is locked.
+### ☀️ 2. Automatic HDR Peak Brightness & Display Probing
+- 🌈 **Auto HDR Detection**: Real-time detection of **HDR10**, **HDR10+**, **Dolby Vision** (`dv`/`dovi`), and **HLG** content.
+- 💡 **Peak Luminance Boost**: Automatically raises screen brightness to peak (`1.0f`) with `COLOR_MODE_HDR`, restoring original brightness on exit.
+- 🔍 **Dynamic SoC & Hardware Inspection**: Detects processor chipset and device model (`Build.SOC_MODEL` / `Build.HARDWARE` / `Build.BOARD`) with native FFmpeg fallback.
+- 📏 **Universal Aspect Ratio Metric**: Real-time calculation of screen ratios (`19.5:9`, `20:9`, `21:9` for phones; `16:10` / `4:3` for tablets) alongside resolution.
 
-### 🎮 3. Premium Player Gestures & Delights
-- **YouTube-Style Double-Tap Seek Ripples**: Expanding frosted arc ripples with dynamic chevron arrows (`«««` / `»»»`) and tactile haptics.
-- **Dual-Side Edge Swiping**: Left-side vertical brightness control and right-side volume control with deadzone touch protection.
-- **Long-Press 2x Speed**: Press-and-hold player surface for temporary 2.0x playback speed acceleration.
-- **Contextual "Skip Intro (+85s)" Capsule**: One-tap intro skipper in the opening minutes of episodes and movies.
-- **Adaptive 2-Row Cinema Dock**: Segregated action dock on phone portrait layouts to eliminate button crowding.
+### 🖼️ 3. Studio-Grade Poster Generation & Intelligent Metadata
+- 🎞️ **Anti-Black Frame Sampling**: Samples frames at 12% into the film (`10s`–`180s`) with Android 10+ `loadThumbnail` support to eliminate black lead-in thumbnails.
+- 🎨 **Cinematic Fallback Artwork**: Genre-matched color gradients (crimson for Horror, deep space cyan for Sci-Fi, navy for Action, royal purple for Animation).
+- 🧠 **Intelligent Genre Detector**: Detects Horror, Sci-Fi, Action, Animation, Comedy, and Crime keywords automatically.
+- 📖 **Authentic & Dynamic Synopses**: Authentic summaries for major franchises (*Avengers, Interstellar, The Dark Knight, Dune, The Conjuring, etc.*) plus smart contextual descriptions for uncataloged films.
 
-### 📁 4. Streamlined Navigation & Folder Management
-- **4 Main Destinations**: Simplified bottom navigation bar and AppRail to **Home**, **Movies**, **TV Shows**, and **Settings**.
-- **Settings-Integrated Storage Hub**: Comprehensive folder management relocated into **Settings → Storage & Folders** featuring storage breakdown bars, active folder lists, and directory removal confirmation.
-- **Clean Full-Width Content**: Removed redundant category filter cards on Movies/TV pages for immediate media immersion.
+### 🔊 4. Audiophile & Late-Night Cinema DSP
+- 🌙 **Dialogue Voice Boost / Night Mode**: Speech clarity enhancement via Android `LoudnessEnhancer` dynamic range compression.
+- 📶 **Bluetooth Lip-Sync Calibration**: Wireless audio delay offset calibration (`±500ms` in 50ms increments).
+- ⏱️ **Live Subtitle Sync Calibration**: On-the-fly subtitle timing adjustments (`±10s` in 100ms increments).
+- 🎼 **Bundled NextLib FFmpeg Decoders**: Lossless decoding for **Dolby Atmos**, **E-AC-3**, **AC-3**, **TrueHD**, **DTS-HD**, **FLAC**, and **AAC**.
+- 🔒 **Screen-Off Background Playback**: Seamless background audio when screen is turned off or device is locked.
 
-### 🎨 5. Clean Material 3 Display Modes
-- **3 Display Modes**: **Light** (Airy Pale-Blue), **Dark** (Night Slate), and **AMOLED** (Pure Black).
-- **Corner Curvature Presets**: Rounded (24dp curve), Compact (14dp curve), Sharp (0dp crisp).
-- **Theme Bloom Transition**: Smooth fade in / fade out animations during appearance transitions.
+### 🎮 5. Premium Player Gestures & Delights
+- 💫 **YouTube-Style Seek Ripples**: Expanding frosted arc ripples with dynamic chevron arrows (`«««` / `»»»`) and tactile haptics.
+- 🎚️ **Dual-Side Edge Swiping**: Left-side vertical brightness control and right-side volume control with deadzone touch protection.
+- ⏩ **Long-Press 2x Speed**: Press and hold anywhere on the player surface to temporarily accelerate playback to 2.0x.
+- ⏭️ **Contextual "Skip Intro (+85s)" Capsule**: One-tap intro skipper in the opening minutes of episodes and movies.
 
-### 🔒 6. 100% Offline-First Privacy Architecture
-- **Offline Sidecar Scraper**: Reads local `poster.jpg`, `fanart.jpg`, and `.nfo` files without network calls.
-- **Zero Telemetry**: No analytics, no ads, no trackers, and no unsolicited network calls.
-- **Local Persistence**: Playback positions, resume markers, and audio/subtitle preferences are kept strictly on-device.
+### 📁 6. Streamlined Navigation & Folder Management
+- 🧭 **4 Core Destinations**: Simplified navigation across **Home**, **Movies**, **TV Shows**, and **Settings**.
+- ⚙️ **Settings-Integrated Storage Hub**: Comprehensive folder management under **Settings → Storage & Folders** featuring storage breakdown bars, active directory lists, and deletion protection dialogs.
+- 🗂️ **Clean Media Grids**: Removed redundant category filter cards on Movies/TV pages for immediate media immersion.
+
+### 🎨 7. Clean Material 3 Display Modes & Aurora Splash
+- 🌌 **Cinematic Dark Aurora Splash**: Deep `#09101d` palette, floating sapphire/cyan blurred energy blobs, frosted glass logo, and glowing loading track.
+- ☀️ **Light Mode**: Airy Pale-Blue aesthetic for bright daytime environments.
+- 🌙 **Dark Mode**: Deep Night Slate styling for cinema immersion.
+- 🖤 **AMOLED Mode**: Pure Black background for maximum OLED battery savings and infinite contrast.
+- 📐 **Corner Curvature Presets**: Choose between **Rounded** (24dp curve), **Compact** (14dp curve), or **Sharp** (0dp crisp).
+- 🌺 **Theme Transition Blend**: Smooth fade in / fade out blend when switching themes.
+- 🎬 **Lively UI Animations**: Fluid slide & spring transitions between tabs, details, and folders.
+
+### 🔒 8. 100% Offline-First Privacy Architecture
+- 📴 **Local Sidecar Scraping**: Reads local `poster.jpg`, `fanart.jpg`, and `.nfo` files without network calls.
+- 🚫 **Zero Telemetry**: No analytics, no ads, no trackers, and no unsolicited network calls.
+- 💾 **Strictly On-Device**: Playback positions, resume markers, and audio/subtitle preferences are kept strictly on-device.
 
 ---
 
