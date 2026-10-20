@@ -35,50 +35,21 @@
 
 ## Upcoming Milestones
 
-### Milestone 5A — Smart Episode Continuity & TV Series Organization (Immediate Next)
-1. **Series & Seasons Grouping**:
-   - Automatic detection of episode naming patterns:
-     - `S01E01`, `S02E05`
-     - `1x04`, `2x12`
-     - `Episode 12`, `EP10`
-   - Clustered under dedicated TV Series screens matching `design-references/jadzumi_tablet_tv_show_details_refined.html`.
-   - Tabbed season switcher: `Season 1`, `Season 2`, `OVAs & Specials`, with watched count badges.
-2. **"Up Next" Highlighting & Watched Badges**:
-   - Per-episode progress bars, remaining runtime, and watched status checkmarks (`Watched`, `In Progress`, `Unwatched`).
-   - Home dashboard hero card automatically spotlights the next unwatched episode in line.
-3. **10-Second Next-Episode Autoplay Countdown**:
-   - In `CinemaPlayer.kt`, detects when an episode enters its last ~15 seconds.
-   - Sleek frosted-glass banner slides in: *"Next episode starts in 10s"* with **Play Now** and **Cancel** buttons.
-   - Fluid auto-advance to the next sequential episode when the timer reaches 0.
+### Milestone 5A & 5B — TV Continuity, Dedicated Movies, Local Art & Sidecar Engine (Completed)
+- **TV Series & Seasons Grouping**: Automatic clustering by SxxExx, 1x04, Episode naming with dedicated TV Series details screen.
+- **Dedicated Movies Tab & Movie Details Screen**: Strict media type isolation between Movies and TV shows, responsive `MovieCardGrid`, and `MovieDetailsPage` matching reference design.
+- **Robust Local Sidecar Engine**: Directory-aware detection of `poster.jpg`, `cover.png`, `fanart.jpg`, and `.nfo` files with subfolder mapping and SQLite v3 unique URI schema.
+- **10-Second Autoplay Banner**: Frosted-glass next-episode autoplay countdown banner in `CinemaPlayer.kt`.
+
+### Milestone 7 — Comprehensive Design Parity Audit & Polish (Completed)
+- **Universal Tablet Compatibility**: Stripped device-specific branding in favor of universal tablet multi-speaker and high-fidelity stereo downmix profiles.
+- **120Hz / High Refresh Rate Optimization**: Programmatic display mode negotiation (`preferredDisplayModeId`) targeting 120Hz/144Hz with memory-bounded downsampled image decoding (`SidecarMemory`).
+- **Responsive Layout & Ergonomics**: Adaptive 16:10 landscape, portrait, and split-screen layouts across all library, details, folder, and player screens.
+- **Production Standalone UI**: Removed legacy "View original design samples" demo buttons and test triggers across all tabs.
 
 ---
 
-### Milestone 5B — Local Art & Optional Metadata
-1. **100% Offline-First by Default**:
-   - Zero network permissions and zero unsolicited web calls.
-2. **Local Sidecar Scraping**:
-   - Automatically reads local poster and backdrop art (`poster.jpg`, `fanart.jpg`, `cover.png`, `folder.jpg`).
-   - Parses local `.nfo` XML metadata already sitting inside movie and TV series folders (synopsis, cast, studio, rating, release date).
-3. **Optional Online Metadata (Opt-In)**:
-   - User-toggleable in Settings (strictly disabled by default).
-   - Fetches missing metadata and backdrop art, caching everything strictly locally on tablet storage for offline viewing.
-
----
-
-### Milestone 7 — Comprehensive Design Parity Audit & Polish
-1. **Pixel-for-Pixel Audit**:
-   - Side-by-side QA of all native Jetpack Compose screens against the 6 approved HTML reference designs in `design-references/`:
-     - `jadzumi_tablet_home_library_refined.html`
-     - `jadzumi_tablet_tv_show_details_refined.html`
-     - `jadzumi_tablet_movie_details_refined.html`
-     - `jadzumi_tablet_folders_storage_consistent_data.html`
-     - `jadzumi_tablet_cinema_player_refined.html`
-     - `jadzumi_tablet_settings_customization_about_me.html`
-2. **Tablet Ergonomics & 120Hz QA**:
-   - Xiaomi Pad 5 120Hz high-refresh rate verification for stutter-free scrolling and animations.
-   - Seamless responsive adaptation across 16:10 landscape, 10:16 portrait, and Android split-screen multitasking.
-
----
+## Upcoming Milestones
 
 ### Milestone 8 — Production Hardening & v1.0 Release
 1. **R8 / ProGuard Code Shrinking**:
