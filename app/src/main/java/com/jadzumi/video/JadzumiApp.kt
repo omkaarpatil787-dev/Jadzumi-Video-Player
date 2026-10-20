@@ -610,7 +610,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(8.dp))
                                     val currentTrack = playback.audioTracks.firstOrNull()
                                     val audioLabel = if (currentTrack != null) {
-                                        "${formatAudioCodec(currentTrack.mimeType)} · ${formatChannelLayout(currentTrack.channelCount)}"
+                                        "${currentTrack.codec} · ${currentTrack.channels}"
                                     } else "Dolby Atmos / 5.1 / 7.1 / AAC Decoder Ready"
                                     Surface(
                                         shape = RoundedCornerShape(14.dp),
