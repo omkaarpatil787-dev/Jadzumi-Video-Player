@@ -499,13 +499,13 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
             val rewindButton = CommandButton.Builder()
                 .setDisplayName("Back ${seekIncrementSeconds}s")
-                .setIconResId(android.R.drawable.ic_media_rew)
+                .setIconResId(android.R.drawable.ic_media_previous)
                 .setSessionCommand(rewindCmd)
                 .build()
 
             val forwardButton = CommandButton.Builder()
                 .setDisplayName("Forward ${seekIncrementSeconds}s")
-                .setIconResId(android.R.drawable.ic_media_ffwd)
+                .setIconResId(android.R.drawable.ic_media_next)
                 .setSessionCommand(forwardCmd)
                 .build()
 

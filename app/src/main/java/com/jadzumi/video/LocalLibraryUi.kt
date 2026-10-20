@@ -509,6 +509,10 @@ fun StorageSummaryCard(
         }
     }
 
+    val filteredSeries = remember(seriesList, query) {
+        seriesList.filter { it.title.contains(query.trim(), true) }
+    }
+
     val continueWatching = remember(allVideos, playback.historyVersion) {
         allVideos.filter { playback.savedPosition(it) > 0 }
     }
@@ -687,9 +691,6 @@ fun StorageSummaryCard(
                 }
 
                 if (category == "TV Shows") {
-                    val filteredSeries = remember(seriesList, query) {
-                        seriesList.filter { it.title.contains(query.trim(), true) }
-                    }
                     if (filteredSeries.isEmpty()) {
                         item {
                             LocalPanel {

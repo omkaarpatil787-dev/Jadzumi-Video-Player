@@ -480,6 +480,8 @@ private val settingsCategories = listOf(
     playback: PlaybackController,
     onNavigateFolders: () -> Unit
 ) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("playback", 0) }
     var activeCategory by rememberSaveable { mutableStateOf("Privacy") }
     var statusNotice by remember { mutableStateOf<String?>(null) }
     val addFolder = rememberFolderPicker(library)
@@ -993,8 +995,8 @@ private val settingsCategories = listOf(
                                 PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it }
                             }
                             item {
-                                var scanSidecars by rememberSaveable { mutableStateOf(prefs.getBoolean("scan_sidecars", true)) }
-                                var onlineMetadata by rememberSaveable { mutableStateOf(prefs.getBoolean("online_metadata", false)) }
+                                var scanSidecars by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("scan_sidecars", true)) }
+                                var onlineMetadata by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("online_metadata", false)) }
 
                                 Panel {
                                     Text("Local Artwork & Metadata (Milestone 5B)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
