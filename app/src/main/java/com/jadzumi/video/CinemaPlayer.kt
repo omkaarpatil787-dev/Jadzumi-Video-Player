@@ -281,7 +281,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     ) {
                         Column(
                             modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically,
+                            verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(

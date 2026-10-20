@@ -1807,20 +1807,24 @@ private fun LiveAppIconPreview(
     val isOutline = finishName == "Outlined"
     val isSolid = finishName == "Solid"
 
+    val bgModifier: Modifier = when {
+        isOutline -> Modifier
+        isSolid -> Modifier.background(palette[2])
+        else -> Modifier.background(Brush.linearGradient(colors = palette))
+    }
+    val borderModifier: Modifier = if (isOutline) {
+        Modifier.border(3.dp, palette[2], cornerShape)
+    } else {
+        Modifier.border(1.2.dp, Color.White.copy(alpha = 0.6f), cornerShape)
+    }
+
     Box(
         modifier = modifier
             .size(130.dp)
             .shadow(16.dp, cornerShape, ambientColor = palette[2].copy(alpha = 0.35f), spotColor = palette[2].copy(alpha = 0.35f))
             .clip(cornerShape)
-            .background(
-                if (isOutline) Color.Transparent
-                else if (isSolid) palette[2]
-                else Brush.linearGradient(colors = palette)
-            )
-            .then(
-                if (isOutline) Modifier.border(3.dp, palette[2], cornerShape)
-                else Modifier.border(1.2.dp, Color.White.copy(alpha = 0.6f), cornerShape)
-            ),
+            .then(bgModifier)
+            .then(borderModifier),
         contentAlignment = Alignment.Center
     ) {
         if (finishName == "Frosted") {
