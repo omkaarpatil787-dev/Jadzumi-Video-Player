@@ -326,7 +326,7 @@ private val destinations = listOf(
                                                 onBack = { selectedId = null }
                                             )
                                         } else {
-                                            LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "TV Shows")
+                                            LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
                                         }
                                     } else if (localVideo != null) {
                                         if (localVideo.episode == null) {
@@ -356,9 +356,9 @@ private val destinations = listOf(
                                         }
                                     } else if (video != null) DetailPage(video)
                                     else when (current) {
-                                        "Home", "Library" -> if (demo) LibraryPage(query, demo, { demo = it }) { selectedId = it } else LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true })
-                                        "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "Movies")
-                                        "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "TV Shows")
+                                        "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it })
+                                        "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies")
+                                        "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
                                         "Folders" -> LocalFoldersPage(localState, library, contentWidth >= 840.dp) { selectedId = it }
                                         "Settings" -> UnifiedSettingsAndPrivacyScreen(
                                             theme = theme,
@@ -691,7 +691,7 @@ private val settingsCategories = listOf(
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Downmix to Stereo", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Optimized for Xiaomi Pad 5 quad-speaker array and headphones", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Optimized for tablet multi-speaker arrays and stereo headphones", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
                                     }

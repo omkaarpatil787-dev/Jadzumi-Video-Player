@@ -109,4 +109,27 @@ class LocalSeriesTest {
         assertEquals(listOf(mov), moviesOnly)
         assertEquals(listOf(ep), tvOnly)
     }
+
+    @Test
+    fun matchesMoviePosterFromDedicatedSubfolder() {
+        val movie = LocalVideo("uri_mov", "folder1", "Avatar (2009).mkv", "video/mp4", 1000, 100, 1000, 1920, 1080, parentDir = "dir_avatar")
+        val sidecars = listOf(
+            LocalSidecar("folder1", "poster.jpg", "image/jpeg", "uri_poster_avatar", parentDir = "dir_avatar"),
+            LocalSidecar("folder1", "poster.jpg", "image/jpeg", "uri_poster_other", parentDir = "dir_other")
+        )
+        val meta = extractMovieMetadata(movie, mapOf("folder1" to sidecars))
+        assertEquals("uri_poster_avatar", meta.posterUri)
+    }
+
+    @Test
+    fun matchesTvShowPosterFromShowFolder() {
+        val ep1 = LocalVideo("uri_ep1", "folder1", "Arcane S01E01.mkv", "video/mp4", 1000, 100, 1000, 1920, 1080, parentDir = "dir_arcane/season1")
+        val sidecars = listOf(
+            LocalSidecar("folder1", "poster.jpg", "image/jpeg", "uri_arcane_poster", parentDir = "dir_arcane"),
+            LocalSidecar("folder1", "poster.jpg", "image/jpeg", "uri_other_poster", parentDir = "dir_other")
+        )
+        val seriesList = clusterVideosIntoSeries(listOf(ep1), mapOf("folder1" to sidecars))
+        assertEquals(1, seriesList.size)
+        assertEquals("uri_arcane_poster", seriesList.first().posterUri)
+    }
 }

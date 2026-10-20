@@ -482,7 +482,7 @@ fun StorageSummaryCard(
     playback: PlaybackController,
     query: String,
     select: (String) -> Unit,
-    preview: () -> Unit,
+    preview: () -> Unit = {},
     defaultCategory: String = "All videos"
 ) {
     val add = rememberFolderPicker(library)
@@ -828,10 +828,6 @@ fun StorageSummaryCard(
                             LocalVideoCard(video) { select(video.uri) }
                         }
                     }
-                }
-
-                item {
-                    TextButton(onClick = preview) { Text("View original design samples") }
                 }
             }
         }
@@ -1293,13 +1289,11 @@ fun TvSeriesSummaryCard(
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 val firstEp = series.seasons.values.firstOrNull()?.firstOrNull()
-                if (firstEp != null) {
-                    LocalThumbnail(video = firstEp, modifier = Modifier.fillMaxSize())
-                } else {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.Tv, null, Modifier.size(36.dp), tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
+                SidecarImage(
+                    uri = series.posterUri ?: series.backdropUri,
+                    fallbackVideo = firstEp,
+                    modifier = Modifier.fillMaxSize()
+                )
 
                 // Seasons badge
                 Surface(

@@ -2,6 +2,8 @@ package com.jadzumi.video
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract as Docs
+import androidx.core.net.toUri
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
@@ -13,8 +15,19 @@ data class LocalSidecar(
     val parentId: String,
     val name: String,
     val mime: String,
-    val uri: String
-)
+    val uri: String,
+    val parentDir: String = ""
+) {
+    val dirId: String get() = if (parentDir.isNotEmpty()) parentDir else try {
+        Docs.getDocumentId(uri.toUri()).substringBeforeLast('/', "")
+    } catch (_: Exception) { "" }
+
+    val isImage: Boolean get() = mime.startsWith("image/") ||
+        name.substringAfterLast('.', "").lowercase() in setOf("jpg", "jpeg", "png", "webp")
+
+    val isNfo: Boolean get() = name.endsWith(".nfo", ignoreCase = true) ||
+        (mime == "text/plain" && name.endsWith(".nfo", ignoreCase = true))
+}
 
 /**
  * Cleaned series, season, and episode information parsed from video filename or path
@@ -300,19 +313,34 @@ fun clusterVideosIntoSeries(
 
         // Find sidecar artwork (poster, fanart, tvshow.nfo)
         val folderSidecars = sidecarsByFolder[folderUri] ?: emptyList()
-        val poster = folderSidecars.firstOrNull {
-            it.name.matches(Regex("(?i)^(poster|cover|folder)\\.(jpe?g|png|webp)$"))
+        val seriesDirs = pairs.map { it.first.dirId }.toSet() +
+            pairs.map { it.first.dirId.substringBeforeLast('/', "") }.filter { it.isNotEmpty() }.toSet()
+        val seriesTitleCleaned = firstInfo.seriesTitle.trim()
+
+        val seriesSidecars = folderSidecars.filter { s ->
+            s.dirId in seriesDirs || s.name.contains(seriesTitleCleaned, ignoreCase = true)
+        }
+        val pool = if (seriesSidecars.isNotEmpty()) seriesSidecars else folderSidecars
+
+        val poster = pool.firstOrNull {
+            it.isImage && it.name.matches(Regex("(?i)^(poster|cover|folder|show)\\.(jpe?g|png|webp)$"))
+        }?.uri ?: pool.firstOrNull {
+            it.isImage && (it.name.contains("poster", ignoreCase = true) || it.name.contains("cover", ignoreCase = true))
+        }?.uri ?: pool.firstOrNull {
+            it.isImage && it.name.contains(seriesTitleCleaned, ignoreCase = true)
         }?.uri
 
-        val backdrop = folderSidecars.firstOrNull {
-            it.name.matches(Regex("(?i)^(fanart|backdrop|background)\\.(jpe?g|png|webp)$"))
+        val backdrop = pool.firstOrNull {
+            it.isImage && it.name.matches(Regex("(?i)^(fanart|backdrop|background)\\.(jpe?g|png|webp)$"))
+        }?.uri ?: pool.firstOrNull {
+            it.isImage && (it.name.contains("fanart", ignoreCase = true) || it.name.contains("backdrop", ignoreCase = true))
         }?.uri
 
         // Try reading tvshow.nfo if available
         var nfoMetadata: ParsedNfo? = null
         if (context != null) {
-            val nfoSidecar = folderSidecars.firstOrNull {
-                it.name.equals("tvshow.nfo", ignoreCase = true) || it.name.endsWith(".nfo", ignoreCase = true)
+            val nfoSidecar = pool.firstOrNull {
+                it.isNfo && (it.name.equals("tvshow.nfo", ignoreCase = true) || it.name.contains(seriesTitleCleaned, ignoreCase = true) || it.name.endsWith(".nfo", ignoreCase = true))
             }
             if (nfoSidecar != null) {
                 try {
@@ -366,26 +394,44 @@ fun extractMovieMetadata(
 ): MovieMetadata {
     val folderSidecars = sidecarsByFolder[video.folder] ?: emptyList()
     val baseName = video.name.substringBeforeLast('.', video.name)
+    val videoDirId = video.dirId
+
+    // Sidecars located in the exact same directory as this movie
+    val dirSidecars = folderSidecars.filter { s ->
+        s.dirId.isNotEmpty() && s.dirId == videoDirId
+    }
+    val isDedicatedFolder = dirSidecars.isNotEmpty()
 
     // Sidecar poster & backdrop detection
-    val poster = folderSidecars.firstOrNull {
-        it.name.matches(Regex("(?i)^(poster|cover|folder)\\.(jpe?g|png|webp)$")) ||
-        (it.name.startsWith(baseName, ignoreCase = true) && it.name.matches(Regex("(?i).*(-poster|\\.poster)?\\.(jpe?g|png|webp)$")))
+    val poster = (if (isDedicatedFolder) {
+        dirSidecars.firstOrNull {
+            it.isImage && it.name.matches(Regex("(?i)^(poster|cover|folder|movie|front)\\.(jpe?g|png|webp)$"))
+        }?.uri ?: dirSidecars.firstOrNull {
+            it.isImage && (it.name.contains("poster", ignoreCase = true) || it.name.contains("cover", ignoreCase = true) || it.name.startsWith(baseName, ignoreCase = true))
+        }?.uri ?: dirSidecars.firstOrNull { it.isImage }?.uri
+    } else null) ?: folderSidecars.firstOrNull {
+        it.isImage && (it.name.startsWith(baseName, ignoreCase = true) && it.name.matches(Regex("(?i).*(-poster|\\.poster)?\\.(jpe?g|png|webp)$")))
+    }?.uri ?: folderSidecars.firstOrNull {
+        it.isImage && it.name.startsWith(baseName, ignoreCase = true)
     }?.uri
 
-    val backdrop = folderSidecars.firstOrNull {
-        it.name.matches(Regex("(?i)^(fanart|backdrop|background)\\.(jpe?g|png|webp)$")) ||
-        (it.name.startsWith(baseName, ignoreCase = true) && it.name.matches(Regex("(?i).*(-fanart|-backdrop)?\\.(jpe?g|png|webp)$")))
+    val backdrop = (if (isDedicatedFolder) {
+        dirSidecars.firstOrNull {
+            it.isImage && it.name.matches(Regex("(?i)^(fanart|backdrop|background)\\.(jpe?g|png|webp)$"))
+        }?.uri ?: dirSidecars.firstOrNull {
+            it.isImage && (it.name.contains("fanart", ignoreCase = true) || it.name.contains("backdrop", ignoreCase = true))
+        }?.uri
+    } else null) ?: folderSidecars.firstOrNull {
+        it.isImage && (it.name.startsWith(baseName, ignoreCase = true) && it.name.matches(Regex("(?i).*(-fanart|-backdrop)?\\.(jpe?g|png|webp)$")))
     }?.uri
 
     // Parse sidecar .nfo if present (movie.nfo or <videoBaseName>.nfo)
     var nfoMetadata: ParsedNfo? = null
     if (context != null) {
-        val nfoSidecar = folderSidecars.firstOrNull {
-            it.name.equals("movie.nfo", ignoreCase = true) ||
-            it.name.equals("$baseName.nfo", ignoreCase = true) ||
-            it.name.endsWith(".nfo", ignoreCase = true)
-        }
+        val nfoSidecar = (if (isDedicatedFolder) dirSidecars.firstOrNull { it.isNfo } else null)
+            ?: folderSidecars.firstOrNull {
+                it.isNfo && (it.name.equals("movie.nfo", ignoreCase = true) || it.name.startsWith(baseName, ignoreCase = true))
+            }
         if (nfoSidecar != null) {
             try {
                 context.contentResolver.openInputStream(Uri.parse(nfoSidecar.uri))?.use { stream ->

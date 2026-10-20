@@ -36,7 +36,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import android.util.LruCache
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -800,22 +803,56 @@ internal fun OfflineVerificationCard() {
     }
 }
 
+internal object SidecarMemory {
+    val cache = object : LruCache<String, Bitmap>(24 * 1024 * 1024) {
+        override fun sizeOf(key: String, value: Bitmap) = value.byteCount
+    }
+    val permits = Semaphore(3)
+}
+
+internal fun decodeSampledBitmap(context: android.content.Context, uriString: String, reqWidth: Int = 800, reqHeight: Int = 1200): Bitmap? {
+    val uri = Uri.parse(uriString)
+    return try {
+        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        context.contentResolver.openInputStream(uri)?.use { stream ->
+            BitmapFactory.decodeStream(stream, null, options)
+        }
+        if (options.outWidth <= 0 || options.outHeight <= 0) return null
+
+        var inSampleSize = 1
+        val halfHeight = options.outHeight / 2
+        val halfWidth = options.outWidth / 2
+        while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+            inSampleSize *= 2
+        }
+        options.inSampleSize = inSampleSize
+        options.inJustDecodeBounds = false
+        options.inPreferredConfig = Bitmap.Config.RGB_565
+
+        context.contentResolver.openInputStream(uri)?.use { stream ->
+            BitmapFactory.decodeStream(stream, null, options)
+        }
+    } catch (_: Throwable) {
+        null
+    }
+}
+
 @Composable
 internal fun SidecarImage(
     uri: String?,
     fallbackVideo: LocalVideo?,
     modifier: Modifier
 ) {
-    val context = LocalContext.current
+    val context = LocalContext.current.applicationContext
     val bitmap by produceState<Bitmap?>(initialValue = null, key1 = uri) {
         value = null
         if (uri != null) {
             value = withContext(Dispatchers.IO) {
-                try {
-                    context.contentResolver.openInputStream(Uri.parse(uri))?.use { stream ->
-                        BitmapFactory.decodeStream(stream)
+                SidecarMemory.permits.withPermit {
+                    SidecarMemory.cache.get(uri) ?: decodeSampledBitmap(context, uri)?.also {
+                        SidecarMemory.cache.put(uri, it)
                     }
-                } catch (_: Exception) { null }
+                }
             }
         }
     }
@@ -826,7 +863,7 @@ internal fun SidecarImage(
         LocalThumbnail(fallbackVideo, modifier)
     } else {
         Box(modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.Tv, null, Modifier.size(36.dp), tint = MaterialTheme.colorScheme.primary)
+            Icon(Icons.Rounded.Movie, null, Modifier.size(36.dp), tint = MaterialTheme.colorScheme.primary)
         }
     }
 }
