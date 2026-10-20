@@ -13,8 +13,10 @@
 ## ✨ Key Features & Highlights
 
 ### 📱 1. Universal Phone & Tablet Ergonomics
-- 🫧 **Snapchat-Style Pure Dock & Tablet Rail**: Ultra-clean, alive navigation icons with natural spring scaling (`1.15x`) and vibrant primary tints. No intrusive bounding shapes or squished glow capsules when auto-minimizing on tablets or phones!
-- 🎛️ **Dock Style Toggle**: Choose between **Icons & labels** (default) or **Icons only** (ultra-sleek 54dp dock / 64dp tablet rail) under Settings › Display.
+- 🏝️ **Universal Floating Frosted Dock (Phones & Tablets)**: Unified navigation ergonomics across handheld phones, foldables, and large-screen tablets. Replaces rigid edge-to-edge side rails with an adaptive frosted glass dock centered at the bottom, unlocking full-width cinema breathing room on tablets while maintaining 100% UX consistency.
+- ✨ **Google Gemini-Style Alive Glooming Logo**: The floating dock is anchored by a strictly non-clickable Jadzumi emblem bathed in an organic, breathing celestial halo (Electric Cyan, Cosmic Violet, Coral Magenta, and Gold Shimmer) that gently rotates and pulses as if alive while using the app.
+- 🫧 **Snapchat-Style Pure Dock Icons**: Ultra-clean, alive navigation icons with natural spring scaling (`1.15x`) and vibrant primary tints. No intrusive bounding shapes or squished glow capsules when auto-minimizing on tablets or phones!
+- 🎛️ **Dock Style Toggle**: Choose between **Icons & labels** (default) or **Icons only** (ultra-sleek 54dp dock) under Settings › Display.
 - 📐 **Mobile Portrait TV Show & Movie Alignment Parity**: Pixel-perfect layout alignment on phones without empty black gaps. Binds breadcrumbs with strict `.weight(1f, fill = false)` constraints and optimized `topPad (12dp)` for seamless, immediate content flow.
 - 🎴 **Tab-Focused Clean Collections**: Top featured swiping cards are exclusively showcased on the Home tab, keeping the Movies and TV Shows tabs uncluttered, focused directly on Continue Watching and collection grids.
 - 🌟 **Interactive Alive Cinema Greeting**: Upper-left Home greeting dynamically tracks your recent episodes and movies (*"Good afternoon · Back to Dragon Ball Super?"* / *"Watching S01E02 · Tap to cycle fun facts 🍿"*), featuring interactive click-to-cycle cinema trivia and a lively presence indicator.

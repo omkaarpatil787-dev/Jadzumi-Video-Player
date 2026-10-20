@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
@@ -212,30 +213,13 @@ private val destinations = listOf(
                     }
                 }
                 BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
-                    val showRail = maxWidth >= 640.dp
-                    Row(Modifier.fillMaxSize()) {
-                        if (showRail) {
-                            AppRail(
-                                route = route,
-                                theme = theme,
-                                bottomBarStyle = bottomBarStyle,
-                                glassIntensity = glassIntensity,
-                                isMinimized = isDockMinimized,
-                                onToggleMinimize = { isDockMinimized = !isDockMinimized },
-                                navigate = {
-                                    if (isDockMinimized) isDockMinimized = false
-                                    route = it
-                                    selectedId = null
-                                }
-                            )
-                        }
-                        BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
-                            val contentWidth = maxWidth
-                            val isPhone = contentWidth < 600.dp
-                            val topPad = if (contentWidth >= 720.dp) 24.dp else 16.dp
+                    val isTablet = maxWidth >= 640.dp
+                    val contentWidth = maxWidth
+                    val isPhone = contentWidth < 600.dp
+                    val topPad = if (contentWidth >= 720.dp) 24.dp else 16.dp
 
-                            Box(Modifier.fillMaxSize()) {
-                                Column(Modifier.fillMaxSize()) {
+                    Box(Modifier.fillMaxSize()) {
+                        Column(Modifier.fillMaxSize()) {
                                     if (isPhone && selectedId == null) {
                                         // Adaptive Phone Top Bar (Greeting + Actions, Full-width frosted search capsule)
                                         Column(Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 6.dp)) {
@@ -641,14 +625,15 @@ private val destinations = listOf(
                                     }
                                 }
 
-                                // Floating Frosted Glass Bottom Navigation Bar (Phones & narrow layouts)
-                                if (!showRail && selectedId == null) {
+                                // Floating Frosted Glass Bottom Navigation Bar (Universal across Phones, Foldables & Tablets)
+                                if (selectedId == null) {
                                     FloatingFrostedBottomBar(
                                         route = route,
                                         theme = theme,
                                         bottomBarStyle = bottomBarStyle,
                                         glassIntensity = glassIntensity,
                                         isMinimized = isDockMinimized,
+                                        isTablet = isTablet,
                                         onToggleMinimize = { isDockMinimized = !isDockMinimized },
                                         onNavigate = {
                                             if (isDockMinimized) isDockMinimized = false
@@ -657,14 +642,13 @@ private val destinations = listOf(
                                         },
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
-                                            .padding(bottom = 6.dp)
+                                            .padding(bottom = if (isTablet) 12.dp else 6.dp)
                                     )
                                 }
                             }
                         }
                     }
                 }
-            }
 
             bloomOriginColor?.let { oldColor ->
                 val progress = bloomProgress.value
@@ -789,135 +773,112 @@ private fun InteractiveCinemaGreeting(
     }
 }
 
-@Composable private fun AppRail(
-    route: String,
-    theme: String,
-    bottomBarStyle: String,
-    glassIntensity: Float = 0.75f,
-    isMinimized: Boolean,
-    onToggleMinimize: () -> Unit,
-    navigate: (String) -> Unit
+@Composable
+fun GeminiGlowingJadzumiLogo(
+    darkSurface: Boolean = true,
+    size: Dp = 32.dp,
+    modifier: Modifier = Modifier
 ) {
-    val isIconsOnly = bottomBarStyle == "Icons only"
+    val infiniteTransition = rememberInfiniteTransition(label = "geminiLogoGlow")
 
-    val railWidth by animateDpAsState(
-        targetValue = when {
-            isMinimized -> 52.dp
-            isIconsOnly -> 64.dp
-            else -> 92.dp
-        },
-        animationSpec = spring(
-            dampingRatio = 0.88f,
-            stiffness = Spring.StiffnessMediumLow
+    // Smooth continuous aura rotation (Google Gemini celestial chromatic drift)
+    val auraRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 7000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
         ),
-        label = "railWidth"
+        label = "geminiRotation"
     )
 
-    Surface(
-        color = GlassTheme.surfaceColor(theme, glassIntensity),
-        border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity)),
-        modifier = Modifier.width(railWidth).fillMaxHeight()
+    // Breathing glow intensity pulse (alive and glooming)
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.55f,
+        targetValue = 0.95f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "geminiPulse"
+    )
+
+    // Breathing scale for organic celestial bloom
+    val auraScale by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.25f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "geminiScale"
+    )
+
+    // Strictly Non-Clickable container
+    Box(
+        modifier = modifier.size(size + 14.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        // 1. Google Gemini Celestial Aurora Halo (Cyan -> Blue -> Cosmic Violet -> Coral Magenta -> Gold -> Cyan)
+        Canvas(
+            modifier = Modifier
+                .size(size * 1.55f)
+                .scale(auraScale)
+                .rotate(auraRotation)
+                .alpha(glowPulse)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clickable {
-                        if (isMinimized) onToggleMinimize() else navigate("Home")
-                    }
-                    .padding(bottom = 16.dp)
-            ) {
-                JadzumiLogo(size = if (isIconsOnly || isMinimized) 36.dp else 42.dp, darkSurface = theme != "Light")
-                if (!isIconsOnly && !isMinimized) {
-                    Spacer(Modifier.height(4.dp))
-                    Text("Jadzumi", fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
-                    Text("Player", fontWeight = FontWeight.Medium, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-                }
-            }
-
-            destinations.filter { it.name != "Settings" }.forEach { d ->
-                val isSelected = route == d.name || (d.name == "Home" && route == "Library")
-                val iconScale by animateFloatAsState(
-                    targetValue = if (isSelected) 1.15f else 1.0f,
-                    animationSpec = spring(dampingRatio = 0.80f, stiffness = Spring.StiffnessMediumLow),
-                    label = "railIconScale_${d.name}"
-                )
-                NavigationRailItem(
-                    selected = isSelected,
-                    onClick = {
-                        if (isMinimized) onToggleMinimize()
-                        navigate(d.name)
-                    },
-                    icon = {
-                        Icon(
-                            d.icon,
-                            contentDescription = d.name,
-                            modifier = Modifier.scale(iconScale)
-                        )
-                    },
-                    label = if (isIconsOnly || isMinimized) null else {
-                        { Text(d.name, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) }
-                    },
-                    alwaysShowLabel = !isIconsOnly && !isMinimized,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    colors = NavigationRailItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
+            drawCircle(
+                brush = Brush.sweepGradient(
+                    colors = listOf(
+                        Color(0xFF64DCFF), // Electric Sky Cyan
+                        Color(0xFF247BFF), // Vibrant Blue
+                        Color(0xFF9B51E0), // Cosmic Violet (Gemini signature)
+                        Color(0xFFFF5376), // Radiant Coral Magenta
+                        Color(0xFFFFB300), // Subtle Gold Shimmer
+                        Color(0xFF64DCFF)  // Back to Cyan
                     )
-                )
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            if (isMinimized) {
-                IconButton(onClick = onToggleMinimize) {
-                    Icon(
-                        Icons.Rounded.ChevronRight,
-                        contentDescription = "Expand Rail",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-
-            val isSettingsSelected = route == "Settings"
-            val settingsScale by animateFloatAsState(
-                targetValue = if (isSettingsSelected) 1.15f else 1.0f,
-                animationSpec = spring(dampingRatio = 0.80f, stiffness = Spring.StiffnessMediumLow),
-                label = "settingsScale"
-            )
-            NavigationRailItem(
-                selected = isSettingsSelected,
-                onClick = {
-                    if (isMinimized) onToggleMinimize()
-                    navigate("Settings")
-                },
-                icon = {
-                    Icon(
-                        Icons.Rounded.Settings,
-                        contentDescription = "Settings",
-                        modifier = Modifier.scale(settingsScale)
-                    )
-                },
-                label = if (isIconsOnly || isMinimized) null else {
-                    { Text("Settings", fontSize = 11.sp, fontWeight = if (isSettingsSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) }
-                },
-                alwaysShowLabel = !isIconsOnly && !isMinimized,
-                colors = NavigationRailItemDefaults.colors(
-                    indicatorColor = Color.Transparent,
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
                 )
             )
+        }
+
+        // 2. Diffuse Ambient Blur Layer to soften the chromatic bloom
+        Canvas(
+            modifier = Modifier
+                .size(size * 1.35f)
+                .alpha(glowPulse * 0.75f)
+        ) {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color(0xFF64DCFF).copy(alpha = 0.70f),
+                        Color(0xFF9B51E0).copy(alpha = 0.40f),
+                        Color.Transparent
+                    )
+                )
+            )
+        }
+
+        // 3. Crisp Frosted Glass Tile (Non-Clickable)
+        Surface(
+            modifier = Modifier.size(size),
+            shape = RoundedCornerShape(size * 0.28f),
+            color = if (darkSurface) Color(0xFF0B192C).copy(alpha = 0.94f) else Color.White.copy(alpha = 0.94f),
+            border = BorderStroke(
+                1.dp,
+                Brush.sweepGradient(
+                    colors = listOf(
+                        Color(0xFF64DCFF).copy(alpha = 0.90f),
+                        Color(0xFF9B51E0).copy(alpha = 0.75f),
+                        Color(0xFFFF5376).copy(alpha = 0.65f),
+                        Color(0xFF64DCFF).copy(alpha = 0.90f)
+                    )
+                )
+            ),
+            shadowElevation = 8.dp
+        ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                JadzumiPlaySymbol(Modifier.size(size * 0.66f))
+            }
         }
     }
 }
@@ -928,6 +889,7 @@ private fun InteractiveCinemaGreeting(
     bottomBarStyle: String,
     glassIntensity: Float = 0.75f,
     isMinimized: Boolean,
+    isTablet: Boolean = false,
     onToggleMinimize: () -> Unit,
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -960,7 +922,11 @@ private fun InteractiveCinemaGreeting(
     )
 
     val dockWidth by animateDpAsState(
-        targetValue = if (isMinimized) 68.dp else 460.dp,
+        targetValue = when {
+            isMinimized -> if (isTablet) 100.dp else 88.dp
+            isIconsOnly -> if (isTablet) 420.dp else 360.dp
+            else -> if (isTablet) 540.dp else 470.dp
+        },
         animationSpec = spring(
             dampingRatio = 0.88f,
             stiffness = Spring.StiffnessMediumLow
@@ -991,17 +957,24 @@ private fun InteractiveCinemaGreeting(
     ) {
         if (isMinimized) {
             // Minimized Floating Pill: Tap to expand with fluid bouncy pop
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clickable(onClick = onToggleMinimize),
-                contentAlignment = Alignment.Center
+                    .clickable(onClick = onToggleMinimize)
+                    .padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
+                GeminiGlowingJadzumiLogo(
+                    darkSurface = theme != "Light",
+                    size = 22.dp
+                )
+                Spacer(Modifier.width(6.dp))
                 Icon(
                     imageVector = activeDestination.icon,
                     contentDescription = "Expand navigation",
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
         } else {
@@ -1009,10 +982,28 @@ private fun InteractiveCinemaGreeting(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 6.dp),
+                    .padding(horizontal = if (isTablet) 12.dp else 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
+                // 1. Non-clickable Google Gemini-style Alive Glooming Logo
+                GeminiGlowingJadzumiLogo(
+                    darkSurface = theme != "Light",
+                    size = if (isIconsOnly) 28.dp else 32.dp
+                )
+
+                // Subtle frosted vertical glass divider
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .height(if (isIconsOnly) 22.dp else 28.dp)
+                        .background(
+                            if (theme == "Light") Color(0xFFD3E3FD).copy(alpha = 0.8f)
+                            else Color.White.copy(alpha = 0.16f)
+                        )
+                )
+
+                // 2. Navigation Destinations
                 navDestinations.forEach { d ->
                     val isSelected = route == d.name || (d.name == "Home" && route == "Library")
                     val activeColor = MaterialTheme.colorScheme.primary
@@ -2361,7 +2352,7 @@ private val settingsCategories = listOf(
 @Composable private fun LibraryPage(query: String, demo: Boolean, onDemo: (Boolean)->Unit, onSelect: (String)->Unit) {
     var category by rememberSaveable { mutableStateOf("All videos") }
     val filtered = filterVideos(if (demo) previewVideos else emptyList(), query, category)
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
             Column {
                 Text("Your cinema,\nat home.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
@@ -2433,7 +2424,7 @@ private val settingsCategories = listOf(
 
 @Composable private fun DetailPage(video: PreviewVideo) {
     var favorite by rememberSaveable(video.id) { mutableStateOf(false) }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
             Box(Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(28.dp))) {
                 Art(video, Modifier.fillMaxSize())

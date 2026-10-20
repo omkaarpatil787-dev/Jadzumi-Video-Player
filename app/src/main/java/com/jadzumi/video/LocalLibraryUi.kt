@@ -942,7 +942,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
         val isPhone = maxWidth < 600.dp
-        val bottomPad = if (isPhone) 88.dp else 24.dp
+        val bottomPad = if (isPhone) 88.dp else 96.dp
         PullToRefreshBox(
             isRefreshing = state.busy,
             onRefresh = { library.rescan() },
@@ -1326,7 +1326,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         } else {
             // Single-column stacked layout for portrait / split-screen so video rows have 100% width
             val isPhone = maxWidth < 600.dp
-            val bottomPad = if (isPhone) 88.dp else 24.dp
+            val bottomPad = if (isPhone) 88.dp else 96.dp
             LazyColumn(
                 Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(start = pad, end = pad, top = pad, bottom = bottomPad),
