@@ -486,7 +486,7 @@ fun StorageSummaryCard(
     defaultCategory: String = "All videos"
 ) {
     val add = rememberFolderPicker(library)
-    var category by rememberSaveable { mutableStateOf(defaultCategory) }
+    var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
     val allVideos = remember(state.videos) { state.videos.distinctBy { it.identity } }
 
     val seriesList = remember(state.videos, state.sidecars) { state.tvSeries }
@@ -495,11 +495,17 @@ fun StorageSummaryCard(
     val animeCount = remember(allVideos) { allVideos.count { it.name.contains("anime", true) || it.folder.contains("anime", true) } }
     val recentCount = remember(allVideos) { allVideos.size }
 
+    val candidateVideos = remember(allVideos, category) {
+        when (category) {
+            "Movies" -> allVideos.filter { it.episode == null }
+            "TV Shows" -> allVideos.filter { it.episode != null }
+            else -> allVideos
+        }
+    }
+
     val videos = remember(allVideos, query, category) {
-        allVideos.filter {
+        candidateVideos.filter {
             it.name.contains(query.trim(), true) && when (category) {
-                "Movies" -> it.episode == null
-                "TV Shows" -> it.episode != null
                 "Anime" -> it.name.contains("anime", true) || it.folder.contains("anime", true)
                 "Recently Added" -> true
                 else -> true
@@ -513,24 +519,26 @@ fun StorageSummaryCard(
         seriesList.filter { it.title.contains(query.trim(), true) }
     }
 
-    val continueWatching = remember(allVideos, playback.historyVersion) {
-        allVideos.filter { playback.savedPosition(it) > 0 }
+    val continueWatching = remember(candidateVideos, playback.historyVersion) {
+        candidateVideos.filter { playback.savedPosition(it) > 0 }
     }
 
-    val heroItems = remember(allVideos, continueWatching, seriesList) {
-        if (allVideos.isNotEmpty()) {
+    val heroItems = remember(candidateVideos, continueWatching, seriesList, category) {
+        if (candidateVideos.isNotEmpty()) {
             val topVideos = mutableListOf<LocalVideo>()
             topVideos.addAll(continueWatching.take(2))
 
-            // Milestone 5A: Spotlight TV Series "Up Next" episode
-            val upNextEpisodes = seriesList.mapNotNull { it.nextUnwatchedEpisode(playback) }
-            upNextEpisodes.forEach { ep ->
-                if (topVideos.size < 5 && topVideos.none { it.uri == ep.uri }) {
-                    topVideos.add(ep)
+            // TV Series "Up Next" spotlight only for TV Shows or All videos (NEVER in Movies tab)
+            if (category != "Movies") {
+                val upNextEpisodes = seriesList.mapNotNull { it.nextUnwatchedEpisode(playback) }
+                upNextEpisodes.forEach { ep ->
+                    if (topVideos.size < 5 && topVideos.none { it.uri == ep.uri }) {
+                        topVideos.add(ep)
+                    }
                 }
             }
 
-            allVideos.forEach { v ->
+            candidateVideos.forEach { v ->
                 if (topVideos.size < 5 && topVideos.none { it.uri == v.uri }) {
                     topVideos.add(v)
                 }
@@ -564,6 +572,8 @@ fun StorageSummaryCard(
                     }
                 )
             }
+        } else if (category == "TV Shows") {
+            emptyList()
         } else {
             previewVideos.take(3).map { pv ->
                 val durStr = timecode(pv.durationSeconds)
@@ -592,57 +602,61 @@ fun StorageSummaryCard(
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
                 // 1. Hero Movie Banner Pager
-                item {
-                    HeroMoviePager(items = heroItems)
+                if (heroItems.isNotEmpty()) {
+                    item {
+                        HeroMoviePager(items = heroItems)
+                    }
                 }
 
                 // 2. Continue Watching Section
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            if (continueWatching.size > 1) {
-                                Text(
-                                    "See all >",
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp,
-                                    modifier = Modifier.clickable { category = "Recently Added" }
-                                )
-                            }
-                        }
-                        val itemsToWatch = if (continueWatching.isNotEmpty()) continueWatching else allVideos.take(4)
-                        if (itemsToWatch.isNotEmpty()) {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                items(itemsToWatch, key = { it.uri }) { v ->
-                                    val pos = playback.savedPosition(v)
-                                    val dur = v.duration.takeIf { it > 0 } ?: 1000L
-                                    ContinueWatchingCard(
-                                        video = v,
-                                        previewFallback = null,
-                                        savedPos = pos,
-                                        durationMs = dur,
-                                        onClick = {
-                                            playback.open(v)
-                                            playback.fullscreen = true
-                                        }
+                val itemsToWatch = if (continueWatching.isNotEmpty()) continueWatching else candidateVideos.take(4)
+                if (itemsToWatch.isNotEmpty() || (category != "TV Shows" && category != "Movies")) {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                if (continueWatching.size > 1) {
+                                    Text(
+                                        "See all >",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp,
+                                        modifier = Modifier.clickable { category = "Recently Added" }
                                     )
                                 }
                             }
-                        } else {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                items(previewVideos, key = { it.id }) { pv ->
-                                    ContinueWatchingCard(
-                                        video = null,
-                                        previewFallback = pv,
-                                        savedPos = pv.positionSeconds * 1000,
-                                        durationMs = pv.durationSeconds * 1000,
-                                        onClick = preview
-                                    )
+                            if (itemsToWatch.isNotEmpty()) {
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    items(itemsToWatch, key = { it.uri }) { v ->
+                                        val pos = playback.savedPosition(v)
+                                        val dur = v.duration.takeIf { it > 0 } ?: 1000L
+                                        ContinueWatchingCard(
+                                            video = v,
+                                            previewFallback = null,
+                                            savedPos = pos,
+                                            durationMs = dur,
+                                            onClick = {
+                                                playback.open(v)
+                                                playback.fullscreen = true
+                                            }
+                                        )
+                                    }
+                                }
+                            } else if (category != "TV Shows" && category != "Movies") {
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    items(previewVideos, key = { it.id }) { pv ->
+                                        ContinueWatchingCard(
+                                            video = null,
+                                            previewFallback = pv,
+                                            savedPos = pv.positionSeconds * 1000,
+                                            durationMs = pv.durationSeconds * 1000,
+                                            onClick = preview
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -724,6 +738,45 @@ fun StorageSummaryCard(
                                 seriesList = filteredSeries,
                                 playback = playback,
                                 onSelect = { select("series:${it.id}") }
+                            )
+                        }
+                    }
+                } else if (category == "Movies") {
+                    val movieList = videos.filter { it.episode == null }
+                    if (movieList.isEmpty()) {
+                        item {
+                            LocalPanel {
+                                Icon(Icons.Rounded.Movie, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                Text("No Movies Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Text(
+                                    "Standalone feature films stored in your connected folders will appear here.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
+                        item {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Movies (${movieList.size})",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                            }
+                        }
+
+                        item {
+                            MovieCardGrid(
+                                movies = movieList,
+                                sidecars = state.sidecars,
+                                playback = playback,
+                                onSelect = { select(it.uri) }
                             )
                         }
                     }
@@ -993,6 +1046,182 @@ fun StorageSummaryCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+fun MovieCardGrid(
+    movies: List<LocalVideo>,
+    sidecars: Map<String, List<LocalSidecar>>,
+    playback: PlaybackController,
+    onSelect: (LocalVideo) -> Unit
+) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val columns = when {
+            maxWidth >= 1000.dp -> 4
+            maxWidth >= 680.dp -> 3
+            else -> 2
+        }
+        val rows = movies.chunked(columns)
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            rows.forEach { rowMovies ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    rowMovies.forEach { movie ->
+                        Box(Modifier.weight(1f)) {
+                            MovieSummaryCard(
+                                video = movie,
+                                sidecars = sidecars,
+                                playback = playback,
+                                onClick = { onSelect(movie) }
+                            )
+                        }
+                    }
+                    val missing = columns - rowMovies.size
+                    repeat(missing) {
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MovieSummaryCard(
+    video: LocalVideo,
+    sidecars: Map<String, List<LocalSidecar>>,
+    playback: PlaybackController,
+    onClick: () -> Unit
+) {
+    val context = LocalContext.current
+    val metadata = remember(video, sidecars) {
+        extractMovieMetadata(video, sidecars, context)
+    }
+    val savedPos = playback.savedPosition(video)
+    val dur = video.duration.takeIf { it > 0 } ?: 1000L
+    val isWatched = savedPos >= dur * 0.9f
+    val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
+    val progress = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        shadowElevation = 2.dp
+    ) {
+        Column {
+            // Poster / Backdrop Thumbnail Container (16:10 aspect ratio)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 10f)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                SidecarImage(
+                    uri = metadata.posterUri ?: metadata.backdropUri,
+                    fallbackVideo = video,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Top Quality / Codec Badge
+                val badge = when {
+                    video.width >= 3840 -> "4K UHD"
+                    video.width >= 1920 -> "1080p"
+                    video.name.contains("hevc", true) || video.name.contains("x265", true) -> "HEVC"
+                    else -> "HD"
+                }
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.75f),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                ) {
+                    Text(
+                        badge,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                // Top Left Rating Badge
+                metadata.rating?.let { rating ->
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color.Black.copy(alpha = 0.75f),
+                        modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Icon(Icons.Rounded.Star, null, Modifier.size(11.dp), tint = Color(0xFFF9AB00))
+                            Text(rating, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+                }
+
+                // Progress Line at bottom of thumbnail
+                if (progress > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth(progress)
+                            .height(3.5.dp)
+                            .background(if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
+                    )
+                }
+            }
+
+            // Info Section
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = metadata.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                val durStr = if (video.duration > 0) timecode(video.duration / 1000) else "Feature Film"
+                val sizeStr = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else ""
+                Text(
+                    text = listOfNotNull(metadata.year, durStr, sizeStr.takeIf { it.isNotEmpty() }).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(Modifier.height(2.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (isWatched) {
+                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(13.dp), tint = Color(0xFF1E8E3E))
+                        Text("Watched", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E8E3E))
+                    } else if (inProgress) {
+                        Text("Resume ${timecode(savedPos / 1000)}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                    } else {
+                        Text(metadata.genres.firstOrNull() ?: "Movie", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
+                    }
+                }
+            }
         }
     }
 }

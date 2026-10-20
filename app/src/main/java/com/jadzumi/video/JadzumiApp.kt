@@ -86,7 +86,7 @@ private val Dark = darkColorScheme(
 private data class Destination(val name: String, val icon: ImageVector)
 private val destinations = listOf(
     Destination("Home", Icons.Rounded.Home),
-    Destination("Videos", Icons.Rounded.Movie),
+    Destination("Movies", Icons.Rounded.Movie),
     Destination("TV Shows", Icons.Rounded.Tv),
     Destination("Folders", Icons.Rounded.Folder),
     Destination("Playlists", Icons.AutoMirrored.Rounded.QueueMusic),
@@ -328,11 +328,36 @@ private val destinations = listOf(
                                         } else {
                                             LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "TV Shows")
                                         }
-                                    } else if (localVideo != null) LocalDetailPage(localVideo, localState, playback)
-                                    else if (video != null) DetailPage(video)
+                                    } else if (localVideo != null) {
+                                        if (localVideo.episode == null) {
+                                            MovieDetailsPage(
+                                                video = localVideo,
+                                                state = localState,
+                                                playback = playback,
+                                                onBack = { selectedId = null }
+                                            )
+                                        } else {
+                                            val series = localState.tvSeries.find { it.seasons.values.any { eps -> eps.any { ep -> ep.identity == localVideo.identity } } }
+                                            if (series != null) {
+                                                TvShowDetailsPage(
+                                                    series = series,
+                                                    library = library,
+                                                    playback = playback,
+                                                    onBack = { selectedId = null }
+                                                )
+                                            } else {
+                                                MovieDetailsPage(
+                                                    video = localVideo,
+                                                    state = localState,
+                                                    playback = playback,
+                                                    onBack = { selectedId = null }
+                                                )
+                                            }
+                                        }
+                                    } else if (video != null) DetailPage(video)
                                     else when (current) {
                                         "Home", "Library" -> if (demo) LibraryPage(query, demo, { demo = it }) { selectedId = it } else LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true })
-                                        "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "Movies")
+                                        "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "Movies")
                                         "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "TV Shows")
                                         "Folders" -> LocalFoldersPage(localState, library, contentWidth >= 840.dp) { selectedId = it }
                                         "Settings" -> UnifiedSettingsAndPrivacyScreen(

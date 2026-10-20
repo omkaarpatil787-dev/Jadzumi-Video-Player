@@ -83,4 +83,30 @@ class LocalSeriesTest {
         assertEquals(listOf("Sci-Fi", "Action"), parsed.genres)
         assertEquals("Aethelgard Studios", parsed.studio)
     }
+
+    @Test
+    fun extractsMovieMetadataFromFilename() {
+        val movie = LocalVideo("uri_mov", "folder1", "Interstellar.2014.1080p.BluRay.x264.mkv", "video/x-matroska", 5_000_000_000, 100, 7200_000, 1920, 1080)
+        assertNull("Movie must not have episode info", movie.episode)
+
+        val meta = extractMovieMetadata(movie)
+        assertEquals("Interstellar", meta.title)
+        assertEquals("2014", meta.year)
+    }
+
+    @Test
+    fun isolatesTvEpisodesFromMovies() {
+        val ep = LocalVideo("uri_ep", "folder1", "Chrono.Shift.S01E03.1080p.mkv", "video/mp4", 1000, 100, 1400_000, 1920, 1080)
+        val mov = LocalVideo("uri_mov", "folder1", "Inception.2010.1080p.mkv", "video/mp4", 1000, 100, 1400_000, 1920, 1080)
+
+        assertNotNull(ep.episode)
+        assertNull(mov.episode)
+
+        val all = listOf(ep, mov)
+        val moviesOnly = all.filter { it.episode == null }
+        val tvOnly = all.filter { it.episode != null }
+
+        assertEquals(listOf(mov), moviesOnly)
+        assertEquals(listOf(ep), tvOnly)
+    }
 }

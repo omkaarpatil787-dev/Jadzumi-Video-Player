@@ -707,7 +707,7 @@ private fun EpisodeCard(
 }
 
 @Composable
-private fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
+internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
@@ -726,7 +726,7 @@ private fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
                 Text("Technical Inspector", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
-            Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
             TechRow("Container & Codec", "MKV / HEVC Main 10-bit")
             TechRow("Resolution", if (sampleVideo != null && sampleVideo.width > 0) "${sampleVideo.width} × ${sampleVideo.height} FHD" else "1920 × 1080 FHD")
@@ -754,7 +754,7 @@ private fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
 }
 
 @Composable
-private fun TechRow(label: String, value: String) {
+internal fun TechRow(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -766,7 +766,7 @@ private fun TechRow(label: String, value: String) {
 }
 
 @Composable
-private fun OfflineVerificationCard() {
+internal fun OfflineVerificationCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
