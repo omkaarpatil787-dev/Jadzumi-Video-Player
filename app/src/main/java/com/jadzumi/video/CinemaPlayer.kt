@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -164,32 +165,43 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         var dragY by remember(video.identity) { mutableFloatStateOf(defaultY) }
         var isDragging by remember(video.identity) { mutableStateOf(false) }
 
+        var wasInPip by remember { mutableStateOf(playback.inPip) }
+        var suppressAnim by remember { mutableStateOf(false) }
+        LaunchedEffect(playback.inPip) {
+            if (wasInPip && !playback.inPip) {
+                suppressAnim = true
+                kotlinx.coroutines.delay(350)
+                suppressAnim = false
+            }
+            wasInPip = playback.inPip
+        }
+
         val targetX = if (full) 0f else dragX.coerceIn(minDragX, maxDragX)
         val targetY = if (full) 0f else dragY.coerceIn(minDragY, maxDragY)
 
         val animX by animateFloatAsState(
             targetValue = targetX,
-            animationSpec = if (isDragging) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
+            animationSpec = if (isDragging || suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "animX"
         )
         val animY by animateFloatAsState(
             targetValue = targetY,
-            animationSpec = if (isDragging) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
+            animationSpec = if (isDragging || suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "animY"
         )
         val animW by animateDpAsState(
             targetValue = if (full) totalWidth else miniW,
-            animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
+            animationSpec = if (suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "animW"
         )
         val animH by animateDpAsState(
             targetValue = if (full) totalHeight else miniH,
-            animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
+            animationSpec = if (suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "animH"
         )
         val cornerRadius by animateDpAsState(
             targetValue = if (full) 0.dp else 22.dp,
-            animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
+            animationSpec = if (suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
             label = "cornerRadius"
         )
 
@@ -224,7 +236,13 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                 }
         ) {
             AndroidView(
-                factory = { ctx -> PlayerView(ctx).apply { useController = false; setKeepContentOnPlayerReset(true) } },
+                factory = { ctx ->
+                    val view = android.view.LayoutInflater.from(ctx).inflate(R.layout.player_view_texture, null, false) as PlayerView
+                    view.apply {
+                        useController = false
+                        setKeepContentOnPlayerReset(true)
+                    }
+                },
                 modifier = Modifier.fillMaxSize().onGloballyPositioned {
                     val b = it.boundsInWindow()
                     activity.videoBounds = Rect(b.left.roundToInt(), b.top.roundToInt(), b.right.roundToInt(), b.bottom.roundToInt())
@@ -950,14 +968,18 @@ private val TimelineAccent = Color(0xFF8B9DFF)
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.weight(1f, fill = false)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.wrapContentWidth()
+        ) {
             Icon(icon, null, tint = Color.White.copy(alpha = 0.85f), modifier = Modifier.size(20.dp))
             Text(label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
         }
         if (value.isNotEmpty()) {
+            Spacer(modifier = Modifier.width(16.dp))
             Text(
                 value,
                 color = Color.White.copy(alpha = 0.72f),
@@ -965,7 +987,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                 fontWeight = FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 12.dp)
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(1f)
             )
         }
     }

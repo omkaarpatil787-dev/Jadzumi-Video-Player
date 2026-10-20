@@ -83,10 +83,11 @@ private val Dark = darkColorScheme(
 
 private data class Destination(val name: String, val icon: ImageVector)
 private val destinations = listOf(
-    Destination("Library", Icons.Rounded.VideoLibrary),
-    Destination("Folders", Icons.Rounded.FolderOpen),
+    Destination("Home", Icons.Rounded.Home),
+    Destination("Videos", Icons.Rounded.Movie),
+    Destination("TV Shows", Icons.Rounded.Tv),
+    Destination("Folders", Icons.Rounded.Folder),
     Destination("Playlists", Icons.AutoMirrored.Rounded.QueueMusic),
-    Destination("Player", Icons.Rounded.PlayCircle),
     Destination("Settings", Icons.Rounded.Settings)
 )
 
@@ -142,7 +143,7 @@ private val destinations = listOf(
     var themeBloomEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("themeBloom", true)) }
     var firstLaunchCardShown by rememberSaveable { mutableStateOf(prefs.getBoolean("pad5_welcome_done", false)) }
 
-    var route by rememberSaveable { mutableStateOf("Library") }
+    var route by rememberSaveable { mutableStateOf("Home") }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var demo by rememberSaveable { mutableStateOf(false) }
     val library = remember { LocalLibrary.get(context) }
@@ -190,8 +191,8 @@ private val destinations = listOf(
     MaterialTheme(colorScheme = colors, shapes = Shapes(medium = RoundedCornerShape(24.dp), large = RoundedCornerShape(28.dp))) {
         Box(Modifier.fillMaxSize()) {
             Surface(Modifier.fillMaxSize(), color = colors.background) {
-                BackHandler(selectedId != null || route != "Library") {
-                    if (selectedId != null) selectedId = null else route = "Library"
+                BackHandler(selectedId != null || (route != "Home" && route != "Library")) {
+                    if (selectedId != null) selectedId = null else route = "Home"
                 }
                 BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
                     val showRail = maxWidth >= 640.dp
@@ -203,83 +204,75 @@ private val destinations = listOf(
 
                             Column(Modifier.fillMaxSize()) {
                                 Row(
-                                    Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 10.dp),
+                                    Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                                 ) {
                                     if (selectedId != null) {
                                         IconButton(onClick = { selectedId = null }) {
                                             Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library")
                                         }
-                                    }
-                                    if (route == "Library" && selectedId == null) {
-                                        OutlinedTextField(
-                                            value = query,
-                                            onValueChange = { query = it },
-                                            modifier = Modifier.weight(1f).widthIn(max = 520.dp),
-                                            placeholder = { Text("Search your video library", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                                            singleLine = true,
-                                            shape = RoundedCornerShape(32.dp),
-                                            leadingIcon = { Icon(Icons.Rounded.Search, null) }
-                                        )
-                                    } else {
                                         Text(
-                                            if (selectedId != null) "Library / Details" else route,
+                                            "Library / Details",
                                             Modifier.weight(1f),
                                             style = MaterialTheme.typography.titleLarge,
                                             fontWeight = FontWeight.Bold,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
+                                    } else if (route == "Home" || route == "Library") {
+                                        Column(Modifier.weight(1f)) {
+                                            val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                                            val greeting = when (hour) { in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; in 17..21 -> "Good evening"; else -> "Good night" }
+                                            Text(greeting, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                            Text("Your movies. Your space.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    } else {
+                                        Text(
+                                            route,
+                                            Modifier.weight(1f),
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
                                     }
+
+                                    OutlinedTextField(
+                                        value = query,
+                                        onValueChange = { query = it },
+                                        modifier = Modifier.widthIn(min = 220.dp, max = 340.dp).height(50.dp),
+                                        placeholder = { Text("Search videos, shows...", maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 13.sp) },
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(25.dp),
+                                        leadingIcon = { Icon(Icons.Rounded.Search, null, Modifier.size(20.dp)) },
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                                        )
+                                    )
 
                                     IconButton(
                                         onClick = { library.rescan() },
                                         enabled = !localState.busy && localState.folders.isNotEmpty()
                                     ) {
-                                        Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
+                                        if (localState.busy) {
+                                            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                                        } else {
+                                            Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
+                                        }
                                     }
 
-                                    if (contentWidth >= 520.dp) {
-                                        AssistChip(
-                                            onClick = { route = "Settings"; selectedId = null },
-                                            label = { Text("Privacy & About", maxLines = 1, softWrap = false) },
-                                            leadingIcon = { Icon(Icons.Rounded.VerifiedUser, null, Modifier.size(16.dp)) }
-                                        )
-                                    }
-                                }
-
-                                AnimatedVisibility(visible = !firstLaunchCardShown && route == "Library") {
                                     Surface(
-                                        Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 6.dp),
-                                        shape = RoundedCornerShape(24.dp),
-                                        color = MaterialTheme.colorScheme.primaryContainer
+                                        onClick = { route = "Settings"; selectedId = null },
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        modifier = Modifier.size(40.dp)
                                     ) {
-                                        Row(
-                                            Modifier.padding(18.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(14.dp)
-                                        ) {
-                                            JadzumiLogo(size = 44.dp)
-                                            Column(Modifier.weight(1f)) {
-                                                Text(
-                                                    "Welcome to Jadzumi Player",
-                                                    fontWeight = FontWeight.Bold,
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                                )
-                                                Text(
-                                                    "16:10 Display Detected · Hardware MediaCodec & Quad-Speaker Stereo Downmix Ready · 100% Offline",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
-                                                )
-                                            }
-                                            TextButton(onClick = {
-                                                firstLaunchCardShown = true
-                                                prefs.edit { putBoolean("pad5_welcome_done", true) }
-                                            }) {
-                                                Text("Got it", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
-                                            }
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Rounded.Person, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                                         }
                                     }
                                 }
@@ -295,7 +288,9 @@ private val destinations = listOf(
                                     if (localVideo != null) LocalDetailPage(localVideo, localState, playback)
                                     else if (video != null) DetailPage(video)
                                     else when (current) {
-                                        "Library" -> if (demo) LibraryPage(query, demo, { demo = it }) { selectedId = it } else LocalLibraryPage(localState, library, query, { selectedId = it }, { demo = true })
+                                        "Home", "Library" -> if (demo) LibraryPage(query, demo, { demo = it }) { selectedId = it } else LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true })
+                                        "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "Movies")
+                                        "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, { demo = true }, defaultCategory = "TV Shows")
                                         "Folders" -> LocalFoldersPage(localState, library, contentWidth >= 840.dp) { selectedId = it }
                                         "Settings" -> UnifiedSettingsAndPrivacyScreen(
                                             theme = theme,
@@ -359,32 +354,63 @@ private val destinations = listOf(
     }
 }
 
-@Composable private fun AppRail(route: String, darkSurface: Boolean, navigate: (String)->Unit) {
-    Surface(color = MaterialTheme.colorScheme.surface) {
-        Column(Modifier.width(92.dp).fillMaxHeight().padding(vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(Modifier.clickable { navigate("Settings") }) {
-                JadzumiLogo(size = 46.dp, darkSurface = darkSurface)
+@Composable private fun AppRail(route: String, darkSurface: Boolean, navigate: (String) -> Unit) {
+    Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.width(96.dp).fillMaxHeight()) {
+        Column(Modifier.fillMaxSize().padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clickable { navigate("Home") }.padding(bottom = 16.dp)
+            ) {
+                JadzumiLogo(size = 42.dp, darkSurface = darkSurface)
+                Spacer(Modifier.height(4.dp))
+                Text("Jadzumi", fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
+                Text("Video", fontWeight = FontWeight.Medium, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             }
-            Text("Jadzumi", Modifier.padding(top = 8.dp, bottom = 24.dp), fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1)
-            destinations.take(4).forEach { d ->
+            destinations.take(5).forEach { d ->
+                val isSelected = route == d.name || (d.name == "Home" && route == "Library")
                 NavigationRailItem(
-                    selected = route == d.name,
+                    selected = isSelected,
                     onClick = { navigate(d.name) },
                     icon = { Icon(d.icon, null) },
-                    label = { Text(d.name, fontSize = 11.sp, maxLines = 1) },
-                    modifier = Modifier.padding(bottom = 10.dp)
+                    label = { Text(d.name, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) },
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    colors = NavigationRailItemDefaults.colors(
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 )
             }
             Spacer(Modifier.weight(1f))
+            val isSettingsSelected = route == "Settings"
             NavigationRailItem(
-                selected = route == "Settings",
+                selected = isSettingsSelected,
                 onClick = { navigate("Settings") },
                 icon = { Icon(Icons.Rounded.Settings, null) },
-                label = { Text("Settings", fontSize = 11.sp, maxLines = 1) }
+                label = { Text("Settings", fontSize = 11.sp, fontWeight = if (isSettingsSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) },
+                colors = NavigationRailItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             )
         }
     }
 }
+
+private data class SettingsCategory(val id: String, val label: String, val icon: ImageVector)
+private val settingsCategories = listOf(
+    SettingsCategory("Video", "Video", Icons.Rounded.PlayCircle),
+    SettingsCategory("Audio", "Audio", Icons.Rounded.VolumeUp),
+    SettingsCategory("Subtitles", "Subtitles", Icons.Rounded.Subtitles),
+    SettingsCategory("Display", "Display", Icons.Rounded.Palette),
+    SettingsCategory("Gestures", "Gestures", Icons.Rounded.TouchApp),
+    SettingsCategory("Privacy", "Privacy & About", Icons.Rounded.Security)
+)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun UnifiedSettingsAndPrivacyScreen(
@@ -399,69 +425,18 @@ private val destinations = listOf(
     playback: PlaybackController,
     onNavigateFolders: () -> Unit
 ) {
-    var topTab by rememberSaveable { mutableStateOf("Privacy & About") }
+    var activeCategory by rememberSaveable { mutableStateOf("Privacy") }
     var statusNotice by remember { mutableStateOf<String?>(null) }
     val addFolder = rememberFolderPicker(library)
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val twoPane = maxWidth >= 840.dp
-        val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
-        val fourColThemes = maxWidth >= 680.dp
+        val twoPane = maxWidth >= 760.dp
+        val pad = if (maxWidth >= 720.dp) 24.dp else 16.dp
 
         Column(Modifier.fillMaxSize().padding(horizontal = pad)) {
-            // Adaptive Header: Never squeezes "Fully Local & Private" into a narrow vertical column
-            FlowRow(
-                Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("Privacy & About", "Appearance & Themes", "Playback & Audio").forEach { tabName ->
-                        FilterChip(
-                            selected = topTab == tabName,
-                            onClick = { topTab = tabName },
-                            label = {
-                                Text(
-                                    tabName,
-                                    fontWeight = if (topTab == tabName) FontWeight.Bold else FontWeight.Medium,
-                                    maxLines = 1,
-                                    softWrap = false
-                                )
-                            },
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                    }
-                }
-                Surface(
-                    color = Color(0xFFECFDF5),
-                    border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
-                    shape = RoundedCornerShape(999.dp),
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                ) {
-                    Row(
-                        Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF10B981)))
-                        Text(
-                            "Fully Local & Private",
-                            color = Color(0xFF047857),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                    }
-                }
-            }
-
             statusNotice?.let { msg ->
                 Surface(
-                    Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.primaryContainer
                 ) {
@@ -482,147 +457,322 @@ private val destinations = listOf(
                 }
             }
 
-            when (topTab) {
-                "Privacy & About" -> {
-                    if (twoPane) {
-                        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                            LazyColumn(
-                                Modifier.weight(0.57f).fillMaxHeight(),
-                                contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
-                                verticalArrangement = Arrangement.spacedBy(18.dp)
+            if (!twoPane) {
+                LazyRow(
+                    Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(settingsCategories) { cat ->
+                        FilterChip(
+                            selected = activeCategory == cat.id,
+                            onClick = { activeCategory = cat.id },
+                            leadingIcon = { Icon(cat.icon, null, Modifier.size(18.dp)) },
+                            label = { Text(cat.label, fontWeight = if (activeCategory == cat.id) FontWeight.Bold else FontWeight.Medium, maxLines = 1, softWrap = false) },
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    }
+                }
+            }
+
+            Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                if (twoPane) {
+                    Column(
+                        Modifier.width(210.dp).fillMaxHeight().padding(vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        settingsCategories.forEach { cat ->
+                            val isSelected = activeCategory == cat.id
+                            Surface(
+                                onClick = { activeCategory = cat.id },
+                                shape = RoundedCornerShape(16.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                item { PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it } }
+                                Row(
+                                    Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        cat.icon,
+                                        null,
+                                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        cat.label,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                        fontSize = 14.sp
+                                    )
+                                }
                             }
-                            LazyColumn(
-                                Modifier.weight(0.43f).fillMaxHeight(),
-                                contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
-                                verticalArrangement = Arrangement.spacedBy(18.dp)
-                            ) {
-                                item { AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED") }
-                            }
-                        }
-                    } else {
-                        // Single-column layout for portrait / split-screen with balanced spacing
-                        LazyColumn(
-                            Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
-                            verticalArrangement = Arrangement.spacedBy(18.dp)
-                        ) {
-                            item { PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it } }
-                            item { AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED") }
                         }
                     }
                 }
 
-                "Appearance & Themes" -> {
-                    val themeItems = listOf(
-                        Triple("Light", "Airy Pale-Blue", Icons.Rounded.LightMode),
-                        Triple("Dark", "Night Slate", Icons.Rounded.DarkMode),
-                        Triple("AMOLED", "Pure Black", Icons.Rounded.Brightness1),
-                        Triple("System", "Auto Sync", Icons.Rounded.Devices)
-                    )
-                    LazyColumn(
-                        Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
-                        verticalArrangement = Arrangement.spacedBy(18.dp)
-                    ) {
-                        item {
-                            Panel {
-                                Text("Base Theme & Display Mode", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                Text(
-                                    "Switch between airy light, deep dark slate, or 0% pixel-draw AMOLED black.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                LazyColumn(
+                    Modifier.weight(1f).fillMaxHeight(),
+                    contentPadding = PaddingValues(top = 10.dp, bottom = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
+                    item {
+                        Text(
+                            when (activeCategory) {
+                                "Video" -> "Video Settings"
+                                "Audio" -> "Audio Settings"
+                                "Subtitles" -> "Subtitle Settings"
+                                "Display" -> "Display & Appearance"
+                                "Gestures" -> "Gestures & Controls"
+                                else -> "Privacy & About"
+                            },
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    when (activeCategory) {
+                        "Video" -> {
+                            item {
+                                Panel {
+                                    Text("Playback & Decoding", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Configure video decoding pipeline and screen scaling.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Video Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Snapdragon 860 hardware decoder with NextLib fallback", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("Auto (Recommended) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Hardware Acceleration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Uses Qualcomm Adreno GPU for 60/120 FPS high-efficiency playback", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = true, onCheckedChange = {})
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Video Scaling Mode", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Default aspect ratio preservation on 16:10 display", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("Fit (Keep aspect ratio) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Brightness Boost", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Enhance visibility and dynamic range in dark video scenes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = false, onCheckedChange = {})
+                                    }
+                                }
+                            }
+                        }
+
+                        "Audio" -> {
+                            item {
+                                Panel {
+                                    Text("Audio Output & Surround", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("NextLib Media3 FFmpeg decoder for Dolby Atmos / 5.1 / 7.1 surround tracks.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Audio Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Bundled FFmpeg: EAC-3, AC-3, TrueHD, DTS-HD, FLAC, AAC", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("Auto (NextLib FFmpeg) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Downmix to Stereo", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Optimized for Xiaomi Pad 5 quad-speaker array and headphones", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = true, onCheckedChange = {})
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Screen-Off Background Audio", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Continue playback when turning off screen or locking device", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
+                                    }
+                                }
+                            }
+                            item {
+                                Panel {
+                                    Text("Active Stream Format", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Spacer(Modifier.height(8.dp))
+                                    val currentTrack = playback.audioTracks.firstOrNull()
+                                    val audioLabel = if (currentTrack != null) {
+                                        "${formatAudioCodec(currentTrack.mimeType)} · ${formatChannelLayout(currentTrack.channelCount)}"
+                                    } else "Dolby Atmos / 5.1 / 7.1 / AAC Decoder Ready"
+                                    Surface(
+                                        shape = RoundedCornerShape(14.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                    ) {
+                                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            Icon(Icons.Rounded.Headphones, null, tint = MaterialTheme.colorScheme.primary)
+                                            Text(audioLabel, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        "Subtitles" -> {
+                            item {
+                                Panel {
+                                    Text("Subtitle Appearance", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Format local SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Default Subtitle Track", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Auto-select embedded subtitle matching system language", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("Auto (Recommended) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Text Size", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Adjust font size on 16:10 high-DPI display", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("100% ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Background Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Translucent letterbox background behind subtitle lines", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("Semi-transparent ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+                            }
+                        }
+
+                        "Display" -> {
+                            item {
+                                val themeItems = listOf(
+                                    Triple("Light", "Airy Pale-Blue", Icons.Rounded.LightMode),
+                                    Triple("Dark", "Night Slate", Icons.Rounded.DarkMode),
+                                    Triple("AMOLED", "Pure Black", Icons.Rounded.Brightness1)
                                 )
-                                if (fourColThemes) {
+                                Panel {
+                                    Text("Appearance Theme", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Select appearance mode for ambient viewing.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 16.dp))
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                         themeItems.forEach { (mode, subtitle, icon) ->
                                             ThemeOptionCard(mode, subtitle, icon, theme == mode, { onTheme(mode) }, Modifier.weight(1f))
                                         }
                                     }
-                                } else {
-                                    // 2x2 grid on narrower portrait/split-screen widths so cards never squash
-                                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                        themeItems.chunked(2).forEach { pair ->
-                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                                pair.forEach { (mode, subtitle, icon) ->
-                                                    ThemeOptionCard(mode, subtitle, icon, theme == mode, { onTheme(mode) }, Modifier.weight(1f))
-                                                }
+                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Corner Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Rounded card geometry (24dp)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("Rounded (Default) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Theme Bloom Circular Reveal (580ms)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Smooth radial wave transition when switching themes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
+                                    }
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Reduced Motion", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Disable animations for instant screen transitions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = reduced, onCheckedChange = onReduced)
+                                    }
+                                }
+                            }
+                        }
+
+                        "Gestures" -> {
+                            item {
+                                Panel {
+                                    Text("Player Gestures & Seeking", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Configure double-tap seeking and edge swipe controls.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Text("Double-Tap Seek Interval", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(vertical = 8.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        listOf(5, 10, 15, 30).forEach { sec ->
+                                            FilterChip(
+                                                selected = playback.seekIncrementSeconds == sec,
+                                                onClick = { playback.updateSeekSeconds(sec) },
+                                                label = { Text("$sec seconds", maxLines = 1, softWrap = false) }
+                                            )
+                                        }
+                                    }
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Swipe Up/Down Gestures", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Left side controls brightness; right side controls volume with deadzone protection", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = playback.swipeGesturesEnabled, onCheckedChange = { playback.updateSwipeGestures(it) })
+                                    }
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Long-Press 2x Speed Up", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Press and hold player surface to temporarily speed up to 2.0x", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = true, onCheckedChange = {})
+                                    }
+                                }
+                            }
+                        }
+
+                        else -> {
+                            // "Privacy & About"
+                            item {
+                                Surface(
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        Text("Your movies. Your space.", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                        Text(
+                                            "Jadzumi Video keeps your video library, playback history, and settings strictly on your tablet. No telemetry, no cloud sync, 100% offline-first.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
+                                        )
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Surface(shape = RoundedCornerShape(999.dp), color = Color(0xFFECFDF5), border = BorderStroke(1.dp, Color(0xFFA7F3D0))) {
+                                                Text("Local-first", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                                            }
+                                            Surface(shape = RoundedCornerShape(999.dp), color = Color(0xFFEFF6FF), border = BorderStroke(1.dp, Color(0xFFBFDBFE))) {
+                                                Text("No tracking", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1D4ED8))
+                                            }
+                                            Surface(shape = RoundedCornerShape(999.dp), color = Color(0xFFF5F3FF), border = BorderStroke(1.dp, Color(0xFFDDD6FE))) {
+                                                Text("You're in control", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6D28D9))
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                        item {
-                            Panel {
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                        Text("Theme Bloom Circular Reveal (580ms)", fontWeight = FontWeight.Bold)
-                                        Text("Smooth radial wave transition when switching between themes.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
-                                }
-                                HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                        Text("Reduced Motion", fontWeight = FontWeight.Bold)
-                                        Text("Disable screen fades and spring animations for instant transitions.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    Switch(checked = reduced, onCheckedChange = onReduced, modifier = Modifier.semantics { contentDescription = "Reduced motion" })
-                                }
+                            item {
+                                PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it }
                             }
-                        }
-                    }
-                }
-
-                "Playback & Audio" -> {
-                    LazyColumn(
-                        Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
-                        verticalArrangement = Arrangement.spacedBy(18.dp)
-                    ) {
-                        item {
-                            Panel {
-                                Text("Double-Tap Seek Interval", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                Text(
-                                    "Choose how many seconds to jump when double-tapping in the player.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-                                )
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    listOf(5, 10, 15, 30).forEach { sec ->
-                                        FilterChip(
-                                            selected = playback.seekIncrementSeconds == sec,
-                                            onClick = { playback.updateSeekSeconds(sec) },
-                                            label = { Text("$sec seconds", maxLines = 1, softWrap = false) }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        item {
-                            Panel {
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                        Text("Vertical Swipe HUD Gestures", fontWeight = FontWeight.Bold)
-                                        Text("Left vertical swipe controls brightness; right controls volume.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    Switch(checked = playback.swipeGesturesEnabled, onCheckedChange = { playback.updateSwipeGestures(it) })
-                                }
-                                HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                        Text("Screen-Off Background Audio", fontWeight = FontWeight.Bold)
-                                        Text("Keep playing audio with lock-screen controls when screen is off.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
-                                }
+                            item {
+                                AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED")
                             }
                         }
                     }

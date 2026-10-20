@@ -4,16 +4,20 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.os.Build
+import android.os.Environment
+import android.os.StatFs
 import android.text.format.Formatter
 import android.util.LruCache
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -24,9 +28,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -86,24 +94,386 @@ import kotlinx.coroutines.withContext
     }
 }
 
+@Composable
+private fun HeroMovieBanner(
+    video: LocalVideo?,
+    fallbackTitle: String = "Interstellar",
+    fallbackDuration: String = "2h 49m",
+    onPlay: () -> Unit,
+    onInfo: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().height(260.dp),
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Black)
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            if (video != null) {
+                LocalThumbnail(video, Modifier.fillMaxSize())
+            } else {
+                Image(
+                    painter = painterResource(R.drawable.hero),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.2f),
+                            Color.Black.copy(alpha = 0.55f),
+                            Color.Black.copy(alpha = 0.94f)
+                        )
+                    )
+                )
+            )
+            Column(
+                Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                val title = video?.title ?: fallbackTitle
+                val durStr = if (video != null && video.duration > 0) timecode(video.duration / 1000) else fallbackDuration
+                Text(
+                    title,
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "2024 · $durStr · 4K · Dolby Atmos",
+                    color = Color.White.copy(alpha = 0.78f),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(Modifier.height(14.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = onPlay,
+                        shape = CircleShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
+                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                    ) {
+                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    }
+                    Surface(
+                        onClick = onPlay,
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.18f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                        modifier = Modifier.size(42.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                    Surface(
+                        onClick = onInfo,
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.18f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                        modifier = Modifier.size(42.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.Info, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                }
+            }
+            Row(
+                Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(Modifier.size(width = 20.dp, height = 4.dp).clip(CircleShape).background(Color.White))
+                Box(Modifier.size(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.45f)))
+                Box(Modifier.size(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.45f)))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContinueWatchingCard(
+    video: LocalVideo?,
+    previewFallback: PreviewVideo?,
+    savedPos: Long,
+    durationMs: Long,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.width(240.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column {
+            Box(Modifier.fillMaxWidth().height(130.dp)) {
+                if (video != null) {
+                    LocalThumbnail(video, Modifier.fillMaxSize())
+                } else {
+                    val res = when (previewFallback?.artwork) {
+                        "anime" -> R.drawable.anime
+                        "cosmos" -> R.drawable.cosmos
+                        else -> R.drawable.hero
+                    }
+                    Image(
+                        painter = painterResource(res),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                Box(
+                    Modifier.fillMaxSize().background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))
+                        )
+                    )
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.55f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                    modifier = Modifier.align(Alignment.Center).size(38.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    }
+                }
+            }
+            Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp)) {
+                val title = video?.title ?: previewFallback?.title ?: "Video"
+                Text(
+                    title,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(8.dp))
+                val durSafe = if (durationMs > 0) durationMs else 1L
+                val progress = (savedPos.toDouble() / durSafe).toFloat().coerceIn(0f, 1f)
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val posSec = savedPos / 1000
+                    val durSec = durationMs / 1000
+                    Text(
+                        "${timecode(posSec)} / ${timecode(durSec)}",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Icon(
+                        Icons.Rounded.ChevronRight,
+                        null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryQuickCard(
+    title: String,
+    countText: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+        )
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(34.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            icon,
+                            null,
+                            tint = if (selected) Color.White else MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                Column {
+                    Text(title, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, maxLines = 1)
+                    Text(countText, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                }
+            }
+            Icon(
+                Icons.Rounded.ChevronRight,
+                null,
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun StorageSummaryCard(
+    videoCount: Int,
+    totalIndexedBytes: Long,
+    onAddFolder: () -> Unit
+) {
+    val context = LocalContext.current
+    val stat = remember { runCatching { android.os.StatFs(android.os.Environment.getDataDirectory().path) }.getOrNull() }
+    val totalDeviceBytes = stat?.totalBytes ?: (256L * 1024 * 1024 * 1024)
+    val freeDeviceBytes = stat?.availableBytes ?: (178L * 1024 * 1024 * 1024)
+    val usedDeviceBytes = (totalDeviceBytes - freeDeviceBytes).coerceAtLeast(0)
+    val storageRatio = (usedDeviceBytes.toDouble() / totalDeviceBytes.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f)
+
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                        }
+                    }
+                    Column {
+                        Text("Internal Storage", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(
+                            "$videoCount videos · ${Formatter.formatFileSize(context, totalIndexedBytes)}",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Button(
+                    onClick = onAddFolder,
+                    shape = RoundedCornerShape(20.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Add folder", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            LinearProgressIndicator(
+                progress = { storageRatio },
+                modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Storage: ${Formatter.formatFileSize(context, freeDeviceBytes)} free of ${Formatter.formatFileSize(context, totalDeviceBytes)}",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable fun LocalLibraryPage(
     state: LocalLibraryState,
     library: LocalLibrary,
+    playback: PlaybackController,
     query: String,
     select: (String) -> Unit,
-    preview: () -> Unit
+    preview: () -> Unit,
+    defaultCategory: String = "All videos"
 ) {
     val add = rememberFolderPicker(library)
-    var category by rememberSaveable { mutableStateOf("All videos") }
-    val videos = remember(state.videos, query, category) {
-        state.videos.distinctBy { it.identity }.filter {
+    var category by rememberSaveable { mutableStateOf(defaultCategory) }
+    val allVideos = remember(state.videos) { state.videos.distinctBy { it.identity } }
+
+    val moviesCount = remember(allVideos) { allVideos.count { it.episode == null } }
+    val showsCount = remember(allVideos) { allVideos.count { it.episode != null } }
+    val animeCount = remember(allVideos) { allVideos.count { it.name.contains("anime", true) || it.folder.contains("anime", true) } }
+    val recentCount = remember(allVideos) { allVideos.size }
+
+    val videos = remember(allVideos, query, category) {
+        allVideos.filter {
             it.name.contains(query.trim(), true) && when (category) {
-                "Episodes" -> it.episode != null
-                "Other videos" -> it.episode == null
+                "Movies" -> it.episode == null
+                "TV Shows" -> it.episode != null
+                "Anime" -> it.name.contains("anime", true) || it.folder.contains("anime", true)
+                "Recently Added" -> true
                 else -> true
             }
+        }.let { list ->
+            if (category == "Recently Added") list.sortedByDescending { it.modified } else list
         }
+    }
+
+    val continueWatching = remember(allVideos, playback.historyVersion) {
+        allVideos.filter { playback.savedPosition(it) > 0 }
+    }
+
+    val featuredVideo = remember(continueWatching, allVideos) {
+        continueWatching.firstOrNull() ?: allVideos.firstOrNull()
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -116,70 +486,175 @@ import kotlinx.coroutines.withContext
             LazyColumn(
                 Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(pad),
-                verticalArrangement = Arrangement.spacedBy(18.dp)
+                verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
+                // 1. Hero Movie Banner
                 item {
-                    Text("Your cinema, at home.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                    Text(
-                        "${state.videos.distinctBy { it.identity }.size} local videos · ${state.folders.size} folders",
-                        Modifier.padding(top = 6.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                item {
-                    LocalPanel {
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Button(onClick = add, enabled = !state.busy) {
-                                Icon(Icons.Rounded.CreateNewFolder, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Add folder", maxLines = 1, softWrap = false)
+                    HeroMovieBanner(
+                        video = featuredVideo,
+                        fallbackTitle = "Interstellar",
+                        fallbackDuration = "2h 49m",
+                        onPlay = {
+                            if (featuredVideo != null) {
+                                playback.open(featuredVideo)
+                                playback.fullscreen = true
+                            } else {
+                                preview()
                             }
-                            if (state.busy) {
-                                TextButton(onClick = library::cancel) { Text("Cancel", maxLines = 1, softWrap = false) }
+                        },
+                        onInfo = {
+                            if (featuredVideo != null) {
+                                select(featuredVideo.uri)
+                            } else {
+                                preview()
                             }
                         }
-                        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                        state.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-                        Text(
-                            "Pull down to refresh or tap the top sync icon to discover new videos. Files remain in place.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // 2. Continue Watching Section
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            if (continueWatching.size > 1) {
+                                Text(
+                                    "See all >",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.clickable { category = "Recently Added" }
+                                )
+                            }
+                        }
+                        val itemsToWatch = if (continueWatching.isNotEmpty()) continueWatching else allVideos.take(4)
+                        if (itemsToWatch.isNotEmpty()) {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                items(itemsToWatch, key = { it.uri }) { v ->
+                                    val pos = playback.savedPosition(v)
+                                    val dur = v.duration.takeIf { it > 0 } ?: 1000L
+                                    ContinueWatchingCard(
+                                        video = v,
+                                        previewFallback = null,
+                                        savedPos = pos,
+                                        durationMs = dur,
+                                        onClick = {
+                                            playback.open(v)
+                                            playback.fullscreen = true
+                                        }
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                items(previewVideos, key = { it.id }) { pv ->
+                                    ContinueWatchingCard(
+                                        video = null,
+                                        previewFallback = pv,
+                                        savedPos = pv.positionSeconds * 1000,
+                                        durationMs = pv.durationSeconds * 1000,
+                                        onClick = preview
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 3. Category Quick Filter Cards Row
+                item {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CategoryQuickCard(
+                            title = "Recently Added",
+                            countText = "$recentCount videos",
+                            icon = Icons.Rounded.AccessTime,
+                            selected = category == "Recently Added",
+                            onClick = { category = if (category == "Recently Added") "All videos" else "Recently Added" },
+                            modifier = Modifier.weight(1f)
+                        )
+                        CategoryQuickCard(
+                            title = "Movies",
+                            countText = "$moviesCount videos",
+                            icon = Icons.Rounded.Movie,
+                            selected = category == "Movies",
+                            onClick = { category = if (category == "Movies") "All videos" else "Movies" },
+                            modifier = Modifier.weight(1f)
+                        )
+                        CategoryQuickCard(
+                            title = "TV Shows",
+                            countText = "$showsCount shows",
+                            icon = Icons.Rounded.Tv,
+                            selected = category == "TV Shows",
+                            onClick = { category = if (category == "TV Shows") "All videos" else "TV Shows" },
+                            modifier = Modifier.weight(1f)
+                        )
+                        CategoryQuickCard(
+                            title = "Anime",
+                            countText = "$animeCount shows",
+                            icon = Icons.Rounded.Bolt,
+                            selected = category == "Anime",
+                            onClick = { category = if (category == "Anime") "All videos" else "Anime" },
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
-                item {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(listOf("All videos", "Episodes", "Other videos")) { name ->
-                            FilterChip(
-                                selected = category == name,
-                                onClick = { category = name },
-                                label = { Text(name, maxLines = 1, softWrap = false) }
-                            )
-                        }
-                    }
-                }
+
+                // 4. Videos List / Empty State
                 if (videos.isEmpty()) {
                     item {
                         LocalPanel {
-                            Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
                             Text(
-                                if (state.videos.isEmpty()) "Make room for your stories" else "No matching videos",
+                                if (allVideos.isEmpty()) "Make room for your stories" else "No matching videos",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                if (state.folders.isEmpty()) "Add your first folder to build your offline library."
-                                else "Pull down to refresh or try another search."
+                                if (state.folders.isEmpty()) "Connect a folder using Android's file picker to populate your library."
+                                else "Pull down to refresh or tap another category.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            if (state.folders.isEmpty()) {
+                                Spacer(Modifier.height(4.dp))
+                                Button(onClick = add, shape = RoundedCornerShape(20.dp)) {
+                                    Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Add your first folder")
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                if (category == "All videos") "All Indexed Videos (${videos.size})" else "$category (${videos.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (category != "All videos") {
+                                TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                            }
                         }
                     }
                 }
+
                 items(videos, key = { it.uri }) { video ->
                     LocalVideoCard(video) { select(video.uri) }
                 }
+
                 item {
                     TextButton(onClick = preview) { Text("View original design samples") }
                 }
@@ -213,7 +688,11 @@ import kotlinx.coroutines.withContext
                 Modifier.fillMaxSize().padding(horizontal = pad, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                FoldersHeader(active, videos.size, totalBytes, state, add, library)
+                StorageSummaryCard(
+                    videoCount = state.videos.size,
+                    totalIndexedBytes = state.videos.sumOf { it.bytes.coerceAtLeast(0) },
+                    onAddFolder = add
+                )
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                     LazyColumn(
                         Modifier.weight(0.38f).fillMaxHeight(),
@@ -249,7 +728,11 @@ import kotlinx.coroutines.withContext
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 item {
-                    FoldersHeader(active, videos.size, totalBytes, state, add, library)
+                    StorageSummaryCard(
+                    videoCount = state.videos.size,
+                    totalIndexedBytes = state.videos.sumOf { it.bytes.coerceAtLeast(0) },
+                    onAddFolder = add
+                )
                 }
                 if (state.folders.isEmpty()) {
                     item { LocalPanel { Text("No folders connected", fontWeight = FontWeight.Bold); Text("Add a folder using Android's file picker.") } }
@@ -595,7 +1078,7 @@ fun clearThumbnailMemoryCache() {
     ThumbnailMemory.cache.evictAll()
 }
 
-@Composable private fun LocalThumbnail(video: LocalVideo, modifier: Modifier) {
+@Composable internal fun LocalThumbnail(video: LocalVideo, modifier: Modifier) {
     val context = LocalContext.current.applicationContext
     val key = "${video.uri}:${video.modified}:${video.bytes}"
     val bitmap by produceState<Bitmap?>(initialValue = null, key1 = key) {
