@@ -10,6 +10,8 @@ import android.text.format.Formatter
 import android.util.LruCache
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -18,6 +20,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -95,109 +99,144 @@ import kotlinx.coroutines.withContext
     }
 }
 
+private data class HeroItem(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val localVideo: LocalVideo? = null,
+    val previewArtwork: String = "hero",
+    val onPlay: () -> Unit,
+    val onInfo: () -> Unit
+)
+
 @Composable
-private fun HeroMovieBanner(
-    video: LocalVideo?,
-    fallbackTitle: String = "Interstellar",
-    fallbackDuration: String = "2h 49m",
-    onPlay: () -> Unit,
-    onInfo: () -> Unit
-) {
+private fun HeroMoviePager(items: List<HeroItem>) {
+    if (items.isEmpty()) return
+    val pagerState = rememberPagerState(pageCount = { items.size })
+
     Card(
         modifier = Modifier.fillMaxWidth().height(260.dp),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Black)
     ) {
         Box(Modifier.fillMaxSize()) {
-            if (video != null) {
-                LocalThumbnail(video, Modifier.fillMaxSize())
-            } else {
-                Image(
-                    painter = painterResource(R.drawable.hero),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.2f),
-                            Color.Black.copy(alpha = 0.55f),
-                            Color.Black.copy(alpha = 0.94f)
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                val item = items[page]
+                Box(Modifier.fillMaxSize()) {
+                    if (item.localVideo != null) {
+                        LocalThumbnail(item.localVideo, Modifier.fillMaxSize())
+                    } else {
+                        val res = when (item.previewArtwork) {
+                            "anime" -> R.drawable.anime
+                            "cosmos" -> R.drawable.cosmos
+                            else -> R.drawable.hero
+                        }
+                        Image(
+                            painter = painterResource(res),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    Box(
+                        Modifier.fillMaxSize().background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.2f),
+                                    Color.Black.copy(alpha = 0.55f),
+                                    Color.Black.copy(alpha = 0.94f)
+                                )
+                            )
                         )
                     )
-                )
-            )
-            Column(
-                Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
-                verticalArrangement = Arrangement.Bottom
-            ) {
-                val title = video?.title ?: fallbackTitle
-                val durStr = if (video != null && video.duration > 0) timecode(video.duration / 1000) else fallbackDuration
-                Text(
-                    title,
-                    color = Color.White,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "2024 · $durStr · 4K · Dolby Atmos",
-                    color = Color.White.copy(alpha = 0.78f),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(Modifier.height(14.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
-                        onClick = onPlay,
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                    Column(
+                        Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
+                        verticalArrangement = Arrangement.Bottom
                     ) {
-                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    }
-                    Surface(
-                        onClick = onPlay,
-                        shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.18f),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                        modifier = Modifier.size(42.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                        }
-                    }
-                    Surface(
-                        onClick = onInfo,
-                        shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.18f),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                        modifier = Modifier.size(42.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.Info, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        Text(
+                            item.title,
+                            color = Color.White,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            item.subtitle,
+                            color = Color.White.copy(alpha = 0.78f),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(Modifier.height(14.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Button(
+                                onClick = item.onPlay,
+                                shape = CircleShape,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
+                                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                            ) {
+                                Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            }
+                            Surface(
+                                onClick = item.onPlay,
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.18f),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Rounded.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                }
+                            }
+                            Surface(
+                                onClick = item.onInfo,
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.18f),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Rounded.Info, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                }
+                            }
                         }
                     }
                 }
             }
-            Row(
-                Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(Modifier.size(width = 20.dp, height = 4.dp).clip(CircleShape).background(Color.White))
-                Box(Modifier.size(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.45f)))
-                Box(Modifier.size(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.45f)))
+
+            if (items.size > 1) {
+                Row(
+                    Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    repeat(items.size) { idx ->
+                        val isSelected = pagerState.currentPage == idx
+                        val dotWidth by animateDpAsState(
+                            targetValue = if (isSelected) 22.dp else 5.dp,
+                            label = "dotWidth"
+                        )
+                        val dotAlpha by animateFloatAsState(
+                            targetValue = if (isSelected) 1f else 0.45f,
+                            label = "dotAlpha"
+                        )
+                        Box(
+                            Modifier
+                                .size(width = dotWidth, height = 5.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = dotAlpha))
+                        )
+                    }
+                }
             }
         }
     }
@@ -473,8 +512,43 @@ fun StorageSummaryCard(
         allVideos.filter { playback.savedPosition(it) > 0 }
     }
 
-    val featuredVideo = remember(continueWatching, allVideos) {
-        continueWatching.firstOrNull() ?: allVideos.firstOrNull()
+    val heroItems = remember(allVideos, continueWatching) {
+        if (allVideos.isNotEmpty()) {
+            val topVideos = mutableListOf<LocalVideo>()
+            topVideos.addAll(continueWatching.take(2))
+            allVideos.forEach { v ->
+                if (topVideos.size < 5 && topVideos.none { it.uri == v.uri }) {
+                    topVideos.add(v)
+                }
+            }
+            topVideos.map { v ->
+                val durStr = if (v.duration > 0) timecode(v.duration / 1000) else "Feature Film"
+                val resStr = if (v.width > 0 && v.height > 0) "${v.width}x${v.height}" else "4K"
+                HeroItem(
+                    id = v.uri,
+                    title = v.title,
+                    subtitle = "2024 · $durStr · $resStr · Dolby Audio",
+                    localVideo = v,
+                    onPlay = {
+                        playback.open(v)
+                        playback.fullscreen = true
+                    },
+                    onInfo = { select(v.uri) }
+                )
+            }
+        } else {
+            previewVideos.take(3).map { pv ->
+                val durStr = timecode(pv.durationSeconds)
+                HeroItem(
+                    id = pv.id,
+                    title = pv.title,
+                    subtitle = "2024 · $durStr · 4K · Dolby Atmos",
+                    previewArtwork = pv.artwork,
+                    onPlay = { preview() },
+                    onInfo = { preview() }
+                )
+            }
+        }
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -489,28 +563,9 @@ fun StorageSummaryCard(
                 contentPadding = PaddingValues(pad),
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
-                // 1. Hero Movie Banner
+                // 1. Hero Movie Banner Pager
                 item {
-                    HeroMovieBanner(
-                        video = featuredVideo,
-                        fallbackTitle = "Interstellar",
-                        fallbackDuration = "2h 49m",
-                        onPlay = {
-                            if (featuredVideo != null) {
-                                playback.open(featuredVideo)
-                                playback.fullscreen = true
-                            } else {
-                                preview()
-                            }
-                        },
-                        onInfo = {
-                            if (featuredVideo != null) {
-                                select(featuredVideo.uri)
-                            } else {
-                                preview()
-                            }
-                        }
-                    )
+                    HeroMoviePager(items = heroItems)
                 }
 
                 // 2. Continue Watching Section

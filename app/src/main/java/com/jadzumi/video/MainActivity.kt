@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
@@ -95,8 +96,19 @@ class MainActivity : ComponentActivity() {
         return builder.build()
     }
 
+    fun updateHdrColorMode() {
+        if (Build.VERSION.SDK_INT >= 26) {
+            window.colorMode = if (playback.video != null && (playback.brightnessBoost || playback.isHdr)) {
+                ActivityInfo.COLOR_MODE_HDR
+            } else {
+                ActivityInfo.COLOR_MODE_DEFAULT
+            }
+        }
+    }
+
     fun updatePip() {
         if (supportsPip()) runCatching { setPictureInPictureParams(pipParams()) }
+        updateHdrColorMode()
     }
 
     fun enterCinemaPip(): Boolean {
@@ -117,7 +129,10 @@ class MainActivity : ComponentActivity() {
         if (inPip) {
             playback.fullscreen = true
             playback.locked = false
+        } else {
+            playback.fullscreen = true
         }
+        updatePip()
     }
 
     override fun onStart() {

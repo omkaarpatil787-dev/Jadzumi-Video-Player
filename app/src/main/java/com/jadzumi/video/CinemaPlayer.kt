@@ -104,14 +104,14 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     DisposableEffect(activity) {
         onDispose { activity.videoBounds = null; activity.updatePip() }
     }
-    val full = playback.fullscreen || playback.inPip
-    BackHandler(full && !playback.inPip) {
+
+    BackHandler(!playback.inPip) {
         if (quickMenuSection != null) {
             quickMenuSection = if (quickMenuSection == "main") null else "main"
         } else if (playback.locked) {
             controls = true; interaction++
         } else {
-            playback.fullscreen = false
+            playback.close()
         }
     }
 
@@ -123,14 +123,20 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     }
     LaunchedEffect(message) { if (message != null) { delay(1400); message = null } }
     LaunchedEffect(hudSide, interaction) { if (hudSide != null) { delay(1200); hudSide = null } }
-    LaunchedEffect(full) { controls = true; interaction++ }
     LaunchedEffect(playback.inPip) {
         if (playback.inPip) { quickMenuSection = null; scrub = null; controls = false }
     }
 
-    DisposableEffect(full, playback.inPip) {
+    LaunchedEffect(playback.brightnessBoost) {
+        if (playback.brightnessBoost) {
+            activity.window.attributes = activity.window.attributes.apply { screenBrightness = 1.0f }
+        }
+        activity.updateHdrColorMode()
+    }
+
+    DisposableEffect(playback.inPip) {
         val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-        if (full && !playback.inPip) {
+        if (!playback.inPip) {
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
         } else {
@@ -139,138 +145,54 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         onDispose {
             controller.show(WindowInsetsCompat.Type.systemBars())
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = previousBrightness }
+            activity.updateHdrColorMode()
         }
     }
 
-    LaunchedEffect(playback.playing, playback.playRequested, playback.seekable, playback.aspect, playback.resizeMode, full) {
+    LaunchedEffect(playback.playing, playback.playRequested, playback.seekable, playback.aspect, playback.resizeMode) {
         activity.updatePip()
     }
 
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val totalWidth = maxWidth
-        val totalHeight = maxHeight
-        val miniW = (totalWidth * 0.40f).coerceIn(240.dp, 350.dp)
-        val miniH = miniW * (9f / 16f)
-
-        val density = LocalDensity.current
-        val maxDragX = with(density) { (totalWidth - miniW - 16.dp).toPx() }.coerceAtLeast(0f)
-        val maxDragY = with(density) { (totalHeight - miniH - 96.dp).toPx() }.coerceAtLeast(0f)
-        val minDragX = with(density) { 16.dp.toPx() }
-        val minDragY = with(density) { 16.dp.toPx() }
-
-        val defaultX = with(density) { (totalWidth - miniW - 20.dp).toPx() }
-        val defaultY = with(density) { (totalHeight - miniH - 92.dp).toPx() }
-
-        var dragX by remember(video.identity) { mutableFloatStateOf(defaultX) }
-        var dragY by remember(video.identity) { mutableFloatStateOf(defaultY) }
-        var isDragging by remember(video.identity) { mutableStateOf(false) }
-
-        var wasInPip by remember { mutableStateOf(playback.inPip) }
-        var suppressAnim by remember { mutableStateOf(false) }
-        LaunchedEffect(playback.inPip) {
-            if (wasInPip && !playback.inPip) {
-                suppressAnim = true
-                kotlinx.coroutines.delay(350)
-                suppressAnim = false
-            }
-            wasInPip = playback.inPip
-        }
-
-        val targetX = if (full) 0f else dragX.coerceIn(minDragX, maxDragX)
-        val targetY = if (full) 0f else dragY.coerceIn(minDragY, maxDragY)
-
-        val animX by animateFloatAsState(
-            targetValue = targetX,
-            animationSpec = if (isDragging || suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
-            label = "animX"
-        )
-        val animY by animateFloatAsState(
-            targetValue = targetY,
-            animationSpec = if (isDragging || suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
-            label = "animY"
-        )
-        val animW by animateDpAsState(
-            targetValue = if (full) totalWidth else miniW,
-            animationSpec = if (suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
-            label = "animW"
-        )
-        val animH by animateDpAsState(
-            targetValue = if (full) totalHeight else miniH,
-            animationSpec = if (suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
-            label = "animH"
-        )
-        val cornerRadius by animateDpAsState(
-            targetValue = if (full) 0.dp else 22.dp,
-            animationSpec = if (suppressAnim) snap() else tween(durationMillis = 280, easing = FastOutSlowInEasing),
-            label = "cornerRadius"
-        )
-
-        Box(
-            modifier = Modifier
-                .offset { IntOffset(animX.roundToInt(), animY.roundToInt()) }
-                .size(animW, animH)
-                .shadow(
-                    elevation = if (full) 0.dp else 18.dp,
-                    shape = RoundedCornerShape(cornerRadius)
-                )
-                .border(
-                    width = if (full) 0.dp else 1.5.dp,
-                    color = if (full) Color.Transparent else Color.White.copy(alpha = 0.35f),
-                    shape = RoundedCornerShape(cornerRadius)
-                )
-                .clip(RoundedCornerShape(cornerRadius))
-                .background(Color.Black)
-                .pointerInput(full) {
-                    if (!full) {
-                        detectDragGestures(
-                            onDragStart = { isDragging = true },
-                            onDragEnd = { isDragging = false },
-                            onDragCancel = { isDragging = false },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                dragX = (dragX + dragAmount.x).coerceIn(minDragX, maxDragX)
-                                dragY = (dragY + dragAmount.y).coerceIn(minDragY, maxDragY)
-                            }
-                        )
-                    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    useController = false
+                    setKeepContentOnPlayerReset(true)
                 }
-        ) {
-            AndroidView(
-                factory = { ctx ->
-                    val view = android.view.LayoutInflater.from(ctx).inflate(R.layout.player_view_texture, null, false) as PlayerView
-                    view.apply {
-                        useController = false
-                        setKeepContentOnPlayerReset(true)
-                    }
-                },
-                modifier = Modifier.fillMaxSize().onGloballyPositioned {
-                    val b = it.boundsInWindow()
-                    activity.videoBounds = Rect(b.left.roundToInt(), b.top.roundToInt(), b.right.roundToInt(), b.bottom.roundToInt())
-                    activity.updatePip()
-                },
-                update = { view ->
-                    if (view.player !== playback.player) view.player = playback.player
-                    view.resizeMode = playback.resizeMode
-                    view.keepScreenOn = playback.playRequested
-                },
-                onReset = null,
-                onRelease = { it.player = null }
-            )
+            },
+            modifier = Modifier.fillMaxSize().onGloballyPositioned {
+                val b = it.boundsInWindow()
+                activity.videoBounds = Rect(b.left.roundToInt(), b.top.roundToInt(), b.right.roundToInt(), b.bottom.roundToInt())
+                activity.updatePip()
+            },
+            update = { view ->
+                if (view.player !== playback.player) view.player = playback.player
+                view.resizeMode = playback.resizeMode
+                view.keepScreenOn = playback.playRequested
+                SubtitlePreferences.applyToPlayerView(view.context, view)
+            },
+            onReset = null,
+            onRelease = { it.player = null }
+        )
 
             if (!playback.inPip) {
                 val audio = remember { activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
                 Box(
                     Modifier.fillMaxSize()
-                        .pointerInput(video.identity, playback.locked, full, seekDeltaMs) {
+                        .pointerInput(video.identity, playback.locked, seekDeltaMs) {
                             detectTapGestures(
                                 onTap = {
-                                    if (!full) playback.fullscreen = true
-                                    else if (quickMenuSection != null) quickMenuSection = null
+                                    if (quickMenuSection != null) quickMenuSection = null
                                     else controls = !controls
                                     interaction++
                                 },
                                 onDoubleTap = { offset ->
-                                    if (!playback.locked && full) {
+                                    if (!playback.locked) {
                                         val isLeft = offset.x < size.width / 2
                                         playback.skip(if (isLeft) -seekDeltaMs else seekDeltaMs)
                                         message = if (isLeft) "−${playback.seekIncrementSeconds}s" else "+${playback.seekIncrementSeconds}s"
@@ -279,7 +201,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             )
                         }
-                        .pointerInput(video.identity, playback.locked, full, playback.swipeGesturesEnabled) {
+                        .pointerInput(video.identity, playback.locked, playback.swipeGesturesEnabled) {
                             var left = false; var level = 0f; var isGestureValid = false
                             detectVerticalDragGestures(
                                 onDragStart = { offset ->
@@ -297,7 +219,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 onDragEnd = { hudSide = null; isGestureValid = false },
                                 onDragCancel = { hudSide = null; isGestureValid = false }
                             ) { change, amount ->
-                                if (isGestureValid && !playback.locked && full && playback.swipeGesturesEnabled) {
+                                if (isGestureValid && !playback.locked && playback.swipeGesturesEnabled) {
                                     change.consume()
                                     level = (level - amount / size.height.coerceAtLeast(1)).coerceIn(if (left) 0.05f else 0f, 1f)
                                     if (left) activity.window.attributes = activity.window.attributes.apply { screenBrightness = level }
@@ -360,252 +282,236 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                         }
                     }
                 }
-                if (full) {
-                    val enterAnim = if (reducedMotion) EnterTransition.None else fadeIn(spring(stiffness = Spring.StiffnessMediumLow))
-                    val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(tween(180))
 
-                    AnimatedVisibility(
-                        visible = controls && !playback.locked,
-                        enter = enterAnim,
-                        exit = exitAnim
+                val enterAnim = if (reducedMotion) EnterTransition.None else fadeIn(spring(stiffness = Spring.StiffnessMediumLow))
+                val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(tween(180))
+
+                AnimatedVisibility(
+                    visible = controls && !playback.locked,
+                    enter = enterAnim,
+                    exit = exitAnim
+                ) {
+                    val subtleScrim = Brush.verticalGradient(
+                        0.0f to Color.Black.copy(alpha = 0.68f),
+                        0.22f to Color.Transparent,
+                        0.76f to Color.Transparent,
+                        1.0f to Color.Black.copy(alpha = 0.78f)
+                    )
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(subtleScrim)
+                            .safeDrawingPadding()
+                            .padding(horizontal = 24.dp, vertical = 18.dp)
                     ) {
-                        val subtleScrim = Brush.verticalGradient(
-                            0.0f to Color.Black.copy(alpha = 0.68f),
-                            0.22f to Color.Transparent,
-                            0.76f to Color.Transparent,
-                            1.0f to Color.Black.copy(alpha = 0.78f)
-                        )
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .background(subtleScrim)
-                                .safeDrawingPadding()
-                                .padding(horizontal = 24.dp, vertical = 18.dp)
+                        // PANEL 1 & 4: CINEMATIC TOP BAR
+                        Row(
+                            Modifier.align(Alignment.TopCenter).fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            // PANEL 1 & 4: CINEMATIC TOP BAR
                             Row(
-                                Modifier.align(Alignment.TopCenter).fillMaxWidth(),
+                                Modifier.weight(1f).padding(end = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                Row(
-                                    Modifier.weight(1f).padding(end = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                                ) {
-                                    FrostedCircleButton("Back to library", { playback.fullscreen = false }, size = 44.dp) {
-                                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, Modifier.size(20.dp), tint = Color.White)
-                                    }
-                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                FrostedCircleButton("Back to library", playback::close, size = 44.dp) {
+                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, Modifier.size(20.dp), tint = Color.White)
+                                }
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        heading.primaryTitle,
+                                        color = Color.White,
+                                        fontSize = 19.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    heading.secondaryMeta?.let { meta ->
                                         Text(
-                                            heading.primaryTitle,
-                                            color = Color.White,
-                                            fontSize = 19.sp,
-                                            fontWeight = FontWeight.SemiBold,
+                                            meta,
+                                            color = Color.White.copy(alpha = 0.75f),
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Normal,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
-                                        heading.secondaryMeta?.let { meta ->
-                                            Text(
-                                                meta,
-                                                color = Color.White.copy(alpha = 0.75f),
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                    }
-                                }
-
-                                // Top-Right Icons: Clean and uncluttered glassy controls
-                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    FrostedCircleButton("Audio and subtitles", { quickMenuSection = "subs"; interaction++ }, size = 44.dp) {
-                                        Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(22.dp), tint = Color.White)
-                                    }
-                                    FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
-                                        Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
                                     }
                                 }
                             }
 
-                            // PANEL 1: CENTRAL FROSTED-GLASS CIRCULAR PLAY/PAUSE & 10s SKIP CONTROLS
+                            // Top-Right Icons: Clean and uncluttered glassy controls
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                FrostedCircleButton("Audio and subtitles", { quickMenuSection = "subs"; interaction++ }, size = 44.dp) {
+                                    Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(22.dp), tint = Color.White)
+                                }
+                                FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
+                                    Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
+                                }
+                            }
+                        }
+
+                        // PANEL 1: CENTRAL FROSTED-GLASS CIRCULAR PLAY/PAUSE & 10s SKIP CONTROLS
+                        Row(
+                            Modifier.align(Alignment.Center),
+                            horizontalArrangement = Arrangement.spacedBy(34.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FrostedCircleButton(
+                                label = "Back ${playback.seekIncrementSeconds} seconds",
+                                onClick = { playback.skip(-seekDeltaMs); interaction++ },
+                                enabled = playback.seekable,
+                                size = 54.dp
+                            ) {
+                                Icon(Icons.Rounded.Replay10, null, Modifier.size(26.dp), tint = Color.White)
+                            }
+
+                            FrostedCircleButton(
+                                label = if (playback.playRequested) "Pause" else "Play",
+                                onClick = { playback.toggle(); interaction++ },
+                                size = 82.dp
+                            ) {
+                                PlayPauseMorph(playback.playRequested, reducedMotion, Modifier.size(36.dp))
+                            }
+
+                            FrostedCircleButton(
+                                label = "Forward ${playback.seekIncrementSeconds} seconds",
+                                onClick = { playback.skip(seekDeltaMs); interaction++ },
+                                enabled = playback.seekable,
+                                size = 54.dp
+                            ) {
+                                Icon(Icons.Rounded.Forward10, null, Modifier.size(26.dp), tint = Color.White)
+                            }
+                        }
+
+                        // PANEL 1 & 3: INLINE TIMELINE ROW + MINIMALIST BOTTOM CONTROLS
+                        Column(
+                            Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            val currentFraction = scrub ?: if (playback.duration > 0) {
+                                (playback.position.toFloat() / playback.duration).coerceIn(0f, 1f)
+                            } else 0f
+                            val bufferedPos = playback.player?.bufferedPosition ?: 0L
+                            val bufferedFraction = if (playback.duration > 0) {
+                                (bufferedPos.toFloat() / playback.duration).coerceIn(0f, 1f)
+                            } else 0f
+
+                            // Edge-Clamped Scrubbing Thumbnail Preview (Panel 3)
+                            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                                val totalW = maxWidth
+                                scrub?.let { frac ->
+                                    val cardW = 164.dp
+                                    val rawX = (totalW * frac) - (cardW / 2)
+                                    val safeX = rawX.coerceIn(0.dp, (totalW - cardW).coerceAtLeast(0.dp))
+                                    Box(Modifier.offset(x = safeX).padding(bottom = 4.dp)) {
+                                        ScrubPreview(video, (frac * playback.duration).toLong())
+                                    }
+                                }
+                            }
+
+                            // Inline Timeline Row
+                            val activePosMs = scrub?.let { (it * playback.duration).toLong() } ?: playback.position
+                            val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
+                            val totalSec = (playback.duration / 1000).coerceAtLeast(0)
+
+                            CinemaTimelineBar(
+                                fraction = currentFraction,
+                                bufferedFraction = bufferedFraction,
+                                isScrubbing = scrub != null,
+                                enabled = playback.seekable && playback.duration > 0,
+                                onScrub = { scrub = it; interaction++ },
+                                onScrubFinished = {
+                                    scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
+                                    scrub = null
+                                }
+                            )
+
+                            // Bottom Row: Glass Time Capsule (Left) & Glass Actions Dock (Right)
                             Row(
-                                Modifier.align(Alignment.Center),
-                                horizontalArrangement = Arrangement.spacedBy(34.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                FrostedCircleButton(
-                                    label = "Back ${playback.seekIncrementSeconds} seconds",
-                                    onClick = { playback.skip(-seekDeltaMs); interaction++ },
-                                    enabled = playback.seekable,
-                                    size = 54.dp
+                                // Bottom-Left: Glassy Time Capsule Pill
+                                Surface(
+                                    shape = RoundedCornerShape(999.dp),
+                                    color = FrostedCircleBg,
+                                    border = BorderStroke(1.dp, FrostedCircleRim)
                                 ) {
-                                    Icon(Icons.Rounded.Replay10, null, Modifier.size(26.dp), tint = Color.White)
-                                }
-
-                                FrostedCircleButton(
-                                    label = if (playback.playRequested) "Pause" else "Play",
-                                    onClick = { playback.toggle(); interaction++ },
-                                    size = 82.dp
-                                ) {
-                                    PlayPauseMorph(playback.playRequested, reducedMotion, Modifier.size(36.dp))
-                                }
-
-                                FrostedCircleButton(
-                                    label = "Forward ${playback.seekIncrementSeconds} seconds",
-                                    onClick = { playback.skip(seekDeltaMs); interaction++ },
-                                    enabled = playback.seekable,
-                                    size = 54.dp
-                                ) {
-                                    Icon(Icons.Rounded.Forward10, null, Modifier.size(26.dp), tint = Color.White)
-                                }
-                            }
-
-                            // PANEL 1 & 3: INLINE TIMELINE ROW + MINIMALIST BOTTOM CONTROLS
-                            Column(
-                                Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                val currentFraction = scrub ?: if (playback.duration > 0) {
-                                    (playback.position.toFloat() / playback.duration).coerceIn(0f, 1f)
-                                } else 0f
-                                val bufferedPos = playback.player?.bufferedPosition ?: 0L
-                                val bufferedFraction = if (playback.duration > 0) {
-                                    (bufferedPos.toFloat() / playback.duration).coerceIn(0f, 1f)
-                                } else 0f
-
-                                // Edge-Clamped Scrubbing Thumbnail Preview (Panel 3)
-                                BoxWithConstraints(Modifier.fillMaxWidth()) {
-                                    val totalW = maxWidth
-                                    scrub?.let { frac ->
-                                        val cardW = 164.dp
-                                        val rawX = (totalW * frac) - (cardW / 2)
-                                        val safeX = rawX.coerceIn(0.dp, (totalW - cardW).coerceAtLeast(0.dp))
-                                        Box(Modifier.offset(x = safeX).padding(bottom = 4.dp)) {
-                                            ScrubPreview(video, (frac * playback.duration).toLong())
-                                        }
-                                    }
-                                }
-
-                                // Inline Timeline Row
-                                val activePosMs = scrub?.let { (it * playback.duration).toLong() } ?: playback.position
-                                val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
-                                val totalSec = (playback.duration / 1000).coerceAtLeast(0)
-
-                                CinemaTimelineBar(
-                                    fraction = currentFraction,
-                                    bufferedFraction = bufferedFraction,
-                                    isScrubbing = scrub != null,
-                                    enabled = playback.seekable && playback.duration > 0,
-                                    onScrub = { scrub = it; interaction++ },
-                                    onScrubFinished = {
-                                        scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
-                                        scrub = null
-                                    }
-                                )
-
-                                // Bottom Row: Glass Time Capsule (Left) & Glass Actions Dock (Right)
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    // Bottom-Left: Glassy Time Capsule Pill
-                                    Surface(
-                                        shape = RoundedCornerShape(999.dp),
-                                        color = FrostedCircleBg,
-                                        border = BorderStroke(1.dp, FrostedCircleRim)
+                                    Row(
+                                        Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Row(
-                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        Text(
+                                            compactTimecode(elapsedSec),
+                                            color = TimelineAccent,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 12.sp)
+                                        Text(
+                                            compactTimecode(totalSec),
+                                            color = Color.White.copy(alpha = 0.85f),
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                        Surface(
+                                            shape = RoundedCornerShape(999.dp),
+                                            color = Color.White.copy(alpha = 0.14f),
+                                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
                                         ) {
                                             Text(
-                                                compactTimecode(elapsedSec),
-                                                color = TimelineAccent,
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                            Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 12.sp)
-                                            Text(
-                                                compactTimecode(totalSec),
-                                                color = Color.White.copy(alpha = 0.85f),
-                                                fontSize = 13.sp,
+                                                "-${compactTimecode(remSec)} remaining",
+                                                Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                color = Color.White.copy(alpha = 0.92f),
+                                                fontSize = 11.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
-                                            val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                            Surface(
-                                                shape = RoundedCornerShape(999.dp),
-                                                color = Color.White.copy(alpha = 0.14f),
-                                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
-                                            ) {
-                                                Text(
-                                                    "-${compactTimecode(remSec)} remaining",
-                                                    Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                                    color = Color.White.copy(alpha = 0.92f),
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            }
                                         }
                                     }
+                                }
 
-                                    // Bottom-Right: Glassy Actions Dock
-                                    Surface(
-                                        shape = RoundedCornerShape(999.dp),
-                                        color = FrostedCircleBg,
-                                        border = BorderStroke(1.dp, FrostedCircleRim)
+                                // Bottom-Right: Glassy Actions Dock
+                                Surface(
+                                    shape = RoundedCornerShape(999.dp),
+                                    color = FrostedCircleBg,
+                                    border = BorderStroke(1.dp, FrostedCircleRim)
+                                ) {
+                                    Row(
+                                        Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        Row(
-                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
-                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
+                                        CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
+                                            Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
+                                        }
+                                        if (activity.supportsPip()) {
+                                            CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
                                             }
-                                            if (activity.supportsPip()) {
-                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
-                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
-                                                }
-                                            }
-                                            CinemaIcon("Exit fullscreen", { playback.fullscreen = false }, modifier = Modifier.size(36.dp)) {
-                                                Icon(Icons.Rounded.FullscreenExit, null, Modifier.size(20.dp))
-                                            }
+                                        }
+                                        CinemaIcon("Close player", playback::close, modifier = Modifier.size(36.dp)) {
+                                            Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                }
 
-                    // Unlock Button when Screen Locked
-                    if (playback.locked && controls) {
-                        FrostedCircleButton(
-                            label = "Unlock controls",
-                            onClick = { playback.locked = false; controls = true; interaction++ },
-                            modifier = Modifier.align(Alignment.CenterStart).safeDrawingPadding().padding(start = 24.dp),
-                            size = 50.dp
-                        ) {
-                            Icon(Icons.Rounded.Lock, null, tint = Color.White)
-                        }
-                    }
-                } else {
-                    // Mini-Player Bar (Panel 6 style)
-                    Row(
-                        Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color.Black.copy(alpha = 0.65f)).padding(horizontal = 10.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                // Unlock Button when Screen Locked
+                if (playback.locked && controls) {
+                    FrostedCircleButton(
+                        label = "Unlock controls",
+                        onClick = { playback.locked = false; controls = true; interaction++ },
+                        modifier = Modifier.align(Alignment.CenterStart).safeDrawingPadding().padding(start = 24.dp),
+                        size = 50.dp
                     ) {
-                        Text(heading.primaryTitle, Modifier.weight(1f), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium)
-                        CinemaIcon(if (playback.playRequested) "Pause" else "Play", { playback.toggle() }) {
-                            Icon(if (playback.playRequested) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, null)
-                        }
-                        CinemaIcon("Expand fullscreen", { playback.fullscreen = true }) {
-                            Icon(Icons.Rounded.OpenInFull, null, Modifier.size(18.dp))
-                        }
-                        CinemaIcon("Close mini-player", playback::close) { Icon(Icons.Rounded.Close, null) }
+                        Icon(Icons.Rounded.Lock, null, tint = Color.White)
                     }
                 }
 
@@ -651,7 +557,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                         border = BorderStroke(1.dp, FrostedCircleRim)
                     ) {
                         Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text(if (full) error else "Playback unavailable", color = Color.White)
+                            Text(error, color = Color.White)
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Button(onClick = playback::retry) { Text("Retry") }
                                 OutlinedButton(onClick = playback::close) { Text("Close", color = Color.White) }
@@ -662,7 +568,6 @@ private val TimelineAccent = Color(0xFF8B9DFF)
             }
         }
     }
-}
 
 /** Panel 1 & 3: Ultra-Thin Periwinkle-Blue Timeline with Prominent White Circular Thumb */
 @Composable private fun CinemaTimelineBar(
@@ -937,6 +842,15 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             label = "Background audio",
                             value = if (playback.backgroundAudioEnabled) "On" else "Off",
                             onClick = { playback.setBackgroundAudio(!playback.backgroundAudioEnabled) }
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.BrightnessMedium,
+                            label = "Brightness Boost (HDR)",
+                            value = if (playback.brightnessBoost) "On (100%)" else "Off",
+                            onClick = {
+                                playback.updateBrightnessBoost(!playback.brightnessBoost)
+                                onMessage(if (playback.brightnessBoost) "Brightness Boost: On (100%)" else "Brightness Boost: Off")
+                            }
                         )
                         QuickMenuRow(
                             icon = Icons.Rounded.Replay,

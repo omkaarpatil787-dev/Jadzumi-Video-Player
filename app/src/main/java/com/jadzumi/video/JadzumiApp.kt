@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
@@ -37,6 +38,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -149,6 +151,12 @@ private val destinations = listOf(
     val library = remember { LocalLibrary.get(context) }
     val localState by library.state.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
+    var cornerStyle by rememberSaveable { mutableStateOf(prefs.getString("cornerStyle", "Rounded") ?: "Rounded") }
+    val cornerRadiusDp = when (cornerStyle) {
+        "Compact" -> 14.dp
+        "Sharp" -> 0.dp
+        else -> 24.dp
+    }
 
     val scope = rememberCoroutineScope()
     val bloomProgress = remember { Animatable(1f) }
@@ -171,7 +179,7 @@ private val destinations = listOf(
             bloomOriginColor = oldBg
             scope.launch {
                 bloomProgress.snapTo(0f)
-                bloomProgress.animateTo(1f, tween(580, easing = FastOutSlowInEasing))
+                bloomProgress.animateTo(1f, tween(320))
                 bloomOriginColor = null
             }
         }
@@ -188,7 +196,14 @@ private val destinations = listOf(
         onDispose { }
     }
 
-    MaterialTheme(colorScheme = colors, shapes = Shapes(medium = RoundedCornerShape(24.dp), large = RoundedCornerShape(28.dp))) {
+    MaterialTheme(
+        colorScheme = colors,
+        shapes = Shapes(
+            small = RoundedCornerShape((cornerRadiusDp / 2).coerceAtLeast(0.dp)),
+            medium = RoundedCornerShape(cornerRadiusDp),
+            large = RoundedCornerShape((cornerRadiusDp + 4.dp).coerceAtLeast(0.dp))
+        )
+    ) {
         Box(Modifier.fillMaxSize()) {
             Surface(Modifier.fillMaxSize(), color = colors.background) {
                 BackHandler(selectedId != null || (route != "Home" && route != "Library")) {
@@ -238,21 +253,64 @@ private val destinations = listOf(
                                         )
                                     }
 
-                                    OutlinedTextField(
-                                        value = query,
-                                        onValueChange = { query = it },
-                                        modifier = Modifier.widthIn(min = 220.dp, max = 340.dp).height(50.dp),
-                                        placeholder = { Text("Search videos, shows...", maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 13.sp) },
-                                        singleLine = true,
-                                        shape = RoundedCornerShape(25.dp),
-                                        leadingIcon = { Icon(Icons.Rounded.Search, null, Modifier.size(20.dp)) },
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                            focusedContainerColor = MaterialTheme.colorScheme.surface
-                                        )
-                                    )
+                                    Surface(
+                                        modifier = Modifier
+                                            .widthIn(min = 220.dp, max = 340.dp)
+                                            .height(42.dp),
+                                        shape = RoundedCornerShape(21.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                    ) {
+                                        Row(
+                                            Modifier
+                                                .fillMaxSize()
+                                                .padding(horizontal = 14.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Rounded.Search,
+                                                contentDescription = "Search",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                                                if (query.isEmpty()) {
+                                                    Text(
+                                                        "Search videos, shows...",
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                        fontSize = 13.sp,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                                BasicTextField(
+                                                    value = query,
+                                                    onValueChange = { query = it },
+                                                    singleLine = true,
+                                                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                                        color = MaterialTheme.colorScheme.onSurface,
+                                                        fontSize = 13.sp
+                                                    ),
+                                                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
+                                            }
+                                            if (query.isNotEmpty()) {
+                                                IconButton(
+                                                    onClick = { query = "" },
+                                                    modifier = Modifier.size(24.dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Rounded.Close,
+                                                        contentDescription = "Clear search",
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
 
                                     IconButton(
                                         onClick = { library.rescan() },
@@ -299,6 +357,11 @@ private val destinations = listOf(
                                             onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
                                             reduced = reducedMotion,
                                             onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
+                                            cornerStyle = cornerStyle,
+                                            onCornerStyle = {
+                                                cornerStyle = it
+                                                prefs.edit { putString("cornerStyle", it) }
+                                            },
                                             localState = localState,
                                             library = library,
                                             playback = playback,
@@ -337,15 +400,11 @@ private val destinations = listOf(
             bloomOriginColor?.let { oldColor ->
                 val progress = bloomProgress.value
                 if (progress < 1f) {
-                    Canvas(Modifier.fillMaxSize()) {
-                        val maxRadius = hypot(size.width, size.height)
-                        val currentRadius = maxRadius * (1f - progress)
-                        drawCircle(
-                            color = oldColor.copy(alpha = (1f - progress).coerceIn(0f, 1f)),
-                            radius = currentRadius,
-                            center = Offset(size.width * 0.5f, size.height * 0.35f)
-                        )
-                    }
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(oldColor.copy(alpha = (1f - progress).coerceIn(0f, 1f)))
+                    )
                 }
             }
 
@@ -420,6 +479,8 @@ private val settingsCategories = listOf(
     onThemeBloom: (Boolean) -> Unit,
     reduced: Boolean,
     onReduced: (Boolean) -> Unit,
+    cornerStyle: String,
+    onCornerStyle: (String) -> Unit,
     localState: LocalLibraryState,
     library: LocalLibrary,
     playback: PlaybackController,
@@ -564,10 +625,29 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Brightness Boost", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Enhance visibility and dynamic range in dark video scenes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Brightness Boost & HDR", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Force maximum panel luminance and enable wide color gamut HDR10/HDR10+/HLG", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
-                                        Switch(checked = false, onCheckedChange = {})
+                                        Switch(checked = playback.brightnessBoost, onCheckedChange = { playback.updateBrightnessBoost(it) })
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)),
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.HdrOn, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                                            Column {
+                                                Text("Hardware HDR10 / HDR10+ Display Mode", fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                                                Text("Adreno 640 hardware video surface delivers direct 10-bit wide gamut HDR rendering", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -628,32 +708,144 @@ private val settingsCategories = listOf(
 
                         "Subtitles" -> {
                             item {
+                                val context = LocalContext.current
+                                var subFont by remember { mutableStateOf(SubtitlePreferences.getFont(context)) }
+                                var subSize by remember { mutableFloatStateOf(SubtitlePreferences.getSize(context)) }
+                                var subColor by remember { mutableStateOf(SubtitlePreferences.getColor(context)) }
+                                var subBg by remember { mutableStateOf(SubtitlePreferences.getBackground(context)) }
+                                var subEdge by remember { mutableStateOf(SubtitlePreferences.getEdge(context)) }
+
                                 Panel {
                                     Text("Subtitle Appearance", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("Format local SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Default Subtitle Track", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Auto-select embedded subtitle matching system language", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("Customization and live rendering for SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
+                                    // Live Subtitle Preview Card
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().height(140.dp),
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1017))
+                                    ) {
+                                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                                            Box(
+                                                Modifier.fillMaxSize().background(
+                                                    Brush.verticalGradient(listOf(Color(0xFF161F2E), Color(0xFF080B0F)))
+                                                )
+                                            )
+                                            val previewTextColor = Color(SubtitlePreferences.getColorInt(subColor))
+                                            val previewBgColor = Color(SubtitlePreferences.getBackgroundInt(subBg))
+                                            val previewFontFamily = when (subFont) {
+                                                "Roboto Condensed" -> androidx.compose.ui.text.font.FontFamily.SansSerif
+                                                "Roboto Monospace" -> androidx.compose.ui.text.font.FontFamily.Monospace
+                                                "System Default" -> androidx.compose.ui.text.font.FontFamily.Default
+                                                else -> androidx.compose.ui.text.font.FontFamily.SansSerif
+                                            }
+                                            val previewFontSize = (15.sp * subSize)
+
+                                            Surface(
+                                                modifier = Modifier.padding(bottom = 18.dp, start = 16.dp, end = 16.dp),
+                                                color = previewBgColor,
+                                                shape = RoundedCornerShape(4.dp)
+                                            ) {
+                                                Text(
+                                                    "We must reach beyond our own horizon.",
+                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                    color = previewTextColor,
+                                                    fontSize = previewFontSize,
+                                                    fontFamily = previewFontFamily,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
                                         }
-                                        Text("Auto (Recommended) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
+
+                                    Spacer(Modifier.height(16.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Text Size", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Adjust font size on 16:10 high-DPI display", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                                    Text("Font Family", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        SubtitlePreferences.fontOptions.forEach { font ->
+                                            FilterChip(
+                                                selected = subFont == font,
+                                                onClick = {
+                                                    subFont = font
+                                                    SubtitlePreferences.setFont(context, font)
+                                                },
+                                                label = { Text(font, maxLines = 1, softWrap = false) }
+                                            )
                                         }
-                                        Text("100% ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
+
+                                    Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Background Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Translucent letterbox background behind subtitle lines", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                                    Text("Text Size", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        SubtitlePreferences.sizeOptions.forEach { (sz, label) ->
+                                            FilterChip(
+                                                selected = subSize == sz,
+                                                onClick = {
+                                                    subSize = sz
+                                                    SubtitlePreferences.setSize(context, sz)
+                                                },
+                                                label = { Text(label, maxLines = 1, softWrap = false) }
+                                            )
                                         }
-                                        Text("Semi-transparent ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+
+                                    Spacer(Modifier.height(12.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Text("Text Color", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        SubtitlePreferences.colorOptions.forEach { colorName ->
+                                            val dotColor = Color(SubtitlePreferences.getColorInt(colorName))
+                                            FilterChip(
+                                                selected = subColor == colorName,
+                                                onClick = {
+                                                    subColor = colorName
+                                                    SubtitlePreferences.setColor(context, colorName)
+                                                },
+                                                leadingIcon = {
+                                                    Box(Modifier.size(12.dp).clip(CircleShape).background(dotColor))
+                                                },
+                                                label = { Text(colorName, maxLines = 1, softWrap = false) }
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(12.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Text("Background Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        SubtitlePreferences.backgroundOptions.forEach { bgName ->
+                                            FilterChip(
+                                                selected = subBg == bgName,
+                                                onClick = {
+                                                    subBg = bgName
+                                                    SubtitlePreferences.setBackground(context, bgName)
+                                                },
+                                                label = { Text(bgName, maxLines = 1, softWrap = false) }
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(12.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Text("Edge & Shadow Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        SubtitlePreferences.edgeOptions.forEach { edgeName ->
+                                            FilterChip(
+                                                selected = subEdge == edgeName,
+                                                onClick = {
+                                                    subEdge = edgeName
+                                                    SubtitlePreferences.setEdge(context, edgeName)
+                                                },
+                                                label = { Text(edgeName, maxLines = 1, softWrap = false) }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -675,18 +867,38 @@ private val settingsCategories = listOf(
                                         }
                                     }
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Corner Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Rounded card geometry (24dp)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                                    Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text("Curvature geometry applied to cards, sheets, and dialogs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(Modifier.height(10.dp))
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        listOf(
+                                            Triple("Rounded", "24dp curve", Icons.Rounded.Circle),
+                                            Triple("Compact", "14dp curve", Icons.Rounded.CropPortrait),
+                                            Triple("Sharp", "0dp crisp", Icons.Rounded.CropSquare)
+                                        ).forEach { (style, radiusText, icon) ->
+                                            val isSel = cornerStyle == style
+                                            Surface(
+                                                modifier = Modifier.weight(1f).clickable { onCornerStyle(style) },
+                                                shape = RoundedCornerShape(14.dp),
+                                                color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                                border = BorderStroke(if (isSel) 2.dp else 1.dp, if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
+                                            ) {
+                                                Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
+                                                    Spacer(Modifier.height(4.dp))
+                                                    Text(style, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                                    Text(radiusText, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                }
+                                            }
                                         }
-                                        Text("Rounded (Default) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
-                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Theme Bloom Circular Reveal (580ms)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Smooth radial wave transition when switching themes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Theme Transition Blend (Fade)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Smooth fade in / fade out blend when switching themes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
                                     }

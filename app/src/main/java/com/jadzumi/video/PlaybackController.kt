@@ -64,6 +64,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     // Milestone 4 Privacy & Playback Settings
     var backgroundAudioEnabled by mutableStateOf(prefs.getBoolean("bg_audio", false))
+    var brightnessBoost by mutableStateOf(prefs.getBoolean("brightness_boost", false))
     var rememberProgress by mutableStateOf(prefs.getBoolean("remember_progress", true))
     var saveTrackPrefs by mutableStateOf(prefs.getBoolean("save_track_prefs", true))
     var swipeGesturesEnabled by mutableStateOf(prefs.getBoolean("swipe_gestures", true))
@@ -172,6 +173,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun updateSwipeGestures(enabled: Boolean) {
         swipeGesturesEnabled = enabled
         prefs.edit { putBoolean("swipe_gestures", enabled) }
+    }
+
+    fun updateBrightnessBoost(enabled: Boolean) {
+        brightnessBoost = enabled
+        prefs.edit { putBoolean("brightness_boost", enabled) }
     }
 
     fun updateSeekSeconds(seconds: Int) {
