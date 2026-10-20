@@ -20,7 +20,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -448,12 +447,9 @@ fun JadzumiSplashScreen(
             // Glass Logo Tile matching jadzumi_player_splash_final.html
             Box(
                 modifier = Modifier
-                    .graphicsLayer {
-                        translationY = levitateY.dp.toPx()
-                        alpha = entryAlpha.value
-                        scaleX = entryScale.value
-                        scaleY = entryScale.value
-                    },
+                    .offset(y = levitateY.dp)
+                    .alpha(entryAlpha.value)
+                    .scale(entryScale.value),
                 contentAlignment = Alignment.Center
             ) {
                 // Frosted Glass Rounded Container
@@ -522,7 +518,7 @@ fun JadzumiSplashScreen(
                 fontSize = 19.sp,
                 fontWeight = FontWeight(650),
                 letterSpacing = 0.29.em,
-                modifier = Modifier.graphicsLayer { alpha = entryAlpha.value }
+                modifier = Modifier.alpha(entryAlpha.value)
             )
 
             Spacer(Modifier.height(if (isCompact) 36.dp else 52.dp))
@@ -535,7 +531,7 @@ fun JadzumiSplashScreen(
                 modifier = Modifier
                     .widthIn(max = 250.dp)
                     .fillMaxWidth(0.70f)
-                    .graphicsLayer { alpha = entryAlpha.value },
+                    .alpha(entryAlpha.value),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // 3px Progress Track with gradient fill

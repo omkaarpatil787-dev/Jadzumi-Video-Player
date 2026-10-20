@@ -928,11 +928,8 @@ private val destinations = listOf(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .width(46.dp)
-                                            .graphicsLayer {
-                                                scaleX = pillScale
-                                                scaleY = pillScale
-                                                alpha = pillAlpha
-                                            }
+                                            .scale(pillScale)
+                                            .alpha(pillAlpha)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
                                     )
@@ -961,11 +958,8 @@ private val destinations = listOf(
                                             modifier = Modifier
                                                 .fillMaxHeight()
                                                 .width(40.dp)
-                                                .graphicsLayer {
-                                                    scaleX = pillScale
-                                                    scaleY = pillScale
-                                                    alpha = pillAlpha
-                                                }
+                                                .scale(pillScale)
+                                                .alpha(pillAlpha)
                                                 .clip(RoundedCornerShape(14.dp))
                                                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
                                         )
