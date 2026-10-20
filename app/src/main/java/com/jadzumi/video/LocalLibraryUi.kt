@@ -782,6 +782,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     defaultCategory: String = "All videos",
     onScrollActive: ((Boolean) -> Unit)? = null
 ) {
+    val colors = LocalCinemaFlowColors.current
     val add = rememberFolderPicker(library)
     val listState = rememberLazyListState()
     val isHeroMinimized by remember(listState) {
