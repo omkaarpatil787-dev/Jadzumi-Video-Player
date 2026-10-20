@@ -43,9 +43,15 @@ fun MovieDetailsPage(
         extractMovieMetadata(video, state.sidecars, context)
     }
 
-    var onlineMeta by remember(video.identity) { mutableStateOf<OnlineMediaMetadata?>(null) }
+    var onlineMeta by remember(video.identity) {
+        mutableStateOf(
+            OnlineMetadataFetcher.getCachedMovie(context, metadata.title, metadata.year)
+                ?: OnlineMetadataFetcher.getCachedMovie(context, video.title, metadata.year)
+        )
+    }
     LaunchedEffect(video.identity, metadata.title, metadata.year) {
         val fetched = OnlineMetadataFetcher.fetchMovieMetadata(context, metadata.title, metadata.year)
+            ?: OnlineMetadataFetcher.fetchMovieMetadata(context, video.title, metadata.year)
         if (fetched != null) {
             onlineMeta = fetched
         }
@@ -55,13 +61,20 @@ fun MovieDetailsPage(
         val meta = onlineMeta
         if (meta != null) {
             val syn = metadata.synopsis
-            val isGenericSynopsis = syn.isNullOrBlank() || syn.contains("offline library", ignoreCase = true) || syn.contains("feature film stored", ignoreCase = true)
+            val isGenericSynopsis = syn.isNullOrBlank()
+                || syn.contains("offline library", ignoreCase = true)
+                || syn.contains("feature film stored", ignoreCase = true)
+                || syn.contains("cinematic experience", ignoreCase = true)
+                || syn.contains("cinematic journey", ignoreCase = true)
+                || syn.contains("visionary journey", ignoreCase = true)
+                || syn.contains("animated spectacle", ignoreCase = true)
+                || syn.contains("psychological puzzle", ignoreCase = true)
             metadata.copy(
                 title = meta.title.ifBlank { metadata.title },
                 year = meta.year ?: metadata.year,
                 rating = meta.rating ?: metadata.rating,
-                genres = if ((metadata.genres.isEmpty() || metadata.genres == listOf("Feature Film", "Cinema")) && meta.genres.isNotEmpty()) meta.genres else metadata.genres,
-                synopsis = if (isGenericSynopsis && !meta.synopsis.isNullOrBlank()) meta.synopsis else syn,
+                genres = meta.genres.takeIf { it.isNotEmpty() } ?: metadata.genres,
+                synopsis = if ((isGenericSynopsis || syn.isNullOrBlank()) && !meta.synopsis.isNullOrBlank()) meta.synopsis else syn,
                 posterUri = metadata.posterUri ?: meta.localPosterPath ?: meta.posterUrl,
                 backdropUri = metadata.backdropUri ?: meta.backdropUrl ?: meta.localPosterPath ?: meta.posterUrl
             )

@@ -1574,6 +1574,22 @@ fun MovieSummaryCard(
     val metadata = remember(video, sidecars) {
         extractMovieMetadata(video, sidecars, context)
     }
+    var dynamicPoster by remember(video.identity) {
+        mutableStateOf(
+            metadata.posterUri
+                ?: OnlineMetadataFetcher.getCachedMovie(context, metadata.title, metadata.year)?.localPosterPath
+                ?: OnlineMetadataFetcher.getCachedMovie(context, video.title, metadata.year)?.localPosterPath
+        )
+    }
+    LaunchedEffect(video.identity, metadata.title, metadata.year) {
+        if (dynamicPoster == null) {
+            val fetched = OnlineMetadataFetcher.fetchMovieMetadata(context, metadata.title, metadata.year)
+                ?: OnlineMetadataFetcher.fetchMovieMetadata(context, video.title, metadata.year)
+            if (fetched?.localPosterPath != null || fetched?.posterUrl != null) {
+                dynamicPoster = fetched.localPosterPath ?: fetched.posterUrl
+            }
+        }
+    }
     val savedPos = playback.savedPosition(video)
     val dur = video.duration.takeIf { it > 0 } ?: 1000L
     val isWatched = savedPos >= dur * 0.9f
@@ -1598,7 +1614,7 @@ fun MovieSummaryCard(
                     .background(colors.bgSecondary)
             ) {
                 SidecarImage(
-                    uri = metadata.posterUri ?: metadata.backdropUri,
+                    uri = dynamicPoster ?: metadata.backdropUri,
                     fallbackVideo = video,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -1746,10 +1762,28 @@ fun TvSeriesSummaryCard(
     playback: PlaybackController,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val watched = remember(series, playback.historyVersion) { series.watchedCount(playback) }
     val total = series.totalEpisodes
     val progress = if (total > 0) (watched.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
     val colors = LocalCinemaFlowColors.current
+
+    var dynamicPoster by remember(series.id) {
+        mutableStateOf(
+            series.posterUri
+                ?: OnlineMetadataFetcher.getCachedTvShow(context, series.title)?.localPosterPath
+                ?: OnlineMetadataFetcher.getCachedTvShow(context, series.id)?.localPosterPath
+        )
+    }
+    LaunchedEffect(series.id, series.title) {
+        if (dynamicPoster == null) {
+            val fetched = OnlineMetadataFetcher.fetchTvShowMetadata(context, series.title)
+                ?: OnlineMetadataFetcher.fetchTvShowMetadata(context, series.id)
+            if (fetched?.localPosterPath != null || fetched?.posterUrl != null) {
+                dynamicPoster = fetched.localPosterPath ?: fetched.posterUrl
+            }
+        }
+    }
 
     Surface(
         modifier = Modifier
@@ -1770,7 +1804,7 @@ fun TvSeriesSummaryCard(
             ) {
                 val firstEp = series.seasons.values.firstOrNull()?.firstOrNull()
                 SidecarImage(
-                    uri = series.posterUri ?: series.backdropUri,
+                    uri = dynamicPoster ?: series.backdropUri,
                     fallbackVideo = firstEp,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -2148,6 +2182,37 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
     }
 }
 
+private fun Bitmap.isAlmostBlack(): Boolean {
+    return try {
+        val w = width
+        val h = height
+        if (w <= 0 || h <= 0) return true
+        val samplePoints = intArrayOf(
+            w / 2, h / 2,
+            w / 4, h / 4,
+            (w * 3) / 4, h / 4,
+            w / 4, (h * 3) / 4,
+            (w * 3) / 4, (h * 3) / 4,
+            w / 2, h / 4,
+            w / 2, (h * 3) / 4
+        )
+        var totalLum = 0L
+        val count = samplePoints.size / 2
+        for (i in 0 until count) {
+            val px = samplePoints[i * 2]
+            val py = samplePoints[i * 2 + 1]
+            val color = getPixel(px, py)
+            val r = (color shr 16) and 0xFF
+            val g = (color shr 8) and 0xFF
+            val b = color and 0xFF
+            totalLum += (r * 299 + g * 587 + b * 114) / 1000
+        }
+        (totalLum / count) < 18
+    } catch (_: Throwable) {
+        false
+    }
+}
+
 @Composable internal fun LocalThumbnail(video: LocalVideo, modifier: Modifier) {
     val context = LocalContext.current.applicationContext
     val key = "${video.uri}:${video.modified}:${video.bytes}"
@@ -2162,39 +2227,57 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
             ThumbnailMemory.permits.withPermit {
                 ThumbnailMemory.cache.get(key) ?: run {
                     var bmp: Bitmap? = null
-                    // 1. On Android 10+, request cached system thumbnail from ContentResolver
-                    if (Build.VERSION.SDK_INT >= 29) {
-                        runCatching {
-                            bmp = context.contentResolver.loadThumbnail(video.uri.toUri(), android.util.Size(480, 270), null)
+
+                    // 1. Anti-Black Frame Fallback: Sample video at 12% runtime (clamped between 10s and 180s)
+                    val retriever = MediaMetadataRetriever()
+                    try {
+                        retriever.setDataSource(context, video.uri.toUri())
+                        val sampleTimeUs = if (video.duration > 0) {
+                            (video.duration * 1000L * 0.12f).toLong().coerceIn(10_000_000L, 180_000_000L)
+                        } else {
+                            15_000_000L
                         }
-                    }
-                    // 2. Sample frame at 12% into the movie (or 15s in) to bypass black intro frames
-                    if (bmp == null) {
-                        val retriever = MediaMetadataRetriever()
-                        try {
-                            retriever.setDataSource(context, video.uri.toUri())
-                            val sampleTimeUs = if (video.duration > 0) {
-                                (video.duration * 1000L * 0.12f).toLong().coerceIn(10_000_000L, 180_000_000L)
+                        if (Build.VERSION.SDK_INT >= 27) {
+                            val candidate = retriever.getScaledFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                            bmp = if (candidate != null && !candidate.isAlmostBlack()) {
+                                candidate
                             } else {
-                                15_000_000L
-                            }
-                            if (Build.VERSION.SDK_INT >= 27) {
-                                bmp = retriever.getScaledFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
-                                if (bmp == null) {
-                                    bmp = retriever.getScaledFrameAtTime(sampleTimeUs / 2, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                val altTime = (sampleTimeUs * 2).coerceIn(25_000_000L, 240_000_000L)
+                                val altCandidate = retriever.getScaledFrameAtTime(altTime, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                if (altCandidate != null && !altCandidate.isAlmostBlack()) {
+                                    altCandidate
+                                } else {
+                                    val halfCandidate = retriever.getScaledFrameAtTime(sampleTimeUs / 2, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                    if (halfCandidate != null && !halfCandidate.isAlmostBlack()) {
+                                        halfCandidate
+                                    } else {
+                                        candidate ?: altCandidate ?: halfCandidate
+                                    }
                                 }
-                                if (bmp == null) {
-                                    bmp = retriever.getScaledFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                            }
+                        }
+                        if (bmp == null || bmp.isAlmostBlack()) {
+                            val fullCandidate = retriever.getFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                            if (fullCandidate != null && !fullCandidate.isAlmostBlack()) {
+                                bmp = fullCandidate
+                            }
+                        }
+                    } catch (_: Exception) { } finally {
+                        runCatching { retriever.release() }
+                    }
+
+                    // 2. If MediaMetadataRetriever produced no frame or black frame, fallback to system ContentResolver thumbnail
+                    if (bmp == null || bmp.isAlmostBlack()) {
+                        if (Build.VERSION.SDK_INT >= 29) {
+                            runCatching {
+                                val sysThumb = context.contentResolver.loadThumbnail(video.uri.toUri(), android.util.Size(480, 270), null)
+                                if (sysThumb != null && (bmp == null || !sysThumb.isAlmostBlack())) {
+                                    bmp = sysThumb
                                 }
                             }
-                            if (bmp == null) {
-                                bmp = retriever.getFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-                                    ?: retriever.getFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-                            }
-                        } catch (_: Exception) { } finally {
-                            runCatching { retriever.release() }
                         }
                     }
+
                     bmp?.also { ThumbnailMemory.cache.put(key, it) }
                 }
             }

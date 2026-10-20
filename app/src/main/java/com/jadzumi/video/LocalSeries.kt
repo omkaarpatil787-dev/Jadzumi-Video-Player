@@ -336,6 +336,8 @@ fun clusterVideosIntoSeries(
 
         val cachedOnline = if (context != null) {
             OnlineMetadataFetcher.getCachedTvShow(context, firstInfo.seriesTitle)
+                ?: OnlineMetadataFetcher.getCachedTvShow(context, seriesTitleCleaned)
+                ?: OnlineMetadataFetcher.getCachedTvShow(context, key)
         } else null
 
         val effectivePoster = poster ?: cachedOnline?.localPosterPath ?: cachedOnline?.posterUrl
@@ -590,6 +592,7 @@ fun extractMovieMetadata(
 
     val cachedOnline = if (context != null) {
         OnlineMetadataFetcher.getCachedMovie(context, cleanedTitle, parsedYear)
+            ?: OnlineMetadataFetcher.getCachedMovie(context, video.title, parsedYear)
     } else null
 
     val effectivePoster = poster ?: cachedOnline?.localPosterPath ?: cachedOnline?.posterUrl

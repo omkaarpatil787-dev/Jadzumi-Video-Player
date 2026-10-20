@@ -51,10 +51,14 @@ fun TvShowDetailsPage(
 ) {
     val context = LocalContext.current
     var onlineShow by remember(series.id, series.title) {
-        mutableStateOf(OnlineMetadataFetcher.getCachedTvShow(context, series.title))
+        mutableStateOf(
+            OnlineMetadataFetcher.getCachedTvShow(context, series.title)
+                ?: OnlineMetadataFetcher.getCachedTvShow(context, series.id)
+        )
     }
     LaunchedEffect(series.id, series.title) {
         val fetched = OnlineMetadataFetcher.fetchTvShowMetadata(context, series.title)
+            ?: OnlineMetadataFetcher.fetchTvShowMetadata(context, series.id)
         if (fetched != null) {
             onlineShow = fetched
         }
@@ -345,18 +349,17 @@ private fun ShowHeroCard(
     onMarkSeasonWatched: () -> Unit
 ) {
     var synopsisExpanded by rememberSaveable { mutableStateOf(false) }
-    val displayPoster = series.posterUri ?: onlineShow?.localPosterPath ?: onlineShow?.posterUrl
+    val displayPoster = onlineShow?.localPosterPath
+        ?: onlineShow?.posterUrl
+        ?: series.posterUri
+        ?: series.backdropUri
     val syn = series.synopsis
-    val isGenericSynopsis = syn.isNullOrBlank() ||
-        syn.contains("Offline TV Series", ignoreCase = true) ||
-        syn.contains("offline library", ignoreCase = true) ||
-        syn.contains("feature film stored", ignoreCase = true)
-    val displaySynopsis = if (isGenericSynopsis && !onlineShow?.synopsis.isNullOrBlank()) {
-        onlineShow!!.synopsis!!
-    } else syn ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
+    val displaySynopsis = onlineShow?.synopsis?.takeIf { it.isNotBlank() }
+        ?: syn
+        ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
 
-    val displayTitle = onlineShow?.title ?: series.title
-    val displayYear = onlineShow?.year ?: series.year ?: "2024"
+    val displayTitle = onlineShow?.title?.takeIf { it.isNotBlank() } ?: series.title
+    val displayYear = onlineShow?.year?.takeIf { it.isNotBlank() } ?: series.year ?: "2024"
     val displayGenres = (onlineShow?.genres?.takeIf { it.isNotEmpty() } ?: series.genres).filter { it != "Cinema" && it != "Feature Film" }
 
     val heroPad = if (isTablet) 22.dp else 16.dp
