@@ -30,11 +30,17 @@ jobs:
         sed -i 's/\r$//' gradlew
         chmod +x gradlew
 
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug --no-daemon
+    - name: Run Unit Tests & Build APKs
+      run: ./gradlew test assembleRelease assembleDebug --no-daemon
 
-    - name: Save APK for Download
+    - name: Save Release APK (v1.0.0 Optimized & Shrunk)
       uses: actions/upload-artifact@v4
       with:
-        name: Jadzumi-Video-Build-6-debug
+        name: Jadzumi-Video-v1.0.0-Release
+        path: app/build/outputs/apk/release/*.apk
+
+    - name: Save Debug APK (v1.0.0)
+      uses: actions/upload-artifact@v4
+      with:
+        name: Jadzumi-Video-v1.0.0-Debug
         path: app/build/outputs/apk/debug/*.apk
