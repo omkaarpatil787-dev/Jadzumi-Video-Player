@@ -1562,6 +1562,24 @@ fun TvSeriesSummaryCard(
                     modifier = Modifier.fillMaxSize()
                 )
 
+                // Top Left Rating Badge
+                series.rating?.let { rating ->
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color.Black.copy(alpha = 0.75f),
+                        modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Icon(Icons.Rounded.Star, null, Modifier.size(11.dp), tint = Color(0xFFF9AB00))
+                            Text(rating, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+                }
+
                 // Seasons badge
                 Surface(
                     shape = RoundedCornerShape(6.dp),

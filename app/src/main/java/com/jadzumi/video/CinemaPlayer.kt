@@ -181,6 +181,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
         val haptic = LocalHapticFeedback.current
         var rippleSide by remember { mutableStateOf<String?>(null) }
+        var lastActiveSide by remember { mutableStateOf("left") }
         var rippleCount by remember { mutableIntStateOf(0) }
 
         LaunchedEffect(rippleSide, rippleCount) {
@@ -227,11 +228,13 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 onDoubleTap = { offset ->
                                     if (!playback.locked) {
                                         val isLeft = offset.x < size.width / 2
+                                        val targetSide = if (isLeft) "left" else "right"
+                                        lastActiveSide = targetSide
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        if (rippleSide == (if (isLeft) "left" else "right")) {
+                                        if (rippleSide == targetSide) {
                                             rippleCount++
                                         } else {
-                                            rippleSide = if (isLeft) "left" else "right"
+                                            rippleSide = targetSide
                                             rippleCount = 1
                                         }
                                         playback.skip(if (isLeft) -seekDeltaMs else seekDeltaMs)
@@ -277,13 +280,14 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                 }
 
                 // YouTube-Style Double-Tap Fast-Forward / Rewind Ripple Overlays (Sized to match 54dp seek buttons)
+                val activeSide = rippleSide ?: lastActiveSide
                 AnimatedVisibility(
                     visible = rippleSide != null,
                     enter = fadeIn(tween(120)) + scaleIn(initialScale = 0.85f),
                     exit = fadeOut(tween(220)) + scaleOut(targetScale = 1.05f),
-                    modifier = Modifier.align(if (rippleSide == "left") Alignment.CenterStart else Alignment.CenterEnd)
+                    modifier = Modifier.align(if (activeSide == "left") Alignment.CenterStart else Alignment.CenterEnd)
                 ) {
-                    val isLeft = rippleSide == "left"
+                    val isLeft = activeSide == "left"
                     val totalSec = playback.seekIncrementSeconds * rippleCount.coerceAtLeast(1)
                     Surface(
                         modifier = Modifier
@@ -423,9 +427,6 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 
                             // Top-Right Icons: Clean and uncluttered glassy controls
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                FrostedCircleButton("Audio and subtitles", { quickMenuSection = "subs"; interaction++ }, size = 44.dp) {
-                                    Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(22.dp), tint = Color.White)
-                                }
                                 FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
                                     Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
                                 }

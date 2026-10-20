@@ -13,12 +13,13 @@
 ## ✨ Key Features & Highlights
 
 ### 📱 1. Universal Phone & Tablet Ergonomics
-- 🫧 **Auto-Minimizing Floating Dock & Tablet Rail**: Silky-smooth fluid physics (`0.88` damping ratio) automatically collapse the navigation bar into a sleek compact pill when scrolling through media. A single tap pops it right back open!
+- 🫧 **Snapchat-Style Pure Dock & Tablet Rail**: Ultra-clean, alive navigation icons with natural spring scaling (`1.15x`) and vibrant primary tints. No intrusive bounding shapes or squished glow capsules when auto-minimizing on tablets or phones!
 - 🎛️ **Dock Style Toggle**: Choose between **Icons & labels** (default) or **Icons only** (ultra-sleek 54dp dock / 64dp tablet rail) under Settings › Display.
-- 📐 **Balanced Mobile Portrait Cinema Player**: Symmetrically centered timecode capsule pill and player actions dock in portrait orientation.
-- 🎬 **Unified Movie Details Page**: Pure single-surface card layout matching TV show ergonomics without elevation tinting or two-tone boundaries. Side-by-side poster and info on all devices, with responsive synopsis and symmetrical action buttons.
+- 📐 **Balanced Mobile Portrait Cinema Player**: Symmetrically centered timecode capsule pill and player actions dock in portrait orientation. Streamlined top bar keeps focus on immersion with subtitles directly accessible via Cinema Settings.
+- 🎬 **Unified Design Parity (Home, Movies & TV Shows)**: Pixel-perfect parity across hero cards, genre subtitles, click-to-expand synopses, rating stars, and single-surface styling without elevation tinting or two-tone borders.
 - 🏷️ **FlowRow Audio & Subtitle Chips**: Modern badge chips for Multi-channel 5.1 passthrough, FFmpeg 6.1 libavcodec, libass, and PGS/SRT formats that never clip or wrap awkwardly on portrait phones.
 - 🔄 **One-Tap Orientation Switcher**: In-player button instantly cycles between **Landscape**, **Portrait**, and **Auto-Sensor** rotation.
+- ✨ **Shared-Axis Premium Tab Transitions**: Replaces fast flickering crossfades with directional horizontal parallax (`slideIn/Out` + overlapping fade) for a continuous, silky-smooth 120 FPS navigation feel.
 
 ---
 
@@ -30,9 +31,9 @@
 
 ---
 
-### 🖼️ 3. Online Poster Album & Rich Metadata Scraping
-- 🌐 **Online Artwork & Metadata Scraper**: When local sidecars are missing, Jadzumi fetches official high-resolution posters, official plot synopses, critic ratings, and release years via Wikipedia REST and TVMaze.
-- 💾 **Local Disk Caching**: Downloaded posters and metadata are cached locally on disk (`cacheDir/poster_cache/`) so they load instantly and remain available 100% offline.
+### 🖼️ 3. Online Poster Album & Rich Metadata Scraping (Movies & TV Series)
+- 🌐 **Dual-Engine Online Metadata Scraper**: When local sidecars are missing, Jadzumi fetches official high-resolution posters, official plot synopses, critic ratings, and release years via **Wikipedia REST** and **TVMaze** for both feature films and TV shows with automatic fallback.
+- 💾 **Local Disk Caching**: Downloaded posters and metadata are cached locally on disk (`cacheDir/poster_cache/`) so they load instantly and remain available 100% offline with verified `☁ Online Art` status pills.
 - 🎯 **Accurate Genre Detection**: Intelligently categorizes movies and shows into Horror, Sci-Fi, Action, Animation, Crime, Thriller, and Comedy.
 - 🎞️ **Anti-Black Frame Fallback**: Samples local video frames at 12% runtime (`10s`–`180s`) to ensure local thumbnails never display black intros.
 

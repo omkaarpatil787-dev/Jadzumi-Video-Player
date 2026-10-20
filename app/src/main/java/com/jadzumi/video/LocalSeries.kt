@@ -334,18 +334,25 @@ fun clusterVideosIntoSeries(
             }
         }
 
+        val cachedOnline = if (context != null) {
+            OnlineMetadataFetcher.getCachedTvShow(context, firstInfo.seriesTitle)
+        } else null
+
+        val effectivePoster = poster ?: cachedOnline?.localPosterPath ?: cachedOnline?.posterUrl
+        val effectiveBackdrop = backdrop ?: cachedOnline?.backdropUrl ?: effectivePoster
+
         TvSeries(
             id = key,
-            title = nfoMetadata?.title ?: firstInfo.seriesTitle,
+            title = nfoMetadata?.title ?: cachedOnline?.title ?: firstInfo.seriesTitle,
             folderUri = folderUri,
             seasons = sortedSeasons,
-            posterUri = poster,
-            backdropUri = backdrop,
-            synopsis = nfoMetadata?.plot ?: detectMovieSynopsis(firstInfo.seriesTitle, detectMovieGenres(firstInfo.seriesTitle, pool.firstOrNull()?.name ?: "")),
-            year = nfoMetadata?.year ?: "2024",
-            rating = nfoMetadata?.rating ?: "8.8",
+            posterUri = effectivePoster,
+            backdropUri = effectiveBackdrop,
+            synopsis = nfoMetadata?.plot ?: cachedOnline?.synopsis ?: detectMovieSynopsis(firstInfo.seriesTitle, detectMovieGenres(firstInfo.seriesTitle, pool.firstOrNull()?.name ?: "")),
+            year = nfoMetadata?.year ?: cachedOnline?.year ?: "2024",
+            rating = nfoMetadata?.rating ?: cachedOnline?.rating ?: "8.8",
             mpaa = nfoMetadata?.mpaa ?: "TV-14",
-            genres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() } ?: detectMovieGenres(firstInfo.seriesTitle, pool.firstOrNull()?.name ?: ""),
+            genres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() } ?: cachedOnline?.genres?.takeIf { it.isNotEmpty() } ?: detectMovieGenres(firstInfo.seriesTitle, pool.firstOrNull()?.name ?: ""),
             studio = nfoMetadata?.studio ?: when {
                 firstInfo.seriesTitle.containsAny("marvel", "disney", "mandalorian", "star wars") -> "Lucasfilm / Marvel Studios"
                 firstInfo.seriesTitle.containsAny("hbo", "game of thrones", "dragon", "last of us", "succession") -> "HBO Originals"

@@ -494,10 +494,17 @@ private val destinations = listOf(
                                                                     fadeOut(animationSpec = tween(220))
                                                         )
                                                 } else {
-                                                    // Navigating between tabs: silky smooth instant crossfade (no heavy GPU scale redraw)
-                                                    fadeIn(animationSpec = tween(140))
+                                                    // Navigating between tabs: silky smooth shared-axis animated crossfade (no fast flicker fade)
+                                                    val tabOrder = listOf("Home", "Library", "Movies", "TV Shows", "Videos", "Folders", "Settings", "Playlists")
+                                                    val initialIndex = tabOrder.indexOf(initialState)
+                                                    val targetIndex = tabOrder.indexOf(targetState)
+                                                    val isForward = if (initialIndex != -1 && targetIndex != -1) targetIndex > initialIndex else true
+
+                                                    (slideInHorizontally(animationSpec = spring(dampingRatio = 0.90f, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (it * 0.08f).toInt() else (-it * 0.08f).toInt() } +
+                                                            fadeIn(animationSpec = tween(260, easing = LinearOutSlowInEasing)))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(100))
+                                                            slideOutHorizontally(animationSpec = spring(dampingRatio = 0.90f, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (-it * 0.08f).toInt() else (it * 0.08f).toInt() } +
+                                                                    fadeOut(animationSpec = tween(190, easing = FastOutLinearInEasing))
                                                         )
                                                 }
                                             }
@@ -736,24 +743,35 @@ private val destinations = listOf(
 
             destinations.filter { it.name != "Settings" }.forEach { d ->
                 val isSelected = route == d.name || (d.name == "Home" && route == "Library")
+                val iconScale by animateFloatAsState(
+                    targetValue = if (isSelected) 1.15f else 1.0f,
+                    animationSpec = spring(dampingRatio = 0.80f, stiffness = Spring.StiffnessMediumLow),
+                    label = "railIconScale_${d.name}"
+                )
                 NavigationRailItem(
                     selected = isSelected,
                     onClick = {
                         if (isMinimized) onToggleMinimize()
                         navigate(d.name)
                     },
-                    icon = { Icon(d.icon, null) },
+                    icon = {
+                        Icon(
+                            d.icon,
+                            contentDescription = d.name,
+                            modifier = Modifier.scale(iconScale)
+                        )
+                    },
                     label = if (isIconsOnly || isMinimized) null else {
                         { Text(d.name, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) }
                     },
                     alwaysShowLabel = !isIconsOnly && !isMinimized,
                     modifier = Modifier.padding(vertical = 4.dp),
                     colors = NavigationRailItemDefaults.colors(
-                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                        indicatorColor = Color.Transparent,
                         selectedIconColor = MaterialTheme.colorScheme.primary,
                         selectedTextColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
                     )
                 )
             }
@@ -771,23 +789,34 @@ private val destinations = listOf(
             }
 
             val isSettingsSelected = route == "Settings"
+            val settingsScale by animateFloatAsState(
+                targetValue = if (isSettingsSelected) 1.15f else 1.0f,
+                animationSpec = spring(dampingRatio = 0.80f, stiffness = Spring.StiffnessMediumLow),
+                label = "settingsScale"
+            )
             NavigationRailItem(
                 selected = isSettingsSelected,
                 onClick = {
                     if (isMinimized) onToggleMinimize()
                     navigate("Settings")
                 },
-                icon = { Icon(Icons.Rounded.Settings, null) },
+                icon = {
+                    Icon(
+                        Icons.Rounded.Settings,
+                        contentDescription = "Settings",
+                        modifier = Modifier.scale(settingsScale)
+                    )
+                },
                 label = if (isIconsOnly || isMinimized) null else {
                     { Text("Settings", fontSize = 11.sp, fontWeight = if (isSettingsSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) }
                 },
                 alwaysShowLabel = !isIconsOnly && !isMinimized,
                 colors = NavigationRailItemDefaults.colors(
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    indicatorColor = Color.Transparent,
                     selectedIconColor = MaterialTheme.colorScheme.primary,
                     selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
                 )
             )
         }
@@ -890,15 +919,10 @@ private val destinations = listOf(
                     val activeColor = MaterialTheme.colorScheme.primary
                     val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
 
-                    val pillAlpha by animateFloatAsState(
-                        targetValue = if (isSelected) 1f else 0f,
-                        animationSpec = tween(180, easing = FastOutSlowInEasing),
-                        label = "pillAlpha"
-                    )
-                    val pillScale by animateFloatAsState(
-                        targetValue = if (isSelected) 1f else 0.85f,
-                        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
-                        label = "pillScale"
+                    val iconScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.15f else 1.0f,
+                        animationSpec = spring(dampingRatio = 0.80f, stiffness = Spring.StiffnessMediumLow),
+                        label = "dockIconScale_${d.name}"
                     )
 
                     Box(
@@ -912,63 +936,45 @@ private val destinations = listOf(
                                     onNavigate(d.name)
                                 }
                             }
-                            .padding(horizontal = if (isIconsOnly) 12.dp else 8.dp, vertical = if (isIconsOnly) 6.dp else 4.dp),
+                            .padding(horizontal = if (isIconsOnly) 14.dp else 10.dp, vertical = if (isIconsOnly) 6.dp else 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (isIconsOnly) {
-                            // Ultra-sleek Icons Only Mode
+                            // Ultra-sleek Snapchat-style Icons Only Mode (Pure icons, zero container shapes)
                             Box(
                                 modifier = Modifier
                                     .height(38.dp)
                                     .widthIn(min = 44.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (pillAlpha > 0.01f) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .width(46.dp)
-                                            .scale(pillScale)
-                                            .alpha(pillAlpha)
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
-                                    )
-                                }
                                 Icon(
                                     imageVector = d.icon,
                                     contentDescription = d.name,
                                     tint = if (isSelected) activeColor else inactiveColor,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .scale(iconScale)
                                 )
                             }
                         } else {
-                            // Default Icons + Labels Mode
+                            // Default Icons + Labels Mode (Snapchat-style alive spring icon + clear label)
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                                verticalArrangement = Arrangement.spacedBy(3.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .height(28.dp)
-                                        .widthIn(min = 38.dp),
+                                        .height(26.dp)
+                                        .widthIn(min = 36.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    if (pillAlpha > 0.01f) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .width(40.dp)
-                                                .scale(pillScale)
-                                                .alpha(pillAlpha)
-                                                .clip(RoundedCornerShape(14.dp))
-                                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
-                                        )
-                                    }
                                     Icon(
                                         imageVector = d.icon,
                                         contentDescription = d.name,
                                         tint = if (isSelected) activeColor else inactiveColor,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier
+                                            .size(21.dp)
+                                            .scale(iconScale)
                                     )
                                 }
                                 Text(
@@ -1812,20 +1818,46 @@ private val settingsCategories = listOf(
                                 PrivacyLeftPane(localState, playback, addFolder, onManagePermissions = { activeCategory = "Folders" }) { statusNotice = it }
                             }
                             item {
+                                var extractThumbnails by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("extract_thumbnails", true)) }
                                 var scanSidecars by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("scan_sidecars", true)) }
                                 var onlineMetadata by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("online_metadata", false)) }
 
                                 Panel {
-                                    Text("Local Artwork & Metadata (Milestone 5B)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Artwork & Metadata", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text(
-                                        "Configure offline sidecar scraping (.nfo, poster.jpg, fanart.jpg) and optional online metadata.",
+                                        "Configure local media thumbnail generation, offline sidecar scraping (.nfo, poster.jpg, fanart.jpg) and optional online metadata.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
                                     )
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    // 1. Scan Local Sidecars
+                                    // 1. Hardware Video Thumbnail Extraction
+                                    Row(
+                                        Modifier.fillMaxWidth().padding(vertical = 14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Local Thumbnail Extraction", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text(
+                                                "Hardware-accelerated on-device poster generation from local video keyframes when no sidecar image is present.",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Switch(
+                                            checked = extractThumbnails,
+                                            onCheckedChange = {
+                                                extractThumbnails = it
+                                                prefs.edit { putBoolean("extract_thumbnails", it) }
+                                            }
+                                        )
+                                    }
+
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    // 2. Scan Local Sidecars
                                     Row(
                                         Modifier.fillMaxWidth().padding(vertical = 14.dp),
                                         verticalAlignment = Alignment.CenterVertically,
@@ -1850,7 +1882,7 @@ private val settingsCategories = listOf(
 
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    // 2. Optional Online Metadata (Opt-In only, disabled by default)
+                                    // 3. Optional Online Metadata (Opt-In only, disabled by default)
                                     Row(
                                         Modifier.fillMaxWidth().padding(vertical = 14.dp),
                                         verticalAlignment = Alignment.CenterVertically,
@@ -1859,7 +1891,7 @@ private val settingsCategories = listOf(
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Fetch Online Metadata (Opt-In)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(
-                                                "Disabled by default. When enabled, optionally fetches missing plot summaries and poster art from the web, strictly cached locally.",
+                                                "Disabled by default. When enabled, fetches missing high-resolution posters and plot summaries from Wikipedia & TVMaze, strictly cached locally.",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -1930,6 +1962,10 @@ private val settingsCategories = listOf(
     onManagePermissions: () -> Unit,
     onStatus: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("jadzumi_settings", Context.MODE_PRIVATE) }
+    var localSandbox by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("local_sandbox", true)) }
+
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1967,6 +2003,31 @@ private val settingsCategories = listOf(
                     Text("Add Directory", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                 }
             }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, modifier = Modifier.padding(vertical = 12.dp))
+
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text("Strict Local Sandbox", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text(
+                        "Enforces on-device isolated storage. Completely prohibits background telemetry and unrequested cloud sync.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = localSandbox,
+                    onCheckedChange = {
+                        localSandbox = it
+                        prefs.edit { putBoolean("local_sandbox", it) }
+                    }
+                )
+            }
+
             Spacer(Modifier.height(14.dp))
             Text("ACTIVE INTERNAL DIRECTORIES", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))

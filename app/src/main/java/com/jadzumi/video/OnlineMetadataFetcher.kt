@@ -403,9 +403,11 @@ object OnlineMetadataFetcher {
 
         if (!isNetworkConnected(context)) return@withContext null
 
+        val queryName = cleanTitle.replace(Regex("\\b(19\\d{2}|20\\d{2})\\b"), "").trim().ifEmpty { cleanTitle }
+
         try {
             val tvMazeUrl = "https://api.tvmaze.com/singlesearch/shows?q=" +
-                    URLEncoder.encode(cleanTitle, "UTF-8")
+                    URLEncoder.encode(queryName, "UTF-8")
 
             val conn = URL(tvMazeUrl).openConnection() as HttpURLConnection
             conn.connectTimeout = 6000
@@ -476,6 +478,115 @@ object OnlineMetadataFetcher {
             }
         } catch (e: Exception) {
             Log.w(TAG, "TVMaze lookup failed for $cleanTitle: ${e.message}")
+        }
+
+        // Fallback: Query Wikipedia TV Series REST API if TVMaze failed or returned nothing
+        try {
+            val searchQuery = "$cleanTitle TV series".trim()
+            val searchUrl = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
+                    URLEncoder.encode(searchQuery, "UTF-8") + "&format=json"
+
+            val conn = URL(searchUrl).openConnection() as HttpURLConnection
+            conn.connectTimeout = 6000
+            conn.readTimeout = 8000
+            conn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2 (omkaar.patil787@gmail.com)")
+
+            var pageTitle: String? = null
+            if (conn.responseCode == 200) {
+                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                val searchJson = JSONObject(body)
+                val searchHits = searchJson.optJSONObject("query")?.optJSONArray("search")
+                if (searchHits != null && searchHits.length() > 0) {
+                    pageTitle = searchHits.getJSONObject(0).optString("title")
+                }
+            }
+
+            if (pageTitle.isNullOrBlank()) {
+                pageTitle = cleanTitle
+            }
+
+            val summaryUrl = "https://en.wikipedia.org/api/rest_v1/page/summary/" +
+                    URLEncoder.encode(pageTitle.replace(' ', '_'), "UTF-8")
+
+            val sumConn = URL(summaryUrl).openConnection() as HttpURLConnection
+            sumConn.connectTimeout = 6000
+            sumConn.readTimeout = 8000
+            sumConn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2 (omkaar.patil787@gmail.com)")
+
+            if (sumConn.responseCode == 200) {
+                val sumBody = sumConn.inputStream.bufferedReader().use { it.readText() }
+                val sumJson = JSONObject(sumBody)
+
+                val officialTitle = sumJson.optString("title", cleanTitle)
+                val synopsis = sumJson.optString("extract").takeIf { it.isNotBlank() }
+                val desc = sumJson.optString("description")
+
+                val posterUrl = sumJson.optJSONObject("originalimage")?.optString("source")
+                    ?: sumJson.optJSONObject("thumbnail")?.optString("source")
+
+                val yearMatch = Regex("\\b(19\\d{2}|20\\d{2})\\b").find(desc + " " + (synopsis ?: ""))
+                val detectedYear = yearMatch?.groupValues?.get(1) ?: "2024"
+
+                val combinedText = (desc + " " + (synopsis ?: "") + " " + officialTitle).lowercase(Locale.US)
+                val detectedGenres = mutableListOf<String>()
+
+                when {
+                    combinedText.containsAny("horror", "supernatural", "mystery", "thriller", "creepy", "stephen king") -> {
+                        detectedGenres.add("Horror")
+                        detectedGenres.add("Mystery")
+                        detectedGenres.add("Drama")
+                    }
+                    combinedText.containsAny("sci-fi", "science fiction", "space") -> {
+                        detectedGenres.add("Sci-Fi")
+                        detectedGenres.add("Drama")
+                    }
+                    combinedText.containsAny("animated", "anime", "animation") -> {
+                        detectedGenres.add("Animation")
+                        detectedGenres.add("Fantasy")
+                    }
+                    combinedText.containsAny("comedy", "sitcom") -> {
+                        detectedGenres.add("Comedy")
+                    }
+                    else -> {
+                        detectedGenres.add("Drama")
+                        detectedGenres.add("Series")
+                    }
+                }
+
+                val localPoster = if (!posterUrl.isNullOrBlank()) {
+                    downloadAndCachePoster(context, posterUrl, cacheKey)
+                } else null
+
+                val metadata = OnlineMediaMetadata(
+                    title = officialTitle,
+                    year = detectedYear,
+                    rating = "8.8",
+                    genres = detectedGenres.distinct().take(3),
+                    synopsis = synopsis,
+                    posterUrl = posterUrl,
+                    localPosterPath = localPoster
+                )
+
+                try {
+                    val cacheJson = JSONObject().apply {
+                        put("title", metadata.title)
+                        put("year", metadata.year)
+                        put("rating", metadata.rating)
+                        put("synopsis", metadata.synopsis)
+                        put("posterUrl", metadata.posterUrl)
+                        put("localPoster", metadata.localPosterPath)
+                        val arr = org.json.JSONArray()
+                        metadata.genres.forEach { arr.put(it) }
+                        put("genres", arr)
+                    }
+                    cacheFile.writeText(cacheJson.toString())
+                } catch (_: Exception) { }
+
+                memoryCache[cacheKey] = metadata
+                return@withContext metadata
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Wikipedia TV fallback lookup failed for $cleanTitle: ${e.message}")
         }
 
         null

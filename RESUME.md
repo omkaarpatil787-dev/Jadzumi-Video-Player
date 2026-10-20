@@ -26,18 +26,20 @@
 | **Milestone 9 — Phone Ergonomics (v1.1.0)** | Floating frosted glass bottom bar, adaptive 2-row mobile headers, in-player rotation | `COMPLETED` |
 | **Milestone 10 — Hardware & DSP Overhaul (v1.2.0)** | Dynamic hardware inspector, Audiophile DSP, seek ripples, unified storage in settings | `COMPLETED` |
 | **Milestone 11 — Modern Refinements & Artwork (v1.2.0+)** | Jadzumi Player rebranding, OLED-exclusive HDR, online poster scraper & disk cache, fluid dock/rail minimize, glassify slider, glowing aurora splash, unified single-surface movie details | `COMPLETED` |
+| **Milestone 12 — TV Metadata Parity & Fluidity Polish** | Dual-engine Wikipedia REST + TVMaze fallback scraper, Snapchat-style alive icons on dock & tablet rail, shared-axis tab transitions, double-tap seek ripple ghosting fix, unified settings switches | `COMPLETED` |
 
 ---
 
 ## 🚀 Key Features in Current Version (v1.2.0)
 
 ### 📱 1. Universal Phone & Tablet Ergonomics
-- 🫧 **Auto-Minimizing Floating Dock & Tablet Rail**: Silky-smooth fluid physics (`0.88` damping ratio) smoothly collapse the bottom dock (phone) and side rail (tablet) into sleek compact pills during scrolling. Tap to expand instantly.
+- 🫧 **Snapchat-Style Pure Dock & Tablet Rail**: Ultra-clean, alive navigation icons with natural spring scaling (`1.15x`) and vibrant primary tints. Completely eliminates squished glow rectangles and bounding boxes when auto-minimizing on tablets or phones!
 - 🎛️ **Dock Style Toggle**: Choose between **Icons & labels** (default) or **Icons only** (ultra-sleek 54dp dock / 64dp rail) under Settings › Display.
-- 📐 **Balanced Mobile Portrait Cinema Player**: Symmetrically centered timecode capsule pill and player actions dock in portrait orientation.
-- 🎬 **Unified Single-Surface Movie Details Page**: Pure single-surface card layout matching TV show ergonomics without elevation tinting or two-tone boundaries. Side-by-side poster and info on all devices, with responsive synopsis and symmetrical action buttons.
+- 📐 **Balanced Mobile Portrait Cinema Player**: Symmetrically centered timecode capsule pill and player actions dock in portrait orientation. Streamlined top bar keeps focus on immersion with subtitles directly accessible via Cinema Settings.
+- 🎬 **Unified Design Parity (Home, Movies & TV Shows)**: Complete design parity across hero cards, genre subtitles, click-to-expand synopses, rating stars, and single-surface styling without elevation tinting or two-tone borders.
 - 🏷️ **FlowRow Audio & Subtitle Chips**: Modern badge chips for Multi-channel 5.1 passthrough, FFmpeg 6.1 libavcodec, libass, and PGS/SRT formats that never clip or wrap awkwardly on portrait phones.
 - 🔄 **In-Player Orientation Switcher**: One-tap rotation between **Landscape**, **Portrait**, and **Auto-Sensor**.
+- ✨ **Shared-Axis Premium Tab Transitions**: Replaces fast flickering crossfades with directional horizontal parallax (`slideIn/Out` + overlapping fade) for a continuous, silky-smooth 120 FPS navigation feel.
 
 ### ☀️ 2. OLED / AMOLED Exclusive Auto HDR Peak Luminance
 - 🌈 **Auto HDR Detection**: Real-time detection of **HDR10**, **HDR10+**, **Dolby Vision** (`dv`/`dovi`), and **HLG** content.
@@ -45,9 +47,9 @@
 - 🛡️ **LCD Backlight Bleed Protection**: Tone-maps naturally on LCD tablets (Xiaomi Pad 5/6, OnePlus Pad, Tab S7/S8 base, Lenovo Tab) without forcing maximum backlight, preventing contrast washout and eye strain.
 - 🔍 **Hardware Display & SoC Inspector**: Real-time inspection of display panel technology, chipset model, and screen aspect ratios (`19.5:9`, `20:9`, `21:9` on phones; `16:10` / `4:3` on tablets).
 
-### 🖼️ 3. Online Poster Album & Rich Metadata Scraping
-- 🌐 **Online Artwork & Metadata Scraper**: When local sidecars are missing, Jadzumi fetches official high-resolution posters, official plot synopses, critic ratings, and release years via Wikipedia REST and TVMaze.
-- 💾 **Local Disk Caching**: Downloaded posters and metadata are cached locally on disk (`cacheDir/poster_cache/`) so they load instantly and remain available 100% offline.
+### 🖼️ 3. Online Poster Album & Rich Metadata Scraping (Movies & TV Series)
+- 🌐 **Dual-Engine Online Metadata Scraper**: When local sidecars are missing, Jadzumi fetches official high-resolution posters, official plot synopses, critic ratings, and release years via **Wikipedia REST** and **TVMaze** for both feature films and TV shows with automatic fallback.
+- 💾 **Local Disk Caching**: Downloaded posters and metadata are cached locally on disk (`cacheDir/poster_cache/`) so they load instantly and remain available 100% offline with verified `☁ Online Art` status pills.
 - 🎯 **Accurate Genre Detection**: Intelligently categorizes movies and shows into Horror, Sci-Fi, Action, Animation, Crime, Thriller, and Comedy.
 - 🎞️ **Anti-Black Frame Fallback**: Samples local video frames at 12% runtime (`10s`–`180s`) to ensure local thumbnails never display black intros.
 

@@ -50,6 +50,16 @@ fun TvShowDetailsPage(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    var onlineShow by remember(series.id, series.title) {
+        mutableStateOf(OnlineMetadataFetcher.getCachedTvShow(context, series.title))
+    }
+    LaunchedEffect(series.id, series.title) {
+        val fetched = OnlineMetadataFetcher.fetchTvShowMetadata(context, series.title)
+        if (fetched != null) {
+            onlineShow = fetched
+        }
+    }
+
     val sortedSeasonNumbers = remember(series.seasons) {
         series.seasons.keys.sortedWith(Comparator { a, b ->
             if (a == 0) 1 else if (b == 0) -1 else a.compareTo(b)
@@ -104,7 +114,7 @@ fun TvShowDetailsPage(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "TV Shows  ›  ${series.title}",
+                            text = "TV Shows  ›  ${onlineShow?.title ?: series.title}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -116,21 +126,24 @@ fun TvShowDetailsPage(
                     Surface(
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                        modifier = Modifier.wrapContentWidth()
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Icon(
-                                Icons.Rounded.CloudDone,
+                                if (onlineShow != null) Icons.Rounded.CloudDone else Icons.Rounded.Storage,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                if (isTablet) "100% Offline Local Metadata" else "Offline",
+                                if (onlineShow != null) (if (isTablet) "Verified Album Artwork & Metadata" else "Online Art")
+                                else if (series.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
+                                else if (isTablet) "Hardware Offline Analysis" else "Offline",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -146,6 +159,7 @@ fun TvShowDetailsPage(
                     series = series,
                     nextUnwatched = nextUnwatched,
                     totalWatched = totalWatchedInSeries,
+                    onlineShow = onlineShow,
                     onPlayNext = {
                         val epToPlay = nextUnwatched ?: currentSeasonEpisodes.firstOrNull()
                         if (epToPlay != null) {
@@ -322,29 +336,29 @@ private fun ShowHeroCard(
     series: TvSeries,
     nextUnwatched: LocalVideo?,
     totalWatched: Int,
+    onlineShow: OnlineMediaMetadata?,
     onPlayNext: () -> Unit,
     onMarkSeasonWatched: () -> Unit
 ) {
-    val context = LocalContext.current
-    var onlineShow by remember(series.title) { mutableStateOf<OnlineMediaMetadata?>(null) }
-    LaunchedEffect(series.title) {
-        val fetched = OnlineMetadataFetcher.fetchTvShowMetadata(context, series.title)
-        if (fetched != null) {
-            onlineShow = fetched
-        }
-    }
-
+    var synopsisExpanded by rememberSaveable { mutableStateOf(false) }
     val displayPoster = series.posterUri ?: onlineShow?.localPosterPath ?: onlineShow?.posterUrl
     val syn = series.synopsis
-    val isGenericSynopsis = syn.isNullOrBlank() || syn.contains("Offline TV Series", ignoreCase = true)
-    val displaySynopsis = if (isGenericSynopsis) {
-        onlineShow?.synopsis ?: syn ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
-    } else syn
+    val isGenericSynopsis = syn.isNullOrBlank() ||
+        syn.contains("Offline TV Series", ignoreCase = true) ||
+        syn.contains("offline library", ignoreCase = true) ||
+        syn.contains("feature film stored", ignoreCase = true)
+    val displaySynopsis = if (isGenericSynopsis && !onlineShow?.synopsis.isNullOrBlank()) {
+        onlineShow!!.synopsis!!
+    } else syn ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
+
+    val displayTitle = onlineShow?.title ?: series.title
+    val displayYear = onlineShow?.year ?: series.year ?: "2024"
+    val displayGenres = (onlineShow?.genres?.takeIf { it.isNotEmpty() } ?: series.genres).filter { it != "Cinema" && it != "Feature Film" }
 
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val isTablet = maxWidth >= 600.dp
         val heroPad = if (isTablet) 22.dp else 16.dp
-        val posterWidth = if (isTablet) 135.dp else 102.dp
+        val posterWidth = if (isTablet) 140.dp else 102.dp
 
         val nextInfo = nextUnwatched?.let { EpisodePatterns.parse(it.name) }
         val buttonText = when {
@@ -356,18 +370,18 @@ private fun ShowHeroCard(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
         ) {
             Column(
                 modifier = Modifier.padding(heroPad),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.Top
                 ) {
-                    // Poster Image
+                    // Poster Image (2:3 aspect ratio)
                     Box(
                         modifier = Modifier
                             .width(posterWidth)
@@ -388,13 +402,24 @@ private fun ShowHeroCard(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = onlineShow?.title ?: series.title,
+                            text = displayTitle,
                             style = if (isTablet) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
+
+                        if (displayGenres.isNotEmpty()) {
+                            Text(
+                                displayGenres.joinToString(" · "),
+                                fontSize = if (isTablet) 13.sp else 12.sp,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
 
                         // Metadata badge chips: unified CircleShape pills
                         FlowRow(
@@ -443,20 +468,18 @@ private fun ShowHeroCard(
                                 }
                             }
 
-                            series.year?.let { yr ->
-                                Surface(
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                                ) {
-                                    Text(
-                                        yr,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            ) {
+                                Text(
+                                    displayYear,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
 
                             Surface(
@@ -494,8 +517,9 @@ private fun ShowHeroCard(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 lineHeight = 18.sp,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
+                                maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
                             )
                         }
                     }
@@ -507,8 +531,9 @@ private fun ShowHeroCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis
+                        maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
                     )
                 }
 
