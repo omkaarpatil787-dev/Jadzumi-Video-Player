@@ -80,7 +80,8 @@
 
 ---
 
-### 📁 8. Smart Library & Folder Management
+### 📁 8. Smart Library, Search & Folder Management
+- 🔍 **Tokenized Smart Search Engine**: Multi-word normalized search matcher across movies, TV series, episodes, and folder paths. Handles dots, underscores, hyphens, and brackets (`"the dark knight"`, `"batman 2022"`, `"spider man"`), with automatic detail view reset, keyboard IME actions, and dedicated categorized search result sections.
 - 🏷️ **Automated Series & Seasons Grouping**: Automatically groups episode patterns (`S01E01`, `1x04`) into organized series hubs and season carousels.
 - ⏳ **Next-Episode Autoplay Countdown**: 10-second autoplay countdown banner with instant "Play Now" and "Cancel" buttons.
 - ⚙️ **Settings-Integrated Storage Hub**: Comprehensive folder management under **Settings → Storage & Folders** featuring storage breakdown bars, active directory lists, and deletion protection dialogs.

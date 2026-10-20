@@ -11,7 +11,7 @@ fun timecode(seconds: Long): String {
     return String.format(Locale.ROOT, "%02d:%02d:%02d", safe / 3600, safe / 60 % 60, safe % 60)
 }
 fun filterVideos(videos: List<PreviewVideo>, query: String, category: String) = videos.filter {
-    (category == "All videos" || it.category == category) && it.title.contains(query.trim(), ignoreCase = true)
+    (category == "All videos" || it.category == category) && matchesQuery(query, it.title, it.category)
 }
 val previewVideos = listOf(
     PreviewVideo("movie", "Interstellar Horizons: The Odyssey", "Movies", 9258, 4152, "hero"),

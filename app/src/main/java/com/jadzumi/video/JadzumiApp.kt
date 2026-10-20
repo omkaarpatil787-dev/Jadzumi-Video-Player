@@ -31,6 +31,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
@@ -58,11 +60,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -146,6 +150,7 @@ private val destinations = listOf(
         "Sharp" -> 0.dp
         else -> 24.dp
     }
+    val keyboardController = LocalSoftwareKeyboardController.current
     var showSplash by rememberSaveable { mutableStateOf(true) }
 
     val scope = rememberCoroutineScope()
@@ -197,8 +202,14 @@ private val destinations = listOf(
         CompositionLocalProvider(LocalGlassIntensity provides glassIntensity) {
             Box(Modifier.fillMaxSize()) {
             Surface(Modifier.fillMaxSize(), color = colors.background) {
-                BackHandler(selectedId != null || (route != "Home" && route != "Library")) {
-                    if (selectedId != null) selectedId = null else route = "Home"
+                BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
+                    if (query.isNotEmpty()) {
+                        query = ""
+                    } else if (selectedId != null) {
+                        selectedId = null
+                    } else {
+                        route = "Home"
+                    }
                 }
                 BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
                     val showRail = maxWidth >= 640.dp
@@ -296,19 +307,32 @@ private val destinations = listOf(
                                                         }
                                                         BasicTextField(
                                                             value = query,
-                                                            onValueChange = { query = it },
+                                                            onValueChange = { newQuery ->
+                                                                query = newQuery
+                                                                if (newQuery.isNotBlank()) {
+                                                                    selectedId = null
+                                                                    if (route == "Folders") {
+                                                                        route = "Home"
+                                                                    }
+                                                                }
+                                                            },
                                                             singleLine = true,
                                                             textStyle = MaterialTheme.typography.bodyMedium.copy(
                                                                 color = MaterialTheme.colorScheme.onSurface,
                                                                 fontSize = 13.sp
                                                             ),
                                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
                                                             modifier = Modifier.fillMaxWidth()
                                                         )
                                                     }
                                                     if (query.isNotEmpty()) {
                                                         IconButton(
-                                                            onClick = { query = "" },
+                                                            onClick = {
+                                                                query = ""
+                                                                keyboardController?.hide()
+                                                            },
                                                             modifier = Modifier.size(24.dp)
                                                         ) {
                                                             Icon(
@@ -391,19 +415,32 @@ private val destinations = listOf(
                                                         }
                                                         BasicTextField(
                                                             value = query,
-                                                            onValueChange = { query = it },
+                                                            onValueChange = { newQuery ->
+                                                                query = newQuery
+                                                                if (newQuery.isNotBlank()) {
+                                                                    selectedId = null
+                                                                    if (route == "Folders") {
+                                                                        route = "Home"
+                                                                    }
+                                                                }
+                                                            },
                                                             singleLine = true,
                                                             textStyle = MaterialTheme.typography.bodyMedium.copy(
                                                                 color = MaterialTheme.colorScheme.onSurface,
                                                                 fontSize = 13.sp
                                                             ),
                                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
                                                             modifier = Modifier.fillMaxWidth()
                                                         )
                                                     }
                                                     if (query.isNotEmpty()) {
                                                         IconButton(
-                                                            onClick = { query = "" },
+                                                            onClick = {
+                                                                query = ""
+                                                                keyboardController?.hide()
+                                                            },
                                                             modifier = Modifier.size(24.dp)
                                                         ) {
                                                             Icon(

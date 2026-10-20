@@ -581,6 +581,38 @@ fun StorageSummaryCard(
     }
 }
 
+/**
+ * Smart multi-word search matcher that normalizes punctuation, symbols, and whitespace.
+ * Handles filename formats with dots, underscores, hyphens, and brackets.
+ * Returns true if every query word matches at least one target token.
+ */
+fun matchesQuery(query: String, vararg targets: String?): Boolean {
+    val q = query.trim()
+    if (q.isEmpty()) return true
+
+    val queryTokens = q.lowercase().split(Regex("[\\s._\\-]+")).filter { it.isNotEmpty() }
+    if (queryTokens.isEmpty()) return true
+
+    val normalizedTarget = targets.filterNotNull().joinToString(" ") { text ->
+        text.replace('.', ' ')
+            .replace('_', ' ')
+            .replace('-', ' ')
+            .replace('+', ' ')
+            .replace(':', ' ')
+            .replace('/', ' ')
+            .replace('\\', ' ')
+            .replace('(', ' ')
+            .replace(')', ' ')
+            .replace('[', ' ')
+            .replace(']', ' ')
+            .replace('{', ' ')
+            .replace('}', ' ')
+            .lowercase()
+    }
+
+    return queryTokens.all { token -> normalizedTarget.contains(token) }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable fun LocalLibraryPage(
     state: LocalLibraryState,
@@ -608,6 +640,54 @@ fun StorageSummaryCard(
     val animeCount = remember(allVideos) { allVideos.count { it.name.contains("anime", true) || it.folder.contains("anime", true) } }
     val recentCount = remember(allVideos) { allVideos.size }
 
+    val isSearching = query.isNotBlank()
+
+    val searchSeries = remember(seriesList, query) {
+        if (!isSearching) emptyList()
+        else {
+            seriesList.filter { series ->
+                val epNames = series.seasons.values.flatten().map { it.name }
+                matchesQuery(
+                    query,
+                    series.title,
+                    series.studio,
+                    series.synopsis,
+                    series.genres.joinToString(" "),
+                    series.folderUri,
+                    *epNames.toTypedArray()
+                )
+            }
+        }
+    }
+
+    val searchMovies = remember(allVideos, query) {
+        if (!isSearching) emptyList()
+        else {
+            allVideos.filter {
+                it.episode == null && matchesQuery(query, it.name, it.title, it.folder, it.parentDir)
+            }
+        }
+    }
+
+    val searchEpisodes = remember(allVideos, query) {
+        if (!isSearching) emptyList()
+        else {
+            allVideos.filter {
+                it.episode != null && matchesQuery(
+                    query,
+                    it.name,
+                    it.title,
+                    it.folder,
+                    it.parentDir,
+                    EpisodePatterns.parse(it.name)?.seriesTitle,
+                    EpisodePatterns.parse(it.name)?.episodeTitle
+                )
+            }
+        }
+    }
+
+    val totalSearchResults = searchSeries.size + searchMovies.size + searchEpisodes.size
+
     val candidateVideos = remember(allVideos, category) {
         when (category) {
             "Movies" -> allVideos.filter { it.episode == null }
@@ -618,7 +698,7 @@ fun StorageSummaryCard(
 
     val videos = remember(allVideos, query, category) {
         candidateVideos.filter {
-            it.name.contains(query.trim(), true) && when (category) {
+            matchesQuery(query, it.name, it.title, it.folder) && when (category) {
                 "Anime" -> it.name.contains("anime", true) || it.folder.contains("anime", true)
                 "Recently Added" -> true
                 else -> true
@@ -629,7 +709,7 @@ fun StorageSummaryCard(
     }
 
     val filteredSeries = remember(seriesList, query) {
-        seriesList.filter { it.title.contains(query.trim(), true) }
+        seriesList.filter { matchesQuery(query, it.title, it.studio, it.synopsis) }
     }
 
     val continueWatching = remember(candidateVideos, playback.historyVersion) {
@@ -705,186 +785,295 @@ fun StorageSummaryCard(
                 contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
-                // 0. Welcome Onboarding (shown if no video folders connected yet)
-                if (state.folders.isEmpty()) {
+                if (isSearching) {
                     item {
-                        WelcomeOnboardingCard(onAddFolder = add)
-                    }
-                }
-
-                // 1. Hero Movie Banner Pager (only shown if real indexed videos exist)
-                if (heroItems.isNotEmpty()) {
-                    item {
-                        HeroMoviePager(items = heroItems, isPhone = isPhone)
-                    }
-                }
-
-                // 2. Continue Watching Section (only real in-progress videos)
-                if (continueWatching.isNotEmpty()) {
-                    item {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                if (continueWatching.size > 1) {
-                                    Text(
-                                        "See all >",
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 13.sp,
-                                        modifier = Modifier.clickable { category = "Recently Added" }
-                                    )
-                                }
-                            }
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                items(continueWatching, key = { it.uri }) { v ->
-                                    val pos = playback.savedPosition(v)
-                                    val dur = v.duration.takeIf { it > 0 } ?: 1000L
-                                    ContinueWatchingCard(
-                                        video = v,
-                                        previewFallback = null,
-                                        savedPos = pos,
-                                        durationMs = dur,
-                                        onClick = {
-                                            playback.open(v)
-                                            playback.fullscreen = true
-                                        }
-                                    )
-                                }
-                            }
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                "Search Results",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                if (totalSearchResults == 0) "No matching videos or series found"
+                                else "$totalSearchResults result${if (totalSearchResults == 1) "" else "s"} for \"$query\"",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
-                }
 
-                if (category == "TV Shows") {
-                    if (filteredSeries.isEmpty()) {
+                    if (totalSearchResults == 0) {
                         item {
                             LocalPanel {
-                                Icon(Icons.Rounded.Tv, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text("No TV Series Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Rounded.Search, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                Text("No Results Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                                 Text(
-                                    "Videos with episode naming patterns (e.g. S01E01, 1x04, Episode 12) will automatically be organized into dedicated series pages.",
+                                    "No titles, series, or video files matched \"$query\". Check your spelling or try searching for another word.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     } else {
-                        item {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "TV Series (${filteredSeries.size})",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                if (defaultCategory == "All videos") {
-                                    TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                        if (category == "TV Shows") {
+                            if (searchSeries.isNotEmpty()) {
+                                item {
+                                    Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                item {
+                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
                                 }
                             }
-                        }
-
-                        item {
-                            TvSeriesCardGrid(
-                                seriesList = filteredSeries,
-                                playback = playback,
-                                onSelect = { select("series:${it.id}") }
-                            )
-                        }
-                    }
-                } else if (category == "Movies") {
-                    val movieList = videos.filter { it.episode == null }
-                    if (movieList.isEmpty()) {
-                        item {
-                            LocalPanel {
-                                Icon(Icons.Rounded.Movie, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text("No Movies Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                Text(
-                                    "Standalone feature films stored in your connected folders will appear here.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    } else {
-                        item {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "Movies (${movieList.size})",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                if (defaultCategory == "All videos") {
-                                    TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                            if (searchEpisodes.isNotEmpty()) {
+                                item {
+                                    Text("Episodes (${searchEpisodes.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                items(searchEpisodes, key = { it.uri }) { video ->
+                                    LocalVideoCard(video) { select(video.uri) }
                                 }
                             }
-                        }
-
-                        item {
-                            MovieCardGrid(
-                                movies = movieList,
-                                sidecars = state.sidecars,
-                                playback = playback,
-                                onSelect = { select(it.uri) }
-                            )
+                            if (searchMovies.isNotEmpty()) {
+                                item {
+                                    Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                item {
+                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
+                                }
+                            }
+                        } else if (category == "Movies") {
+                            if (searchMovies.isNotEmpty()) {
+                                item {
+                                    Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                item {
+                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
+                                }
+                            }
+                            if (searchSeries.isNotEmpty()) {
+                                item {
+                                    Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                item {
+                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
+                                }
+                            }
+                            if (searchEpisodes.isNotEmpty()) {
+                                item {
+                                    Text("Other Videos (${searchEpisodes.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                items(searchEpisodes, key = { it.uri }) { video ->
+                                    LocalVideoCard(video) { select(video.uri) }
+                                }
+                            }
+                        } else {
+                            if (searchSeries.isNotEmpty()) {
+                                item {
+                                    Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                item {
+                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
+                                }
+                            }
+                            if (searchMovies.isNotEmpty()) {
+                                item {
+                                    Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                item {
+                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
+                                }
+                            }
+                            if (searchEpisodes.isNotEmpty()) {
+                                item {
+                                    Text("Episodes & Videos (${searchEpisodes.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                items(searchEpisodes, key = { it.uri }) { video ->
+                                    LocalVideoCard(video) { select(video.uri) }
+                                }
+                            }
                         }
                     }
                 } else {
-                    if (videos.isEmpty()) {
+                    // 0. Welcome Onboarding (shown if no video folders connected yet)
+                    if (state.folders.isEmpty()) {
                         item {
-                            LocalPanel {
-                                Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text(
-                                    if (allVideos.isEmpty()) "Make room for your stories" else "No matching videos",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    if (state.folders.isEmpty()) "Connect a folder using Android's file picker to populate your library."
-                                    else "Pull down to refresh or tap another category.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                if (state.folders.isEmpty()) {
-                                    Spacer(Modifier.height(4.dp))
-                                    Button(onClick = add, shape = RoundedCornerShape(20.dp)) {
-                                        Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Add your first folder")
+                            WelcomeOnboardingCard(onAddFolder = add)
+                        }
+                    }
+
+                    // 1. Hero Movie Banner Pager (only shown if real indexed videos exist)
+                    if (heroItems.isNotEmpty()) {
+                        item {
+                            HeroMoviePager(items = heroItems, isPhone = isPhone)
+                        }
+                    }
+
+                    // 2. Continue Watching Section (only real in-progress videos)
+                    if (continueWatching.isNotEmpty()) {
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                    if (continueWatching.size > 1) {
+                                        Text(
+                                            "See all >",
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.sp,
+                                            modifier = Modifier.clickable { category = "Recently Added" }
+                                        )
+                                    }
+                                }
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    items(continueWatching, key = { it.uri }) { v ->
+                                        val pos = playback.savedPosition(v)
+                                        val dur = v.duration.takeIf { it > 0 } ?: 1000L
+                                        ContinueWatchingCard(
+                                            video = v,
+                                            previewFallback = null,
+                                            savedPos = pos,
+                                            durationMs = dur,
+                                            onClick = {
+                                                playback.open(v)
+                                                playback.fullscreen = true
+                                            }
+                                        )
                                     }
                                 }
                             }
                         }
-                    } else {
-                        item {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    if (category == "All videos") "All Indexed Videos (${videos.size})" else "$category (${videos.size})",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                if (category != "All videos") {
-                                    TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                    }
+
+                    if (category == "TV Shows") {
+                        if (filteredSeries.isEmpty()) {
+                            item {
+                                LocalPanel {
+                                    Icon(Icons.Rounded.Tv, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Text("No TV Series Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        "Videos with episode naming patterns (e.g. S01E01, 1x04, Episode 12) will automatically be organized into dedicated series pages.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
-                        }
+                        } else {
+                            item {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "TV Series (${filteredSeries.size})",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    if (defaultCategory == "All videos") {
+                                        TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                    }
+                                }
+                            }
 
-                        items(videos, key = { it.uri }) { video ->
-                            LocalVideoCard(video) { select(video.uri) }
+                            item {
+                                TvSeriesCardGrid(
+                                    seriesList = filteredSeries,
+                                    playback = playback,
+                                    onSelect = { select("series:${it.id}") }
+                                )
+                            }
+                        }
+                    } else if (category == "Movies") {
+                        val movieList = videos.filter { it.episode == null }
+                        if (movieList.isEmpty()) {
+                            item {
+                                LocalPanel {
+                                    Icon(Icons.Rounded.Movie, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Text("No Movies Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        "Standalone feature films stored in your connected folders will appear here.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        } else {
+                            item {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "Movies (${movieList.size})",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    if (defaultCategory == "All videos") {
+                                        TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                    }
+                                }
+                            }
+
+                            item {
+                                MovieCardGrid(
+                                    movies = movieList,
+                                    sidecars = state.sidecars,
+                                    playback = playback,
+                                    onSelect = { select(it.uri) }
+                                )
+                            }
+                        }
+                    } else {
+                        if (videos.isEmpty()) {
+                            item {
+                                LocalPanel {
+                                    Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Text(
+                                        if (allVideos.isEmpty()) "Make room for your stories" else "No matching videos",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        if (state.folders.isEmpty()) "Connect a folder using Android's file picker to populate your library."
+                                        else "Pull down to refresh or tap another category.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    if (state.folders.isEmpty()) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Button(onClick = add, shape = RoundedCornerShape(20.dp)) {
+                                            Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Add your first folder")
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            item {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        if (category == "All videos") "All Indexed Videos (${videos.size})" else "$category (${videos.size})",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    if (category != "All videos") {
+                                        TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                    }
+                                }
+                            }
+
+                            items(videos, key = { it.uri }) { video ->
+                                LocalVideoCard(video) { select(video.uri) }
+                            }
                         }
                     }
                 }
