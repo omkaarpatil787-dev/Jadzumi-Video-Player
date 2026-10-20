@@ -78,29 +78,38 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import kotlinx.coroutines.launch
 
-private val Blue = Color(0xFF0B57D0)
-private val PaleBlue = Color(0xFFD3E3FD)
-private val Light = lightColorScheme(
-    primary = Blue,
-    primaryContainer = PaleBlue,
-    onPrimaryContainer = Color(0xFF041E49),
-    background = Color(0xFFF4F7FC),
+private val CinemaFlowLight = lightColorScheme(
+    primary = Color(0xFF458AC9),
+    primaryContainer = Color(0xFFE1F0FF),
+    onPrimaryContainer = Color(0xFF2C689C),
+    background = Color(0xFFF7FAFF),
     surface = Color.White,
-    surfaceVariant = Color(0xFFE7EEF8),
-    onSurface = Color(0xFF1F1F1F),
-    onSurfaceVariant = Color(0xFF44474E),
-    outlineVariant = Color(0xFFE2E8F0)
+    surfaceVariant = Color(0xFFEAF4FF),
+    onSurface = Color(0xFF1C2B3D),
+    onSurfaceVariant = Color(0xFF586C82),
+    outlineVariant = Color(0xD9FFFFFF)
 )
-private val Dark = darkColorScheme(
-    primary = Color(0xFFADC7FF),
+private val CinemaFlowDark = darkColorScheme(
+    primary = Color(0xFF76B5EF),
     primaryContainer = Color(0xFF1E3A5F),
     onPrimaryContainer = Color(0xFFD3E3FD),
-    background = Color(0xFF0F1724),
-    surface = Color(0xFF182232),
-    surfaceVariant = Color(0xFF233044),
-    onSurface = Color(0xFFF1F5F9),
-    onSurfaceVariant = Color(0xFF94A3B8),
-    outlineVariant = Color(0xFF2E3C52)
+    background = Color(0xFF0E1724),
+    surface = Color(0xFF142032),
+    surfaceVariant = Color(0xFF1A283C),
+    onSurface = Color(0xFFF0F6FF),
+    onSurfaceVariant = Color(0xFFABBDD3),
+    outlineVariant = Color(0x298CB9EB)
+)
+private val CinemaFlowAmoled = darkColorScheme(
+    primary = Color(0xFF8AC3F7),
+    primaryContainer = Color(0xFF1E2838),
+    onPrimaryContainer = Color(0xFFBFE0FF),
+    background = Color.Black,
+    surface = Color(0xFF08080A),
+    surfaceVariant = Color(0xFF16161A),
+    onSurface = Color.White,
+    onSurfaceVariant = Color(0xFFB0B4BC),
+    outlineVariant = Color(0x1CFFFFFF)
 )
 
 private data class Destination(val name: String, val icon: ImageVector)
@@ -130,6 +139,7 @@ private val destinations = listOf(
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
     var theme by rememberSaveable { mutableStateOf(prefs.getString("theme", "Dark") ?: "Dark") }
+    var ambientAura by rememberSaveable { mutableStateOf(prefs.getBoolean("ambientAura", true)) }
     var reducedMotion by rememberSaveable { mutableStateOf(prefs.getBoolean("reducedMotion", false)) }
     var livelyAnimations by rememberSaveable { mutableStateOf(prefs.getBoolean("livelyAnimations", true)) }
     var themeBloomEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("themeBloom", true)) }
@@ -160,11 +170,12 @@ private val destinations = listOf(
 
     val sysDark = isSystemInDarkTheme()
     val colors = when (theme) {
-        "Light" -> Light
-        "Dark" -> Dark
-        "AMOLED" -> Dark.copy(background = Color.Black, surface = Color(0xFF0A0A0C), surfaceVariant = Color(0xFF141418))
-        else -> if (sysDark) Dark else Light
+        "Light" -> CinemaFlowLight
+        "Dark" -> CinemaFlowDark
+        "AMOLED" -> CinemaFlowAmoled
+        else -> if (sysDark) CinemaFlowDark else CinemaFlowLight
     }
+    val cinemaColors = GlassTheme.colors(theme, sysDark)
 
     fun switchThemeWithBloom(newTheme: String) {
         if (newTheme == theme) return
@@ -186,7 +197,7 @@ private val destinations = listOf(
     }
 
     DisposableEffect(colors) {
-        val style = if (colors == Light) SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+        val style = if (colors == CinemaFlowLight) SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
         else SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
         (context as? ComponentActivity)?.enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
         onDispose { }
@@ -200,9 +211,17 @@ private val destinations = listOf(
             large = RoundedCornerShape((cornerRadiusDp + 4.dp).coerceAtLeast(0.dp))
         )
     ) {
-        CompositionLocalProvider(LocalGlassIntensity provides glassIntensity) {
+        CompositionLocalProvider(
+            LocalGlassIntensity provides glassIntensity,
+            LocalCinemaFlowColors provides cinemaColors
+        ) {
             Box(Modifier.fillMaxSize()) {
-            Surface(Modifier.fillMaxSize(), color = colors.background) {
+                // Dynamic Cinema Flow Ambient Aura
+                CinemaAmbientAura(
+                    enabled = ambientAura,
+                    reducedMotion = reducedMotion
+                )
+                Surface(Modifier.fillMaxSize(), color = if (ambientAura) colors.background.copy(alpha = 0.55f) else colors.background) {
                 BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
                     if (query.isNotEmpty()) {
                         query = ""
@@ -213,245 +232,62 @@ private val destinations = listOf(
                     }
                 }
                 BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
-                    val isTablet = maxWidth >= 640.dp
+                    val isTablet = maxWidth >= 720.dp
                     val contentWidth = maxWidth
                     val isPhone = contentWidth < 600.dp
-                    val topPad = if (contentWidth >= 720.dp) 24.dp else 16.dp
+                    val topPad = if (contentWidth >= 720.dp) 20.dp else 14.dp
 
                     Box(Modifier.fillMaxSize()) {
-                        Column(Modifier.fillMaxSize()) {
-                                    if (isPhone && selectedId == null) {
-                                        // Adaptive Phone Top Bar (Greeting + Actions, Full-width frosted search capsule)
-                                        Column(Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 6.dp)) {
-                                            Row(
-                                                Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.SpaceBetween
-                                            ) {
-                                                if (route == "Home" || route == "Library") {
-                                                    InteractiveCinemaGreeting(
-                                                        localState = localState,
-                                                        playback = playback,
-                                                        isPhone = true,
-                                                        modifier = Modifier.weight(1f)
-                                                    )
-                                                } else {
-                                                    Text(
-                                                        route,
-                                                        Modifier.weight(1f),
-                                                        style = MaterialTheme.typography.titleLarge,
-                                                        fontWeight = FontWeight.Bold,
-                                                        maxLines = 1,
-                                                        overflow = TextOverflow.Ellipsis
-                                                    )
-                                                }
+                        Row(Modifier.fillMaxSize()) {
+                            if (isTablet) {
+                                CinemaFlowNavRail(
+                                    route = route,
+                                    onNavigate = {
+                                        route = it
+                                        selectedId = null
+                                    },
+                                    isCompact = maxWidth < 960.dp,
+                                    theme = theme,
+                                    modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp)
+                                )
+                            }
 
-                                                IconButton(
-                                                    onClick = { library.rescan() },
-                                                    enabled = !localState.busy && localState.folders.isNotEmpty()
-                                                ) {
-                                                    if (localState.busy) {
-                                                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                                                    } else {
-                                                        Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-                                                    }
-                                                }
-                                            }
-
-                                            Spacer(Modifier.height(6.dp))
-
-                                            Surface(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(42.dp),
-                                                shape = RoundedCornerShape(21.dp),
-                                                color = GlassTheme.surfaceColor(theme, glassIntensity),
-                                                border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
-                                            ) {
-                                                Row(
-                                                    Modifier.fillMaxSize().padding(horizontal = 14.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                                ) {
-                                                    Icon(
-                                                        Icons.Rounded.Search,
-                                                        contentDescription = "Search",
-                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.size(18.dp)
-                                                    )
-                                                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                                                        if (query.isEmpty()) {
-                                                            Text(
-                                                                "Search videos, shows...",
-                                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                                                fontSize = 13.sp,
-                                                                maxLines = 1,
-                                                                overflow = TextOverflow.Ellipsis
-                                                            )
-                                                        }
-                                                        BasicTextField(
-                                                            value = query,
-                                                            onValueChange = { newQuery ->
-                                                                query = newQuery
-                                                                if (newQuery.isNotBlank()) {
-                                                                    selectedId = null
-                                                                    if (route == "Folders") {
-                                                                        route = "Home"
-                                                                    }
-                                                                }
-                                                            },
-                                                            singleLine = true,
-                                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                                                color = MaterialTheme.colorScheme.onSurface,
-                                                                fontSize = 13.sp
-                                                            ),
-                                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
-                                                            modifier = Modifier.fillMaxWidth()
-                                                        )
-                                                    }
-                                                    if (query.isNotEmpty()) {
-                                                        IconButton(
-                                                            onClick = {
-                                                                query = ""
-                                                                keyboardController?.hide()
-                                                            },
-                                                            modifier = Modifier.size(24.dp)
-                                                        ) {
-                                                            Icon(
-                                                                Icons.Rounded.Close,
-                                                                contentDescription = "Clear search",
-                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                                modifier = Modifier.size(16.dp)
-                                                            )
-                                                        }
-                                                    }
-                                                }
+                            Column(Modifier.weight(1f).fillMaxHeight()) {
+                                CinemaFlowTopAppBar(
+                                    route = route,
+                                    query = query,
+                                    onQueryChange = { newQuery ->
+                                        query = newQuery
+                                        if (newQuery.isNotBlank()) {
+                                            selectedId = null
+                                            if (route == "Folders") {
+                                                route = "Home"
                                             }
                                         }
-                                    } else {
-                                        Row(
-                                            Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 12.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(14.dp)
-                                        ) {
-                                            if (selectedId != null) {
-                                                IconButton(onClick = { selectedId = null }) {
-                                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library")
-                                                }
-                                                Text(
-                                                    "Library / Details",
-                                                    Modifier.weight(1f),
-                                                    style = MaterialTheme.typography.titleLarge,
-                                                    fontWeight = FontWeight.Bold,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                            } else if (route == "Home" || route == "Library") {
-                                                InteractiveCinemaGreeting(
-                                                    localState = localState,
-                                                    playback = playback,
-                                                    isPhone = false,
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                            } else {
-                                                Text(
-                                                    route,
-                                                    Modifier.weight(1f),
-                                                    style = MaterialTheme.typography.headlineMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                            }
-
-                                            Surface(
-                                                modifier = Modifier
-                                                    .widthIn(min = 220.dp, max = 340.dp)
-                                                    .height(42.dp),
-                                                shape = RoundedCornerShape(21.dp),
-                                                color = GlassTheme.surfaceColor(theme, glassIntensity),
-                                                border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
-                                            ) {
-                                                Row(
-                                                    Modifier
-                                                        .fillMaxSize()
-                                                        .padding(horizontal = 14.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                                ) {
-                                                    Icon(
-                                                        Icons.Rounded.Search,
-                                                        contentDescription = "Search",
-                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.size(20.dp)
-                                                    )
-                                                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                                                        if (query.isEmpty()) {
-                                                            Text(
-                                                                "Search videos, shows...",
-                                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                                                fontSize = 13.sp,
-                                                                maxLines = 1,
-                                                                overflow = TextOverflow.Ellipsis
-                                                            )
-                                                        }
-                                                        BasicTextField(
-                                                            value = query,
-                                                            onValueChange = { newQuery ->
-                                                                query = newQuery
-                                                                if (newQuery.isNotBlank()) {
-                                                                    selectedId = null
-                                                                    if (route == "Folders") {
-                                                                        route = "Home"
-                                                                    }
-                                                                }
-                                                            },
-                                                            singleLine = true,
-                                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                                                color = MaterialTheme.colorScheme.onSurface,
-                                                                fontSize = 13.sp
-                                                            ),
-                                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
-                                                            modifier = Modifier.fillMaxWidth()
-                                                        )
-                                                    }
-                                                    if (query.isNotEmpty()) {
-                                                        IconButton(
-                                                            onClick = {
-                                                                query = ""
-                                                                keyboardController?.hide()
-                                                            },
-                                                            modifier = Modifier.size(24.dp)
-                                                        ) {
-                                                            Icon(
-                                                                Icons.Rounded.Close,
-                                                                contentDescription = "Clear search",
-                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                                modifier = Modifier.size(16.dp)
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                            IconButton(
-                                                onClick = { library.rescan() },
-                                                enabled = !localState.busy && localState.folders.isNotEmpty()
-                                            ) {
-                                                if (localState.busy) {
-                                                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                                                } else {
-                                                    Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
-                                                }
-                                            }
+                                    },
+                                    onClearQuery = {
+                                        query = ""
+                                        keyboardController?.hide()
+                                    },
+                                    selectedId = selectedId,
+                                    onBack = { selectedId = null },
+                                    onSync = { library.rescan() },
+                                    isSyncing = localState.busy,
+                                    canSync = !localState.busy && localState.folders.isNotEmpty(),
+                                    isTablet = isTablet,
+                                    greetingContent = if (route == "Home" || route == "Library") {
+                                        {
+                                            InteractiveCinemaGreeting(
+                                                localState = localState,
+                                                playback = playback,
+                                                isPhone = isPhone
+                                            )
                                         }
-                                    }
+                                    } else null,
+                                    modifier = Modifier.padding(horizontal = topPad, vertical = if (isPhone) 6.dp else 10.dp)
+                                )
 
-                                    AnimatedContent(
+                                AnimatedContent(
                                         targetState = selectedId ?: route,
                                         transitionSpec = {
                                             if (reducedMotion || !livelyAnimations) {
@@ -572,6 +408,11 @@ private val destinations = listOf(
                                                     glassIntensity = it
                                                     prefs.edit { putFloat("glassIntensity", it) }
                                                 },
+                                                ambientAura = ambientAura,
+                                                onAmbientAura = {
+                                                    ambientAura = it
+                                                    prefs.edit { putBoolean("ambientAura", it) }
+                                                },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
                                                 library = library,
@@ -607,6 +448,11 @@ private val destinations = listOf(
                                                     glassIntensity = it
                                                     prefs.edit { putFloat("glassIntensity", it) }
                                                 },
+                                                ambientAura = ambientAura,
+                                                onAmbientAura = {
+                                                    ambientAura = it
+                                                    prefs.edit { putBoolean("ambientAura", it) }
+                                                },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
                                                 library = library,
@@ -624,30 +470,31 @@ private val destinations = listOf(
                                         }
                                     }
                                 }
+                            }
 
-                                // Floating Frosted Glass Bottom Navigation Bar (Universal across Phones, Foldables & Tablets)
-                                if (selectedId == null) {
-                                    FloatingFrostedBottomBar(
-                                        route = route,
-                                        theme = theme,
-                                        bottomBarStyle = bottomBarStyle,
-                                        glassIntensity = glassIntensity,
-                                        isMinimized = isDockMinimized,
-                                        isTablet = isTablet,
-                                        onToggleMinimize = { isDockMinimized = !isDockMinimized },
-                                        onNavigate = {
-                                            if (isDockMinimized) isDockMinimized = false
-                                            route = it
-                                            selectedId = null
-                                        },
-                                        modifier = Modifier
-                                            .align(Alignment.BottomCenter)
-                                            .padding(bottom = if (isTablet) 12.dp else 6.dp)
-                                    )
-                                }
+                            // Floating Frosted Glass Bottom Navigation Bar (Phone only when rail is not active)
+                            if (selectedId == null && !isTablet) {
+                                FloatingFrostedBottomBar(
+                                    route = route,
+                                    theme = theme,
+                                    bottomBarStyle = bottomBarStyle,
+                                    glassIntensity = glassIntensity,
+                                    isMinimized = isDockMinimized,
+                                    isTablet = false,
+                                    onToggleMinimize = { isDockMinimized = !isDockMinimized },
+                                    onNavigate = {
+                                        if (isDockMinimized) isDockMinimized = false
+                                        route = it
+                                        selectedId = null
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .padding(bottom = 6.dp)
+                                )
                             }
                         }
                     }
+                }
 
             bloomOriginColor?.let { oldColor ->
                 val progress = bloomProgress.value
@@ -1112,6 +959,8 @@ private val settingsCategories = listOf(
     onDockAutoMinimize: (Boolean) -> Unit = {},
     glassIntensity: Float = 0.75f,
     onGlassIntensity: (Float) -> Unit = {},
+    ambientAura: Boolean = true,
+    onAmbientAura: (Boolean) -> Unit = {},
     onReplaySplash: () -> Unit,
     localState: LocalLibraryState,
     library: LocalLibrary,
@@ -1703,6 +1552,15 @@ private val settingsCategories = listOf(
                                             Text("Balanced (65%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Text("Deep Glass (100%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Cinema Ambient Aura", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Soft fluid celestial gradient radiance blooming softly behind frosted glass surfaces", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = ambientAura, onCheckedChange = onAmbientAura)
                                     }
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
@@ -2449,12 +2307,13 @@ private val settingsCategories = listOf(
 }
 
 @Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
+    val colors = LocalCinemaFlowColors.current
     val glassIntensity = LocalGlassIntensity.current
     Surface(
         Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.45f * glassIntensity).coerceIn(0.50f, 1.0f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.50f * glassIntensity).coerceIn(0.30f, 0.90f)))
+        shape = CinemaCorners.Lg,
+        color = colors.glassCard.copy(alpha = (0.92f - 0.35f * glassIntensity).coerceIn(0.40f, 0.95f)),
+        border = BorderStroke(1.dp, colors.glassBorder.copy(alpha = (0.30f + 0.50f * glassIntensity).coerceIn(0.25f, 0.90f)))
     ) {
         Column(Modifier.padding(20.dp), content = content)
     }

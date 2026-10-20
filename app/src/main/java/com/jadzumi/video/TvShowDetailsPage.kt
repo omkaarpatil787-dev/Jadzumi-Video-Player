@@ -368,12 +368,12 @@ private fun ShowHeroCard(
         else -> "Start Series"
     }
 
-    val glassIntensity = LocalGlassIntensity.current
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
+        modifier = Modifier
+            .fillMaxWidth()
+            .cinemaGlassCard(CinemaCorners.Xl),
+        shape = CinemaCorners.Xl,
+        color = Color.Transparent
     ) {
             Column(
                 modifier = Modifier.padding(heroPad),
@@ -608,13 +608,17 @@ private fun SeasonTabPill(
     isCompleted: Boolean,
     onClick: () -> Unit
 ) {
+    val colors = LocalCinemaFlowColors.current
     Surface(
-        shape = CircleShape,
-        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.clip(CircleShape).clickable(onClick = onClick)
+        shape = CinemaCorners.Pill,
+        color = if (isSelected) colors.pillActiveBg else colors.pillBg,
+        modifier = Modifier
+            .clip(CinemaCorners.Pill)
+            .clickable(onClick = onClick)
+            .cinemaPill(active = isSelected)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -623,25 +627,25 @@ private fun SeasonTabPill(
                     Icons.Rounded.CheckCircle,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = if (isSelected) Color.White else MaterialTheme.colorScheme.primary
+                    tint = if (isSelected) colors.pillActiveText else Color(0xFF1E8E3E)
                 )
             }
             Text(
                 label,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                color = if (isSelected) colors.pillActiveText else colors.inkPrimary
             )
             Surface(
-                shape = CircleShape,
-                color = if (isSelected) Color.White.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surfaceContainerHighest
+                shape = CinemaCorners.Pill,
+                color = if (isSelected) colors.pillActiveText.copy(alpha = 0.15f) else colors.bgSecondary
             ) {
                 Text(
                     badgeText,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isSelected) colors.pillActiveText else colors.inkMuted
                 )
             }
         }
@@ -704,6 +708,7 @@ private fun EpisodeCard(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val colors = LocalCinemaFlowColors.current
     val savedPos = playback.savedPosition(video)
     val dur = video.duration.takeIf { it > 0 } ?: 1000L
     val isWatched = savedPos >= dur * 0.9f
@@ -713,14 +718,10 @@ private fun EpisodeCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .cinemaGlassCard(CinemaCorners.Lg)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(
-            if (isNext) 2.dp else 1.dp,
-            if (isNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-        )
+        shape = CinemaCorners.Lg,
+        color = if (isNext) colors.accentPrimary.copy(alpha = 0.08f) else Color.Transparent
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
@@ -878,12 +879,12 @@ private fun EpisodeCard(
 
 @Composable
 internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
-    val glassIntensity = LocalGlassIntensity.current
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
+        modifier = Modifier
+            .fillMaxWidth()
+            .cinemaGlassCard(CinemaCorners.Lg),
+        shape = CinemaCorners.Lg,
+        color = Color.Transparent
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -949,9 +950,11 @@ internal fun TechRow(label: String, value: String) {
 @Composable
 internal fun OfflineVerificationCard() {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        modifier = Modifier
+            .fillMaxWidth()
+            .cinemaGlassCard(CinemaCorners.Lg),
+        shape = CinemaCorners.Lg,
+        color = Color.Transparent
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
