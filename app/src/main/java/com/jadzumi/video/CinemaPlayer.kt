@@ -7,9 +7,11 @@ import android.media.AudioManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -21,8 +23,6 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,7 +45,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
@@ -59,7 +58,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
@@ -72,8 +70,8 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 private val QuickMenuBg = Color(0xFF151B26).copy(alpha = 0.90f)
-private val FrostedCircleBg = Color(0x26E5F5FF)
-private val FrostedCircleRim = Color(0x4AE8F6FF)
+private val FrostedCircleBg = Color.White.copy(alpha = 0.16f)
+private val FrostedCircleRim = Color.White.copy(alpha = 0.30f)
 private val TimelineAccent = Color(0xFF8B9DFF)
 
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
@@ -278,11 +276,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     CircularProgressIndicator(Modifier.align(Alignment.Center).size(42.dp), color = Color.White, strokeWidth = 2.5.dp)
                 }
 
-                // YouTube-Style Double-Tap Fast-Forward / Rewind Ripple Overlays (Sized to match seek buttons)
-                val isLandscape = !isPhonePortrait && maxHeight < 500.dp
-                val seekBtnSize = if (isLandscape) 43.dp else 58.dp
-                val playBtnSize = if (isLandscape) 57.dp else 78.dp
-
+                // YouTube-Style Double-Tap Fast-Forward / Rewind Ripple Overlays (Sized to match 54dp seek buttons)
                 AnimatedVisibility(
                     visible = rippleSide != null,
                     enter = fadeIn(tween(120)) + scaleIn(initialScale = 0.85f),
@@ -294,7 +288,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     Surface(
                         modifier = Modifier
                             .padding(horizontal = 24.dp)
-                            .size(seekBtnSize)
+                            .size(54.dp)
                             .clip(CircleShape),
                         shape = CircleShape,
                         color = dynamicFrostedCircleBg,
@@ -309,13 +303,14 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 if (isLeft) Icons.Rounded.Replay10 else Icons.Rounded.Forward10,
                                 null,
                                 tint = Color.White,
-                                modifier = Modifier.size(if (isLandscape) 20.dp else 26.dp)
+                                modifier = Modifier.size(24.dp)
                             )
+                            Spacer(Modifier.height(1.dp))
                             Text(
                                 if (isLeft) "-${totalSec}s" else "+${totalSec}s",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = if (isLandscape) 8.sp else 9.sp,
+                                fontSize = 10.sp,
                                 maxLines = 1
                             )
                         }
@@ -401,84 +396,38 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                FrostedCircleButton(
-                                    label = "Back to library",
-                                    onClick = playback::close,
-                                    size = if (isLandscape) 40.dp else 44.dp,
-                                    bgColor = dynamicFrostedCircleBg,
-                                    rimColor = dynamicFrostedCircleRim
-                                ) {
-                                    Icon(
-                                        Icons.AutoMirrored.Rounded.ArrowBack,
-                                        null,
-                                        Modifier.size(if (isLandscape) 18.dp else 20.dp),
-                                        tint = Color.White
-                                    )
+                                FrostedCircleButton("Back to library", playback::close, size = 44.dp) {
+                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, Modifier.size(20.dp), tint = Color.White)
                                 }
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text(
                                         heading.primaryTitle,
                                         color = Color.White,
-                                        fontSize = if (isPhonePortrait) 16.sp else 18.sp,
+                                        fontSize = 19.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
+                                    heading.secondaryMeta?.let { meta ->
                                         Text(
-                                            "JADZUMI PLAYER",
-                                            color = Color(0xFFCFEDFF).copy(alpha = 0.68f),
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            letterSpacing = 0.16.em
+                                            meta,
+                                            color = Color.White.copy(alpha = 0.75f),
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Normal,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
-                                        heading.secondaryMeta?.let { meta ->
-                                            Text("•", color = Color.White.copy(alpha = 0.40f), fontSize = 10.sp)
-                                            Text(
-                                                meta,
-                                                color = Color.White.copy(alpha = 0.75f),
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
                                     }
                                 }
                             }
 
-                            // Top-Right Icons: Audio/Subtitles + Cinema Settings (Minimal & Immersive)
+                            // Top-Right Icons: Clean and uncluttered glassy controls
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                FrostedCircleButton(
-                                    label = "Audio and subtitles",
-                                    onClick = { quickMenuSection = "subs"; interaction++ },
-                                    size = if (isLandscape) 40.dp else 44.dp,
-                                    bgColor = dynamicFrostedCircleBg,
-                                    rimColor = dynamicFrostedCircleRim
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.ClosedCaption,
-                                        null,
-                                        Modifier.size(if (isLandscape) 20.dp else 22.dp),
-                                        tint = Color.White
-                                    )
+                                FrostedCircleButton("Audio and subtitles", { quickMenuSection = "subs"; interaction++ }, size = 44.dp) {
+                                    Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(22.dp), tint = Color.White)
                                 }
-                                FrostedCircleButton(
-                                    label = "Cinema settings",
-                                    onClick = { quickMenuSection = "main"; interaction++ },
-                                    size = if (isLandscape) 40.dp else 44.dp,
-                                    bgColor = dynamicFrostedCircleBg,
-                                    rimColor = dynamicFrostedCircleRim
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Tune,
-                                        null,
-                                        Modifier.size(if (isLandscape) 20.dp else 22.dp),
-                                        tint = Color.White
-                                    )
+                                FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
+                                    Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
                                 }
                             }
                         }
@@ -486,88 +435,46 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                         // PANEL 1: CENTRAL FROSTED-GLASS CIRCULAR PLAY/PAUSE & 10s SKIP CONTROLS
                         Row(
                             Modifier.align(Alignment.Center),
-                            horizontalArrangement = Arrangement.spacedBy(if (isLandscape) 20.dp else 28.dp),
+                            horizontalArrangement = Arrangement.spacedBy(34.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             FrostedCircleButton(
                                 label = "Back ${playback.seekIncrementSeconds} seconds",
                                 onClick = { playback.skip(-seekDeltaMs); interaction++ },
                                 enabled = playback.seekable,
-                                size = seekBtnSize,
-                                pressedScale = 0.85f,
+                                size = 54.dp,
                                 bgColor = dynamicFrostedCircleBg,
                                 rimColor = dynamicFrostedCircleRim
                             ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Replay10,
-                                        null,
-                                        Modifier.size(if (isLandscape) 20.dp else 26.dp),
-                                        tint = Color.White
-                                    )
-                                    Text(
-                                        "10",
-                                        color = Color.White.copy(alpha = 0.90f),
-                                        fontSize = if (isLandscape) 7.sp else 9.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        lineHeight = 9.sp
-                                    )
-                                }
+                                Icon(Icons.Rounded.Replay10, null, Modifier.size(26.dp), tint = Color.White)
                             }
 
                             FrostedCircleButton(
                                 label = if (playback.playRequested) "Pause" else "Play",
                                 onClick = { playback.toggle(); interaction++ },
-                                size = playBtnSize,
-                                pressedScale = 0.84f,
-                                bgColor = dynamicFrostedCircleBg.copy(alpha = (0.28f + 0.18f * glassIntensity).coerceIn(0.22f, 0.65f)),
-                                rimColor = dynamicFrostedCircleRim.copy(alpha = (0.45f + 0.35f * glassIntensity).coerceIn(0.40f, 0.90f))
+                                size = 82.dp,
+                                bgColor = dynamicFrostedCircleBg,
+                                rimColor = dynamicFrostedCircleRim
                             ) {
-                                PlayPauseMorph(playback.playRequested, reducedMotion, Modifier.size(if (isLandscape) 26.dp else 34.dp))
+                                PlayPauseMorph(playback.playRequested, reducedMotion, Modifier.size(36.dp))
                             }
 
                             FrostedCircleButton(
                                 label = "Forward ${playback.seekIncrementSeconds} seconds",
                                 onClick = { playback.skip(seekDeltaMs); interaction++ },
                                 enabled = playback.seekable,
-                                size = seekBtnSize,
-                                pressedScale = 0.85f,
+                                size = 54.dp,
                                 bgColor = dynamicFrostedCircleBg,
                                 rimColor = dynamicFrostedCircleRim
                             ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Forward10,
-                                        null,
-                                        Modifier.size(if (isLandscape) 20.dp else 26.dp),
-                                        tint = Color.White
-                                    )
-                                    Text(
-                                        "10",
-                                        color = Color.White.copy(alpha = 0.90f),
-                                        fontSize = if (isLandscape) 7.sp else 9.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        lineHeight = 9.sp
-                                    )
-                                }
+                                Icon(Icons.Rounded.Forward10, null, Modifier.size(26.dp), tint = Color.White)
                             }
                         }
 
-                        // PANEL 1 & 3: MINIMAL IMMERSIVE PLAYBACK CONTROLS (Glass Motion v2 Scrubber & Action Controls)
+                        // PANEL 1 & 3: INLINE TIMELINE ROW + MINIMALIST BOTTOM CONTROLS
                         Column(
-                            Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .padding(bottom = if (isLandscape) 4.dp else 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(if (isLandscape) 4.dp else 8.dp)
+                            Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             val currentFraction = scrub ?: if (playback.duration > 0) {
                                 (playback.position.toFloat() / playback.duration).coerceIn(0f, 1f)
@@ -616,11 +523,11 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             }
 
+                            // Inline Timeline Row
                             val activePosMs = scrub?.let { (it * playback.duration).toLong() } ?: playback.position
                             val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
                             val totalSec = (playback.duration / 1000).coerceAtLeast(0)
 
-                            // 1. Fluid Cyan Scrubber (Border rectangle removed - clean, minimal & immersive)
                             CinemaTimelineBar(
                                 fraction = currentFraction,
                                 bufferedFraction = bufferedFraction,
@@ -633,113 +540,189 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             )
 
-                            // 2. Timecodes and Glass Motion Action Controls
-                            Row(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // Time row
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            // Bottom Controls: Adaptive 2-Row on Phone Portrait vs 1-Row on Tablet/Landscape
+                            if (isPhonePortrait) {
+                                Column(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text(
-                                        compactTimecode(elapsedSec),
-                                        color = Color(0xFFD9EFFF),
-                                        fontSize = if (isLandscape) 11.sp else 12.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        "/",
-                                        color = Color(0xFFD9EFFF).copy(alpha = 0.45f),
-                                        fontSize = if (isLandscape) 10.sp else 11.sp
-                                    )
-                                    Text(
-                                        compactTimecode(totalSec),
-                                        color = Color(0xFFD9EFFF).copy(alpha = 0.80f),
-                                        fontSize = if (isLandscape) 11.sp else 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    if (!isLandscape) {
-                                        Text(
-                                            "•",
-                                            color = Color.White.copy(alpha = 0.35f),
-                                            fontSize = 10.sp,
-                                            modifier = Modifier.padding(horizontal = 2.dp)
-                                        )
-                                        Text(
-                                            text = if (playback.playing) "Playing" else "Paused",
-                                            color = Color(0xFF67CAFF).copy(alpha = 0.85f),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-                                }
-
-                                // Glass Action Buttons with Motion v2 UX
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    FrostedCircleButton(
-                                        label = "Rotate orientation",
-                                        onClick = {
-                                            val current = activity.requestedOrientation
-                                            val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                                            } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                                                ActivityInfo.SCREEN_ORIENTATION_USER
-                                            } else {
-                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                            }
-                                            activity.requestedOrientation = next
-                                            message = when (next) {
-                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
-                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
-                                                else -> "Orientation: Auto (Sensor)"
-                                            }
-                                            interaction++
-                                        },
-                                        size = if (isLandscape) 32.dp else 36.dp,
-                                        bgColor = dynamicFrostedCircleBg,
-                                        rimColor = dynamicFrostedCircleRim
+                                    // Row 1: Glassy Time Capsule Pill (Centered & adaptively padded)
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
                                     ) {
-                                        Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(if (isLandscape) 16.dp else 18.dp), tint = Color.White)
-                                    }
-
-                                    FrostedCircleButton(
-                                        label = "Lock controls",
-                                        onClick = { playback.locked = true; controls = false },
-                                        size = if (isLandscape) 32.dp else 36.dp,
-                                        bgColor = dynamicFrostedCircleBg,
-                                        rimColor = dynamicFrostedCircleRim
-                                    ) {
-                                        Icon(Icons.Rounded.LockOpen, null, Modifier.size(if (isLandscape) 16.dp else 18.dp), tint = Color.White)
-                                    }
-
-                                    if (activity.supportsPip()) {
-                                        FrostedCircleButton(
-                                            label = "Picture in picture",
-                                            onClick = { if (!activity.enterCinemaPip()) message = "PiP unavailable" },
-                                            size = if (isLandscape) 32.dp else 36.dp,
-                                            bgColor = dynamicFrostedCircleBg,
-                                            rimColor = dynamicFrostedCircleRim
+                                        Row(
+                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
-                                            Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(if (isLandscape) 16.dp else 18.dp), tint = Color.White)
+                                            Text(
+                                                compactTimecode(elapsedSec),
+                                                color = TimelineAccent,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 11.sp)
+                                            Text(
+                                                compactTimecode(totalSec),
+                                                color = Color.White.copy(alpha = 0.85f),
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = Color.White.copy(alpha = 0.14f),
+                                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                                            ) {
+                                                Text(
+                                                    "-${compactTimecode(remSec)} remaining",
+                                                    Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                                                    color = Color.White.copy(alpha = 0.92f),
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
                                         }
                                     }
 
-                                    FrostedCircleButton(
-                                        label = "Close player",
-                                        onClick = playback::close,
-                                        size = if (isLandscape) 32.dp else 36.dp,
-                                        bgColor = dynamicFrostedCircleBg,
-                                        rimColor = dynamicFrostedCircleRim
+                                    // Row 2: Glassy Actions Dock (Centered & aligned with time pill)
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
                                     ) {
-                                        Icon(Icons.Rounded.Close, null, Modifier.size(if (isLandscape) 16.dp else 18.dp), tint = Color.White)
+                                        Row(
+                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            CinemaIcon("Rotate orientation", {
+                                                val current = activity.requestedOrientation
+                                                val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                                                } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_USER
+                                                } else {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                                }
+                                                activity.requestedOrientation = next
+                                                message = when (next) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
+                                                    else -> "Orientation: Auto (Sensor)"
+                                                }
+                                                interaction++
+                                            }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
+                                            }
+                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
+                                            }
+                                            if (activity.supportsPip()) {
+                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
+                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
+                                                }
+                                            }
+                                            CinemaIcon("Close player", playback::close, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    // Bottom-Left: Glassy Time Capsule Pill
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Text(
+                                                compactTimecode(elapsedSec),
+                                                color = TimelineAccent,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 12.sp)
+                                            Text(
+                                                compactTimecode(totalSec),
+                                                color = Color.White.copy(alpha = 0.85f),
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = Color.White.copy(alpha = 0.14f),
+                                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                                            ) {
+                                                Text(
+                                                    "-${compactTimecode(remSec)} remaining",
+                                                    Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                    color = Color.White.copy(alpha = 0.92f),
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // Bottom-Right: Glassy Actions Dock
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            CinemaIcon("Rotate orientation", {
+                                                val current = activity.requestedOrientation
+                                                val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                                                } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_USER
+                                                } else {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                                }
+                                                activity.requestedOrientation = next
+                                                message = when (next) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
+                                                    else -> "Orientation: Auto (Sensor)"
+                                                }
+                                                interaction++
+                                            }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
+                                            }
+                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
+                                            }
+                                            if (activity.supportsPip()) {
+                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
+                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
+                                                }
+                                            }
+                                            CinemaIcon("Close player", playback::close, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -753,9 +736,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                         label = "Unlock controls",
                         onClick = { playback.locked = false; controls = true; interaction++ },
                         modifier = Modifier.align(Alignment.CenterStart).safeDrawingPadding().padding(start = 24.dp),
-                        size = 50.dp,
-                        bgColor = dynamicFrostedCircleBg,
-                        rimColor = dynamicFrostedCircleRim
+                        size = 50.dp
                     ) {
                         Icon(Icons.Rounded.Lock, null, tint = Color.White)
                     }
@@ -883,55 +864,45 @@ private val TimelineAccent = Color(0xFF8B9DFF)
             val top = yCenter - h / 2f
             val corner = CornerRadius(h / 2f, h / 2f)
 
-            // Remaining Track (Spec: #e7f4ff37)
+            // Remaining Track
             drawRoundRect(
-                color = Color(0x37E7F4FF),
+                color = Color.White.copy(alpha = 0.24f),
                 topLeft = Offset(0f, top),
                 size = Size(size.width, h),
                 cornerRadius = corner
             )
-            // Buffered Track (Spec: #d5eaff36)
+            // Buffered Track
             if (bufferedFraction > 0f) {
                 drawRoundRect(
-                    color = Color(0x36D5EAFF),
+                    color = Color.White.copy(alpha = 0.40f),
                     topLeft = Offset(0f, top),
                     size = Size(size.width * bufferedFraction.coerceIn(0f, 1f), h),
                     cornerRadius = corner
                 )
             }
-            // Played Track (Spec: linear-gradient(90deg, #359eff, #83e5ff))
+            // Played Track (Soft Periwinkle-Blue matching Panel 1 & 3)
             val activeW = size.width * fraction.coerceIn(0f, 1f)
             if (activeW > 0f) {
                 drawRoundRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF359EFF), Color(0xFF83E5FF)),
-                        startX = 0f,
-                        endX = activeW
-                    ),
+                    color = TimelineAccent,
                     topLeft = Offset(0f, top),
                     size = Size(activeW, h),
                     cornerRadius = corner
                 )
             }
-            // Crisp Glowing Thumb (Spec: #f0fcff, border #68dcff, glowing ring #60ceff)
+            // Crisp White Circular Thumb
             if (enabled) {
                 val thumbX = activeW.coerceIn(r, (size.width - r).coerceAtLeast(r))
-                // Outer glowing halo
+                if (isScrubbing) {
+                    drawCircle(
+                        color = TimelineAccent.copy(alpha = 0.38f),
+                        radius = r * 1.7f,
+                        center = Offset(thumbX, yCenter)
+                    )
+                }
                 drawCircle(
-                    color = Color(0xFF60CEFF).copy(alpha = if (isScrubbing) 0.35f else 0.20f),
-                    radius = r * (if (isScrubbing) 2.2f else 1.6f),
-                    center = Offset(thumbX, yCenter)
-                )
-                // Cyan ring border
-                drawCircle(
-                    color = Color(0xFF68DCFF),
+                    color = Color.White,
                     radius = r,
-                    center = Offset(thumbX, yCenter)
-                )
-                // White center
-                drawCircle(
-                    color = Color(0xFFF0FCFF),
-                    radius = (r - 2.5f).coerceAtLeast(1f),
                     center = Offset(thumbX, yCenter)
                 )
             }
@@ -1321,37 +1292,17 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     size: Dp = 48.dp,
-    pressedScale: Float = 0.88f,
     bgColor: Color = FrostedCircleBg,
     rimColor: Color = FrostedCircleRim,
     icon: @Composable () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) pressedScale else 1.0f,
-        animationSpec = spring(
-            dampingRatio = 0.65f,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "frostedCircleScale"
-    )
-
     Surface(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier
-            .size(size)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .semantics { contentDescription = label },
+        modifier = modifier.size(size).semantics { contentDescription = label },
         shape = CircleShape,
         color = if (enabled) bgColor else bgColor.copy(alpha = 0.06f),
-        border = BorderStroke(1.dp, if (enabled) rimColor else rimColor.copy(alpha = 0.12f)),
-        interactionSource = interactionSource,
-        shadowElevation = 6.dp
+        border = BorderStroke(1.dp, if (enabled) rimColor else rimColor.copy(alpha = 0.10f))
     ) {
         Box(contentAlignment = Alignment.Center) {
             icon()
@@ -1366,14 +1317,18 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     enabled: Boolean = true,
     icon: @Composable () -> Unit
 ) {
-    FrostedCircleButton(
-        label = label,
-        onClick = action,
-        modifier = modifier,
-        enabled = enabled,
-        size = 36.dp,
-        icon = icon
+    val colors = IconButtonDefaults.iconButtonColors(
+        contentColor = Color.White.copy(alpha = 0.90f),
+        disabledContentColor = Color.White.copy(alpha = 0.30f)
     )
+    IconButton(
+        onClick = action,
+        modifier = modifier.size(42.dp).semantics { contentDescription = label },
+        enabled = enabled,
+        colors = colors
+    ) {
+        icon()
+    }
 }
 
 @Composable

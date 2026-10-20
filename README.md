@@ -15,22 +15,14 @@
 ### 📱 1. Universal Phone & Tablet Ergonomics
 - 🫧 **Auto-Minimizing Floating Dock & Tablet Rail**: Silky-smooth fluid physics (`0.88` damping ratio) automatically collapse the navigation bar into a sleek compact pill when scrolling through media. A single tap pops it right back open!
 - 🎛️ **Dock Style Toggle**: Choose between **Icons & labels** (default) or **Icons only** (ultra-sleek 54dp dock / 64dp tablet rail) under Settings › Display.
+- 📐 **Balanced Mobile Portrait Cinema Player**: Symmetrically centered timecode capsule pill and player actions dock in portrait orientation.
 - 🎬 **Unified Movie Details Page**: Pure single-surface card layout matching TV show ergonomics without elevation tinting or two-tone boundaries. Side-by-side poster and info on all devices, with responsive synopsis and symmetrical action buttons.
 - 🏷️ **FlowRow Audio & Subtitle Chips**: Modern badge chips for Multi-channel 5.1 passthrough, FFmpeg 6.1 libavcodec, libass, and PGS/SRT formats that never clip or wrap awkwardly on portrait phones.
 - 🔄 **One-Tap Orientation Switcher**: In-player button instantly cycles between **Landscape**, **Portrait**, and **Auto-Sensor** rotation.
 
 ---
 
-### 🌊 2. Minimal & Immersive Glass Playback Motion v2 Cinema Controls
-- 💎 **Universal Glass Motion v2 UX across All Buttons**: Back navigation, Caption/Subtitles, Cinema Settings, and bottom actions (Rotate, Lock, PiP, Close) all feature interactive spring physics (`scale` 0.88 on press), dynamic frosted glass backgrounds, and glowing specular frosted rims responsive to the Glassify slider.
-- 🌈 **Minimal & Immersive Floating Scrubber**: Removed the enclosed border rectangle around the progress bar; the fluid cyan gradient timeline (`#359EFF` ➔ `#83E5FF`) and glowing cyan-rimmed circular thumb now float cleanly and edge-to-edge over the subtle cinematic scrim.
-- 💫 **Symmetrical 58dp Seek & 78dp Morphing Play Controls**: 58dp frosted glass circular seek buttons (±10s) with numeric indicators and a central 78dp play/pause button featuring radiant gradient rims and fluid icon morphing.
-- 🎬 **Distraction-Free Minimal Top Bar**: Completely removed the refresh button for an uncluttered, pure cinema view with clean title and `"JADZUMI PLAYER"` micro-badge tracking.
-- ⚡ **YouTube-Style Seek Ripples**: Proportioned 58dp double-tap seek ripple overlays with dynamic chevrons (`«««` / `»»»`) and clean circular geometry eliminating hexagonal artifacts.
-
----
-
-### ☀️ 3. OLED / AMOLED Exclusive Auto HDR Peak Luminance
+### ☀️ 2. OLED / AMOLED Exclusive Auto HDR Peak Luminance
 - 🌈 **Auto HDR Detection**: Real-time detection of **HDR10**, **HDR10+**, **Dolby Vision** (`dv`/`dovi`), and **HLG** content.
 - 🖤 **OLED-Exclusive Peak Luminance**: Automatically boosts display luminance to peak (`1.0f`) with `COLOR_MODE_HDR` **only on OLED / AMOLED displays** for piercing highlights with infinite true blacks.
 - 🛡️ **LCD Backlight Protection**: Bypasses auto peak luminance on LCD tablets (Xiaomi Pad 5/6, OnePlus Pad, Galaxy Tab S7/S8 base, Lenovo Tab) to eliminate backlight bleeding and preserve natural contrast.
@@ -61,13 +53,6 @@
   - 🖤 **AMOLED Mode**: Pure `#000000` pitch black background for zero OLED battery consumption with a soft ambient sapphire aura.
   - ☀️ **Light Mode**: Luminous morning sky gradient (`#EAF4FF`) with airy azure floating blobs and diagonal specular sheen.
 - ✨ **Levitating Glass Tile & SVG Logo**: Levitating frosted tile (`translateY(-6px)`) with breathing radial aura, 120x120 vector play symbol, and 3dp gradient loading track with dynamic status text (*"Preparing your cinema…"* ➔ *"Loading your library…"*) and 1.09x smooth zoom exit.
-
----
-
-### 📱 6. Mobile Portrait TV Show & Episode Card Ergonomics
-- 🏷️ **Adaptive Audio & Subtitle Badges**: FlowRow layout preventing horizontal compression or single-letter vertical stretching on narrow phone displays.
-- 🎞️ **Responsive Episode Cards**: Responsive thumbnail dimensions (`116dp` on narrow phones vs `156dp` on tablets) with wrapped specs and status text for clean readability.
-- ⚡ **Zero-Flash Dock Selection**: Fluid single-action tap selection with unified bounded ripple, smooth indicator fade/scale animations, and instant 120 FPS tab crossfades.
 
 ---
 

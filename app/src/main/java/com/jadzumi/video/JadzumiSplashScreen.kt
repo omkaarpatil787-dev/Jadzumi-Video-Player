@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -90,10 +91,43 @@ fun JadzumiPlaySymbol(modifier: Modifier = Modifier) {
     }
 }
 
+// Pre-allocated static gradient and color stops for 120 FPS GC-free aurora background animation
+private val AmoledBlob1Colors = listOf(Color(0xFF188AF5).copy(alpha = 0.12f), Color.Transparent)
+private val AmoledBlob2Colors = listOf(Color(0xFF1659D9).copy(alpha = 0.10f), Color.Transparent)
+
+private val DarkLinearStops = arrayOf(
+    0.0f to Color(0xFF09101D),
+    0.52f to Color(0xFF0B2445),
+    1.0f to Color(0xFF171E40)
+)
+private val DarkEllipse1Colors = listOf(Color(0xFF172E53).copy(alpha = 0.45f), Color.Transparent)
+private val DarkEllipse2Colors = listOf(Color(0xFF154A8B).copy(alpha = 0.40f), Color.Transparent)
+private val DarkBlob1Colors = listOf(Color(0xFF80C6FF).copy(alpha = 0.18f), Color.Transparent)
+private val DarkBlob2Colors = listOf(Color(0xFF8CAEFF).copy(alpha = 0.18f), Color.Transparent)
+private val DarkBlob3Colors = listOf(Color(0xFFC2F1FF).copy(alpha = 0.16f), Color.Transparent)
+private val DarkSheenColors = listOf(Color.White.copy(alpha = 0.04f), Color.Transparent)
+
+private val LightLinearStops = arrayOf(
+    0.0f to Color(0xFFEFF9FF),
+    0.52f to Color(0xFFCDE6FF),
+    1.0f to Color(0xFFE9E5FF)
+)
+private val LightEllipse1Colors = listOf(Color.White.copy(alpha = 0.90f), Color.Transparent)
+private val LightEllipse2Colors = listOf(Color(0xFFACD9FF).copy(alpha = 0.80f), Color.Transparent)
+private val LightBlob1Colors = listOf(Color(0xFF80C6FF).copy(alpha = 0.55f), Color.Transparent)
+private val LightBlob2Colors = listOf(Color(0xFF8CAEFF).copy(alpha = 0.55f), Color.Transparent)
+private val LightBlob3Colors = listOf(Color(0xFFC2F1FF).copy(alpha = 0.55f), Color.Transparent)
+private val LightSheenStops = arrayOf(
+    0.0f to Color.White.copy(alpha = 0.54f),
+    0.35f to Color.Transparent,
+    0.65f to Color.White.copy(alpha = 0.22f),
+    1.0f to Color.Transparent
+)
+
 /**
  * Ambient background matching jadzumi_player_splash_final.html:
  * Features ambient radial gradients, 3 floating blobs, and specular sheen.
- * Adaptive to Light, Dark, and AMOLED themes.
+ * Adaptive to Light, Dark, and AMOLED themes with pre-allocated color lists for zero-GC 120 FPS rendering.
  */
 @Composable
 private fun AuroraAmbientBackground(
@@ -121,7 +155,7 @@ private fun AuroraAmbientBackground(
                 val b1Y = h * (-0.05f + 0.10f * float2)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF188AF5).copy(alpha = 0.12f), Color.Transparent),
+                        colors = AmoledBlob1Colors,
                         center = Offset(b1X, b1Y),
                         radius = w * 0.45f
                     )
@@ -131,7 +165,7 @@ private fun AuroraAmbientBackground(
                 val b2Y = h * (0.40f - 0.12f * float3)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF1659D9).copy(alpha = 0.10f), Color.Transparent),
+                        colors = AmoledBlob2Colors,
                         center = Offset(b2X, b2Y),
                         radius = w * 0.45f
                     )
@@ -145,11 +179,7 @@ private fun AuroraAmbientBackground(
                 // Dark ambient gradient: #09101d -> #0b2445 52% -> #171e40
                 drawRect(
                     brush = Brush.linearGradient(
-                        colorStops = arrayOf(
-                            0.0f to Color(0xFF09101D),
-                            0.52f to Color(0xFF0B2445),
-                            1.0f to Color(0xFF171E40)
-                        ),
+                        colorStops = DarkLinearStops,
                         start = Offset(0f, 0f),
                         end = Offset(w, h)
                     )
@@ -158,7 +188,7 @@ private fun AuroraAmbientBackground(
                 // Soft radial ellipse at 30% 28%
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF172E53).copy(alpha = 0.45f), Color.Transparent),
+                        colors = DarkEllipse1Colors,
                         center = Offset(w * 0.30f, h * 0.28f),
                         radius = w * 0.65f
                     )
@@ -167,7 +197,7 @@ private fun AuroraAmbientBackground(
                 // Soft radial ellipse at 74% 64%
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF154A8B).copy(alpha = 0.40f), Color.Transparent),
+                        colors = DarkEllipse2Colors,
                         center = Offset(w * 0.74f, h * 0.64f),
                         radius = w * 0.70f
                     )
@@ -178,7 +208,7 @@ private fun AuroraAmbientBackground(
                 val b1Y = h * (-0.05f + 0.12f * float2)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF80C6FF).copy(alpha = 0.18f), Color.Transparent),
+                        colors = DarkBlob1Colors,
                         center = Offset(b1X, b1Y),
                         radius = w * 0.50f
                     )
@@ -188,7 +218,7 @@ private fun AuroraAmbientBackground(
                 val b2Y = h * (0.40f - 0.15f * float3)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF8CAEFF).copy(alpha = 0.18f), Color.Transparent),
+                        colors = DarkBlob2Colors,
                         center = Offset(b2X, b2Y),
                         radius = w * 0.50f
                     )
@@ -198,7 +228,7 @@ private fun AuroraAmbientBackground(
                 val b3Y = h * (0.95f - 0.15f * float1)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFFC2F1FF).copy(alpha = 0.16f), Color.Transparent),
+                        colors = DarkBlob3Colors,
                         center = Offset(b3X, b3Y),
                         radius = w * 0.45f
                     )
@@ -207,7 +237,7 @@ private fun AuroraAmbientBackground(
                 // Sheen: linear-gradient(128deg, #ffffff0a, transparent 65%)
                 drawRect(
                     brush = Brush.linearGradient(
-                        colors = listOf(Color.White.copy(alpha = 0.04f), Color.Transparent),
+                        colors = DarkSheenColors,
                         start = Offset(0f, 0f),
                         end = Offset(w * 0.65f, h * 0.65f)
                     )
@@ -221,11 +251,7 @@ private fun AuroraAmbientBackground(
                 // Ambient linear gradient: #eff9ff -> #cde6ff 52% -> #e9e5ff
                 drawRect(
                     brush = Brush.linearGradient(
-                        colorStops = arrayOf(
-                            0.0f to Color(0xFFEFF9FF),
-                            0.52f to Color(0xFFCDE6FF),
-                            1.0f to Color(0xFFE9E5FF)
-                        ),
+                        colorStops = LightLinearStops,
                         start = Offset(0f, 0f),
                         end = Offset(w, h)
                     )
@@ -234,7 +260,7 @@ private fun AuroraAmbientBackground(
                 // Ellipse at 30% 28%: #fff
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color.White.copy(alpha = 0.90f), Color.Transparent),
+                        colors = LightEllipse1Colors,
                         center = Offset(w * 0.30f, h * 0.28f),
                         radius = w * 0.65f
                     )
@@ -243,7 +269,7 @@ private fun AuroraAmbientBackground(
                 // Ellipse at 74% 64%: #acd9ff
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFFACD9FF).copy(alpha = 0.80f), Color.Transparent),
+                        colors = LightEllipse2Colors,
                         center = Offset(w * 0.74f, h * 0.64f),
                         radius = w * 0.70f
                     )
@@ -254,7 +280,7 @@ private fun AuroraAmbientBackground(
                 val b1Y = h * (-0.05f + 0.14f * float2)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF80C6FF).copy(alpha = 0.55f), Color.Transparent),
+                        colors = LightBlob1Colors,
                         center = Offset(b1X, b1Y),
                         radius = w * 0.58f
                     )
@@ -265,7 +291,7 @@ private fun AuroraAmbientBackground(
                 val b2Y = h * (0.42f - 0.16f * float3)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF8CAEFF).copy(alpha = 0.55f), Color.Transparent),
+                        colors = LightBlob2Colors,
                         center = Offset(b2X, b2Y),
                         radius = w * 0.58f
                     )
@@ -276,7 +302,7 @@ private fun AuroraAmbientBackground(
                 val b3Y = h * (0.95f - 0.15f * float1)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFFC2F1FF).copy(alpha = 0.55f), Color.Transparent),
+                        colors = LightBlob3Colors,
                         center = Offset(b3X, b3Y),
                         radius = w * 0.52f
                     )
@@ -285,12 +311,7 @@ private fun AuroraAmbientBackground(
                 // Sheen: linear-gradient(128deg, #ffffff8a, transparent 35%, #ffffff3a 65%, transparent)
                 drawRect(
                     brush = Brush.linearGradient(
-                        colorStops = arrayOf(
-                            0.0f to Color.White.copy(alpha = 0.54f),
-                            0.35f to Color.Transparent,
-                            0.65f to Color.White.copy(alpha = 0.22f),
-                            1.0f to Color.Transparent
-                        ),
+                        colorStops = LightSheenStops,
                         start = Offset(0f, 0f),
                         end = Offset(w, h)
                     )
@@ -427,9 +448,12 @@ fun JadzumiSplashScreen(
             // Glass Logo Tile matching jadzumi_player_splash_final.html
             Box(
                 modifier = Modifier
-                    .offset(y = levitateY.dp)
-                    .alpha(entryAlpha.value)
-                    .scale(entryScale.value),
+                    .graphicsLayer {
+                        translationY = levitateY.dp.toPx()
+                        alpha = entryAlpha.value
+                        scaleX = entryScale.value
+                        scaleY = entryScale.value
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 // Frosted Glass Rounded Container
@@ -498,7 +522,7 @@ fun JadzumiSplashScreen(
                 fontSize = 19.sp,
                 fontWeight = FontWeight(650),
                 letterSpacing = 0.29.em,
-                modifier = Modifier.alpha(entryAlpha.value)
+                modifier = Modifier.graphicsLayer { alpha = entryAlpha.value }
             )
 
             Spacer(Modifier.height(if (isCompact) 36.dp else 52.dp))
@@ -511,7 +535,7 @@ fun JadzumiSplashScreen(
                 modifier = Modifier
                     .widthIn(max = 250.dp)
                     .fillMaxWidth(0.70f)
-                    .alpha(entryAlpha.value),
+                    .graphicsLayer { alpha = entryAlpha.value },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // 3px Progress Track with gradient fill

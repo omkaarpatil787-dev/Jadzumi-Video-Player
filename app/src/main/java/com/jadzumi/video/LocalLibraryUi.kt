@@ -1911,7 +1911,12 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
 @Composable internal fun LocalThumbnail(video: LocalVideo, modifier: Modifier) {
     val context = LocalContext.current.applicationContext
     val key = "${video.uri}:${video.modified}:${video.bytes}"
-    val bitmap by produceState<Bitmap?>(initialValue = null, key1 = key) {
+    val cached = remember(key) { ThumbnailMemory.cache.get(key) }
+    val bitmap by produceState<Bitmap?>(initialValue = cached, key1 = key) {
+        if (cached != null) {
+            value = cached
+            return@produceState
+        }
         value = null
         value = withContext(Dispatchers.IO) {
             ThumbnailMemory.permits.withPermit {

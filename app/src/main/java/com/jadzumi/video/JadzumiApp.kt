@@ -905,7 +905,7 @@ private val destinations = listOf(
                         modifier = Modifier
                             .clip(RoundedCornerShape(18.dp))
                             .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
+                                interactionSource = remember(d.name) { MutableInteractionSource() },
                                 indication = ripple(bounded = true, radius = 26.dp)
                             ) {
                                 if (!isSelected) {
@@ -928,8 +928,11 @@ private val destinations = listOf(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .width(46.dp)
-                                            .scale(pillScale)
-                                            .alpha(pillAlpha)
+                                            .graphicsLayer {
+                                                scaleX = pillScale
+                                                scaleY = pillScale
+                                                alpha = pillAlpha
+                                            }
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
                                     )
@@ -958,8 +961,11 @@ private val destinations = listOf(
                                             modifier = Modifier
                                                 .fillMaxHeight()
                                                 .width(40.dp)
-                                                .scale(pillScale)
-                                                .alpha(pillAlpha)
+                                                .graphicsLayer {
+                                                    scaleX = pillScale
+                                                    scaleY = pillScale
+                                                    alpha = pillAlpha
+                                                }
                                                 .clip(RoundedCornerShape(14.dp))
                                                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
                                         )

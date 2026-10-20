@@ -1031,7 +1031,12 @@ internal fun SidecarImage(
     modifier: Modifier
 ) {
     val context = LocalContext.current.applicationContext
-    val bitmap by produceState<Bitmap?>(initialValue = null, key1 = uri) {
+    val cached = remember(uri) { uri?.let { SidecarMemory.cache.get(it) } }
+    val bitmap by produceState<Bitmap?>(initialValue = cached, key1 = uri) {
+        if (cached != null) {
+            value = cached
+            return@produceState
+        }
         value = null
         if (uri != null) {
             value = withContext(Dispatchers.IO) {
