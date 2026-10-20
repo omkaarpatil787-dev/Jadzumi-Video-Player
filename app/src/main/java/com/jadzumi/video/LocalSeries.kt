@@ -4,8 +4,6 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract as Docs
 import androidx.core.net.toUri
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
 
 /**
@@ -132,8 +130,8 @@ object EpisodePatterns {
     private val S_E_REGEX = Regex("(?i)(?:^|[ ._\\-\\[])s(\\d{1,2})[ ._\\-]?e(\\d{1,3})(?=[ ._\\-\\]]|$)", RegexOption.IGNORE_CASE)
     // 1x04, 02x12
     private val X_REGEX = Regex("(?i)(?:^|[ ._\\-\\[])(\\d{1,2})x(\\d{1,3})(?=[ ._\\-\\]]|$)", RegexOption.IGNORE_CASE)
-    // Episode 12, Ep. 05, EP10
-    private val EP_REGEX = Regex("(?i)(?:^|[ ._\\-\\[])(?:episode|ep|e)[ ._\\-]?(\\d{1,3})(?=[ ._\\-\\]]|$)", RegexOption.IGNORE_CASE)
+    // Episode 12, Ep. 05, EP10, OVA 01, SP 02, Special 03
+    private val EP_REGEX = Regex("(?i)(?:^|[ ._\\-\\[])(?:episode|ep|e|ova|sp|special)[ ._\\-]?(\\d{1,3})(?=[ ._\\-\\]]|$)", RegexOption.IGNORE_CASE)
     // Folder Season indicator: "Season 1", "Season 02", "S02"
     private val FOLDER_SEASON_REGEX = Regex("(?i)\\b(?:season|s)[ ._\\-]?(\\d{1,2})\\b", RegexOption.IGNORE_CASE)
     // Specials folder
@@ -172,11 +170,11 @@ object EpisodePatterns {
             return SeriesEpisodeInfo(series, season, episode, epTitle)
         }
 
-        // 3. Check Episode 12 / Ep 05
+        // 3. Check Episode 12 / Ep 05 / OVA 01 / Special 02
         val epMatch = EP_REGEX.find(baseName)
         if (epMatch != null) {
             val episode = epMatch.groupValues[1].toIntOrNull() ?: 1
-            val detectedSeason = detectSeasonFromFolder(folderName) ?: 1
+            val detectedSeason = detectSeasonFromFolder(folderName, epMatch.value) ?: 1
             val rawSeries = baseName.substring(0, epMatch.range.first)
             val rawEpTitle = baseName.substring(epMatch.range.last + 1)
             val series = cleanSeriesTitle(rawSeries, folderName)
@@ -187,7 +185,8 @@ object EpisodePatterns {
         return null
     }
 
-    private fun detectSeasonFromFolder(folderName: String?): Int? {
+    private fun detectSeasonFromFolder(folderName: String?, matchedToken: String? = null): Int? {
+        if (matchedToken != null && Regex("(?i)\\b(?:ova|sp|special)\\b").containsMatchIn(matchedToken)) return 0
         if (folderName == null) return null
         if (SPECIALS_REGEX.containsMatchIn(folderName)) return 0
         return FOLDER_SEASON_REGEX.find(folderName)?.groupValues?.get(1)?.toIntOrNull()
@@ -217,57 +216,41 @@ object EpisodePatterns {
 }
 
 /**
- * Lightweight XML Pull Parser for Kodi / Jellyfin / Plex .nfo files (100% offline)
+ * Lightweight XML Parser for Kodi / Jellyfin / Plex .nfo files (100% offline & JVM-safe)
  */
 object NfoParser {
     fun parse(inputStream: InputStream): ParsedNfo {
-        var title: String? = null
-        var plot: String? = null
-        var year: String? = null
-        var rating: String? = null
-        var mpaa: String? = null
-        val genres = mutableListOf<String>()
-        var studio: String? = null
-        var season: Int? = null
-        var episode: Int? = null
-        var aired: String? = null
-
-        try {
-            val factory = XmlPullParserFactory.newInstance()
-            factory.isNamespaceAware = false
-            val parser = factory.newPullParser()
-            parser.setInput(inputStream, "UTF-8")
-
-            var eventType = parser.eventType
-            var currentTag = ""
-
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                when (eventType) {
-                    XmlPullParser.START_TAG -> currentTag = parser.name.lowercase()
-                    XmlPullParser.TEXT -> {
-                        val text = parser.text?.trim()
-                        if (!text.isNullOrEmpty()) {
-                            when (currentTag) {
-                                "title" -> if (title == null) title = text
-                                "plot", "outline" -> if (plot == null) plot = text
-                                "year" -> if (year == null) year = text
-                                "rating" -> if (rating == null) rating = text
-                                "mpaa" -> if (mpaa == null) mpaa = text
-                                "genre" -> if (!genres.contains(text)) genres.add(text)
-                                "studio" -> if (studio == null) studio = text
-                                "season" -> if (season == null) season = text.toIntOrNull()
-                                "episode" -> if (episode == null) episode = text.toIntOrNull()
-                                "aired", "premiered" -> if (aired == null) aired = text
-                            }
-                        }
-                    }
-                    XmlPullParser.END_TAG -> currentTag = ""
-                }
-                eventType = parser.next()
-            }
+        val text = try {
+            inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
         } catch (_: Exception) {
-            // Graceful fallback on corrupt XML
+            return ParsedNfo()
         }
+        return parseText(text)
+    }
+
+    fun parseText(text: String): ParsedNfo {
+        fun extractFirst(tag: String): String? {
+            val regex = Regex("(?si)<$tag\\b[^>]*>(.*?)</$tag>")
+            return regex.find(text)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotEmpty() }
+        }
+
+        fun extractAll(tag: String): List<String> {
+            val regex = Regex("(?si)<$tag\\b[^>]*>(.*?)</$tag>")
+            return regex.findAll(text).mapNotNull {
+                it.groupValues.getOrNull(1)?.trim()?.takeIf { s -> s.isNotEmpty() }
+            }.distinct().toList()
+        }
+
+        val title = extractFirst("title")
+        val plot = extractFirst("plot") ?: extractFirst("outline")
+        val year = extractFirst("year")
+        val rating = extractFirst("rating")
+        val mpaa = extractFirst("mpaa")
+        val genres = extractAll("genre")
+        val studio = extractFirst("studio")
+        val season = extractFirst("season")?.toIntOrNull()
+        val episode = extractFirst("episode")?.toIntOrNull()
+        val aired = extractFirst("aired") ?: extractFirst("premiered")
 
         return ParsedNfo(title, plot, year, rating, mpaa, genres, studio, season, episode, aired)
     }

@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -255,7 +256,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Icon(
-                                if (isBright) Icons.Rounded.Brightness6 else Icons.Rounded.VolumeUp,
+                                if (isBright) Icons.Rounded.Brightness6 else Icons.AutoMirrored.Rounded.VolumeUp,
                                 null,
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)

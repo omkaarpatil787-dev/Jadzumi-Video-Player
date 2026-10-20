@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -482,7 +483,7 @@ private val destinations = listOf(
 private data class SettingsCategory(val id: String, val label: String, val icon: ImageVector)
 private val settingsCategories = listOf(
     SettingsCategory("Video", "Video", Icons.Rounded.PlayCircle),
-    SettingsCategory("Audio", "Audio", Icons.Rounded.VolumeUp),
+    SettingsCategory("Audio", "Audio", Icons.AutoMirrored.Rounded.VolumeUp),
     SettingsCategory("Subtitles", "Subtitles", Icons.Rounded.Subtitles),
     SettingsCategory("Display", "Display", Icons.Rounded.Palette),
     SettingsCategory("Gestures", "Gestures", Icons.Rounded.TouchApp),

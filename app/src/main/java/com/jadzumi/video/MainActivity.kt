@@ -146,10 +146,10 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT < 31 && playback.fullscreen && playback.playing) enterCinemaPip()
     }
 
-    override fun onPictureInPictureModeChanged(inPip: Boolean, newConfig: Configuration) {
-        super.onPictureInPictureModeChanged(inPip, newConfig)
-        playback.inPip = inPip
-        if (inPip) {
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        playback.inPip = isInPictureInPictureMode
+        if (isInPictureInPictureMode) {
             playback.fullscreen = true
             playback.locked = false
         } else {
