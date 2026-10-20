@@ -648,7 +648,6 @@ private val destinations = listOf(
                             }
                         }
                     }
-                }
 
             bloomOriginColor?.let { oldColor ->
                 val progress = bloomProgress.value
@@ -669,7 +668,7 @@ private val destinations = listOf(
                     onFinished = { showSplash = false }
                 )
             }
-        }
+            }
         }
     }
 }
