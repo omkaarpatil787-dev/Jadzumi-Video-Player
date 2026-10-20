@@ -204,7 +204,21 @@ private val destinations = listOf(
                 BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
                     val showRail = maxWidth >= 640.dp
                     Row(Modifier.fillMaxSize()) {
-                        if (showRail) AppRail(route, colors != Light) { route = it; selectedId = null }
+                        if (showRail) {
+                            AppRail(
+                                route = route,
+                                darkSurface = colors != Light,
+                                bottomBarStyle = bottomBarStyle,
+                                glassIntensity = glassIntensity,
+                                isMinimized = isDockMinimized,
+                                onToggleMinimize = { isDockMinimized = !isDockMinimized },
+                                navigate = {
+                                    if (isDockMinimized) isDockMinimized = false
+                                    route = it
+                                    selectedId = null
+                                }
+                            )
+                        }
                         BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
                             val contentWidth = maxWidth
                             val isPhone = contentWidth < 600.dp
@@ -635,25 +649,69 @@ private val destinations = listOf(
     }
 }
 
-@Composable private fun AppRail(route: String, darkSurface: Boolean, navigate: (String) -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.width(96.dp).fillMaxHeight()) {
-        Column(Modifier.fillMaxSize().padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+@Composable private fun AppRail(
+    route: String,
+    darkSurface: Boolean,
+    bottomBarStyle: String,
+    glassIntensity: Float = 0.75f,
+    isMinimized: Boolean,
+    onToggleMinimize: () -> Unit,
+    navigate: (String) -> Unit
+) {
+    val isIconsOnly = bottomBarStyle == "Icons only"
+
+    val railWidth by animateDpAsState(
+        targetValue = when {
+            isMinimized -> 52.dp
+            isIconsOnly -> 64.dp
+            else -> 92.dp
+        },
+        animationSpec = spring(
+            dampingRatio = 0.88f,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "railWidth"
+    )
+
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.width(railWidth).fillMaxHeight()
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.clickable { navigate("Home") }.padding(bottom = 16.dp)
+                modifier = Modifier
+                    .clickable {
+                        if (isMinimized) onToggleMinimize() else navigate("Home")
+                    }
+                    .padding(bottom = 16.dp)
             ) {
-                JadzumiLogo(size = 42.dp, darkSurface = darkSurface)
-                Spacer(Modifier.height(4.dp))
-                Text("Jadzumi", fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
-                Text("Video", fontWeight = FontWeight.Medium, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                JadzumiLogo(size = if (isIconsOnly || isMinimized) 36.dp else 42.dp, darkSurface = darkSurface)
+                if (!isIconsOnly && !isMinimized) {
+                    Spacer(Modifier.height(4.dp))
+                    Text("Jadzumi", fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
+                    Text("Player", fontWeight = FontWeight.Medium, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                }
             }
+
             destinations.filter { it.name != "Settings" }.forEach { d ->
                 val isSelected = route == d.name || (d.name == "Home" && route == "Library")
                 NavigationRailItem(
                     selected = isSelected,
-                    onClick = { navigate(d.name) },
+                    onClick = {
+                        if (isMinimized) onToggleMinimize()
+                        navigate(d.name)
+                    },
                     icon = { Icon(d.icon, null) },
-                    label = { Text(d.name, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) },
+                    label = if (isIconsOnly || isMinimized) null else {
+                        { Text(d.name, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) }
+                    },
+                    alwaysShowLabel = !isIconsOnly && !isMinimized,
                     modifier = Modifier.padding(vertical = 4.dp),
                     colors = NavigationRailItemDefaults.colors(
                         indicatorColor = MaterialTheme.colorScheme.primaryContainer,
@@ -664,13 +722,31 @@ private val destinations = listOf(
                     )
                 )
             }
+
             Spacer(Modifier.weight(1f))
+
+            if (isMinimized) {
+                IconButton(onClick = onToggleMinimize) {
+                    Icon(
+                        Icons.Rounded.ChevronRight,
+                        contentDescription = "Expand Rail",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
             val isSettingsSelected = route == "Settings"
             NavigationRailItem(
                 selected = isSettingsSelected,
-                onClick = { navigate("Settings") },
+                onClick = {
+                    if (isMinimized) onToggleMinimize()
+                    navigate("Settings")
+                },
                 icon = { Icon(Icons.Rounded.Settings, null) },
-                label = { Text("Settings", fontSize = 11.sp, fontWeight = if (isSettingsSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) },
+                label = if (isIconsOnly || isMinimized) null else {
+                    { Text("Settings", fontSize = 11.sp, fontWeight = if (isSettingsSelected) FontWeight.Bold else FontWeight.Normal, maxLines = 1) }
+                },
+                alwaysShowLabel = !isIconsOnly && !isMinimized,
                 colors = NavigationRailItemDefaults.colors(
                     indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -706,7 +782,7 @@ private val destinations = listOf(
     val activeDestination = navDestinations.firstOrNull { it.name == route || (it.name == "Home" && route == "Library") }
         ?: navDestinations.first()
 
-    // Fluid bouncy animations
+    // Fluid smooth animations (Apple / M3 smooth settling, no excessive bounce)
     val dockHeight by animateDpAsState(
         targetValue = when {
             isMinimized -> 52.dp
@@ -714,8 +790,8 @@ private val destinations = listOf(
             else -> 64.dp
         },
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+            dampingRatio = 0.88f,
+            stiffness = Spring.StiffnessMediumLow
         ),
         label = "dockHeight"
     )
@@ -723,15 +799,15 @@ private val destinations = listOf(
     val dockWidth by animateDpAsState(
         targetValue = if (isMinimized) 68.dp else 460.dp,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+            dampingRatio = 0.88f,
+            stiffness = Spring.StiffnessMediumLow
         ),
         label = "dockWidth"
     )
 
     val cornerRadius by animateDpAsState(
         targetValue = if (isMinimized) 26.dp else 32.dp,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        animationSpec = spring(dampingRatio = 0.88f, stiffness = Spring.StiffnessMediumLow),
         label = "dockCorner"
     )
 
@@ -924,7 +1000,7 @@ private val settingsCategories = listOf(
         AlertDialog(
             onDismissRequest = { folderToRemove = null },
             title = { Text("Remove ${folder.name}?") },
-            text = { Text("Remove this folder from Jadzumi Video. The videos on your device storage will remain unchanged.") },
+            text = { Text("Remove this folder from Jadzumi Player. The videos on your device storage will remain unchanged.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -1103,6 +1179,26 @@ private val settingsCategories = listOf(
                                             Column {
                                                 Text(hdrTitle, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                                                 Text(hdrDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
+                                    }
+
+                                    val (panelTitle, panelDesc) = remember { DeviceHardwareInspector.getDisplayPanelInfo(context) }
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.Tv, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(24.dp))
+                                            Column {
+                                                Text(panelTitle, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                                Text(panelDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                         }
                                     }
@@ -1660,7 +1756,7 @@ private val settingsCategories = listOf(
                                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         Text("Your movies. Your space.", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
                                         Text(
-                                            "Jadzumi Video keeps your video library, playback history, and settings strictly on your device. No telemetry, no cloud sync, 100% offline-first.",
+                                            "Jadzumi Player keeps your video library, playback history, and settings strictly on your device. No telemetry, no cloud sync, 100% offline-first.",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
                                         )

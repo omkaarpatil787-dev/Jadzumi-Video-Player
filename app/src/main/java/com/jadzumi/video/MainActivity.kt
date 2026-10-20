@@ -119,9 +119,10 @@ class MainActivity : ComponentActivity() {
         return builder.build()
     }
 
-    fun updateHdrColorMode() {
+    fun updateHdrColorMode(isOled: Boolean = DeviceHardwareInspector.isOledOrAmoledDisplay(this)) {
         if (Build.VERSION.SDK_INT >= 26) {
-            window.colorMode = if (playback.video != null && (playback.brightnessBoost || playback.isHdr)) {
+            val shouldBoostHdr = playback.video != null && (playback.brightnessBoost || (playback.isHdr && isOled))
+            window.colorMode = if (shouldBoostHdr) {
                 ActivityInfo.COLOR_MODE_HDR
             } else {
                 ActivityInfo.COLOR_MODE_DEFAULT

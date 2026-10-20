@@ -43,6 +43,31 @@ fun MovieDetailsPage(
         extractMovieMetadata(video, state.sidecars, context)
     }
 
+    var onlineMeta by remember(video.identity) { mutableStateOf<OnlineMediaMetadata?>(null) }
+    LaunchedEffect(video.identity, metadata.title, metadata.year) {
+        val fetched = OnlineMetadataFetcher.fetchMovieMetadata(context, metadata.title, metadata.year)
+        if (fetched != null) {
+            onlineMeta = fetched
+        }
+    }
+
+    val effectiveMetadata = remember(metadata, onlineMeta) {
+        val meta = onlineMeta
+        if (meta != null) {
+            metadata.copy(
+                title = meta.title.ifBlank { metadata.title },
+                year = meta.year ?: metadata.year,
+                rating = meta.rating ?: metadata.rating,
+                genres = if ((metadata.genres.isEmpty() || metadata.genres == listOf("Feature Film", "Cinema")) && meta.genres.isNotEmpty()) meta.genres else metadata.genres,
+                synopsis = if ((metadata.synopsis.isBlank() || metadata.synopsis.contains("offline library")) && !meta.synopsis.isNullOrBlank()) meta.synopsis else metadata.synopsis,
+                posterUri = metadata.posterUri ?: meta.localPosterPath ?: meta.posterUrl,
+                backdropUri = metadata.backdropUri ?: meta.backdropUrl ?: meta.localPosterPath ?: meta.posterUrl
+            )
+        } else {
+            metadata
+        }
+    }
+
     val savedPos = playback.savedPosition(video)
     val dur = video.duration.takeIf { it > 0 } ?: 1000L
     val isWatched = savedPos >= dur * 0.9f
@@ -80,7 +105,7 @@ fun MovieDetailsPage(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Movies  ›  ${metadata.title}",
+                            text = "Movies  ›  ${effectiveMetadata.title}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -101,13 +126,15 @@ fun MovieDetailsPage(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Icon(
-                                Icons.Rounded.CloudDone,
+                                if (onlineMeta != null) Icons.Rounded.CloudDone else Icons.Rounded.Storage,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                if (isTablet) "100% Offline Local Metadata" else "Offline",
+                                if (onlineMeta != null) (if (isTablet) "Verified Album Artwork & Metadata" else "Online Art")
+                                else if (metadata.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
+                                else if (isTablet) "Hardware Offline Analysis" else "Offline",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -129,7 +156,7 @@ fun MovieDetailsPage(
                     val heroPad = if (isTablet) 22.dp else 16.dp
                     val posterWidth = if (isTablet) 140.dp else 102.dp
 
-                    val fullSynopsis = metadata.synopsis
+                    val fullSynopsis = effectiveMetadata.synopsis
                         ?: "Offline Feature Film stored in your local library. High-efficiency playback with hardware-accelerated MediaCodec decoding."
 
                     Column(
@@ -150,7 +177,7 @@ fun MovieDetailsPage(
                                         .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                                 ) {
                                     SidecarImage(
-                                        uri = metadata.posterUri ?: metadata.backdropUri,
+                                        uri = effectiveMetadata.posterUri ?: effectiveMetadata.backdropUri,
                                         fallbackVideo = video,
                                         modifier = Modifier.fillMaxSize()
                                     )
@@ -162,7 +189,7 @@ fun MovieDetailsPage(
                                     verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     Text(
-                                        text = metadata.title,
+                                        text = effectiveMetadata.title,
                                         style = MaterialTheme.typography.headlineMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface,
@@ -170,9 +197,9 @@ fun MovieDetailsPage(
                                         overflow = TextOverflow.Ellipsis
                                     )
 
-                                    if (metadata.genres.isNotEmpty()) {
+                                    if (effectiveMetadata.genres.isNotEmpty()) {
                                         Text(
-                                            metadata.genres.joinToString(" · "),
+                                            effectiveMetadata.genres.joinToString(" · "),
                                             fontSize = 13.sp,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.SemiBold,
@@ -181,7 +208,7 @@ fun MovieDetailsPage(
                                         )
                                     }
 
-                                    MovieBadgesFlow(metadata, video)
+                                    MovieBadgesFlow(effectiveMetadata, video)
 
                                     Text(
                                         text = fullSynopsis,
@@ -198,7 +225,7 @@ fun MovieDetailsPage(
                             // Mobile Phone Optimized Layout: Full-width title, genre subtitle, side-by-side poster + badges, synopsis
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Text(
-                                    text = metadata.title,
+                                    text = effectiveMetadata.title,
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -206,9 +233,9 @@ fun MovieDetailsPage(
                                     overflow = TextOverflow.Ellipsis
                                 )
 
-                                if (metadata.genres.isNotEmpty()) {
+                                if (effectiveMetadata.genres.isNotEmpty()) {
                                     Text(
-                                        metadata.genres.joinToString(" · "),
+                                        effectiveMetadata.genres.joinToString(" · "),
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.SemiBold,
@@ -230,7 +257,7 @@ fun MovieDetailsPage(
                                             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                                     ) {
                                         SidecarImage(
-                                            uri = metadata.posterUri ?: metadata.backdropUri,
+                                            uri = effectiveMetadata.posterUri ?: effectiveMetadata.backdropUri,
                                             fallbackVideo = video,
                                             modifier = Modifier.fillMaxSize()
                                         )
@@ -240,7 +267,7 @@ fun MovieDetailsPage(
                                         modifier = Modifier.weight(1f),
                                         verticalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        MovieBadgesFlow(metadata, video)
+                                        MovieBadgesFlow(effectiveMetadata, video)
                                     }
                                 }
 

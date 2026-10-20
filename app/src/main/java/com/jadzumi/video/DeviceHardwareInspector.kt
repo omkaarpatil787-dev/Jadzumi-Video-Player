@@ -82,6 +82,73 @@ object DeviceHardwareInspector {
         }
     }
 
+    /**
+     * Detects whether the device display panel is OLED / AMOLED vs LCD.
+     * On OLED/AMOLED displays, true pitch black is achieved (0.0 nits), so boosting peak luminance
+     * enhances dynamic range with infinite contrast.
+     * On LCD displays (even those supporting HDR10), forcing 100% luminance causes severe backlight bleed
+     * and washes out contrast, so peak screen luminance auto-boost is bypassed.
+     */
+    fun isOledOrAmoledDisplay(context: Context): Boolean {
+        val prefs = context.getSharedPreferences("appearance", Context.MODE_PRIVATE)
+        val userOverride = prefs.getString("displayPanelType", "auto") ?: "auto"
+        if (userOverride == "oled") return true
+        if (userOverride == "lcd") return false
+
+        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try { context.display } catch (_: Exception) { windowManager?.defaultDisplay }
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager?.defaultDisplay
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && display != null) {
+            try {
+                val hdrCaps = display.hdrCapabilities
+                if (hdrCaps != null) {
+                    val desiredMin = hdrCaps.desiredMinLuminance
+                    if (desiredMin >= 0.04f) {
+                        return false // Definitively LCD backlight glow
+                    } else if (desiredMin >= 0.0f && desiredMin < 0.02f && hdrCaps.desiredMaxLuminance > 0f) {
+                        return true // Definitively OLED / AMOLED true black
+                    }
+                }
+            } catch (_: Exception) { }
+        }
+
+        val dm = context.resources.displayMetrics
+        val minDimDp = minOf(dm.widthPixels, dm.heightPixels) / dm.density
+        val isTablet = minDimDp >= 600f
+
+        val model = (Build.MODEL + " " + Build.PRODUCT + " " + Build.DEVICE).lowercase(Locale.US)
+
+        val isAmoledTablet = model.contains("sm-t970") || model.contains("sm-t976") || // Tab S7+
+                model.contains("sm-x800") || model.contains("sm-x806") || // Tab S8+
+                model.contains("sm-x900") || model.contains("sm-x906") || // Tab S8 Ultra
+                model.contains("sm-x710") || model.contains("sm-x716") || // Tab S9
+                model.contains("sm-x810") || model.contains("sm-x816") || // Tab S9+
+                model.contains("sm-x910") || model.contains("sm-x916") || // Tab S9 Ultra
+                model.contains("sm-x820") || model.contains("sm-x920")    // Tab S10
+
+        if (isTablet) {
+            // Tablets with HDR are predominantly IPS LCD (Xiaomi Pad 5/6, OnePlus Pad, Tab S7/S8 base, Tab S9 FE, Lenovo)
+            return isAmoledTablet
+        }
+
+        val isExplicitLcdPhone = model.contains("lcd") || model.contains("ips") || model.contains("nord ce") || model.contains("poco x4 gt")
+        return !isExplicitLcdPhone
+    }
+
+    fun getDisplayPanelInfo(context: Context): Pair<String, String> {
+        val isOled = isOledOrAmoledDisplay(context)
+        return if (isOled) {
+            "OLED / AMOLED Display Panel" to "Auto HDR Peak Luminance active · Infinite contrast with pitch blacks"
+        } else {
+            "IPS / LCD Display Panel" to "Peak luminance boost bypassed to preserve contrast and prevent backlight bleed"
+        }
+    }
+
     fun getStereoDownmixDescription(): String {
         return "Optimized for device stereo speakers, earpieces, and headphones"
     }

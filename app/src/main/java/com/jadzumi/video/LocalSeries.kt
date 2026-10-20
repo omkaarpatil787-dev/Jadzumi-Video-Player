@@ -391,7 +391,10 @@ fun detectMovieGenres(title: String, filename: String): List<String> {
             "evil dead", "saw", "scream", "paranormal", "quiet place", "hereditary", "midsommar",
             "annabelle", "nun", "ring", "grudge", "alien", "nightmare", "chucky", "babadook",
             "sinister", "witch", "terrifier", "nosferatu", "smile", "talk to me", "boogeyman",
-            "shining", "psycho", "get out", "us", "nope", "creepy", "slasher", "haunted"
+            "shining", "psycho", "get out", "us", "nope", "creepy", "slasher", "haunted",
+            "demon", "devil", "ghost", "vampire", "werewolf", "omen", "hellraiser", "texas chainsaw",
+            "longlegs", "cuckoo", "immaculate", "first omen", "alien romulus", "rosemary", "poltergeist",
+            "frankenstein", "bloody", "spooky", "possession", "ouija", "amityville", "coraline"
         ) -> listOf("Horror", "Mystery", "Thriller")
 
         text.containsAny(
@@ -444,6 +447,7 @@ fun detectMovieGenres(title: String, filename: String): List<String> {
 
         else -> {
             val detected = mutableListOf<String>()
+            if (text.contains("horror") || text.contains("spooky") || text.contains("scary") || text.contains("slasher") || text.contains("haunt")) detected.add("Horror")
             if (text.contains("action")) detected.add("Action")
             if (text.contains("adventure")) detected.add("Adventure")
             if (text.contains("comedy")) detected.add("Comedy")
@@ -454,7 +458,9 @@ fun detectMovieGenres(title: String, filename: String): List<String> {
             if (text.contains("romance") || text.contains("romantic")) detected.add("Romance")
             if (text.contains("fantasy")) detected.add("Fantasy")
             if (text.contains("family") || text.contains("kids")) detected.add("Family")
+            if (text.contains("animation") || text.contains("anime")) detected.add("Animation")
             if (text.contains("mystery")) detected.add("Mystery")
+            if (text.contains("docu") || text.contains("history")) detected.add("Documentary")
             if (detected.isEmpty()) listOf("Feature Film", "Cinema") else detected.take(3)
         }
     }
@@ -575,20 +581,29 @@ fun extractMovieMetadata(
         .trim()
         .ifEmpty { video.title }
 
+    val cachedOnline = if (context != null) {
+        OnlineMetadataFetcher.getCachedMovie(context, cleanedTitle, parsedYear)
+    } else null
+
+    val effectivePoster = poster ?: cachedOnline?.localPosterPath ?: cachedOnline?.posterUrl
+    val effectiveBackdrop = backdrop ?: cachedOnline?.backdropUrl ?: effectivePoster
+
     val detectedGenres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() }
+        ?: cachedOnline?.genres?.takeIf { it.isNotEmpty() }
         ?: detectMovieGenres(cleanedTitle, video.name)
 
     val detectedSynopsis = nfoMetadata?.plot
+        ?: cachedOnline?.synopsis
         ?: detectMovieSynopsis(cleanedTitle, detectedGenres)
 
     return MovieMetadata(
-        title = nfoMetadata?.title ?: cleanedTitle,
-        year = nfoMetadata?.year ?: parsedYear ?: "2024",
-        rating = nfoMetadata?.rating ?: "8.6",
+        title = nfoMetadata?.title ?: cachedOnline?.title ?: cleanedTitle,
+        year = nfoMetadata?.year ?: cachedOnline?.year ?: parsedYear ?: "2024",
+        rating = nfoMetadata?.rating ?: cachedOnline?.rating ?: "8.6",
         mpaa = nfoMetadata?.mpaa ?: "PG-13",
         synopsis = detectedSynopsis,
         genres = detectedGenres,
-        posterUri = poster,
-        backdropUri = backdrop
+        posterUri = effectivePoster,
+        backdropUri = effectiveBackdrop
     )
 }

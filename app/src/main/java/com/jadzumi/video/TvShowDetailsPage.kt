@@ -324,6 +324,20 @@ private fun ShowHeroCard(
     onPlayNext: () -> Unit,
     onMarkSeasonWatched: () -> Unit
 ) {
+    val context = LocalContext.current
+    var onlineShow by remember(series.title) { mutableStateOf<OnlineMediaMetadata?>(null) }
+    LaunchedEffect(series.title) {
+        val fetched = OnlineMetadataFetcher.fetchTvShowMetadata(context, series.title)
+        if (fetched != null) {
+            onlineShow = fetched
+        }
+    }
+
+    val displayPoster = series.posterUri ?: onlineShow?.localPosterPath ?: onlineShow?.posterUrl
+    val displaySynopsis = if (series.synopsis.isNullOrBlank() || series.synopsis.contains("Offline TV Series")) {
+        onlineShow?.synopsis ?: series.synopsis ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
+    } else series.synopsis
+
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val isTablet = maxWidth >= 600.dp
         val heroPad = if (isTablet) 22.dp else 16.dp
@@ -358,7 +372,7 @@ private fun ShowHeroCard(
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     ) {
                         SidecarImage(
-                            uri = series.posterUri,
+                            uri = displayPoster,
                             fallbackVideo = nextUnwatched ?: series.seasons.values.firstOrNull()?.firstOrNull(),
                             modifier = Modifier.fillMaxSize()
                         )
@@ -370,7 +384,7 @@ private fun ShowHeroCard(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = series.title,
+                            text = onlineShow?.title ?: series.title,
                             style = if (isTablet) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -472,7 +486,7 @@ private fun ShowHeroCard(
 
                         if (isTablet) {
                             Text(
-                                text = series.synopsis ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding.",
+                                text = displaySynopsis,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 lineHeight = 18.sp,
@@ -485,7 +499,7 @@ private fun ShowHeroCard(
 
                 if (!isTablet) {
                     Text(
-                        text = series.synopsis ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding.",
+                        text = displaySynopsis,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp,
@@ -934,10 +948,45 @@ internal object SidecarMemory {
 }
 
 internal fun decodeSampledBitmap(context: android.content.Context, uriString: String, reqWidth: Int = 800, reqHeight: Int = 1200): Bitmap? {
-    val uri = Uri.parse(uriString)
     return try {
+        val resolvedPathOrUri: String = if (uriString.startsWith("http://") || uriString.startsWith("https://")) {
+            val key = uriString.hashCode().toString()
+            val posterDir = java.io.File(context.cacheDir, "poster_cache")
+            if (!posterDir.exists()) posterDir.mkdirs()
+            val cachedFile = java.io.File(posterDir, "$key.jpg")
+            if (!cachedFile.exists() || cachedFile.length() < 500) {
+                try {
+                    val conn = java.net.URL(uriString).openConnection() as java.net.HttpURLConnection
+                    conn.connectTimeout = 6000
+                    conn.readTimeout = 8000
+                    conn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2")
+                    if (conn.responseCode in 200..299) {
+                        conn.inputStream.use { input ->
+                            java.io.FileOutputStream(cachedFile).use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                    }
+                } catch (_: Exception) { }
+            }
+            if (cachedFile.exists() && cachedFile.length() > 500) cachedFile.absolutePath else uriString
+        } else {
+            uriString
+        }
+
+        fun getInputStream(): java.io.InputStream? {
+            return when {
+                resolvedPathOrUri.startsWith("/") -> java.io.FileInputStream(java.io.File(resolvedPathOrUri))
+                resolvedPathOrUri.startsWith("file://") -> {
+                    val path = android.net.Uri.parse(resolvedPathOrUri).path ?: resolvedPathOrUri.removePrefix("file://")
+                    java.io.FileInputStream(java.io.File(path))
+                }
+                else -> context.contentResolver.openInputStream(android.net.Uri.parse(resolvedPathOrUri))
+            }
+        }
+
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        context.contentResolver.openInputStream(uri)?.use { stream ->
+        getInputStream()?.use { stream ->
             BitmapFactory.decodeStream(stream, null, options)
         }
         if (options.outWidth <= 0 || options.outHeight <= 0) return null
@@ -952,7 +1001,7 @@ internal fun decodeSampledBitmap(context: android.content.Context, uriString: St
         options.inJustDecodeBounds = false
         options.inPreferredConfig = Bitmap.Config.RGB_565
 
-        context.contentResolver.openInputStream(uri)?.use { stream ->
+        getInputStream()?.use { stream ->
             BitmapFactory.decodeStream(stream, null, options)
         }
     } catch (_: Throwable) {

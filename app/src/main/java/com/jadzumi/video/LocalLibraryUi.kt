@@ -129,7 +129,7 @@ fun WelcomeOnboardingCard(
                 }
             }
             Text(
-                "Welcome to Jadzumi Video",
+                "Welcome to Jadzumi Player",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -1002,7 +1002,7 @@ fun StorageSummaryCard(
         AlertDialog(
             onDismissRequest = { remove = null },
             title = { Text("Remove ${folder.name}?") },
-            text = { Text("Remove this folder from Jadzumi Video. The videos on your storage will remain unchanged.") },
+            text = { Text("Remove this folder from Jadzumi Player. The videos on your storage will remain unchanged.") },
             confirmButton = { TextButton(onClick = { library.remove(folder); remove = null }, enabled = !state.busy) { Text("Remove") } },
             dismissButton = { TextButton(onClick = { remove = null }) { Text("Keep folder") } }
         )

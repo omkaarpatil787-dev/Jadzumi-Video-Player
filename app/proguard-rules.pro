@@ -1,5 +1,5 @@
 # ============================================================================
-# Jadzumi Video Player - Production R8 / ProGuard Optimization Rules
+# Jadzumi Player - Production R8 / ProGuard Optimization Rules
 # Version: 1.0.0 (Release)
 # ============================================================================
 

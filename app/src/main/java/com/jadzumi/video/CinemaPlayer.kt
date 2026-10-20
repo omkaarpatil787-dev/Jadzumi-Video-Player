@@ -79,9 +79,9 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 @Composable fun CinemaPlayer(playback: PlaybackController, reducedMotion: Boolean) {
     val video = playback.video ?: return
     val activity = LocalActivity.current as? MainActivity ?: return
-    val context = LocalContext.current
-    val appearancePrefs = remember { context.getSharedPreferences("appearance", 0) }
+    val appearancePrefs = remember { activity.getSharedPreferences("appearance", Context.MODE_PRIVATE) }
     val glassIntensity = remember { appearancePrefs.getFloat("glassIntensity", 0.75f) }
+    val isOled = remember { DeviceHardwareInspector.isOledOrAmoledDisplay(activity) }
     val dynamicFrostedCircleBg = remember(glassIntensity) {
         Color.White.copy(alpha = (0.08f + 0.12f * glassIntensity).coerceIn(0.06f, 0.35f))
     }
@@ -140,13 +140,14 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         if (playback.inPip) { quickMenuSection = null; scrub = null; controls = false }
     }
 
-    LaunchedEffect(playback.brightnessBoost, playback.isHdr) {
-        if (playback.brightnessBoost || playback.isHdr) {
+    LaunchedEffect(playback.brightnessBoost, playback.isHdr, isOled) {
+        val shouldBoost = playback.brightnessBoost || (playback.isHdr && isOled)
+        if (shouldBoost) {
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = 1.0f }
         } else {
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = previousBrightness }
         }
-        activity.updateHdrColorMode()
+        activity.updateHdrColorMode(isOled)
     }
 
     DisposableEffect(playback.inPip) {
@@ -161,7 +162,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
             controller.show(WindowInsetsCompat.Type.systemBars())
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = previousBrightness }
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
-            activity.updateHdrColorMode()
+            activity.updateHdrColorMode(isOled)
         }
     }
 
