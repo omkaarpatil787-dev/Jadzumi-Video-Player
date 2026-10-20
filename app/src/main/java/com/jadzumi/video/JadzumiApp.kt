@@ -94,45 +94,16 @@ private val destinations = listOf(
 )
 
 @Composable fun JadzumiLogo(size: Dp = 48.dp, darkSurface: Boolean = false) {
-    Canvas(Modifier.size(size)) {
-        val w = this.size.width
-        val h = this.size.height
-        val bgColors = if (darkSurface) listOf(Color(0xFF1E293B), Color(0xFF0F172A))
-        else listOf(Color(0xFFFFFFFF), Color(0xFFE8F1FF), Color(0xFFD3E3FD))
-        drawRoundRect(
-            brush = Brush.linearGradient(bgColors, Offset.Zero, Offset(w, h)),
-            size = Size(w, h),
-            cornerRadius = CornerRadius(w * 0.24f, h * 0.24f)
-        )
-        val backWing = Path().apply {
-            moveTo(w * 0.40f, h * 0.21f)
-            lineTo(w * 0.80f, h * 0.41f)
-            lineTo(w * 0.80f, h * 0.73f)
-            lineTo(w * 0.40f, h * 0.53f)
-            close()
+    Surface(
+        modifier = Modifier.size(size),
+        shape = RoundedCornerShape(size * 0.26f),
+        color = if (darkSurface) Color(0xFF132238) else Color.White,
+        border = BorderStroke(1.dp, if (darkSurface) Color.White.copy(alpha = 0.18f) else Color(0xFFD3E3FD)),
+        shadowElevation = if (darkSurface) 6.dp else 4.dp
+    ) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            JadzumiPlaySymbol(Modifier.size(size * 0.68f))
         }
-        drawPath(
-            path = backWing,
-            brush = Brush.linearGradient(
-                listOf(Color(0xFF3B82F6), Color(0xFF0B57D0), Color(0xFF1D4ED8)),
-                Offset(w * 0.4f, h * 0.2f),
-                Offset(w * 0.8f, h * 0.75f)
-            )
-        )
-        val frontPlay = Path().apply {
-            moveTo(w * 0.26f, h * 0.29f)
-            lineTo(w * 0.66f, h * 0.50f)
-            lineTo(w * 0.26f, h * 0.71f)
-            close()
-        }
-        drawPath(
-            path = frontPlay,
-            brush = Brush.linearGradient(
-                listOf(Color.White, Color(0xFFEFF6FF), Color(0xFFBFDBFE)),
-                Offset(w * 0.26f, h * 0.29f),
-                Offset(w * 0.66f, h * 0.71f)
-            )
-        )
     }
 }
 
@@ -157,6 +128,7 @@ private val destinations = listOf(
         "Sharp" -> 0.dp
         else -> 24.dp
     }
+    var showSplash by rememberSaveable { mutableStateOf(true) }
 
     val scope = rememberCoroutineScope()
     val bloomProgress = remember { Animatable(1f) }
@@ -362,6 +334,7 @@ private val destinations = listOf(
                                                 cornerStyle = it
                                                 prefs.edit { putString("cornerStyle", it) }
                                             },
+                                            onReplaySplash = { showSplash = true },
                                             localState = localState,
                                             library = library,
                                             playback = playback,
@@ -409,6 +382,13 @@ private val destinations = listOf(
             }
 
             CinemaPlayer(playback, reducedMotion)
+
+            if (showSplash) {
+                JadzumiSplashScreen(
+                    theme = theme,
+                    onFinished = { showSplash = false }
+                )
+            }
         }
     }
 }
@@ -481,6 +461,7 @@ private val settingsCategories = listOf(
     onReduced: (Boolean) -> Unit,
     cornerStyle: String,
     onCornerStyle: (String) -> Unit,
+    onReplaySplash: () -> Unit,
     localState: LocalLibraryState,
     library: LocalLibrary,
     playback: PlaybackController,
@@ -909,6 +890,21 @@ private val settingsCategories = listOf(
                                             Text("Disable animations for instant screen transitions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = reduced, onCheckedChange = onReduced)
+                                    }
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .clickable { onReplaySplash() }
+                                            .padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Replay Aurora Splash Screen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Play the cinematic opening animation in current theme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("Preview ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
                                 }
                             }
