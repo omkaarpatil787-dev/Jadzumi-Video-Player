@@ -21,11 +21,11 @@
 
 ---
 
-### 🌊 2. Glass Playback Motion v2 Cinema Controls
-- 💎 **Unified 23dp Frosted Glass Capsule**: Enclosed in a 23dp rounded glass container (`#b9eaff18` ➔ `#081e3433`) based on `jadzumi_player_playback_glass_motion_v2.html` with tabular time codes, playback status, and docked action icons.
-- 🌈 **Fluid Cyan Scrubber & Glowing Ring Thumb**: High-precision timeline with vibrant cyan gradient fill (`#359EFF` ➔ `#83E5FF`), 5dp track height, and 15dp white circular thumb with `#68DCFF` cyan rim and glowing outer halo.
+### 🌊 2. Minimal & Immersive Glass Playback Motion v2 Cinema Controls
+- 💎 **Universal Glass Motion v2 UX across All Buttons**: Back navigation, Caption/Subtitles, Cinema Settings, and bottom actions (Rotate, Lock, PiP, Close) all feature interactive spring physics (`scale` 0.88 on press), dynamic frosted glass backgrounds, and glowing specular frosted rims responsive to the Glassify slider.
+- 🌈 **Minimal & Immersive Floating Scrubber**: Removed the enclosed border rectangle around the progress bar; the fluid cyan gradient timeline (`#359EFF` ➔ `#83E5FF`) and glowing cyan-rimmed circular thumb now float cleanly and edge-to-edge over the subtle cinematic scrim.
 - 💫 **Symmetrical 58dp Seek & 78dp Morphing Play Controls**: 58dp frosted glass circular seek buttons (±10s) with numeric indicators and a central 78dp play/pause button featuring radiant gradient rims and fluid icon morphing.
-- 🔄 **In-Place Animated Library Refresh**: Header button with silky 360-degree spring spin animation and `"JADZUMI PLAYER"` micro-badge tracking.
+- 🎬 **Distraction-Free Minimal Top Bar**: Completely removed the refresh button for an uncluttered, pure cinema view with clean title and `"JADZUMI PLAYER"` micro-badge tracking.
 - ⚡ **YouTube-Style Seek Ripples**: Proportioned 58dp double-tap seek ripple overlays with dynamic chevrons (`«««` / `»»»`) and clean circular geometry eliminating hexagonal artifacts.
 
 ---

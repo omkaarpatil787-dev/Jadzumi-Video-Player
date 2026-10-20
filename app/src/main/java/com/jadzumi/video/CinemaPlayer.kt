@@ -7,11 +7,9 @@ import android.media.AudioManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.*
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -23,6 +21,8 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -72,8 +72,8 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 private val QuickMenuBg = Color(0xFF151B26).copy(alpha = 0.90f)
-private val FrostedCircleBg = Color.White.copy(alpha = 0.16f)
-private val FrostedCircleRim = Color.White.copy(alpha = 0.30f)
+private val FrostedCircleBg = Color(0x26E5F5FF)
+private val FrostedCircleRim = Color(0x4AE8F6FF)
 private val TimelineAccent = Color(0xFF8B9DFF)
 
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
@@ -108,14 +108,6 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     var hudValue by remember(video.identity) { mutableFloatStateOf(0f) }
     var interaction by remember(video.identity) { mutableIntStateOf(0) }
     val seekDeltaMs = playback.seekIncrementSeconds * 1000L
-
-    var isRefreshing by remember(video.identity) { mutableStateOf(false) }
-    val refreshRotation by animateFloatAsState(
-        targetValue = if (isRefreshing) 360f else 0f,
-        animationSpec = if (isRefreshing) tween(1100, easing = FastOutSlowInEasing) else snap(),
-        finishedListener = { isRefreshing = false },
-        label = "refreshRotation"
-    )
 
     // Working Sleep Timer coroutine
     LaunchedEffect(sleepTimerMinutes, video.identity) {
@@ -409,8 +401,19 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                FrostedCircleButton("Back to library", playback::close, size = 44.dp) {
-                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, Modifier.size(20.dp), tint = Color.White)
+                                FrostedCircleButton(
+                                    label = "Back to library",
+                                    onClick = playback::close,
+                                    size = if (isLandscape) 40.dp else 44.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Rounded.ArrowBack,
+                                        null,
+                                        Modifier.size(if (isLandscape) 18.dp else 20.dp),
+                                        tint = Color.White
+                                    )
                                 }
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text(
@@ -447,33 +450,35 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             }
 
-                            // Top-Right Icons: Refresh in-place + Subtitles + Settings
+                            // Top-Right Icons: Audio/Subtitles + Cinema Settings (Minimal & Immersive)
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                                 FrostedCircleButton(
-                                    label = "Refresh library",
-                                    onClick = {
-                                        if (!isRefreshing) {
-                                            isRefreshing = true
-                                            message = "Refreshing library…"
-                                            interaction++
-                                        }
-                                    },
-                                    size = 44.dp
+                                    label = "Audio and subtitles",
+                                    onClick = { quickMenuSection = "subs"; interaction++ },
+                                    size = if (isLandscape) 40.dp else 44.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
                                 ) {
                                     Icon(
-                                        Icons.Rounded.Refresh,
-                                        contentDescription = "Refresh library",
-                                        modifier = Modifier
-                                            .size(22.dp)
-                                            .graphicsLayer(rotationZ = refreshRotation),
-                                        tint = if (isRefreshing) Color(0xFF67CAFF) else Color.White
+                                        Icons.Rounded.ClosedCaption,
+                                        null,
+                                        Modifier.size(if (isLandscape) 20.dp else 22.dp),
+                                        tint = Color.White
                                     )
                                 }
-                                FrostedCircleButton("Audio and subtitles", { quickMenuSection = "subs"; interaction++ }, size = 44.dp) {
-                                    Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(22.dp), tint = Color.White)
-                                }
-                                FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
-                                    Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
+                                FrostedCircleButton(
+                                    label = "Cinema settings",
+                                    onClick = { quickMenuSection = "main"; interaction++ },
+                                    size = if (isLandscape) 40.dp else 44.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Tune,
+                                        null,
+                                        Modifier.size(if (isLandscape) 20.dp else 22.dp),
+                                        tint = Color.White
+                                    )
                                 }
                             }
                         }
@@ -489,6 +494,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 onClick = { playback.skip(-seekDeltaMs); interaction++ },
                                 enabled = playback.seekable,
                                 size = seekBtnSize,
+                                pressedScale = 0.85f,
                                 bgColor = dynamicFrostedCircleBg,
                                 rimColor = dynamicFrostedCircleRim
                             ) {
@@ -517,6 +523,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 label = if (playback.playRequested) "Pause" else "Play",
                                 onClick = { playback.toggle(); interaction++ },
                                 size = playBtnSize,
+                                pressedScale = 0.84f,
                                 bgColor = dynamicFrostedCircleBg.copy(alpha = (0.28f + 0.18f * glassIntensity).coerceIn(0.22f, 0.65f)),
                                 rimColor = dynamicFrostedCircleRim.copy(alpha = (0.45f + 0.35f * glassIntensity).coerceIn(0.40f, 0.90f))
                             ) {
@@ -528,6 +535,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 onClick = { playback.skip(seekDeltaMs); interaction++ },
                                 enabled = playback.seekable,
                                 size = seekBtnSize,
+                                pressedScale = 0.85f,
                                 bgColor = dynamicFrostedCircleBg,
                                 rimColor = dynamicFrostedCircleRim
                             ) {
@@ -553,10 +561,13 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             }
                         }
 
-                        // PANEL 1 & 3: UNIFIED 23DP FROSTED GLASS CAPSULE (jadzumi_player_playback_glass_motion_v2.html)
+                        // PANEL 1 & 3: MINIMAL IMMERSIVE PLAYBACK CONTROLS (Glass Motion v2 Scrubber & Action Controls)
                         Column(
-                            Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .padding(bottom = if (isLandscape) 4.dp else 10.dp),
+                            verticalArrangement = Arrangement.spacedBy(if (isLandscape) 4.dp else 8.dp)
                         ) {
                             val currentFraction = scrub ?: if (playback.duration > 0) {
                                 (playback.position.toFloat() / playback.duration).coerceIn(0f, 1f)
@@ -609,103 +620,126 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
                             val totalSec = (playback.duration / 1000).coerceAtLeast(0)
 
-                            // Unified 23dp Frosted Glass Bottom Container
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(if (isLandscape) 16.dp else 23.dp),
-                                color = dynamicFrostedCircleBg.copy(alpha = (0.28f + 0.15f * glassIntensity).coerceIn(0.20f, 0.55f)),
-                                border = BorderStroke(1.dp, dynamicFrostedCircleRim.copy(alpha = (0.32f + 0.25f * glassIntensity).coerceIn(0.25f, 0.70f))),
-                                shadowElevation = 14.dp
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(
-                                        if (isLandscape) PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                                        else PaddingValues(horizontal = 18.dp, vertical = 12.dp)
-                                    ),
-                                    verticalArrangement = Arrangement.spacedBy(if (isLandscape) 2.dp else 6.dp)
-                                ) {
-                                    // 1. Fluid Cyan Scrubber
-                                    CinemaTimelineBar(
-                                        fraction = currentFraction,
-                                        bufferedFraction = bufferedFraction,
-                                        isScrubbing = scrub != null,
-                                        enabled = playback.seekable && playback.duration > 0,
-                                        onScrub = { scrub = it; interaction++ },
-                                        onScrubFinished = {
-                                            scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
-                                            scrub = null
-                                        }
-                                    )
+                            // 1. Fluid Cyan Scrubber (Border rectangle removed - clean, minimal & immersive)
+                            CinemaTimelineBar(
+                                fraction = currentFraction,
+                                bufferedFraction = bufferedFraction,
+                                isScrubbing = scrub != null,
+                                enabled = playback.seekable && playback.duration > 0,
+                                onScrub = { scrub = it; interaction++ },
+                                onScrubFinished = {
+                                    scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
+                                    scrub = null
+                                }
+                            )
 
-                                    // 2. Time Row
-                                    Row(
-                                        Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
+                            // 2. Timecodes and Glass Motion Action Controls
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Time row
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        compactTimecode(elapsedSec),
+                                        color = Color(0xFFD9EFFF),
+                                        fontSize = if (isLandscape) 11.sp else 12.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        "/",
+                                        color = Color(0xFFD9EFFF).copy(alpha = 0.45f),
+                                        fontSize = if (isLandscape) 10.sp else 11.sp
+                                    )
+                                    Text(
+                                        compactTimecode(totalSec),
+                                        color = Color(0xFFD9EFFF).copy(alpha = 0.80f),
+                                        fontSize = if (isLandscape) 11.sp else 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    if (!isLandscape) {
                                         Text(
-                                            compactTimecode(elapsedSec),
-                                            color = Color(0xFFD9EFFF),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.SemiBold
+                                            "•",
+                                            color = Color.White.copy(alpha = 0.35f),
+                                            fontSize = 10.sp,
+                                            modifier = Modifier.padding(horizontal = 2.dp)
                                         )
                                         Text(
-                                            compactTimecode(totalSec),
-                                            color = Color(0xFFD9EFFF).copy(alpha = 0.85f),
+                                            text = if (playback.playing) "Playing" else "Paused",
+                                            color = Color(0xFF67CAFF).copy(alpha = 0.85f),
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Medium
                                         )
                                     }
+                                }
 
-                                    // 3. Status & Quick Actions Row
-                                    Row(
-                                        Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                // Glass Action Buttons with Motion v2 UX
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    FrostedCircleButton(
+                                        label = "Rotate orientation",
+                                        onClick = {
+                                            val current = activity.requestedOrientation
+                                            val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                                            } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                                                ActivityInfo.SCREEN_ORIENTATION_USER
+                                            } else {
+                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                            }
+                                            activity.requestedOrientation = next
+                                            message = when (next) {
+                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
+                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
+                                                else -> "Orientation: Auto (Sensor)"
+                                            }
+                                            interaction++
+                                        },
+                                        size = if (isLandscape) 32.dp else 36.dp,
+                                        bgColor = dynamicFrostedCircleBg,
+                                        rimColor = dynamicFrostedCircleRim
                                     ) {
-                                        Text(
-                                            text = (if (playback.playing) "Playing" else "Paused") + " · Cinema Mode",
-                                            color = Color(0xFFD3E9FF).copy(alpha = 0.75f),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Medium
-                                        )
+                                        Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(if (isLandscape) 16.dp else 18.dp), tint = Color.White)
+                                    }
 
-                                        // Sleek Actions Row
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                    FrostedCircleButton(
+                                        label = "Lock controls",
+                                        onClick = { playback.locked = true; controls = false },
+                                        size = if (isLandscape) 32.dp else 36.dp,
+                                        bgColor = dynamicFrostedCircleBg,
+                                        rimColor = dynamicFrostedCircleRim
+                                    ) {
+                                        Icon(Icons.Rounded.LockOpen, null, Modifier.size(if (isLandscape) 16.dp else 18.dp), tint = Color.White)
+                                    }
+
+                                    if (activity.supportsPip()) {
+                                        FrostedCircleButton(
+                                            label = "Picture in picture",
+                                            onClick = { if (!activity.enterCinemaPip()) message = "PiP unavailable" },
+                                            size = if (isLandscape) 32.dp else 36.dp,
+                                            bgColor = dynamicFrostedCircleBg,
+                                            rimColor = dynamicFrostedCircleRim
                                         ) {
-                                            CinemaIcon("Rotate orientation", {
-                                                val current = activity.requestedOrientation
-                                                val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                                                } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_USER
-                                                } else {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                                }
-                                                activity.requestedOrientation = next
-                                                message = when (next) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
-                                                    else -> "Orientation: Auto (Sensor)"
-                                                }
-                                                interaction++
-                                            }, modifier = Modifier.size(34.dp)) {
-                                                Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(18.dp))
-                                            }
-                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(34.dp)) {
-                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(18.dp))
-                                            }
-                                            if (activity.supportsPip()) {
-                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(34.dp)) {
-                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(18.dp))
-                                                }
-                                            }
-                                            CinemaIcon("Close player", playback::close, modifier = Modifier.size(34.dp)) {
-                                                Icon(Icons.Rounded.Close, null, Modifier.size(19.dp))
-                                            }
+                                            Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(if (isLandscape) 16.dp else 18.dp), tint = Color.White)
                                         }
+                                    }
+
+                                    FrostedCircleButton(
+                                        label = "Close player",
+                                        onClick = playback::close,
+                                        size = if (isLandscape) 32.dp else 36.dp,
+                                        bgColor = dynamicFrostedCircleBg,
+                                        rimColor = dynamicFrostedCircleRim
+                                    ) {
+                                        Icon(Icons.Rounded.Close, null, Modifier.size(if (isLandscape) 16.dp else 18.dp), tint = Color.White)
                                     }
                                 }
                             }
@@ -719,7 +753,9 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                         label = "Unlock controls",
                         onClick = { playback.locked = false; controls = true; interaction++ },
                         modifier = Modifier.align(Alignment.CenterStart).safeDrawingPadding().padding(start = 24.dp),
-                        size = 50.dp
+                        size = 50.dp,
+                        bgColor = dynamicFrostedCircleBg,
+                        rimColor = dynamicFrostedCircleRim
                     ) {
                         Icon(Icons.Rounded.Lock, null, tint = Color.White)
                     }
@@ -1285,17 +1321,37 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     size: Dp = 48.dp,
+    pressedScale: Float = 0.88f,
     bgColor: Color = FrostedCircleBg,
     rimColor: Color = FrostedCircleRim,
     icon: @Composable () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed && enabled) pressedScale else 1.0f,
+        animationSpec = spring(
+            dampingRatio = 0.65f,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "frostedCircleScale"
+    )
+
     Surface(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.size(size).semantics { contentDescription = label },
+        modifier = modifier
+            .size(size)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .semantics { contentDescription = label },
         shape = CircleShape,
         color = if (enabled) bgColor else bgColor.copy(alpha = 0.06f),
-        border = BorderStroke(1.dp, if (enabled) rimColor else rimColor.copy(alpha = 0.10f))
+        border = BorderStroke(1.dp, if (enabled) rimColor else rimColor.copy(alpha = 0.12f)),
+        interactionSource = interactionSource,
+        shadowElevation = 6.dp
     ) {
         Box(contentAlignment = Alignment.Center) {
             icon()
@@ -1310,18 +1366,14 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     enabled: Boolean = true,
     icon: @Composable () -> Unit
 ) {
-    val colors = IconButtonDefaults.iconButtonColors(
-        contentColor = Color.White.copy(alpha = 0.90f),
-        disabledContentColor = Color.White.copy(alpha = 0.30f)
-    )
-    IconButton(
+    FrostedCircleButton(
+        label = label,
         onClick = action,
-        modifier = modifier.size(42.dp).semantics { contentDescription = label },
+        modifier = modifier,
         enabled = enabled,
-        colors = colors
-    ) {
-        icon()
-    }
+        size = 36.dp,
+        icon = icon
+    )
 }
 
 @Composable
