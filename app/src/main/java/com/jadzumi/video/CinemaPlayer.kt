@@ -38,6 +38,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -156,11 +158,24 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         activity.updatePip()
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
+        val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
+        val haptic = LocalHapticFeedback.current
+        var rippleSide by remember { mutableStateOf<String?>(null) }
+        var rippleCount by remember { mutableIntStateOf(0) }
+
+        LaunchedEffect(rippleSide, rippleCount) {
+            if (rippleSide != null) {
+                kotlinx.coroutines.delay(650)
+                rippleSide = null
+                rippleCount = 0
+            }
+        }
+
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
@@ -197,8 +212,15 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 onDoubleTap = { offset ->
                                     if (!playback.locked) {
                                         val isLeft = offset.x < size.width / 2
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        if (rippleSide == (if (isLeft) "left" else "right")) {
+                                            rippleCount++
+                                        } else {
+                                            rippleSide = if (isLeft) "left" else "right"
+                                            rippleCount = 1
+                                        }
                                         playback.skip(if (isLeft) -seekDeltaMs else seekDeltaMs)
-                                        message = if (isLeft) "−${playback.seekIncrementSeconds}s" else "+${playback.seekIncrementSeconds}s"
+                                        message = if (isLeft) "−${playback.seekIncrementSeconds * rippleCount}s" else "+${playback.seekIncrementSeconds * rippleCount}s"
                                         interaction++
                                     }
                                 }
@@ -237,6 +259,46 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 
                 if (playback.buffering) {
                     CircularProgressIndicator(Modifier.align(Alignment.Center).size(42.dp), color = Color.White, strokeWidth = 2.5.dp)
+                }
+
+                // YouTube-Style Double-Tap Fast-Forward / Rewind Ripple Overlays
+                AnimatedVisibility(
+                    visible = rippleSide != null,
+                    enter = fadeIn(tween(120)) + scaleIn(initialScale = 0.85f),
+                    exit = fadeOut(tween(220)) + scaleOut(targetScale = 1.05f),
+                    modifier = Modifier.align(if (rippleSide == "left") Alignment.CenterStart else Alignment.CenterEnd)
+                ) {
+                    val isLeft = rippleSide == "left"
+                    val totalSec = playback.seekIncrementSeconds * rippleCount.coerceAtLeast(1)
+                    Surface(
+                        modifier = Modifier
+                            .padding(horizontal = 24.dp)
+                            .size(118.dp),
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.22f),
+                        border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.50f)),
+                        shadowElevation = 16.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                if (isLeft) Icons.Rounded.Replay10 else Icons.Rounded.Forward10,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(36.dp)
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                if (isLeft) "−${totalSec}s" else "+${totalSec}s",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
                 }
 
                 // Horizontal Swipe Brightness / Volume Capsule HUD
@@ -413,6 +475,32 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             }
 
+                            // Skip Intro Pill Button (Visible in first 2.5 minutes)
+                            val showSkipIntro = playback.duration > 180_000 && playback.position in 3_000..150_000
+                            if (showSkipIntro) {
+                                Surface(
+                                    onClick = {
+                                        playback.skip(85_000)
+                                        message = "Skipped Intro (+85s)"
+                                        interaction++
+                                    },
+                                    shape = RoundedCornerShape(999.dp),
+                                    color = Color(0xD9101827),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                                    shadowElevation = 8.dp,
+                                    modifier = Modifier.align(Alignment.End).padding(bottom = 2.dp)
+                                ) {
+                                    Row(
+                                        Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(Icons.Rounded.FastForward, null, tint = TimelineAccent, modifier = Modifier.size(16.dp))
+                                        Text("Skip Intro (+85s)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    }
+                                }
+                            }
+
                             // Inline Timeline Row
                             val activePosMs = scrub?.let { (it * playback.duration).toLong() } ?: playback.position
                             val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
@@ -430,93 +518,187 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             )
 
-                            // Bottom Row: Glass Time Capsule (Left) & Glass Actions Dock (Right)
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                // Bottom-Left: Glassy Time Capsule Pill
-                                Surface(
-                                    shape = RoundedCornerShape(999.dp),
-                                    color = FrostedCircleBg,
-                                    border = BorderStroke(1.dp, FrostedCircleRim)
+                            // Bottom Controls: Adaptive 2-Row on Phone Portrait vs 1-Row on Tablet/Landscape
+                            if (isPhonePortrait) {
+                                Column(
+                                    Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Row(
-                                        Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    // Row 1: Glassy Time Capsule Pill
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = FrostedCircleBg,
+                                        border = BorderStroke(1.dp, FrostedCircleRim),
+                                        modifier = Modifier.align(Alignment.Start)
                                     ) {
-                                        Text(
-                                            compactTimecode(elapsedSec),
-                                            color = TimelineAccent,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 12.sp)
-                                        Text(
-                                            compactTimecode(totalSec),
-                                            color = Color.White.copy(alpha = 0.85f),
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                        val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = Color.White.copy(alpha = 0.14f),
-                                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                                        Row(
+                                            Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
                                             Text(
-                                                "-${compactTimecode(remSec)} remaining",
-                                                Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                                color = Color.White.copy(alpha = 0.92f),
-                                                fontSize = 11.sp,
+                                                compactTimecode(elapsedSec),
+                                                color = TimelineAccent,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 11.sp)
+                                            Text(
+                                                compactTimecode(totalSec),
+                                                color = Color.White.copy(alpha = 0.85f),
+                                                fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
+                                            val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = Color.White.copy(alpha = 0.14f),
+                                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                                            ) {
+                                                Text(
+                                                    "-${compactTimecode(remSec)} remaining",
+                                                    Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                    color = Color.White.copy(alpha = 0.92f),
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // Row 2: Glassy Actions Dock
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = FrostedCircleBg,
+                                        border = BorderStroke(1.dp, FrostedCircleRim),
+                                        modifier = Modifier.align(Alignment.End)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            CinemaIcon("Rotate orientation", {
+                                                val current = activity.requestedOrientation
+                                                val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                                                } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_USER
+                                                } else {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                                }
+                                                activity.requestedOrientation = next
+                                                message = when (next) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
+                                                    else -> "Orientation: Auto (Sensor)"
+                                                }
+                                                interaction++
+                                            }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
+                                            }
+                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
+                                            }
+                                            if (activity.supportsPip()) {
+                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
+                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
+                                                }
+                                            }
+                                            CinemaIcon("Close player", playback::close, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
+                                            }
                                         }
                                     }
                                 }
-
-                                // Bottom-Right: Glassy Actions Dock
-                                Surface(
-                                    shape = RoundedCornerShape(999.dp),
-                                    color = FrostedCircleBg,
-                                    border = BorderStroke(1.dp, FrostedCircleRim)
+                            } else {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Row(
-                                        Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    // Bottom-Left: Glassy Time Capsule Pill
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = FrostedCircleBg,
+                                        border = BorderStroke(1.dp, FrostedCircleRim)
                                     ) {
-                                        CinemaIcon("Rotate orientation", {
-                                            val current = activity.requestedOrientation
-                                            val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                                            } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                                                ActivityInfo.SCREEN_ORIENTATION_USER
-                                            } else {
-                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                        Row(
+                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Text(
+                                                compactTimecode(elapsedSec),
+                                                color = TimelineAccent,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 12.sp)
+                                            Text(
+                                                compactTimecode(totalSec),
+                                                color = Color.White.copy(alpha = 0.85f),
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = Color.White.copy(alpha = 0.14f),
+                                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                                            ) {
+                                                Text(
+                                                    "-${compactTimecode(remSec)} remaining",
+                                                    Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                    color = Color.White.copy(alpha = 0.92f),
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
                                             }
-                                            activity.requestedOrientation = next
-                                            message = when (next) {
-                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
-                                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
-                                                else -> "Orientation: Auto (Sensor)"
+                                        }
+                                    }
+
+                                    // Bottom-Right: Glassy Actions Dock
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = FrostedCircleBg,
+                                        border = BorderStroke(1.dp, FrostedCircleRim)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            CinemaIcon("Rotate orientation", {
+                                                val current = activity.requestedOrientation
+                                                val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                                                } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_USER
+                                                } else {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                                }
+                                                activity.requestedOrientation = next
+                                                message = when (next) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
+                                                    else -> "Orientation: Auto (Sensor)"
+                                                }
+                                                interaction++
+                                            }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
                                             }
-                                            interaction++
-                                        }, modifier = Modifier.size(36.dp)) {
-                                            Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
-                                        }
-                                        CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
-                                            Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
-                                        }
-                                        if (activity.supportsPip()) {
-                                            CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
-                                                Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
+                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
                                             }
-                                        }
-                                        CinemaIcon("Close player", playback::close, modifier = Modifier.size(36.dp)) {
-                                            Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
+                                            if (activity.supportsPip()) {
+                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
+                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
+                                                }
+                                            }
+                                            CinemaIcon("Close player", playback::close, modifier = Modifier.size(36.dp)) {
+                                                Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
+                                            }
                                         }
                                     }
                                 }
@@ -835,9 +1017,10 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                 }
 
                 "audio" -> {
-                    QuickSubMenuContainer(title = "Audio track", onBack = { onSelectSection("main") }) {
+                    QuickSubMenuContainer(title = "Audio settings", onBack = { onSelectSection("main") }) {
+                        Text("Active Track", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                         if (playback.audioTracks.isEmpty()) {
-                            Text("Default audio stream active", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(16.dp))
+                            Text("Default audio stream active", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
                         } else {
                             playback.audioTracks.forEach { track ->
                                 QuickOptionItem(
@@ -847,11 +1030,60 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 )
                             }
                         }
+
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        // Night Mode / Voice Clarity Boost
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text("Night Mode / Voice Boost", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Dynamic compression amplifies quiet dialogue and dampens loud effects", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
+                            }
+                            Switch(
+                                checked = playback.nightModeVoiceBoost,
+                                onCheckedChange = {
+                                    playback.updateNightMode(it)
+                                    onMessage(if (it) "Night Mode (Voice Boost) ON" else "Night Mode OFF")
+                                }
+                            )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        // Bluetooth Audio Delay (Lip-Sync)
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text("Bluetooth Audio Delay", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Lip-sync compensation: ${playback.audioDelayMs}ms", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                FrostedCircleButton("-50ms", { playback.updateAudioDelay(-50); onMessage("Audio Delay: ${playback.audioDelayMs}ms") }, size = 32.dp) {
+                                    Text("-", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                                if (playback.audioDelayMs != 0L) {
+                                    FrostedCircleButton("Reset", { playback.resetAudioDelay(); onMessage("Audio Delay: 0ms") }, size = 32.dp) {
+                                        Text("0", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    }
+                                }
+                                FrostedCircleButton("+50ms", { playback.updateAudioDelay(50); onMessage("Audio Delay: ${playback.audioDelayMs}ms") }, size = 32.dp) {
+                                    Text("+", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                            }
+                        }
                     }
                 }
 
                 "subs" -> {
-                    QuickSubMenuContainer(title = "Subtitle track", onBack = { onSelectSection("main") }) {
+                    QuickSubMenuContainer(title = "Subtitle settings", onBack = { onSelectSection("main") }) {
+                        Text("Active Track", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                         val noneSelected = playback.subtitleTracks.none { it.isSelected }
                         QuickOptionItem(
                             label = "Off",
@@ -864,6 +1096,34 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 selected = track.isSelected,
                                 onClick = { playback.selectSubtitleTrack(track); onMessage("Subtitles: ${track.label}"); onSelectSection("main") }
                             )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        // Subtitle Timing Calibration
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text("Subtitle Sync Offset", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                val sec = playback.subtitleDelayMs / 1000f
+                                Text("Offset: ${if (sec > 0) "+$sec" else "$sec"}s", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                FrostedCircleButton("-100ms", { playback.updateSubtitleDelay(-100); onMessage("Sub Delay: ${playback.subtitleDelayMs / 1000f}s") }, size = 32.dp) {
+                                    Text("-", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                                if (playback.subtitleDelayMs != 0L) {
+                                    FrostedCircleButton("Reset", { playback.resetSubtitleDelay(); onMessage("Sub Delay: 0.0s") }, size = 32.dp) {
+                                        Text("0", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    }
+                                }
+                                FrostedCircleButton("+100ms", { playback.updateSubtitleDelay(100); onMessage("Sub Delay: ${playback.subtitleDelayMs / 1000f}s") }, size = 32.dp) {
+                                    Text("+", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                            }
                         }
                     }
                 }

@@ -315,6 +315,7 @@ fun TvShowDetailsPage(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ShowHeroCard(
     series: TvSeries,
@@ -325,9 +326,14 @@ private fun ShowHeroCard(
 ) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val isTablet = maxWidth >= 600.dp
-        val heroPad = if (isTablet) 22.dp else 14.dp
-        val heroGap = if (isTablet) 22.dp else 14.dp
-        val posterWidth = if (isTablet) 135.dp else 105.dp
+        val heroPad = if (isTablet) 22.dp else 16.dp
+        val posterWidth = if (isTablet) 135.dp else 102.dp
+
+        val nextInfo = nextUnwatched?.let { EpisodePatterns.parse(it.name) }
+        val buttonText = when {
+            nextInfo != null -> "Play S%02dE%02d".format(nextInfo.season, nextInfo.episode)
+            else -> "Start Series"
+        }
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -335,121 +341,159 @@ private fun ShowHeroCard(
             color = MaterialTheme.colorScheme.surfaceContainerLowest,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
-            Row(
-                modifier = Modifier.padding(heroPad),
-                horizontalArrangement = Arrangement.spacedBy(heroGap),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Poster Image
-                Box(
-                    modifier = Modifier
-                        .width(posterWidth)
-                        .aspectRatio(2f / 3f)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                ) {
-                SidecarImage(
-                    uri = series.posterUri,
-                    fallbackVideo = nextUnwatched ?: series.seasons.values.firstOrNull()?.firstOrNull(),
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            // Info & CTAs
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier = Modifier.padding(heroPad),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text(
-                    text = series.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                // Metadata badge chips
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    series.year?.let {
-                        Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
-                        Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
+                    // Poster Image
+                    Box(
+                        modifier = Modifier
+                            .width(posterWidth)
+                            .aspectRatio(2f / 3f)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    ) {
+                        SidecarImage(
+                            uri = series.posterUri,
+                            fallbackVideo = nextUnwatched ?: series.seasons.values.firstOrNull()?.firstOrNull(),
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
-                    series.mpaa?.let {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh
-                        ) {
-                            Text(it, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
-                    }
-                    Text("${series.seasonCount} Seasons", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
-                    Text("${series.totalEpisodes} Episodes", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
+
+                    // Info Beside Poster
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            "1080p HEVC",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 10.sp,
+                            text = series.title,
+                            style = if (isTablet) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
+
+                        // Metadata badge chips
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            series.year?.let {
+                                Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
+                                Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+                            series.mpaa?.let {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh
+                                ) {
+                                    Text(it, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+                            Text("${series.seasonCount} Seasons", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
+                            Text("${series.totalEpisodes} Episodes", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer
+                            ) {
+                                Text(
+                                    "1080p HEVC",
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+
+                        if (isTablet) {
+                            Text(
+                                text = series.synopsis ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                lineHeight = 18.sp,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
 
-                // Synopsis
-                Text(
-                    text = series.synopsis ?: "Offline TV Series in your local tablet library. High-efficiency playback with hardware-accelerated decoding.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 18.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
+                if (!isTablet) {
+                    Text(
+                        text = series.synopsis ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 18.sp,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
                 // Action Buttons
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val nextInfo = nextUnwatched?.let { EpisodePatterns.parse(it.name) }
-                    val buttonText = when {
-                        nextInfo != null -> "Play S%02dE%02d".format(nextInfo.season, nextInfo.episode)
-                        else -> "Start Series"
-                    }
-
-                    Button(
-                        onClick = onPlayNext,
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                if (isTablet) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(buttonText, fontWeight = FontWeight.Bold)
-                    }
+                        Button(
+                            onClick = onPlayNext,
+                            shape = CircleShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(buttonText, fontWeight = FontWeight.Bold)
+                        }
 
-                    OutlinedButton(
-                        onClick = onMarkSeasonWatched,
-                        shape = CircleShape,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Toggle Season Watched", fontSize = 12.sp)
+                        OutlinedButton(
+                            onClick = onMarkSeasonWatched,
+                            shape = CircleShape,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Toggle Season Watched", fontSize = 12.sp)
+                        }
+                    }
+                } else {
+                    // Mobile Portrait Action Buttons: Full-width primary button + secondary button below
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = onPlayNext,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(buttonText, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = onMarkSeasonWatched,
+                            modifier = Modifier.fillMaxWidth().height(42.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Toggle Season Watched", fontSize = 12.sp)
+                        }
                     }
                 }
             }
         }
     }
-}
 }
 
 @Composable

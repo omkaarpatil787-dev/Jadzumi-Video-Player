@@ -1,7 +1,7 @@
 # Jadzumi Video / Jadzumi Player — Active Development Checkpoint
 
 Updated: 2026-10-20  
-Version: 1.1.0 (Release)  
+Version: 1.2.0 (Release)  
 Target: Universal Android Devices — Handheld Phones, Tablets & Large Screens (16:10, 16:9, 19.5:9, 20:9, 4:3, Foldables; Android 8.0–16, ARM64-v8a)  
 
 ## Milestone Status Summary
@@ -34,3 +34,11 @@ Target: Universal Android Devices — Handheld Phones, Tablets & Large Screens (
   - Mobile Cinema Player: one-tap orientation toggle (Landscape/Portrait/Sensor) and responsive bottom sheet Quick Menu in phone portrait.
   - Thumb-friendly bottom padding and universal "device's internal storage" dialog cleanups.
   - Upgraded to `versionCode = 10`, `versionName = "1.1.0"`.
+- **Milestone 10 — Expressive Themes, App Icon Studio, Audiophile DSP, Double-Tap Ripples & Phone Portrait Overhaul (v1.2.0):** [COMPLETED & PACKAGED]
+  - Eradicated empty-state mockup cards; added first-run `WelcomeOnboardingCard` SAF folder picker.
+  - Fully adapted Cinema Player, Movie Details, TV Show Details, and Storage Cards for phone portrait mode.
+  - Implemented 5 Expressive Themes: Aura Flow, Frost Crystal, Neo Cinema, Soft Motion, and Prism across Light, Dark, and AMOLED modes.
+  - Added Custom App Icon Studio under Settings → Display with live vector preview and dynamic launcher switching via Android `<activity-alias>`.
+  - Audiophile DSP: Night Mode / Dialogue Voice Boost (`LoudnessEnhancer`), Bluetooth lip-sync audio delay offset (`±500ms`), and in-player subtitle sync offset calibration.
+  - Gestures & Delights: YouTube-style double-tap seeking ripples with chevrons and haptics, plus "Skip Intro (+85s)" frosted pill.
+  - Upgraded to `versionCode = 11`, `versionName = "1.2.0"`.

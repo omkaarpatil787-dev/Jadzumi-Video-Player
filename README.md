@@ -1,6 +1,6 @@
 # Jadzumi Video — Modern Cinema & TV Player for Android (Phones, Tablets & Foldables)
 
-**Version 1.1.0 (Release)**  
+**Version 1.2.0 (Release)**  
 Target: Universal Android Devices — Handheld Phones, Tablets & Large Screens (16:10, 16:9, 19.5:9, 20:9, 4:3, Foldables; Android 8.0–16, ARM64-v8a)  
 Architecture: 100% Offline-First, Native Jetpack Compose, Media3/ExoPlayer + FFmpeg C++ Decoders, Material 3 Expressive UI.
 
@@ -8,8 +8,28 @@ Architecture: 100% Offline-First, Native Jetpack Compose, Media3/ExoPlayer + FFm
 
 ## Key Features
 
+- **Signature Expressive Themes & Custom App Icon Studio (v1.2.0)**:
+  - **5 Expressive Themes**: **Aura Flow** (🩵 Floating, fluid & soft), **Frost Crystal** (❄️ Icy, crystalline & serene), **Neo Cinema** (🎞️ Angular, precise & cinematic), **Soft Motion** (🌸 Squishy, playful & bouncy), and **Prism** (💜 Faceted, layered & luminous).
+  - **3 Independent Appearance Modes**: Light, Dark, and AMOLED (Pure Black).
+  - **App Icon Studio**: Interactive vector icon preview inside **Settings → Display** allowing silhouette (`Squircle`, `Circle`, `Soft square`) and finish selection (`Frosted`, `Solid`, `Outlined`).
+  - **Dynamic Home Screen Icon Switching**: Direct launcher icon switching via Android `<activity-alias>` (`LauncherAura`, `LauncherFrost`, `LauncherNeo`, `LauncherSoft`, `LauncherPrism`).
+
+- **Audiophile & Late-Night Cinema DSP (v1.2.0)**:
+  - **Night Mode / Dialogue Voice Boost**: Native dynamic range compression via Android `LoudnessEnhancer` bringing whispered dialogue forward while taming sudden explosions for late-night watching.
+  - **Bluetooth Audio Lip-Sync Delay**: Fine-tune wireless audio synchronization (`±500ms` in 50ms steps) from Settings → Audio or directly in the Cinema Player Quick Menu.
+  - **In-Player Subtitle Sync Offset Calibration**: Adjust subtitle timing on-the-fly (`±10s` in 100ms steps) for out-of-sync SRT or ASS files.
+
+- **Premium Gestures & Player Delights (v1.2.0)**:
+  - **YouTube-Style Animated Seek Ripples**: Double-tap left or right to seek with expanding frosted arc ripples, dynamic chevrons (`«««` / `»»»`), and haptic feedback.
+  - **"Skip Intro (+85s)" Frosted Capsule Pill**: Contextually appears in the opening minutes of TV episodes and films for instant one-tap intro skipping.
+
+- **Mobile Phone Portrait Ergonomics (v1.2.0)**:
+  - **Adaptive 2-Row Cinema Player Dock**: Segregates Time Capsule and Action Dock into a two-row layout on mobile portrait screens (< 600dp) to prevent button collision.
+  - **MovieDetailsPage & TvShowDetailsPage Portrait Layout**: Stacked hero header, `FlowRow` metadata badges, full-width action buttons, and responsive secondary actions.
+  - **First-Run Welcome Onboarding**: Direct SAF directory selection card, completely replacing empty state fallbacks with real library indexing.
+
 - **Universal Phone & Tablet Ergonomics (v1.1.0)**:
-  - **Floating Frosted Glass Bottom Navigation Bar**: Automatically deploys on phones (`< 600dp`) with translucent blurred surface, specular border, and fluid animated indicator pills, preserving screen real estate while hiding on player and detail screens.
+  - **Floating Frosted Glass Bottom Navigation Bar**: Automatically deploys on phones (`< 600dp`) with translucent blurred surface, specular border, and fluid animated indicator pills.
   - **Adaptive Header & Search**: Two-row layout on phones featuring greeting/title row and full-width frosted search capsule; single-row expanded bar on tablets.
   - **Responsive 2×2 Quick Category Cards**: Rebalances Home categories into an ergonomic 2×2 grid on phones and a 1×4 row on tablets.
   - **Mobile Cinema Player Controls**: One-tap orientation toggle button (Landscape / Portrait / Auto-Sensor) in player action pill, responsive frosted bottom sheet for the Quick Menu in phone portrait mode, and automatic orientation reset on exit.
@@ -39,7 +59,7 @@ Architecture: 100% Offline-First, Native Jetpack Compose, Media3/ExoPlayer + FFm
   - Adaptive landscape, portrait, and split-screen responsive layouts.
   - Ambient Aurora splash screen with animated bezier play glyph.
 
-- **Production Hardening (v1.0 & v1.1)**:
+- **Production Hardening (v1.0, v1.1 & v1.2)**:
   - R8 code shrinking and resource optimization enabled.
   - Precision ProGuard keep-rules for native FFmpeg JNI bindings and Media3 ExoPlayer renderers.
   - Consistent signing key for zero-friction in-place updates without data wipe.

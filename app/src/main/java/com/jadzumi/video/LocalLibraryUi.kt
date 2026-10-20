@@ -88,6 +88,64 @@ import kotlinx.coroutines.withContext
     }
 }
 
+@Composable
+fun WelcomeOnboardingCard(
+    onAddFolder: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shadowElevation = 3.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(64.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.VideoLibrary,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+            Text(
+                "Welcome to Jadzumi Video",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Text(
+                "100% Offline-First Cinema Player for your phone and tablet. Connect a folder on your device (e.g. Movies, TV Shows, or Downloads) to scan and play your media with hardware acceleration and automatic artwork detection.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                lineHeight = 20.sp
+            )
+            Button(
+                onClick = onAddFolder,
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 12.dp)
+            ) {
+                Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Select Video Folder", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
 @Composable private fun LocalPanel(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         Modifier.fillMaxWidth(),
@@ -414,62 +472,101 @@ fun StorageSummaryCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(44.dp)
+        BoxWithConstraints(Modifier.fillMaxWidth().padding(18.dp)) {
+            val compact = maxWidth < 460.dp
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (compact) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(44.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                            }
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text("Internal Storage", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(
+                                "$videoCount videos · ${Formatter.formatFileSize(context, totalIndexedBytes)}",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
-                    Column {
-                        Text("Internal Storage", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text(
-                            "$videoCount videos · ${Formatter.formatFileSize(context, totalIndexedBytes)}",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Button(
+                        onClick = onAddFolder,
+                        shape = RoundedCornerShape(20.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Add Folder", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                                }
+                            }
+                            Column {
+                                Text("Internal Storage", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text(
+                                    "$videoCount videos · ${Formatter.formatFileSize(context, totalIndexedBytes)}",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Button(
+                            onClick = onAddFolder,
+                            shape = RoundedCornerShape(20.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Add folder", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
-                Button(
-                    onClick = onAddFolder,
-                    shape = RoundedCornerShape(20.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                ) {
-                    Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Add folder", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-            LinearProgressIndicator(
-                progress = { storageRatio },
-                modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Storage: ${Formatter.formatFileSize(context, freeDeviceBytes)} free of ${Formatter.formatFileSize(context, totalDeviceBytes)}",
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                LinearProgressIndicator(
+                    progress = { storageRatio },
+                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
-                Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Storage: ${Formatter.formatFileSize(context, freeDeviceBytes)} free of ${Formatter.formatFileSize(context, totalDeviceBytes)}",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
+                }
             }
         }
     }
@@ -572,20 +669,8 @@ fun StorageSummaryCard(
                     }
                 )
             }
-        } else if (category == "TV Shows") {
-            emptyList()
         } else {
-            previewVideos.take(3).map { pv ->
-                val durStr = timecode(pv.durationSeconds)
-                HeroItem(
-                    id = pv.id,
-                    title = pv.title,
-                    subtitle = "2024 · $durStr · 4K · Dolby Atmos",
-                    previewArtwork = pv.artwork,
-                    onPlay = { preview() },
-                    onInfo = { preview() }
-                )
-            }
+            emptyList()
         }
     }
 
@@ -603,16 +688,22 @@ fun StorageSummaryCard(
                 contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
-                // 1. Hero Movie Banner Pager
+                // 0. Welcome Onboarding (shown if no video folders connected yet)
+                if (state.folders.isEmpty()) {
+                    item {
+                        WelcomeOnboardingCard(onAddFolder = add)
+                    }
+                }
+
+                // 1. Hero Movie Banner Pager (only shown if real indexed videos exist)
                 if (heroItems.isNotEmpty()) {
                     item {
                         HeroMoviePager(items = heroItems, isPhone = isPhone)
                     }
                 }
 
-                // 2. Continue Watching Section
-                val itemsToWatch = if (continueWatching.isNotEmpty()) continueWatching else candidateVideos.take(4)
-                if (itemsToWatch.isNotEmpty() || (category != "TV Shows" && category != "Movies")) {
+                // 2. Continue Watching Section (only real in-progress videos)
+                if (continueWatching.isNotEmpty()) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(
@@ -631,34 +722,20 @@ fun StorageSummaryCard(
                                     )
                                 }
                             }
-                            if (itemsToWatch.isNotEmpty()) {
-                                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    items(itemsToWatch, key = { it.uri }) { v ->
-                                        val pos = playback.savedPosition(v)
-                                        val dur = v.duration.takeIf { it > 0 } ?: 1000L
-                                        ContinueWatchingCard(
-                                            video = v,
-                                            previewFallback = null,
-                                            savedPos = pos,
-                                            durationMs = dur,
-                                            onClick = {
-                                                playback.open(v)
-                                                playback.fullscreen = true
-                                            }
-                                        )
-                                    }
-                                }
-                            } else if (category != "TV Shows" && category != "Movies") {
-                                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    items(previewVideos, key = { it.id }) { pv ->
-                                        ContinueWatchingCard(
-                                            video = null,
-                                            previewFallback = pv,
-                                            savedPos = pv.positionSeconds * 1000,
-                                            durationMs = pv.durationSeconds * 1000,
-                                            onClick = preview
-                                        )
-                                    }
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                items(continueWatching, key = { it.uri }) { v ->
+                                    val pos = playback.savedPosition(v)
+                                    val dur = v.duration.takeIf { it > 0 } ?: 1000L
+                                    ContinueWatchingCard(
+                                        video = v,
+                                        previewFallback = null,
+                                        savedPos = pos,
+                                        durationMs = dur,
+                                        onClick = {
+                                            playback.open(v)
+                                            playback.fullscreen = true
+                                        }
+                                    )
                                 }
                             }
                         }

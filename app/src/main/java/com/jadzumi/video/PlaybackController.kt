@@ -86,6 +86,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var saveTrackPrefs by mutableStateOf(prefs.getBoolean("save_track_prefs", true))
     var swipeGesturesEnabled by mutableStateOf(prefs.getBoolean("swipe_gestures", true))
     var seekIncrementSeconds by mutableIntStateOf(prefs.getInt("seek_seconds", 10))
+    var audioDelayMs by mutableLongStateOf(prefs.getLong("audio_delay", 0L))
+    var subtitleDelayMs by mutableLongStateOf(prefs.getLong("sub_delay", 0L))
+    var nightModeVoiceBoost by mutableStateOf(prefs.getBoolean("night_mode", false))
+    private var loudnessEnhancer: android.media.audiofx.LoudnessEnhancer? = null
     var historyVersion by mutableIntStateOf(0); private set
 
     private val channelId = "playback_channel"
@@ -218,6 +222,49 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun updateSeekSeconds(seconds: Int) {
         seekIncrementSeconds = seconds.coerceIn(5, 60)
         prefs.edit { putInt("seek_seconds", seekIncrementSeconds) }
+    }
+
+    fun updateNightMode(enabled: Boolean) {
+        nightModeVoiceBoost = enabled
+        prefs.edit { putBoolean("night_mode", enabled) }
+        applyNightMode()
+    }
+
+    fun applyNightMode() {
+        try {
+            val sessionId = player?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
+            if (nightModeVoiceBoost && sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
+                if (loudnessEnhancer == null) {
+                    loudnessEnhancer = android.media.audiofx.LoudnessEnhancer(sessionId)
+                }
+                loudnessEnhancer?.setTargetGain(600)
+                loudnessEnhancer?.enabled = true
+            } else {
+                loudnessEnhancer?.enabled = false
+                loudnessEnhancer?.release()
+                loudnessEnhancer = null
+            }
+        } catch (_: Exception) {}
+    }
+
+    fun updateAudioDelay(deltaMs: Long) {
+        audioDelayMs = (audioDelayMs + deltaMs).coerceIn(-500L, 500L)
+        prefs.edit { putLong("audio_delay", audioDelayMs) }
+    }
+
+    fun resetAudioDelay() {
+        audioDelayMs = 0L
+        prefs.edit { putLong("audio_delay", 0L) }
+    }
+
+    fun updateSubtitleDelay(deltaMs: Long) {
+        subtitleDelayMs = (subtitleDelayMs + deltaMs).coerceIn(-10_000L, 10_000L)
+        prefs.edit { putLong("sub_delay", subtitleDelayMs) }
+    }
+
+    fun resetSubtitleDelay() {
+        subtitleDelayMs = 0L
+        prefs.edit { putLong("sub_delay", 0L) }
     }
 
     fun clearWatchHistory() {
@@ -357,6 +404,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             p.setHandleAudioBecomingNoisy(true)
 
             p.addListener(object : Player.Listener {
+                override fun onAudioSessionIdChanged(audioSessionId: Int) {
+                    if (nightModeVoiceBoost) applyNightMode()
+                }
+
                 override fun onTracksChanged(tracks: Tracks) {
                     if (this@PlaybackController.player !== p) return
                     updateTracks(tracks)
@@ -467,6 +518,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
             p.setMediaItem(mediaItem)
             p.prepare()
+            if (nightModeVoiceBoost) applyNightMode()
             if (suspendedPosition > 0 && rememberProgress) {
                 p.seekTo(suspendedPosition)
             }
@@ -662,6 +714,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     private fun release() {
         save()
+        try {
+            loudnessEnhancer?.enabled = false
+            loudnessEnhancer?.release()
+            loudnessEnhancer = null
+        } catch (_: Exception) {}
         val oldPlayer = player
         player = null; mediaItemAssigned = false
         session?.release(); session = null

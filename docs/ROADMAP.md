@@ -52,7 +52,7 @@
 
 ## Current Milestone
 
-### Milestone 9 (v1.1.0) — Universal Phone Adaptation & Glassmorphic Polish (Completed)
+### Milestone 9 (v1.1.0) — Universal Phone Adaptation & Glassmorphic Polish (Approved)
 - **Floating Frosted Glass Bottom Navigation Bar**:
   - Dynamically activates for phone form factors (`< 600dp`), floating gracefully with a translucent frosted container, specular white border, and animated indicator pill.
   - Seamlessly keeps the 96dp navigation rail on tablets and foldables.
@@ -69,3 +69,31 @@
   - Polished specular highlights, frosted borders, and high-translucency surfaces.
   - Universal "device's internal storage" localization across all confirmation dialogs.
 - **Version Tag**: `versionCode = 10`, `versionName = "1.1.0"`.
+
+---
+
+## Current Milestone
+
+### Milestone 10 (v1.2.0) — Expressive Themes, App Icon Studio, Audiophile DSP, Double-Tap Ripples & Phone Portrait Overhaul (Completed)
+- **Eradication of "Mockup" Feel & First-Run SAF Onboarding**:
+  - Identified and removed legacy fallback cards with inert no-op click listeners that rendered on empty library state.
+  - Introduced `WelcomeOnboardingCard` with direct, zero-friction "Select Video Folder" Storage Access Framework picker.
+- **Mobile Phone Portrait Adaptations**:
+  - **Cinema Player**: Adaptive 2-row layout on phone portrait (< 600dp) cleanly separating the Time Capsule and Actions Dock to eliminate clipping and overlap.
+  - **MovieDetailsPage & TvShowDetailsPage**: Stacked poster/header, `FlowRow` metadata chips, full-width primary action buttons, and responsive secondary docks preventing horizontal overflow.
+  - **StorageSummaryCard**: Adaptive vertical stacking on compact phone displays.
+- **Audiophile & Late-Night Cinema Enhancements**:
+  - **Night Mode / Dialogue Voice Boost**: Native Android `LoudnessEnhancer` dynamic range compression DSP bringing quiet dialogue forward while softening jarring explosions for midnight viewing.
+  - **Bluetooth Audio Delay (Lip-Sync Compensation)**: Real-time audio timing offset (`±500ms` in 50ms steps) accessible both from Settings → Audio and directly inside the player Quick Menu.
+  - **In-Player Subtitle Delay Adjustment**: Instant subtitle synchronization offset calibration (`±10s` in 100ms steps) in Subtitle Settings and player Quick Menu.
+- **Premium Gestures & Player Delights**:
+  - **YouTube-Style Animated Seeking Ripples**: Double-tap left/right seek with expanding frosted arc ripples, dynamic chevrons (`«««` / `»»»`), and haptic feedback.
+  - **"Skip Intro (+85s)" Frosted Capsule Pill**: Appears dynamically in opening minutes of episodes/films with smooth fade-out and haptics.
+- **Signature Expressive Themes (Jadzumi Design Lab Parity)**:
+  - 5 distinctive visual personalities: **Aura Flow** (🩵), **Frost Crystal** (❄️), **Neo Cinema** (🎞️), **Soft Motion** (🌸), and **Prism** (💜).
+  - 3 independent appearance modes: **Light**, **Dark**, and **AMOLED** (Pure Black).
+- **Custom App Icon Studio & Dynamic Launcher Switcher**:
+  - Integrated App Icon Studio under **Settings → Display** with interactive folded-play vector preview.
+  - Silhouette selectors (`Squircle`, `Circle`, `Soft square`) and finish styles (`Frosted`, `Solid`, `Outlined`).
+  - "Apply to Home Screen Launcher" button dynamically switching Android `<activity-alias>` (`LauncherAura`, `LauncherFrost`, `LauncherNeo`, `LauncherSoft`, `LauncherPrism`) via `PackageManager`.
+- **Version Tag**: `versionCode = 11`, `versionName = "1.2.0"`.

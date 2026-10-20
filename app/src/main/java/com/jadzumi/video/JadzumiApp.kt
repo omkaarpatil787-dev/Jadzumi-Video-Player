@@ -1,5 +1,8 @@
 package com.jadzumi.video
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
@@ -16,6 +19,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -36,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -43,6 +48,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -87,6 +95,177 @@ private val Dark = darkColorScheme(
     outlineVariant = Color(0xFF2E3C52)
 )
 
+private fun getExpressiveColorScheme(themeName: String, mode: String, isSysDark: Boolean): ColorScheme {
+    val actualMode = if (mode == "System") (if (isSysDark) "Dark" else "Light") else mode
+    return when (themeName) {
+        "Frost Crystal" -> when (actualMode) {
+            "Dark" -> darkColorScheme(
+                primary = Color(0xFF73BDEB),
+                primaryContainer = Color(0xFF1A374D),
+                onPrimaryContainer = Color(0xFFCDEBFA),
+                background = Color(0xFF0B1721),
+                surface = Color(0xFF122433),
+                surfaceVariant = Color(0xFF1B3347),
+                onSurface = Color(0xFFF0F8FF),
+                onSurfaceVariant = Color(0xFFA2BED4),
+                outlineVariant = Color(0xFF284863)
+            )
+            "AMOLED" -> darkColorScheme(
+                primary = Color(0xFF73BDEB),
+                primaryContainer = Color(0xFF152C3D),
+                onPrimaryContainer = Color(0xFFCDEBFA),
+                background = Color.Black,
+                surface = Color(0xFF081017),
+                surfaceVariant = Color(0xFF101F2C),
+                onSurface = Color(0xFFF0F8FF),
+                onSurfaceVariant = Color(0xFFA2BED4),
+                outlineVariant = Color(0xFF20384D)
+            )
+            else -> lightColorScheme(
+                primary = Color(0xFF3882B5),
+                primaryContainer = Color(0xFFCDEBFA),
+                onPrimaryContainer = Color(0xFF0C2B42),
+                background = Color(0xFFEAF4FA),
+                surface = Color(0xFFF5FBFF),
+                surfaceVariant = Color(0xFFDCEEF7),
+                onSurface = Color(0xFF18283C),
+                onSurfaceVariant = Color(0xFF4C657A),
+                outlineVariant = Color(0xFFCCE2EF)
+            )
+        }
+        "Neo Cinema" -> when (actualMode) {
+            "Dark" -> darkColorScheme(
+                primary = Color(0xFF48D8F0),
+                primaryContainer = Color(0xFF14354A),
+                onPrimaryContainer = Color(0xFFB8F2FF),
+                background = Color(0xFF08111E),
+                surface = Color(0xFF101F31),
+                surfaceVariant = Color(0xFF1A2F47),
+                onSurface = Color(0xFFE5F8FF),
+                onSurfaceVariant = Color(0xFF8AA8C4),
+                outlineVariant = Color(0xFF2A4866)
+            )
+            "AMOLED" -> darkColorScheme(
+                primary = Color(0xFF48D8F0),
+                primaryContainer = Color(0xFF102B3D),
+                onPrimaryContainer = Color(0xFFB8F2FF),
+                background = Color.Black,
+                surface = Color(0xFF08101A),
+                surfaceVariant = Color(0xFF122030),
+                onSurface = Color(0xFFE5F8FF),
+                onSurfaceVariant = Color(0xFF8AA8C4),
+                outlineVariant = Color(0xFF1F3A54)
+            )
+            else -> lightColorScheme(
+                primary = Color(0xFF008CA8),
+                primaryContainer = Color(0xFFD0F2F9),
+                onPrimaryContainer = Color(0xFF002A33),
+                background = Color(0xFFE8F1F5),
+                surface = Color.White,
+                surfaceVariant = Color(0xFFD3E4EC),
+                onSurface = Color(0xFF12222E),
+                onSurfaceVariant = Color(0xFF4B6475),
+                outlineVariant = Color(0xFFC5DCE6)
+            )
+        }
+        "Soft Motion" -> when (actualMode) {
+            "Dark" -> darkColorScheme(
+                primary = Color(0xFFCF9FFF),
+                primaryContainer = Color(0xFF38234D),
+                onPrimaryContainer = Color(0xFFF2E2FF),
+                background = Color(0xFF1A1124),
+                surface = Color(0xFF261A33),
+                surfaceVariant = Color(0xFF352547),
+                onSurface = Color(0xFFF9F2FD),
+                onSurfaceVariant = Color(0xFFBAA3C9),
+                outlineVariant = Color(0xFF493561)
+            )
+            "AMOLED" -> darkColorScheme(
+                primary = Color(0xFFCF9FFF),
+                primaryContainer = Color(0xFF2B1A3D),
+                onPrimaryContainer = Color(0xFFF2E2FF),
+                background = Color.Black,
+                surface = Color(0xFF12091A),
+                surfaceVariant = Color(0xFF221230),
+                onSurface = Color(0xFFF9F2FD),
+                onSurfaceVariant = Color(0xFFBAA3C9),
+                outlineVariant = Color(0xFF38234D)
+            )
+            else -> lightColorScheme(
+                primary = Color(0xFF935EC2),
+                primaryContainer = Color(0xFFF2E2FF),
+                onPrimaryContainer = Color(0xFF2D0D4E),
+                background = Color(0xFFFAF4FC),
+                surface = Color.White,
+                surfaceVariant = Color(0xFFEFE3F5),
+                onSurface = Color(0xFF2C1E38),
+                onSurfaceVariant = Color(0xFF6B537B),
+                outlineVariant = Color(0xFFE5D3ED)
+            )
+        }
+        "Prism" -> when (actualMode) {
+            "Dark" -> darkColorScheme(
+                primary = Color(0xFF9E8CFC),
+                primaryContainer = Color(0xFF2E2854),
+                onPrimaryContainer = Color(0xFFE7E0FF),
+                background = Color(0xFF141226),
+                surface = Color(0xFF1F1B38),
+                surfaceVariant = Color(0xFF2D284F),
+                onSurface = Color(0xFFF2F0FF),
+                onSurfaceVariant = Color(0xFFAFA7D6),
+                outlineVariant = Color(0xFF3F376E)
+            )
+            "AMOLED" -> darkColorScheme(
+                primary = Color(0xFF9E8CFC),
+                primaryContainer = Color(0xFF251F45),
+                onPrimaryContainer = Color(0xFFE7E0FF),
+                background = Color.Black,
+                surface = Color(0xFF0D0B1A),
+                surfaceVariant = Color(0xFF1A1733),
+                onSurface = Color(0xFFF2F0FF),
+                onSurfaceVariant = Color(0xFFAFA7D6),
+                outlineVariant = Color(0xFF302859)
+            )
+            else -> lightColorScheme(
+                primary = Color(0xFF6E56CF),
+                primaryContainer = Color(0xFFE7E0FF),
+                onPrimaryContainer = Color(0xFF211047),
+                background = Color(0xFFF4F2FB),
+                surface = Color.White,
+                surfaceVariant = Color(0xFFE6E1F7),
+                onSurface = Color(0xFF1D1B26),
+                onSurfaceVariant = Color(0xFF5D5778),
+                outlineVariant = Color(0xFFDDD6F2)
+            )
+        }
+        else -> when (actualMode) {
+            // Aura Flow (Default)
+            "Dark" -> Dark
+            "AMOLED" -> Dark.copy(background = Color.Black, surface = Color(0xFF0A0A0C), surfaceVariant = Color(0xFF141418))
+            else -> Light
+        }
+    }
+}
+
+private fun applyLauncherIcon(context: Context, themeName: String) {
+    try {
+        val aliasMap = mapOf(
+            "Aura Flow" to "LauncherAura",
+            "Frost Crystal" to "LauncherFrost",
+            "Neo Cinema" to "LauncherNeo",
+            "Soft Motion" to "LauncherSoft",
+            "Prism" to "LauncherPrism"
+        )
+        val target = aliasMap[themeName] ?: "LauncherAura"
+        val pm = context.packageManager
+        listOf("LauncherAura", "LauncherFrost", "LauncherNeo", "LauncherSoft", "LauncherPrism").forEach { alias ->
+            val comp = ComponentName(context, "com.jadzumi.video.$alias")
+            val state = if (alias == target) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+            pm.setComponentEnabledSetting(comp, state, PackageManager.DONT_KILL_APP)
+        }
+    } catch (_: Exception) {}
+}
+
 private data class Destination(val name: String, val icon: ImageVector)
 private val destinations = listOf(
     Destination("Home", Icons.Rounded.Home),
@@ -115,7 +294,10 @@ private val destinations = listOf(
 @Composable fun JadzumiApp(playback: PlaybackController) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
-    var theme by rememberSaveable { mutableStateOf(prefs.getString("theme", "Light") ?: "Light") }
+    var expressiveTheme by rememberSaveable { mutableStateOf(prefs.getString("expressiveTheme", "Aura Flow") ?: "Aura Flow") }
+    var theme by rememberSaveable { mutableStateOf(prefs.getString("theme", "Dark") ?: "Dark") }
+    var iconShape by rememberSaveable { mutableStateOf(prefs.getString("iconShape", "Squircle") ?: "Squircle") }
+    var iconFinish by rememberSaveable { mutableStateOf(prefs.getString("iconFinish", "Frosted") ?: "Frosted") }
     var reducedMotion by rememberSaveable { mutableStateOf(prefs.getBoolean("reducedMotion", false)) }
     var themeBloomEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("themeBloom", true)) }
     var firstLaunchCardShown by rememberSaveable { mutableStateOf(prefs.getBoolean("pad5_welcome_done", false)) }
@@ -139,18 +321,28 @@ private val destinations = listOf(
     var bloomOriginColor by remember { mutableStateOf<Color?>(null) }
 
     val sysDark = isSystemInDarkTheme()
-    val colors = when (theme) {
-        "Dark" -> Dark
-        "AMOLED" -> Dark.copy(background = Color.Black, surface = Color(0xFF0A0A0C), surfaceVariant = Color(0xFF141418))
-        "System" -> if (sysDark) Dark else Light
-        else -> Light
-    }
+    val colors = getExpressiveColorScheme(expressiveTheme, theme, sysDark)
 
     fun switchThemeWithBloom(newTheme: String) {
         if (newTheme == theme) return
         val oldBg = colors.background
         theme = newTheme
         prefs.edit { putString("theme", newTheme) }
+        if (themeBloomEnabled && !reducedMotion) {
+            bloomOriginColor = oldBg
+            scope.launch {
+                bloomProgress.snapTo(0f)
+                bloomProgress.animateTo(1f, tween(320))
+                bloomOriginColor = null
+            }
+        }
+    }
+
+    fun switchExpressiveTheme(newExpTheme: String) {
+        if (newExpTheme == expressiveTheme) return
+        val oldBg = colors.background
+        expressiveTheme = newExpTheme
+        prefs.edit { putString("expressiveTheme", newExpTheme) }
         if (themeBloomEnabled && !reducedMotion) {
             bloomOriginColor = oldBg
             scope.launch {
@@ -482,8 +674,14 @@ private val destinations = listOf(
                                             "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
                                             "Folders" -> LocalFoldersPage(localState, library, contentWidth >= 840.dp) { selectedId = it }
                                             "Settings" -> UnifiedSettingsAndPrivacyScreen(
+                                                expressiveTheme = expressiveTheme,
+                                                onExpressiveTheme = ::switchExpressiveTheme,
                                                 theme = theme,
                                                 onTheme = ::switchThemeWithBloom,
+                                                iconShape = iconShape,
+                                                onIconShape = { iconShape = it; prefs.edit { putString("iconShape", it) } },
+                                                iconFinish = iconFinish,
+                                                onIconFinish = { iconFinish = it; prefs.edit { putString("iconFinish", it) } },
                                                 themeBloom = themeBloomEnabled,
                                                 onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
                                                 reduced = reducedMotion,
@@ -707,8 +905,14 @@ private val settingsCategories = listOf(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun UnifiedSettingsAndPrivacyScreen(
+    expressiveTheme: String,
+    onExpressiveTheme: (String) -> Unit,
     theme: String,
     onTheme: (String) -> Unit,
+    iconShape: String,
+    onIconShape: (String) -> Unit,
+    iconFinish: String,
+    onIconFinish: (String) -> Unit,
     themeBloom: Boolean,
     onThemeBloom: (Boolean) -> Unit,
     reduced: Boolean,
@@ -919,6 +1123,32 @@ private val settingsCategories = listOf(
                                         }
                                         Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
                                     }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Night Mode & Dialogue Voice Boost", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Dynamic Range Compression & speech clarity boost for late-night watching", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = playback.nightModeVoiceBoost, onCheckedChange = { playback.updateNightMode(it) })
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+                                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Column(Modifier.weight(1f)) {
+                                                Text("Bluetooth Audio Delay Compensation", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Calibrate audio lip-sync delay for Bluetooth earbuds & wireless speakers", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                            Text("${playback.audioDelayMs} ms", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
+                                        }
+                                        Spacer(Modifier.height(8.dp))
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            OutlinedButton(onClick = { playback.updateAudioDelay(playback.audioDelayMs - 50) }) { Text("-50ms", fontSize = 12.sp) }
+                                            OutlinedButton(onClick = { playback.updateAudioDelay(playback.audioDelayMs + 50) }) { Text("+50ms", fontSize = 12.sp) }
+                                            if (playback.audioDelayMs != 0L) {
+                                                TextButton(onClick = { playback.resetAudioDelay() }) { Text("Reset", fontSize = 12.sp) }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             item {
@@ -1084,25 +1314,86 @@ private val settingsCategories = listOf(
                                             )
                                         }
                                     }
+
+                                    Spacer(Modifier.height(12.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+                                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Column(Modifier.weight(1f)) {
+                                                Text("Subtitle Sync Offset Calibration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Fine-tune subtitle timing synchronization for out-of-sync SRT/ASS tracks", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                            Text("${playback.subtitleDelayMs} ms", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
+                                        }
+                                        Spacer(Modifier.height(8.dp))
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            OutlinedButton(onClick = { playback.updateSubtitleDelay(playback.subtitleDelayMs - 100) }) { Text("-100ms", fontSize = 12.sp) }
+                                            OutlinedButton(onClick = { playback.updateSubtitleDelay(playback.subtitleDelayMs + 100) }) { Text("+100ms", fontSize = 12.sp) }
+                                            if (playback.subtitleDelayMs != 0L) {
+                                                TextButton(onClick = { playback.resetSubtitleDelay() }) { Text("Reset", fontSize = 12.sp) }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
 
                         "Display" -> {
                             item {
-                                val themeItems = listOf(
-                                    Triple("Light", "Airy Pale-Blue", Icons.Rounded.LightMode),
-                                    Triple("Dark", "Night Slate", Icons.Rounded.DarkMode),
-                                    Triple("AMOLED", "Pure Black", Icons.Rounded.Brightness1)
-                                )
                                 Panel {
-                                    Text("Appearance Theme", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("Select appearance mode for ambient viewing.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 16.dp))
-                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Text("Expressive Theme", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("One player. Five distinct visual personalities inspired by the Jadzumi Design Lab.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
+                                    val themeList = listOf(
+                                        Triple("Aura Flow", "Floating · fluid · soft", listOf(Color(0xFFE9F7FF), Color(0xFFA9D8FF), Color(0xFF3688D7))),
+                                        Triple("Frost Crystal", "Icy · crystalline · serene", listOf(Color(0xFFF4FCFF), Color(0xFFB9EDFF), Color(0xFF4A9CCF))),
+                                        Triple("Neo Cinema", "Angular · precise · cinematic", listOf(Color(0xFF142A44), Color(0xFF375B83), Color(0xFF74D9F5))),
+                                        Triple("Soft Motion", "Squishy · playful · bouncy", listOf(Color(0xFFFFF0FA), Color(0xFFE5D5FF), Color(0xFF9E7CE9))),
+                                        Triple("Prism", "Faceted · layered · luminous", listOf(Color(0xFFF0DBFF), Color(0xFFA8A0FF), Color(0xFF7551D8)))
+                                    )
+                                    val emojiMap = mapOf(
+                                        "Aura Flow" to "🩵",
+                                        "Frost Crystal" to "❄️",
+                                        "Neo Cinema" to "🎞️",
+                                        "Soft Motion" to "🌸",
+                                        "Prism" to "💜"
+                                    )
+
+                                    FlowRow(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        themeList.forEach { (name, descriptor, gradient) ->
+                                            ExpressiveThemeCard(
+                                                name = name,
+                                                emoji = emojiMap[name] ?: "✦",
+                                                descriptor = descriptor,
+                                                gradientColors = gradient,
+                                                selected = expressiveTheme == name,
+                                                onClick = { onExpressiveTheme(name) },
+                                                modifier = Modifier.widthIn(min = 140.dp).weight(1f, fill = false)
+                                            )
+                                        }
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Text("Appearance Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Select base lighting mode for ambient viewing.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
+                                    val themeItems = listOf(
+                                        Triple("Light", "Airy Pale-Blue", Icons.Rounded.LightMode),
+                                        Triple("Dark", "Night Slate", Icons.Rounded.DarkMode),
+                                        Triple("AMOLED", "Pure Black", Icons.Rounded.Brightness1)
+                                    )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         themeItems.forEach { (mode, subtitle, icon) ->
                                             ThemeOptionCard(mode, subtitle, icon, theme == mode, { onTheme(mode) }, Modifier.weight(1f))
                                         }
                                     }
+
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
                                     Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
@@ -1161,6 +1452,99 @@ private val settingsCategories = listOf(
                                             Text("Play the cinematic opening animation in current theme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Preview ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+                            }
+
+                            item {
+                                Panel {
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(Modifier.weight(1f)) {
+                                            Text("App Icon Studio ✦", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                            Text("Customize the folded-play app icon and apply directly to your home launcher.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = MaterialTheme.colorScheme.primaryContainer
+                                        ) {
+                                            Text(
+                                                expressiveTheme,
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(16.dp))
+
+                                    // Hero Live Preview Box
+                                    Surface(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(22.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 26.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            LiveAppIconPreview(
+                                                themeName = expressiveTheme,
+                                                shapeName = iconShape,
+                                                finishName = iconFinish
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(18.dp))
+
+                                    Text("Icon Silhouette", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.padding(top = 8.dp, bottom = 14.dp)
+                                    ) {
+                                        listOf("Squircle", "Circle", "Soft square").forEach { shape ->
+                                            FilterChip(
+                                                selected = iconShape == shape,
+                                                onClick = { onIconShape(shape) },
+                                                label = { Text(shape, maxLines = 1, softWrap = false) }
+                                            )
+                                        }
+                                    }
+
+                                    Text("Icon Finish", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.padding(top = 8.dp, bottom = 18.dp)
+                                    ) {
+                                        listOf("Frosted", "Solid", "Outlined").forEach { finish ->
+                                            FilterChip(
+                                                selected = iconFinish == finish,
+                                                onClick = { onIconFinish(finish) },
+                                                label = { Text(finish, maxLines = 1, softWrap = false) }
+                                            )
+                                        }
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            applyLauncherIcon(context, expressiveTheme)
+                                            statusNotice = "Applied '$expressiveTheme' home launcher icon! (Your launcher will refresh shortly)"
+                                        },
+                                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                                        shape = RoundedCornerShape(16.dp)
+                                    ) {
+                                        Icon(Icons.Rounded.Home, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Apply to Home Screen Launcher", fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -1340,6 +1724,198 @@ private val settingsCategories = listOf(
                 softWrap = false,
                 color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun ExpressiveThemeCard(
+    name: String,
+    emoji: String,
+    descriptor: String,
+    gradientColors: List<Color>,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.clickable { onClick() },
+        shape = RoundedCornerShape(18.dp),
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+        border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Brush.linearGradient(gradientColors)),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.85f),
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(emoji, fontSize = 14.sp)
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                descriptor,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun LiveAppIconPreview(
+    themeName: String,
+    shapeName: String,
+    finishName: String,
+    modifier: Modifier = Modifier
+) {
+    val cornerShape = when (shapeName) {
+        "Circle" -> CircleShape
+        "Soft square" -> RoundedCornerShape(20.dp)
+        else -> RoundedCornerShape(32.dp) // Squircle
+    }
+
+    val palette = when (themeName) {
+        "Frost Crystal" -> listOf(Color(0xFFF4FCFF), Color(0xFFB9EDFF), Color(0xFF4A9CCF))
+        "Neo Cinema" -> listOf(Color(0xFF142A44), Color(0xFF375B83), Color(0xFF74D9F5))
+        "Soft Motion" -> listOf(Color(0xFFFFF0FA), Color(0xFFE5D5FF), Color(0xFF9E7CE9))
+        "Prism" -> listOf(Color(0xFFF0DBFF), Color(0xFFA8A0FF), Color(0xFF7551D8))
+        else -> listOf(Color(0xFFE9F7FF), Color(0xFFA9D8FF), Color(0xFF3688D7)) // Aura Flow
+    }
+
+    val isOutline = finishName == "Outlined"
+    val isSolid = finishName == "Solid"
+
+    Box(
+        modifier = modifier
+            .size(130.dp)
+            .shadow(16.dp, cornerShape, ambientColor = palette[2].copy(alpha = 0.35f), spotColor = palette[2].copy(alpha = 0.35f))
+            .clip(cornerShape)
+            .background(
+                if (isOutline) Color.Transparent
+                else if (isSolid) palette[2]
+                else Brush.linearGradient(colors = palette)
+            )
+            .then(
+                if (isOutline) Modifier.border(3.dp, palette[2], cornerShape)
+                else Modifier.border(1.2.dp, Color.White.copy(alpha = 0.6f), cornerShape)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (finishName == "Frosted") {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+                    .border(1.dp, Color.White.copy(alpha = 0.35f), cornerShape)
+            )
+        }
+
+        when (themeName) {
+            "Neo Cinema" -> {
+                Canvas(Modifier.size(52.dp)) {
+                    val w = size.width
+                    val h = size.height
+                    drawLine(
+                        color = palette[2],
+                        start = Offset(w * 0.22f, h * 0.18f),
+                        end = Offset(w * 0.22f, h * 0.82f),
+                        strokeWidth = 5.dp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+                    val path = Path().apply {
+                        moveTo(w * 0.36f, h * 0.22f)
+                        lineTo(w * 0.82f, h * 0.50f)
+                        lineTo(w * 0.36f, h * 0.78f)
+                        close()
+                    }
+                    drawPath(path, color = Color.White, style = Stroke(width = 4.dp.toPx(), join = StrokeJoin.Bevel))
+                }
+            }
+            "Soft Motion" -> {
+                Canvas(Modifier.size(56.dp)) {
+                    val w = size.width
+                    val h = size.height
+                    val path = Path().apply {
+                        moveTo(w * 0.30f, h * 0.22f)
+                        quadraticTo(w * 0.26f, h * 0.16f, w * 0.38f, h * 0.23f)
+                        lineTo(w * 0.78f, h * 0.45f)
+                        quadraticTo(w * 0.88f, h * 0.50f, w * 0.78f, h * 0.55f)
+                        lineTo(w * 0.38f, h * 0.77f)
+                        quadraticTo(w * 0.26f, h * 0.84f, w * 0.30f, h * 0.78f)
+                        close()
+                    }
+                    drawPath(path, color = Color.White)
+                    drawCircle(color = palette[2], radius = 4.dp.toPx(), center = Offset(w * 0.44f, h * 0.50f))
+                }
+            }
+            "Frost Crystal" -> {
+                Canvas(Modifier.size(54.dp)) {
+                    val w = size.width
+                    val h = size.height
+                    val path = Path().apply {
+                        moveTo(w * 0.30f, h * 0.20f)
+                        lineTo(w * 0.78f, h * 0.50f)
+                        lineTo(w * 0.30f, h * 0.80f)
+                        close()
+                    }
+                    drawPath(path, color = Color.White)
+                    val foldPath = Path().apply {
+                        moveTo(w * 0.36f, h * 0.24f)
+                        lineTo(w * 0.54f, h * 0.50f)
+                        lineTo(w * 0.36f, h * 0.76f)
+                    }
+                    drawPath(foldPath, color = palette[2], style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
+                    val glint = Path().apply {
+                        moveTo(w * 0.78f, h * 0.16f)
+                        lineTo(w * 0.86f, h * 0.22f)
+                        lineTo(w * 0.78f, h * 0.28f)
+                        lineTo(w * 0.70f, h * 0.22f)
+                        close()
+                    }
+                    drawPath(glint, color = Color.White.copy(alpha = 0.85f))
+                }
+            }
+            else -> {
+                Canvas(Modifier.size(54.dp)) {
+                    val w = size.width
+                    val h = size.height
+                    val path = Path().apply {
+                        moveTo(w * 0.28f, h * 0.20f)
+                        lineTo(w * 0.78f, h * 0.50f)
+                        lineTo(w * 0.28f, h * 0.80f)
+                        close()
+                    }
+                    drawPath(path, color = Color.White)
+                    val foldPath = Path().apply {
+                        moveTo(w * 0.35f, h * 0.25f)
+                        lineTo(w * 0.55f, h * 0.50f)
+                        lineTo(w * 0.35f, h * 0.75f)
+                    }
+                    drawPath(foldPath, color = palette[2], style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
+                }
+            }
         }
     }
 }
