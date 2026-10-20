@@ -900,7 +900,7 @@ internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
 
 @Composable
 internal fun TechRow(label: String, value: String) {
-    if (value.length > 36) {
+    if (value.length > 25) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
             verticalArrangement = Arrangement.spacedBy(3.dp)

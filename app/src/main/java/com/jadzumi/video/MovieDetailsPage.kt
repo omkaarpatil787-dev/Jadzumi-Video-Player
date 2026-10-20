@@ -152,9 +152,8 @@ fun MovieDetailsPage(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f))),
-                    shadowElevation = 2.dp
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
                 ) {
                     val heroPad = if (isTablet) 22.dp else 16.dp
                     val posterWidth = if (isTablet) 140.dp else 102.dp
@@ -166,53 +165,53 @@ fun MovieDetailsPage(
                         modifier = Modifier.padding(heroPad),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        if (isTablet) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                verticalAlignment = Alignment.Top
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            // Poster Thumbnail (2:3 aspect ratio)
+                            Box(
+                                modifier = Modifier
+                                    .width(posterWidth)
+                                    .aspectRatio(2f / 3f)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                             ) {
-                                // Poster Thumbnail (2:3 aspect ratio)
-                                Box(
-                                    modifier = Modifier
-                                        .width(posterWidth)
-                                        .aspectRatio(2f / 3f)
-                                        .clip(RoundedCornerShape(18.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                ) {
-                                    SidecarImage(
-                                        uri = effectiveMetadata.posterUri ?: effectiveMetadata.backdropUri,
-                                        fallbackVideo = video,
-                                        modifier = Modifier.fillMaxSize()
+                                SidecarImage(
+                                    uri = effectiveMetadata.posterUri ?: effectiveMetadata.backdropUri,
+                                    fallbackVideo = video,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+
+                            // Movie Info Beside Poster
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = effectiveMetadata.title,
+                                    style = if (isTablet) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+
+                                if (effectiveMetadata.genres.isNotEmpty()) {
+                                    Text(
+                                        effectiveMetadata.genres.joinToString(" · "),
+                                        fontSize = if (isTablet) 13.sp else 12.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
 
-                                // Movie Info Beside Poster
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Text(
-                                        text = effectiveMetadata.title,
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
+                                MovieBadgesFlow(effectiveMetadata, video)
 
-                                    if (effectiveMetadata.genres.isNotEmpty()) {
-                                        Text(
-                                            effectiveMetadata.genres.joinToString(" · "),
-                                            fontSize = 13.sp,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-
-                                    MovieBadgesFlow(effectiveMetadata, video)
-
+                                if (isTablet) {
                                     Text(
                                         text = fullSynopsis,
                                         style = MaterialTheme.typography.bodySmall,
@@ -224,66 +223,18 @@ fun MovieDetailsPage(
                                     )
                                 }
                             }
-                        } else {
-                            // Mobile Phone Optimized Layout: Full-width title, genre subtitle, side-by-side poster + badges, synopsis
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text(
-                                    text = effectiveMetadata.title,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                        }
 
-                                if (effectiveMetadata.genres.isNotEmpty()) {
-                                    Text(
-                                        effectiveMetadata.genres.joinToString(" · "),
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    verticalAlignment = Alignment.Top
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .width(posterWidth)
-                                            .aspectRatio(2f / 3f)
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                    ) {
-                                        SidecarImage(
-                                            uri = effectiveMetadata.posterUri ?: effectiveMetadata.backdropUri,
-                                            fallbackVideo = video,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                    }
-
-                                    Column(
-                                        modifier = Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        MovieBadgesFlow(effectiveMetadata, video)
-                                    }
-                                }
-
-                                Text(
-                                    text = fullSynopsis,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    lineHeight = 18.sp,
-                                    maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
-                                )
-                            }
+                        if (!isTablet) {
+                            Text(
+                                text = fullSynopsis,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                lineHeight = 18.sp,
+                                maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
+                            )
                         }
 
                         // Action Buttons: Symmetrical and beautifully aligned pill buttons
@@ -507,7 +458,7 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
     ) {
         Column(
@@ -534,18 +485,19 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MovieAudioSubtitleCard(video: LocalVideo) {
     val glassIntensity = LocalGlassIntensity.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -557,10 +509,87 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
-            TechRow("Audio Decoder", "FFmpeg 6.1 (libavcodec)")
-            TechRow("Audio Streams", "Multi-channel 5.1 / Stereo Passthrough")
-            TechRow("Subtitle Engine", "libass / System CaptionStyle Engine")
-            TechRow("Supported Formats", "SubRip (.srt), SubStation Alpha (.ass), PGS")
+            // Audio Section with chips
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Rounded.Audiotrack, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Text("Audio Streams", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                }
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Text(
+                            "Multi-channel 5.1 / Stereo Passthrough",
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Text(
+                            "FFmpeg 6.1 (libavcodec)",
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            // Subtitle Section with chips
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Rounded.ClosedCaption, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Text("Subtitle Engine", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                }
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.secondaryContainer
+                    ) {
+                        Text(
+                            "libass · System CaptionStyle",
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Text(
+                            "SubRip (.srt) · SubStation Alpha (.ass) · PGS",
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -113,21 +113,27 @@ private fun AuroraAmbientBackground(
 
         when {
             isAmoled -> {
-                // AMOLED: Pure True Pitch Black for OLED display power efficiency
+                // AMOLED: True Pitch Black for OLED display power efficiency
                 drawRect(Color.Black)
 
-                // Soft subtle accent glow matching app icon without destroying black levels
-                val b1X = w * (0.35f + 0.15f * float1)
-                val b1Y = h * (0.35f + 0.10f * float2)
+                // Very soft accent floating blobs (.12f opacity) without destroying true black levels
+                val b1X = w * (-0.10f + 0.22f * float1)
+                val b1Y = h * (-0.05f + 0.10f * float2)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF188AF5).copy(alpha = 0.18f),
-                            Color(0xFF1659D9).copy(alpha = 0.08f),
-                            Color.Transparent
-                        ),
+                        colors = listOf(Color(0xFF188AF5).copy(alpha = 0.12f), Color.Transparent),
                         center = Offset(b1X, b1Y),
-                        radius = w * 0.70f
+                        radius = w * 0.45f
+                    )
+                )
+
+                val b2X = w * (1.10f - 0.18f * float2)
+                val b2Y = h * (0.40f - 0.12f * float3)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFF1659D9).copy(alpha = 0.10f), Color.Transparent),
+                        center = Offset(b2X, b2Y),
+                        radius = w * 0.45f
                     )
                 )
             }
@@ -136,41 +142,45 @@ private fun AuroraAmbientBackground(
                 // Dark theme base: #091628
                 drawRect(Color(0xFF091628))
 
-                // Dark ambient gradient
+                // Dark ambient gradient: #09101d -> #0b2445 52% -> #171e40
                 drawRect(
                     brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFF09101D), Color(0xFF0B2445), Color(0xFF171E40)),
+                        colorStops = arrayOf(
+                            0.0f to Color(0xFF09101D),
+                            0.52f to Color(0xFF0B2445),
+                            1.0f to Color(0xFF171E40)
+                        ),
                         start = Offset(0f, 0f),
                         end = Offset(w, h)
                     )
                 )
 
-                // Radial ellipse 1 at 30% 28%
+                // Soft radial ellipse at 30% 28%
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF172E53).copy(alpha = 0.85f), Color.Transparent),
+                        colors = listOf(Color(0xFF172E53).copy(alpha = 0.45f), Color.Transparent),
                         center = Offset(w * 0.30f, h * 0.28f),
                         radius = w * 0.65f
                     )
                 )
 
-                // Radial ellipse 2 at 74% 64%
+                // Soft radial ellipse at 74% 64%
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF154A8B).copy(alpha = 0.70f), Color.Transparent),
+                        colors = listOf(Color(0xFF154A8B).copy(alpha = 0.40f), Color.Transparent),
                         center = Offset(w * 0.74f, h * 0.64f),
                         radius = w * 0.70f
                     )
                 )
 
-                // Floating Blobs (opacity .28)
+                // Floating Blobs (soft opacity .18f for smooth background integration)
                 val b1X = w * (-0.10f + 0.25f * float1)
                 val b1Y = h * (-0.05f + 0.12f * float2)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF80C6FF).copy(alpha = 0.28f), Color.Transparent),
+                        colors = listOf(Color(0xFF80C6FF).copy(alpha = 0.18f), Color.Transparent),
                         center = Offset(b1X, b1Y),
-                        radius = w * 0.55f
+                        radius = w * 0.50f
                     )
                 )
 
@@ -178,9 +188,9 @@ private fun AuroraAmbientBackground(
                 val b2Y = h * (0.40f - 0.15f * float3)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF8CAEFF).copy(alpha = 0.28f), Color.Transparent),
+                        colors = listOf(Color(0xFF8CAEFF).copy(alpha = 0.18f), Color.Transparent),
                         center = Offset(b2X, b2Y),
-                        radius = w * 0.55f
+                        radius = w * 0.50f
                     )
                 )
 
@@ -188,9 +198,9 @@ private fun AuroraAmbientBackground(
                 val b3Y = h * (0.95f - 0.15f * float1)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFFC2F1FF).copy(alpha = 0.28f), Color.Transparent),
+                        colors = listOf(Color(0xFFC2F1FF).copy(alpha = 0.16f), Color.Transparent),
                         center = Offset(b3X, b3Y),
-                        radius = w * 0.50f
+                        radius = w * 0.45f
                     )
                 )
 
@@ -345,13 +355,6 @@ fun JadzumiSplashScreen(
         label = "levitate"
     )
 
-    // Breathe glow pulse
-    val breatheGlow by infiniteTransition.animateFloat(
-        initialValue = 0.35f, targetValue = 0.55f,
-        animationSpec = infiniteRepeatable(tween(2000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "breathe"
-    )
-
     // Entrance and Exit Animators
     val entryAlpha = remember { Animatable(0f) }
     val entryScale = remember { Animatable(0.76f) }
@@ -421,7 +424,7 @@ fun JadzumiSplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Glass Logo Tile with Ambient Breathing Halo
+            // Glass Logo Tile matching jadzumi_player_splash_final.html
             Box(
                 modifier = Modifier
                     .offset(y = levitateY.dp)
@@ -429,39 +432,18 @@ fun JadzumiSplashScreen(
                     .scale(entryScale.value),
                 contentAlignment = Alignment.Center
             ) {
-                // Breathing radial glow: radial-gradient(circle, #6ab7ff50, transparent 70%)
-                Canvas(Modifier.size(glassSize + 56.dp)) {
-                    val w = size.width
-                    val h = size.height
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFF6AB7FF).copy(alpha = breatheGlow),
-                                Color(0xFF188AF5).copy(alpha = breatheGlow * 0.5f),
-                                Color.Transparent
-                            ),
-                            center = Offset(w * 0.5f, h * 0.5f),
-                            radius = w * 0.48f
-                        )
-                    )
-                }
-
                 // Frosted Glass Rounded Container
                 // HTML:
-                // Light: linear-gradient(145deg,#ffffffa8,#ffffff30 42%,#6db7ff36); border: 1px solid #ffffffcf
+                // Light: linear-gradient(145deg,#ffffffa8,#ffffff30 42%,#6db7ff36); border: 1px solid #ffffffcf; box-shadow: 0 20px 52px #3379c044
                 // Dark: linear-gradient(145deg,#a4d6ff2b,#ffffff09); border-color: #ffffff35
-                // Amoled: linear-gradient(145deg,#2d69a34d,#071c34a0)
+                // Amoled: linear-gradient(145deg,#2d69a34d,#071c34a0); border-color: #ffffff24
                 Surface(
                     modifier = Modifier
                         .size(glassSize)
                         .shadow(
-                            elevation = if (isLight) 14.dp else 22.dp,
+                            elevation = if (isLight) 14.dp else 0.dp,
                             shape = RoundedCornerShape(glassRadius),
-                            spotColor = when {
-                                isLight -> Color(0x443379C0)
-                                isAmoled -> Color(0xFF000000)
-                                else -> Color(0x80000000)
-                            }
+                            spotColor = if (isLight) Color(0x333379C0) else Color.Transparent
                         ),
                     shape = RoundedCornerShape(glassRadius),
                     color = Color.Transparent,
@@ -469,7 +451,7 @@ fun JadzumiSplashScreen(
                         width = 1.dp,
                         color = when {
                             isLight -> Color(0xCFFFFFFF)
-                            isAmoled -> Color(0x3564DCFF)
+                            isAmoled -> Color(0x24FFFFFF)
                             else -> Color(0x35FFFFFF)
                         }
                     )
