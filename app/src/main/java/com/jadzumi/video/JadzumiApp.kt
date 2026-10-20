@@ -246,7 +246,7 @@ private val destinations = listOf(
                                         route = it
                                         selectedId = null
                                     },
-                                    isCompact = maxWidth < 960.dp,
+                                    isCompact = contentWidth < 960.dp,
                                     theme = theme,
                                     modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp)
                                 )

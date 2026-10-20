@@ -1,12 +1,12 @@
 # 📑 Jadzumi Player — Project Resume & Development Checkpoint
 
-> **Status:** Production Ready · **Version:** 1.2.0 (Release) · **Target:** Universal Android Devices (Phones, Foldables, Tablets) · **Updated:** 2026-10-20
+> **Status:** Production Ready · **Version:** 1.3.0 (Cinema Flow Release) · **Target:** Universal Android Devices (Phones, Foldables, Tablets) · **Updated:** 2026-10-20
 
 ---
 
 ## 🎯 Executive Summary
 
-**Jadzumi Player** is a modern, privacy-first cinema and TV media player engineered for Android. Built from the ground up with **Kotlin**, **Jetpack Compose**, and **NextLib Media3 (ExoPlayer + FFmpeg JNI C++ decoders)**, the application delivers a premium cinema experience with universal device ergonomics, OLED-exclusive HDR peak luminance, online poster and metadata scraping with local disk caching, audiophile DSP enhancements, and fluid gesture navigation.
+**Jadzumi Player** is a modern, privacy-first cinema and TV media player engineered for Android. Built from the ground up with **Kotlin**, **Jetpack Compose**, and **NextLib Media3 (ExoPlayer + FFmpeg JNI C++ decoders)**, the application delivers a premium cinema experience with universal device ergonomics, OLED-exclusive HDR peak luminance, online poster and metadata scraping with local disk caching, audiophile DSP enhancements, fluid gesture navigation, and the comprehensive **Cinema Flow v1.3** design system.
 
 ---
 
@@ -25,16 +25,26 @@
 | **Milestone 8 — Production Hardening (v1.0.0)** | R8 code shrinking, resource shrinking, FFmpeg ProGuard rules, reproducible signing | `COMPLETED` |
 | **Milestone 9 — Phone Ergonomics (v1.1.0)** | Floating frosted glass bottom bar, adaptive 2-row mobile headers, in-player rotation | `COMPLETED` |
 | **Milestone 10 — Hardware & DSP Overhaul (v1.2.0)** | Dynamic hardware inspector, Audiophile DSP, seek ripples, unified storage in settings | `COMPLETED` |
-| **Milestone 11 — Modern Refinements & Artwork (v1.2.0+)** | Jadzumi Player rebranding, OLED-exclusive HDR, online poster scraper & disk cache, fluid dock/rail minimize, glassify slider, glowing aurora splash, unified single-surface movie details | `COMPLETED` |
+| **Milestone 11 — Modern Refinements & Artwork** | Jadzumi Player rebranding, OLED-exclusive HDR, online poster scraper & disk cache, fluid dock/rail minimize, glassify slider, glowing aurora splash, unified single-surface movie details | `COMPLETED` |
 | **Milestone 12 — TV Metadata Parity & Fluidity Polish** | Dual-engine Wikipedia REST + TVMaze fallback scraper, Snapchat-style alive icons on dock & tablet rail, shared-axis tab transitions, double-tap seek ripple ghosting fix, unified settings switches | `COMPLETED` |
-| **Milestone 13 — Alive Home & Mobile Details Polish (v1.2.0 Final Checkpoint)** | Pixel-perfect mobile TV/Movie details alignment, swiping cards restricted to Home with auto-minimizing live suggestions carousel, interactive alive cinema greeting with real-time series tracking & fun facts | `COMPLETED` |
-| **Milestone 14 — Universal Floating Dock & Gemini Glow (v1.2.0 Locked)** | Universal floating frosted dock across phones and tablets, Google Gemini-style alive glooming brand logo (non-clickable, breathing chromatic aurora halo), full-width tablet layout | `COMPLETED` |
+| **Milestone 13 — Alive Home & Mobile Details Polish** | Pixel-perfect mobile TV/Movie details alignment, swiping cards restricted to Home with auto-minimizing live suggestions carousel, interactive alive cinema greeting with real-time series tracking & fun facts | `COMPLETED` |
+| **Milestone 14 — Universal Floating Dock & Gemini Glow** | Universal floating frosted dock across phones and tablets, Google Gemini-style alive glooming brand logo (non-clickable, breathing chromatic aurora halo), full-width tablet layout | `COMPLETED` |
+| **Milestone 15 — Cinema Flow v1.3 Master Architecture** | Complete Google Stitch native Compose implementation (`CinemaFlowTokens`, `AmbientAura`), dual-engine TV & movie scraper with 0ms disk cache, anti-black frame fallback (12% runtime sample + 7-point luminance check), and universal dock | `COMPLETED` |
 
 ---
 
-## 🚀 Key Features in Current Version (v1.2.0)
+## 🚀 Key Features in Current Version (v1.3.0)
 
-### 📱 1. Universal Phone & Tablet Ergonomics
+### 🎨 1. Cinema Flow v1.3 Design System & Ambient Aura
+- 🌌 **Cinema Ambient Aura (`#aura-container`)**: Hardware-accelerated fluid background aura composed of three luminous ambient blobs (Electric Cyan, Violet Indigo, and Sapphire Navy) that gently pulse and drift behind content, creating deep visual depth without impacting frame pacing.
+- 🎛️ **Reduced Motion Optimization**: Ambient aura animation dynamically observes system and in-app accessibility preferences, switching instantly to static radial blurs for battery conservation and zero distraction.
+- 💎 **Universal Glassmorphism Tokens (`CinemaFlowTokens`)**: Unified tokens for translucent frosted surfaces (`cinemaGlassCard`), spec-accurate radius scales (`CinemaCorners`), and directional ambient gradients (`CinemaGradients`).
+- 🌓 **Tri-Theme Fidelity (Dark, AMOLED, Light)**:
+  - 🌙 **Dark Mode**: Deep obsidian navy (`#080E18`) with glowing indigo and cyan accents.
+  - 🖤 **AMOLED Mode**: Pure `#000000` pitch black background for zero OLED battery consumption.
+  - ☀️ **Light Mode**: Crisp luminous crystal surfaces with high-contrast typography.
+
+### 📱 2. Universal Phone & Tablet Ergonomics
 - 🏝️ **Universal Floating Frosted Dock (Phones & Tablets)**: Unified navigation ergonomics across handheld phones, foldables, and large-screen tablets. Replaces rigid edge-to-edge side rails with an adaptive frosted glass dock centered at the bottom, unlocking full-width cinema breathing room on tablets while maintaining 100% UX consistency.
 - ✨ **Google Gemini-Style Alive Glooming Logo**: The floating dock is anchored by a strictly non-clickable Jadzumi emblem bathed in an organic, breathing celestial halo (Electric Cyan, Cosmic Violet, Coral Magenta, and Gold Shimmer) that gently rotates and pulses as if alive while using the app.
 - 🫧 **Snapchat-Style Pure Dock Icons**: Ultra-clean, alive navigation icons with natural spring scaling (`1.15x`) and vibrant primary tints. Completely eliminates squished glow rectangles and bounding boxes when auto-minimizing on tablets or phones!
@@ -43,58 +53,47 @@
 - 🎴 **Tab-Focused Clean Collections**: Top featured swiping cards are exclusively showcased on the Home tab, keeping the Movies and TV Shows tabs uncluttered, focused directly on Continue Watching and collection grids.
 - 🌟 **Interactive Alive Cinema Greeting**: Upper-left Home greeting dynamically tracks your recent episodes and movies (*"Good afternoon · Back to Dragon Ball Super?"* / *"Watching S01E02 · Tap to cycle fun facts 🍿"*), featuring interactive click-to-cycle cinema trivia and a lively presence indicator.
 - 🪗 **Auto-Minimizing Live Suggestions Carousel**: Home swiping cards intelligently curate real-time "Up Next" episodes and resume recommendations, naturally minimizing into a sleek 74dp live bar as you scroll, blooming back with organic spring physics on return.
-- 📐 **Balanced Mobile Portrait Cinema Player**: Symmetrically centered timecode capsule pill and player actions dock in portrait orientation. Streamlined top bar keeps focus on immersion with subtitles directly accessible via Cinema Settings.
 - 🎬 **Unified Design Parity (Home, Movies & TV Shows)**: Complete design parity across hero cards, genre subtitles, click-to-expand synopses, rating stars, and single-surface styling without elevation tinting or two-tone borders.
 - 🏷️ **FlowRow Audio & Subtitle Chips**: Modern badge chips for Multi-channel 5.1 passthrough, FFmpeg 6.1 libavcodec, libass, and PGS/SRT formats that never clip or wrap awkwardly on portrait phones.
 - 🔄 **In-Player Orientation Switcher**: One-tap rotation between **Landscape**, **Portrait**, and **Auto-Sensor**.
 - ✨ **Shared-Axis Premium Tab Transitions**: Replaces fast flickering crossfades with directional horizontal parallax (`slideIn/Out` + overlapping fade) for a continuous, silky-smooth 120 FPS navigation feel.
 
-### ☀️ 2. OLED / AMOLED Exclusive Auto HDR Peak Luminance
+### 🖼️ 3. Online Poster Album & Rich Metadata Scraping (Movies & TV Series)
+- 🌐 **Dual-Engine Online Metadata Scraper**: When local sidecars are missing, Jadzumi fetches official high-resolution posters, official plot synopses, critic ratings, and release years via **Wikipedia REST** and **TVMaze** for both feature films and TV shows with automatic fallback.
+- 💾 **Local Disk Caching & 0ms Offline Recall**: Downloaded posters and metadata are cached locally on disk (`cacheDir/poster_cache/` and `cacheDir/metadata_cache/`) so they load instantly and remain available 100% offline with verified `☁ Online Art` status pills.
+- 🎯 **Accurate Genre Detection**: Intelligently categorizes movies and shows into Horror, Sci-Fi, Action, Animation, Crime, Thriller, and Comedy.
+- 🎞️ **Anti-Black Frame Fallback**: Samples local video frames at 12% runtime (`10s`–`180s`) with 7-point luminance verification to ensure local thumbnails never display black intros.
+
+### ☀️ 4. OLED / AMOLED Exclusive Auto HDR Peak Luminance
 - 🌈 **Auto HDR Detection**: Real-time detection of **HDR10**, **HDR10+**, **Dolby Vision** (`dv`/`dovi`), and **HLG** content.
 - 🖤 **OLED-Exclusive Peak Luminance**: Automatically engages maximum brightness (`1.0f`) with `COLOR_MODE_HDR` **only on true OLED / AMOLED displays** for piercing highlights and infinite black levels.
 - 🛡️ **LCD Backlight Bleed Protection**: Tone-maps naturally on LCD tablets (Xiaomi Pad 5/6, OnePlus Pad, Tab S7/S8 base, Lenovo Tab) without forcing maximum backlight, preventing contrast washout and eye strain.
 - 🔍 **Hardware Display & SoC Inspector**: Real-time inspection of display panel technology, chipset model, and screen aspect ratios (`19.5:9`, `20:9`, `21:9` on phones; `16:10` / `4:3` on tablets).
 
-### 🖼️ 3. Online Poster Album & Rich Metadata Scraping (Movies & TV Series)
-- 🌐 **Dual-Engine Online Metadata Scraper**: When local sidecars are missing, Jadzumi fetches official high-resolution posters, official plot synopses, critic ratings, and release years via **Wikipedia REST** and **TVMaze** for both feature films and TV shows with automatic fallback.
-- 💾 **Local Disk Caching**: Downloaded posters and metadata are cached locally on disk (`cacheDir/poster_cache/`) so they load instantly and remain available 100% offline with verified `☁ Online Art` status pills.
-- 🎯 **Accurate Genre Detection**: Intelligently categorizes movies and shows into Horror, Sci-Fi, Action, Animation, Crime, Thriller, and Comedy.
-- 🎞️ **Anti-Black Frame Fallback**: Samples local video frames at 12% runtime (`10s`–`180s`) to ensure local thumbnails never display black intros.
-
-### 🎛️ 4. Glassify UI Elements Intensity Slider
+### 🎛️ 5. Glassify UI Elements Intensity Slider
 - 🧪 **Adjustable Glass Translucency**: Interactive slider in **Settings › Display** adjusting frosted glass intensity from **0% (Solid)** to **100% (Deep Glass)**.
 - 💎 **Universal Live UI Engine (`GlassTheme`)**: Dynamically modulates background opacity and specular frosted rims across the floating dock, tablet rail, search capsules, settings panels, and CinemaPlayer overlay pills and controls.
-- 🌓 **Full Tri-Theme Fidelity**: Calibrated for **Light** (frosted white crystal), **Dark** (frosted obsidian navy), and **AMOLED** (pure pitch black scaling into sapphire dark glass).
 
-### 🌌 5. Final Aurora Splash Screen
+### 🌌 6. Fluid Glass Aurora Splash Screen
 - 🎨 **HTML-Spec Accurate Aurora**: Ethereal liquid aurora based on `jadzumi_player_splash_final.html`, blending Electric Cyan (`#64DCFF`), Sapphire Azure (`#188AF5`), and Royal Blue (`#1659D9`).
 - 📱 **Adaptive Screen Sizing**: Dynamically scales glass tile and logo dimensions across compact phones (<680dp), standard phones, and large-screen tablets.
-- 🌓 **Adaptive Display Palettes**:
-  - 🌙 **Dark Mode**: Deep obsidian navy (`#091628`) with ambient radial ellipses and screen-blend floating blobs.
-  - 🖤 **AMOLED Mode**: Pure `#000000` pitch black background for zero OLED battery consumption with a soft ambient sapphire aura.
-  - ☀️ **Light Mode**: Luminous morning sky gradient (`#EAF4FF`) with airy azure floating blobs and diagonal specular sheen.
 - ✨ **Levitating Glass Tile & SVG Logo**: Levitating frosted tile (`translateY(-6px)`) with breathing radial aura, 120x120 vector play symbol, and 3dp gradient loading track with dynamic status text (*"Preparing your cinema…"* ➔ *"Loading your library…"*) and 1.09x smooth zoom exit.
 
-### 📱 6. Mobile Portrait TV Show & Episode Card Ergonomics
-- 🏷️ **Adaptive Audio & Subtitle Badges**: FlowRow layout preventing horizontal compression or single-letter vertical stretching on narrow phone displays.
-- 🎞️ **Responsive Episode Cards**: Responsive thumbnail dimensions (`116dp` on narrow phones vs `156dp` on tablets) with wrapped specs and status text for clean readability.
-- ⚡ **Zero-Flash Dock Selection**: Fluid single-action tap selection with unified bounded ripple, smooth indicator fade/scale animations, and instant 120 FPS tab crossfades.
-
-### 🎮 6. Studio Player Gestures & Seek Controls
-- 💫 **YouTube-Style 54dp Seek Ripples**: Proportioned double-tap seek ripple overlay (`54dp` matching seek control buttons) with dynamic chevrons (`«««` / `»»»`), seek accumulator, and smooth circular clipping.
+### 🎮 7. Studio Player Gestures & Seek Controls
+- 💫 **Ghost-Free 54dp Seek Ripples**: Proportioned double-tap seek ripple overlay (`54dp` matching seek control buttons) with dynamic chevrons (`«««` / `»»»`), seek accumulator, and smooth circular clipping without ghosting on reverse tap.
 - 🎚️ **Dual-Side Edge Swipes**: Left side controls screen brightness; right side controls audio volume with deadzone touch protection.
 - ⏩ **Long-Press 2x Speed**: Press and hold anywhere on the player surface to temporarily accelerate playback to 2.0x.
 - ⏭️ **Contextual "Skip Intro (+85s)" Capsule**: One-tap intro skipper in the opening minutes of episodes and movies.
 - 🖼️ **Hardware Picture-in-Picture (PiP)**: Smooth background playback with source aspect ratio matching.
 
-### 🔊 7. Audiophile Cinema DSP & NextLib FFmpeg
+### 🔊 8. Audiophile Cinema DSP & NextLib FFmpeg
 - 🌙 **Dialogue Voice Boost / Night Mode**: Speech clarity enhancement via Android `LoudnessEnhancer` dynamic range compression.
 - 📶 **Bluetooth Lip-Sync Calibration**: Wireless audio delay offset calibration (`±500ms` in 50ms steps).
 - ⏱️ **Live Subtitle Sync Calibration**: On-the-fly subtitle timing adjustments (`±10s` in 100ms increments).
 - 🎼 **Bundled NextLib FFmpeg Decoders**: Lossless decoding for **Dolby Atmos**, **Dolby Digital (AC-3)**, **Dolby Digital Plus (E-AC-3)**, **TrueHD**, **DTS-HD**, **FLAC**, and **AAC**.
 - 🔒 **Screen-Off Background Audio**: Continue listening to concerts, commentary, and podcasts with your device locked.
 
-### 📁 8. Smart Library, Search & Folder Management
+### 📁 9. Smart Library, Search & Folder Management
 - 🔍 **Tokenized Smart Search Engine**: Multi-word normalized search matcher across movies, TV series, episodes, and folder paths. Handles dots, underscores, hyphens, and brackets (`"the dark knight"`, `"batman 2022"`, `"spider man"`), with automatic detail view reset, keyboard IME actions, and dedicated categorized search result sections.
 - 🏷️ **Automated Series & Seasons Grouping**: Automatically groups episode patterns (`S01E01`, `1x04`) into organized series hubs and season carousels.
 - ⏳ **Next-Episode Autoplay Countdown**: 10-second autoplay countdown banner with instant "Play Now" and "Cancel" buttons.
@@ -105,7 +104,7 @@
 ## 🛠️ Tech Stack & Architecture
 
 - **Language:** Kotlin 2.0 (JVM 17 Target)
-- **UI Toolkit:** Jetpack Compose (Material 3 Expressive Design)
+- **UI Toolkit:** Jetpack Compose (Cinema Flow Design System)
 - **Media Engine:** AndroidX Media3 (ExoPlayer) + NextLib FFmpeg native JNI bindings
 - **Storage:** Android Storage Access Framework (SAF) + DocumentFile + SQLite
 - **Architecture Pattern:** Offline-First Unidirectional Data Flow (UDF) with Kotlin StateFlow & Coroutines
@@ -119,5 +118,6 @@
 - **Package ID:** `com.jadzumi.video`
 - **Application Label:** `Jadzumi Player`
 - **Target SDK:** 35 (Android 15) · **Min SDK:** 26 (Android 8.0 Oreo)
+- **Version:** `1.3.0` (Build `13`)
 - **ABI Architectures:** `arm64-v8a` (Primary Cinema Target)
 - **Release Signing:** Production development keystore with reproducible credentials
