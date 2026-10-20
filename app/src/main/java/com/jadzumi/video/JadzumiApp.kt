@@ -142,6 +142,7 @@ private val destinations = listOf(
     var bottomBarStyle by rememberSaveable { mutableStateOf(prefs.getString("bottomBarStyle", "Icons and labels") ?: "Icons and labels") }
     var dockAutoMinimize by rememberSaveable { mutableStateOf(prefs.getBoolean("dockAutoMinimize", true)) }
     var isDockMinimized by rememberSaveable { mutableStateOf(false) }
+    var glassIntensity by rememberSaveable { mutableStateOf(prefs.getFloat("glassIntensity", 0.75f)) }
     val cornerRadiusDp = when (cornerStyle) {
         "Compact" -> 14.dp
         "Sharp" -> 0.dp
@@ -524,6 +525,11 @@ private val destinations = listOf(
                                                     dockAutoMinimize = it
                                                     prefs.edit { putBoolean("dockAutoMinimize", it) }
                                                 },
+                                                glassIntensity = glassIntensity,
+                                                onGlassIntensity = {
+                                                    glassIntensity = it
+                                                    prefs.edit { putFloat("glassIntensity", it) }
+                                                },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
                                                 library = library,
@@ -554,6 +560,11 @@ private val destinations = listOf(
                                                     dockAutoMinimize = it
                                                     prefs.edit { putBoolean("dockAutoMinimize", it) }
                                                 },
+                                                glassIntensity = glassIntensity,
+                                                onGlassIntensity = {
+                                                    glassIntensity = it
+                                                    prefs.edit { putFloat("glassIntensity", it) }
+                                                },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
                                                 library = library,
@@ -578,6 +589,7 @@ private val destinations = listOf(
                                         route = route,
                                         darkSurface = colors != Light,
                                         bottomBarStyle = bottomBarStyle,
+                                        glassIntensity = glassIntensity,
                                         isMinimized = isDockMinimized,
                                         onToggleMinimize = { isDockMinimized = !isDockMinimized },
                                         onNavigate = {
@@ -675,6 +687,7 @@ private val destinations = listOf(
     route: String,
     darkSurface: Boolean,
     bottomBarStyle: String,
+    glassIntensity: Float = 0.75f,
     isMinimized: Boolean,
     onToggleMinimize: () -> Unit,
     onNavigate: (String) -> Unit,
@@ -722,6 +735,17 @@ private val destinations = listOf(
         label = "dockCorner"
     )
 
+    val surfaceAlpha = if (darkSurface) {
+        (0.85f - 0.22f * (glassIntensity - 0.5f)).coerceIn(0.55f, 0.96f)
+    } else {
+        (0.92f - 0.20f * (glassIntensity - 0.5f)).coerceIn(0.65f, 0.98f)
+    }
+    val rimAlpha = if (darkSurface) {
+        (0.12f + 0.16f * glassIntensity).coerceIn(0.10f, 0.35f)
+    } else {
+        (0.50f + 0.30f * glassIntensity).coerceIn(0.40f, 0.90f)
+    }
+
     Surface(
         modifier = modifier
             .widthIn(max = dockWidth)
@@ -730,10 +754,10 @@ private val destinations = listOf(
             .height(dockHeight)
             .clip(RoundedCornerShape(cornerRadius)),
         shape = RoundedCornerShape(cornerRadius),
-        color = if (darkSurface) Color(0xD9101827) else Color(0xEBFFFFFF),
+        color = if (darkSurface) Color(0xFF101827).copy(alpha = surfaceAlpha) else Color.White.copy(alpha = surfaceAlpha),
         border = BorderStroke(
             1.dp,
-            if (darkSurface) Color.White.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.70f)
+            Color.White.copy(alpha = rimAlpha)
         ),
         shadowElevation = if (isMinimized) 18.dp else 14.dp
     ) {
@@ -881,6 +905,8 @@ private val settingsCategories = listOf(
     onBottomBarStyle: (String) -> Unit = {},
     dockAutoMinimize: Boolean = true,
     onDockAutoMinimize: (Boolean) -> Unit = {},
+    glassIntensity: Float = 0.75f,
+    onGlassIntensity: (Float) -> Unit = {},
     onReplaySplash: () -> Unit,
     localState: LocalLibraryState,
     library: LocalLibrary,
@@ -1408,6 +1434,50 @@ private val settingsCategories = listOf(
                                             Text("Smoothly collapse floating navigation into a bouncy mini-pill while scrolling movies or browsing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = dockAutoMinimize, onCheckedChange = onDockAutoMinimize)
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Column(Modifier.fillMaxWidth()) {
+                                        Row(
+                                            Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                                Text("Glassify UI Elements", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Adjust frosted glass translucency and depth across player pills, floating docks, and sheets", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = MaterialTheme.colorScheme.primaryContainer,
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                            ) {
+                                                Text(
+                                                    "${(glassIntensity * 100).toInt()}%",
+                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                                )
+                                            }
+                                        }
+                                        Spacer(Modifier.height(8.dp))
+                                        Slider(
+                                            value = glassIntensity,
+                                            onValueChange = onGlassIntensity,
+                                            valueRange = 0.20f..1.0f,
+                                            steps = 15,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                        Row(
+                                            Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text("Solid (20%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Balanced (65%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Deep Glass (100%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
                                     }
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)

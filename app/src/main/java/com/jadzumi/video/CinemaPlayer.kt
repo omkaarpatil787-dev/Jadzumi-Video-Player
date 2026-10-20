@@ -79,6 +79,15 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 @Composable fun CinemaPlayer(playback: PlaybackController, reducedMotion: Boolean) {
     val video = playback.video ?: return
     val activity = LocalActivity.current as? MainActivity ?: return
+    val context = LocalContext.current
+    val appearancePrefs = remember { context.getSharedPreferences("appearance", 0) }
+    val glassIntensity = remember { appearancePrefs.getFloat("glassIntensity", 0.75f) }
+    val dynamicFrostedCircleBg = remember(glassIntensity) {
+        Color.White.copy(alpha = (0.08f + 0.12f * glassIntensity).coerceIn(0.06f, 0.35f))
+    }
+    val dynamicFrostedCircleRim = remember(glassIntensity) {
+        Color.White.copy(alpha = (0.15f + 0.25f * glassIntensity).coerceIn(0.12f, 0.55f))
+    }
     val previousBrightness = remember(activity) { activity.window.attributes.screenBrightness }
     val effectiveDuration = playback.duration.takeIf { it > 0 } ?: video.duration
     val heading = remember(video.name, video.width, video.height, effectiveDuration) {
@@ -263,7 +272,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     CircularProgressIndicator(Modifier.align(Alignment.Center).size(42.dp), color = Color.White, strokeWidth = 2.5.dp)
                 }
 
-                // YouTube-Style Double-Tap Fast-Forward / Rewind Ripple Overlays
+                // YouTube-Style Double-Tap Fast-Forward / Rewind Ripple Overlays (Sized to match 54dp seek buttons)
                 AnimatedVisibility(
                     visible = rippleSide != null,
                     enter = fadeIn(tween(120)) + scaleIn(initialScale = 0.85f),
@@ -275,11 +284,11 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     Surface(
                         modifier = Modifier
                             .padding(horizontal = 24.dp)
-                            .size(118.dp),
+                            .size(54.dp)
+                            .clip(CircleShape),
                         shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.22f),
-                        border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.50f)),
-                        shadowElevation = 16.dp
+                        color = dynamicFrostedCircleBg,
+                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
                     ) {
                         Column(
                             modifier = Modifier.fillMaxSize(),
@@ -290,14 +299,15 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 if (isLeft) Icons.Rounded.Replay10 else Icons.Rounded.Forward10,
                                 null,
                                 tint = Color.White,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(24.dp)
                             )
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(1.dp))
                             Text(
-                                if (isLeft) "−${totalSec}s" else "+${totalSec}s",
+                                if (isLeft) "-${totalSec}s" else "+${totalSec}s",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
+                                fontSize = 10.sp,
+                                maxLines = 1
                             )
                         }
                     }
