@@ -91,7 +91,7 @@ fun TvShowDetailsPage(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = horizontalPad, top = topPad, bottom = if (isTablet) 24.dp else 88.dp),
+            contentPadding = PaddingValues(start = horizontalPad, top = topPad, end = horizontalPad, bottom = if (isTablet) 24.dp else 88.dp),
             verticalArrangement = Arrangement.spacedBy(if (isTablet) 22.dp else 16.dp)
         ) {
             // 1. Top Breadcrumb & 100% Offline Badge

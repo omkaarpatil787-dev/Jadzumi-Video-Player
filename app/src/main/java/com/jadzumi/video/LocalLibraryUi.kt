@@ -192,225 +192,239 @@ private fun HeroMoviePager(
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "heroHeight"
     )
+    val animatedCorners by animateDpAsState(
+        targetValue = if (isMinimized) 20.dp else 26.dp,
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "heroCorners"
+    )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(animatedHeight),
-        shape = RoundedCornerShape(if (isMinimized) 20.dp else 26.dp),
+        shape = RoundedCornerShape(animatedCorners),
         colors = CardDefaults.cardColors(containerColor = Color.Black)
     ) {
-        Box(Modifier.fillMaxSize()) {
-            if (isMinimized) {
-                val currentItem = items[pagerState.currentPage.coerceIn(0, items.size - 1)]
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Box(
+        AnimatedContent(
+            targetState = isMinimized,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
+            },
+            label = "heroContentMode",
+            modifier = Modifier.fillMaxSize()
+        ) { minimized ->
+            Box(Modifier.fillMaxSize()) {
+                if (minimized) {
+                    val currentItem = items[pagerState.currentPage.coerceIn(0, items.size - 1)]
+                    Row(
                         modifier = Modifier
-                            .width(if (isPhone) 80.dp else 100.dp)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        if (currentItem.localVideo != null) {
-                            LocalThumbnail(currentItem.localVideo, Modifier.fillMaxSize())
-                        } else {
-                            val res = when (currentItem.previewArtwork) {
-                                "anime" -> R.drawable.anime
-                                "cosmos" -> R.drawable.cosmos
-                                else -> R.drawable.hero
-                            }
-                            Image(
-                                painter = painterResource(res),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        if (currentItem.badge != null) {
-                            Text(
-                                currentItem.badge,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                maxLines = 1
-                            )
-                        }
-                        Text(
-                            currentItem.title,
-                            color = Color.White,
-                            fontSize = if (isPhone) 15.sp else 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            currentItem.subtitle,
-                            color = Color.White.copy(alpha = 0.72f),
-                            fontSize = 11.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Surface(
-                        onClick = currentItem.onPlay,
-                        shape = CircleShape,
-                        color = Color(0xFF0B57D0),
-                        modifier = Modifier.size(if (isPhone) 40.dp else 44.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Rounded.PlayArrow,
-                                contentDescription = "Play",
-                                tint = Color.White,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                    }
-                }
-            } else {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize()
-                ) { page ->
-                    val item = items[page]
-                    Box(Modifier.fillMaxSize()) {
-                        if (item.localVideo != null) {
-                            LocalThumbnail(item.localVideo, Modifier.fillMaxSize())
-                        } else {
-                            val res = when (item.previewArtwork) {
-                                "anime" -> R.drawable.anime
-                                "cosmos" -> R.drawable.cosmos
-                                else -> R.drawable.hero
-                            }
-                            Image(
-                                painter = painterResource(res),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
                         Box(
-                            Modifier.fillMaxSize().background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Black.copy(alpha = 0.2f),
-                                        Color.Black.copy(alpha = 0.55f),
-                                        Color.Black.copy(alpha = 0.94f)
-                                    )
-                                )
-                            )
-                        )
-                        Column(
-                            Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
-                            verticalArrangement = Arrangement.Bottom
+                            modifier = Modifier
+                                .width(if (isPhone) 80.dp else 100.dp)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         ) {
-                            if (item.badge != null) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = Color(0xFF0B57D0).copy(alpha = 0.85f),
-                                    modifier = Modifier.padding(bottom = 6.dp)
-                                ) {
-                                    Text(
-                                        item.badge,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
+                            if (currentItem.localVideo != null) {
+                                LocalThumbnail(currentItem.localVideo, Modifier.fillMaxSize())
+                            } else {
+                                val res = when (currentItem.previewArtwork) {
+                                    "anime" -> R.drawable.anime
+                                    "cosmos" -> R.drawable.cosmos
+                                    else -> R.drawable.hero
                                 }
+                                Image(
+                                    painter = painterResource(res),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            if (currentItem.badge != null) {
+                                Text(
+                                    currentItem.badge,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1
+                                )
                             }
                             Text(
-                                item.title,
+                                currentItem.title,
                                 color = Color.White,
-                                fontSize = 28.sp,
+                                fontSize = if (isPhone) 15.sp else 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                            Spacer(Modifier.height(4.dp))
                             Text(
-                                item.subtitle,
-                                color = Color.White.copy(alpha = 0.78f),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
+                                currentItem.subtitle,
+                                color = Color.White.copy(alpha = 0.72f),
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
-                            Spacer(Modifier.height(14.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Button(
-                                    onClick = item.onPlay,
-                                    shape = CircleShape,
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
-                                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
-                                ) {
-                                    Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+
+                        Surface(
+                            onClick = currentItem.onPlay,
+                            shape = CircleShape,
+                            color = Color(0xFF0B57D0),
+                            modifier = Modifier.size(if (isPhone) 40.dp else 44.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Rounded.PlayArrow,
+                                    contentDescription = "Play",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        val item = items[page]
+                        Box(Modifier.fillMaxSize()) {
+                            if (item.localVideo != null) {
+                                LocalThumbnail(item.localVideo, Modifier.fillMaxSize())
+                            } else {
+                                val res = when (item.previewArtwork) {
+                                    "anime" -> R.drawable.anime
+                                    "cosmos" -> R.drawable.cosmos
+                                    else -> R.drawable.hero
                                 }
-                                Surface(
-                                    onClick = item.onPlay,
-                                    shape = CircleShape,
-                                    color = Color.White.copy(alpha = 0.18f),
-                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                                    modifier = Modifier.size(42.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(Icons.Rounded.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                Image(
+                                    painter = painterResource(res),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                            Box(
+                                Modifier.fillMaxSize().background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Black.copy(alpha = 0.2f),
+                                            Color.Black.copy(alpha = 0.55f),
+                                            Color.Black.copy(alpha = 0.94f)
+                                        )
+                                    )
+                                )
+                            )
+                            Column(
+                                Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
+                                verticalArrangement = Arrangement.Bottom
+                            ) {
+                                if (item.badge != null) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = Color(0xFF0B57D0).copy(alpha = 0.85f),
+                                        modifier = Modifier.padding(bottom = 6.dp)
+                                    ) {
+                                        Text(
+                                            item.badge,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
                                     }
                                 }
-                                Surface(
-                                    onClick = item.onInfo,
-                                    shape = CircleShape,
-                                    color = Color.White.copy(alpha = 0.18f),
-                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                                    modifier = Modifier.size(42.dp)
+                                Text(
+                                    item.title,
+                                    color = Color.White,
+                                    fontSize = 28.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    item.subtitle,
+                                    color = Color.White.copy(alpha = 0.78f),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Spacer(Modifier.height(14.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(Icons.Rounded.Info, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                    Button(
+                                        onClick = item.onPlay,
+                                        shape = CircleShape,
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
+                                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                                    ) {
+                                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    }
+                                    Surface(
+                                        onClick = item.onPlay,
+                                        shape = CircleShape,
+                                        color = Color.White.copy(alpha = 0.18f),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                                        modifier = Modifier.size(42.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Rounded.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                        }
+                                    }
+                                    Surface(
+                                        onClick = item.onInfo,
+                                        shape = CircleShape,
+                                        color = Color.White.copy(alpha = 0.18f),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                                        modifier = Modifier.size(42.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Rounded.Info, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                if (items.size > 1) {
-                    Row(
-                        Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        repeat(items.size) { idx ->
-                            val isSelected = pagerState.currentPage == idx
-                            val dotWidth by animateDpAsState(
-                                targetValue = if (isSelected) 22.dp else 5.dp,
-                                label = "dotWidth"
-                            )
-                            val dotAlpha by animateFloatAsState(
-                                targetValue = if (isSelected) 1f else 0.45f,
-                                label = "dotAlpha"
-                            )
-                            Box(
-                                Modifier
-                                    .size(width = dotWidth, height = 5.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = dotAlpha))
-                            )
+                    if (items.size > 1) {
+                        Row(
+                            Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            repeat(items.size) { idx ->
+                                val isSelected = pagerState.currentPage == idx
+                                val dotWidth by animateDpAsState(
+                                    targetValue = if (isSelected) 22.dp else 5.dp,
+                                    label = "dotWidth"
+                                )
+                                val dotAlpha by animateFloatAsState(
+                                    targetValue = if (isSelected) 1f else 0.45f,
+                                    label = "dotAlpha"
+                                )
+                                Box(
+                                    Modifier
+                                        .size(width = dotWidth, height = 5.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = dotAlpha))
+                                )
+                            }
                         }
                     }
                 }
@@ -738,7 +752,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     val listState = rememberLazyListState()
     val isHeroMinimized by remember(listState) {
         derivedStateOf {
-            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 30
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 60
         }
     }
     LaunchedEffect(listState.isScrollInProgress) {
