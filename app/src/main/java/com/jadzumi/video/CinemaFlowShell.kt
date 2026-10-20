@@ -275,7 +275,7 @@ private fun CinemaRailOfflineFooter(isCompact: Boolean) {
         Row(
             modifier = Modifier.padding(horizontal = if (isCompact) 8.dp else 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = if (isCompact) Arrangement.Center else Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
@@ -283,14 +283,6 @@ private fun CinemaRailOfflineFooter(isCompact: Boolean) {
                     .clip(CircleShape)
                     .background(Color(0xFF34D399).copy(alpha = dotAlpha))
             )
-            if (!isCompact) {
-                Text(
-                    "100% Offline Mode",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.inkSecondary
-                )
-            }
         }
     }
 }
@@ -371,8 +363,8 @@ fun CinemaFlowTopAppBar(
             // Middle/Right: Glass Search Capsule
             Surface(
                 modifier = Modifier
-                    .widthIn(min = if (isTablet) 240.dp else 160.dp, max = if (isTablet) 420.dp else 240.dp)
-                    .height(42.dp),
+                    .widthIn(min = if (isTablet) 200.dp else 140.dp, max = if (isTablet) 320.dp else 220.dp)
+                    .height(40.dp),
                 shape = CinemaCorners.Pill,
                 color = colors.glassCard,
                 border = BorderStroke(1.dp, colors.glassBorder)

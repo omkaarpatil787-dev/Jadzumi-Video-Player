@@ -156,14 +156,18 @@ fun WelcomeOnboardingCard(
 }
 
 @Composable private fun LocalPanel(content: @Composable ColumnScope.() -> Unit) {
+    val colors = LocalCinemaFlowColors.current
     Surface(
         Modifier
             .fillMaxWidth()
             .cinemaGlassCard(CinemaCorners.Lg),
         shape = CinemaCorners.Lg,
-        color = Color.Transparent
+        color = Color.Transparent,
+        contentColor = colors.inkPrimary
     ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+        CompositionLocalProvider(LocalContentColor provides colors.inkPrimary) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+        }
     }
 }
 
@@ -1119,7 +1123,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                    Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = colors.inkPrimary)
                                     if (continueWatching.size > 1) {
                                         Text(
                                             "See all >",
@@ -1173,7 +1177,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text(
                                         "TV Series (${filteredSeries.size})",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = colors.inkPrimary
                                     )
                                     if (defaultCategory == "All videos") {
                                         TextButton(onClick = { category = "All videos" }) { Text("Show all") }
@@ -1266,7 +1271,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text(
                                         if (category == "All videos") "All Indexed Videos (${videos.size})" else "$category (${videos.size})",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = colors.inkPrimary
                                     )
                                     if (category != "All videos") {
                                         TextButton(onClick = { category = "All videos" }) { Text("Show all") }

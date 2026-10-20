@@ -96,9 +96,9 @@ private val CinemaFlowDark = darkColorScheme(
     background = Color(0xFF0E1724),
     surface = Color(0xFF142032),
     surfaceVariant = Color(0xFF1A283C),
-    onSurface = Color(0xFFF0F6FF),
-    onSurfaceVariant = Color(0xFFABBDD3),
-    outlineVariant = Color(0x298CB9EB)
+    onSurface = Color(0xFFF8FAFC),
+    onSurfaceVariant = Color(0xFFCBD5E1),
+    outlineVariant = Color(0x3D94A3B8)
 )
 private val CinemaFlowAmoled = darkColorScheme(
     primary = Color(0xFF8AC3F7),
@@ -108,8 +108,8 @@ private val CinemaFlowAmoled = darkColorScheme(
     surface = Color(0xFF08080A),
     surfaceVariant = Color(0xFF16161A),
     onSurface = Color.White,
-    onSurfaceVariant = Color(0xFFB0B4BC),
-    outlineVariant = Color(0x1CFFFFFF)
+    onSurfaceVariant = Color(0xFFE2E8F0),
+    outlineVariant = Color(0x33FFFFFF)
 )
 
 private data class Destination(val name: String, val icon: ImageVector)
@@ -213,7 +213,8 @@ private val destinations = listOf(
     ) {
         CompositionLocalProvider(
             LocalGlassIntensity provides glassIntensity,
-            LocalCinemaFlowColors provides cinemaColors
+            LocalCinemaFlowColors provides cinemaColors,
+            LocalContentColor provides colors.onSurface
         ) {
             Box(Modifier.fillMaxSize()) {
                 // Dynamic Cinema Flow Ambient Aura
@@ -221,39 +222,30 @@ private val destinations = listOf(
                     enabled = ambientAura,
                     reducedMotion = reducedMotion
                 )
-                Surface(Modifier.fillMaxSize(), color = if (ambientAura) colors.background.copy(alpha = 0.55f) else colors.background) {
-                BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
-                    if (query.isNotEmpty()) {
-                        query = ""
-                    } else if (selectedId != null) {
-                        selectedId = null
-                    } else {
-                        route = "Home"
-                    }
-                }
-                BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
-                    val isTablet = maxWidth >= 720.dp
-                    val contentWidth = maxWidth
-                    val isPhone = contentWidth < 600.dp
-                    val topPad = if (contentWidth >= 720.dp) 20.dp else 14.dp
-
-                    Box(Modifier.fillMaxSize()) {
-                        Row(Modifier.fillMaxSize()) {
-                            if (isTablet) {
-                                CinemaFlowNavRail(
-                                    route = route,
-                                    onNavigate = {
-                                        route = it
-                                        selectedId = null
-                                    },
-                                    isCompact = contentWidth < 960.dp,
-                                    theme = theme,
-                                    modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp)
-                                )
+                Surface(
+                    Modifier.fillMaxSize(),
+                    color = if (ambientAura) colors.background.copy(alpha = 0.55f) else colors.background,
+                    contentColor = colors.onSurface
+                ) {
+                    CompositionLocalProvider(LocalContentColor provides colors.onSurface) {
+                        BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
+                            if (query.isNotEmpty()) {
+                                query = ""
+                            } else if (selectedId != null) {
+                                selectedId = null
+                            } else {
+                                route = "Home"
                             }
+                        }
+                        BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
+                            val isTablet = maxWidth >= 720.dp
+                            val contentWidth = maxWidth
+                            val isPhone = contentWidth < 600.dp
+                            val topPad = if (contentWidth >= 720.dp) 20.dp else 14.dp
 
-                            Column(Modifier.weight(1f).fillMaxHeight()) {
-                                CinemaFlowTopAppBar(
+                            Box(Modifier.fillMaxSize()) {
+                                Column(Modifier.fillMaxSize()) {
+                                    CinemaFlowTopAppBar(
                                     route = route,
                                     query = query,
                                     onQueryChange = { newQuery ->
@@ -470,27 +462,27 @@ private val destinations = listOf(
                                         }
                                     }
                                 }
-                            }
 
-                            // Floating Frosted Glass Bottom Navigation Bar (Phone only when rail is not active)
-                            if (selectedId == null && !isTablet) {
-                                FloatingFrostedBottomBar(
-                                    route = route,
-                                    theme = theme,
-                                    bottomBarStyle = bottomBarStyle,
-                                    glassIntensity = glassIntensity,
-                                    isMinimized = isDockMinimized,
-                                    isTablet = false,
-                                    onToggleMinimize = { isDockMinimized = !isDockMinimized },
-                                    onNavigate = {
-                                        if (isDockMinimized) isDockMinimized = false
-                                        route = it
-                                        selectedId = null
-                                    },
-                                    modifier = Modifier
-                                        .align(Alignment.BottomCenter)
-                                        .padding(bottom = 6.dp)
-                                )
+                                // Floating Frosted Glass Bottom Navigation Bar (Centered universally across phone & tablet)
+                                if (selectedId == null) {
+                                    FloatingFrostedBottomBar(
+                                        route = route,
+                                        theme = theme,
+                                        bottomBarStyle = bottomBarStyle,
+                                        glassIntensity = glassIntensity,
+                                        isMinimized = isDockMinimized,
+                                        isTablet = isTablet,
+                                        onToggleMinimize = { isDockMinimized = !isDockMinimized },
+                                        onNavigate = {
+                                            if (isDockMinimized) isDockMinimized = false
+                                            route = it
+                                            selectedId = null
+                                        },
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .padding(bottom = if (isTablet) 14.dp else 6.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -515,9 +507,9 @@ private val destinations = listOf(
                     onFinished = { showSplash = false }
                 )
             }
-            }
         }
     }
+}
 }
 
 @Composable
@@ -546,7 +538,7 @@ private fun InteractiveCinemaGreeting(
             "🎧 Studio audio: NextLib FFmpeg powers true 5.1 & 7.1 discrete surround sound.",
             "🎥 Trivia: The iconic Jurassic Park T-Rex roar was mixed from a baby elephant & alligator.",
             "🎞️ Fun fact: The iconic green falling code in The Matrix is actually sushi recipes.",
-            "🛡️ Pure privacy: 100% offline cinema vault, zero telemetry."
+            "🛡️ Pure privacy: Offline cinema vault, zero telemetry."
         )
     }
 
@@ -587,8 +579,9 @@ private fun InteractiveCinemaGreeting(
                     inProgressMovie != null -> "$baseGreeting · ${inProgressMovie.title}"
                     else -> baseGreeting
                 },
-                style = if (isPhone) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
+                fontSize = if (isPhone) 17.sp else 19.sp,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -627,20 +620,9 @@ fun GeminiGlowingJadzumiLogo(
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "geminiLogoGlow")
 
-    // Smooth continuous aura rotation (Google Gemini celestial chromatic drift)
-    val auraRotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 7000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "geminiRotation"
-    )
-
     // Breathing glow intensity pulse (alive and glooming)
     val glowPulse by infiniteTransition.animateFloat(
-        initialValue = 0.55f,
+        initialValue = 0.45f,
         targetValue = 0.95f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
@@ -649,81 +631,77 @@ fun GeminiGlowingJadzumiLogo(
         label = "geminiPulse"
     )
 
-    // Breathing scale for organic celestial bloom
-    val auraScale by infiniteTransition.animateFloat(
+    // Dynamic shimmer offset for the icon's glowing perimeter
+    val shimmerOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "geminiShimmer"
+    )
+
+    // Breathing micro-scale for the inner play glyph
+    val symbolScale by infiniteTransition.animateFloat(
         initialValue = 1.0f,
-        targetValue = 1.25f,
+        targetValue = 1.06f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "geminiScale"
+        label = "geminiSymbolScale"
     )
 
-    // Strictly Non-Clickable container
+    val cornerRadius = size * 0.28f
+
+    // Strictly Non-Clickable container — original icon itself glows without any outer floating donut ring
     Box(
-        modifier = modifier.size(size + 14.dp),
+        modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // 1. Google Gemini Celestial Aurora Halo (Cyan -> Blue -> Cosmic Violet -> Coral Magenta -> Gold -> Cyan)
-        Canvas(
+        // 1. Diffuse Ambient Backlight (soft rounded bloom radiating directly behind the squircle tile)
+        Box(
             modifier = Modifier
-                .size(size * 1.55f)
-                .scale(auraScale)
-                .rotate(auraRotation)
-                .alpha(glowPulse)
-        ) {
-            drawCircle(
-                brush = Brush.sweepGradient(
-                    colors = listOf(
-                        Color(0xFF64DCFF), // Electric Sky Cyan
-                        Color(0xFF247BFF), // Vibrant Blue
-                        Color(0xFF9B51E0), // Cosmic Violet (Gemini signature)
-                        Color(0xFFFF5376), // Radiant Coral Magenta
-                        Color(0xFFFFB300), // Subtle Gold Shimmer
-                        Color(0xFF64DCFF)  // Back to Cyan
+                .matchParentSize()
+                .scale(1.10f)
+                .clip(RoundedCornerShape(cornerRadius * 1.12f))
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF38BDF8).copy(alpha = glowPulse * 0.60f),
+                            Color(0xFF818CF8).copy(alpha = glowPulse * 0.30f),
+                            Color.Transparent
+                        )
                     )
                 )
-            )
-        }
+        )
 
-        // 2. Diffuse Ambient Blur Layer to soften the chromatic bloom
-        Canvas(
-            modifier = Modifier
-                .size(size * 1.35f)
-                .alpha(glowPulse * 0.75f)
-        ) {
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF64DCFF).copy(alpha = 0.70f),
-                        Color(0xFF9B51E0).copy(alpha = 0.40f),
-                        Color.Transparent
-                    )
-                )
-            )
-        }
-
-        // 3. Crisp Frosted Glass Tile (Non-Clickable)
+        // 2. Crisp Frosted Glass Tile with luminous breathing border (Non-Clickable)
         Surface(
             modifier = Modifier.size(size),
-            shape = RoundedCornerShape(size * 0.28f),
-            color = if (darkSurface) Color(0xFF0B192C).copy(alpha = 0.94f) else Color.White.copy(alpha = 0.94f),
+            shape = RoundedCornerShape(cornerRadius),
+            color = if (darkSurface) Color(0xFF0F1B2D) else Color(0xFFF0F6FF),
             border = BorderStroke(
-                1.dp,
-                Brush.sweepGradient(
+                1.25.dp,
+                Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF64DCFF).copy(alpha = 0.90f),
-                        Color(0xFF9B51E0).copy(alpha = 0.75f),
-                        Color(0xFFFF5376).copy(alpha = 0.65f),
-                        Color(0xFF64DCFF).copy(alpha = 0.90f)
-                    )
+                        Color(0xFF64DCFF).copy(alpha = (0.50f + 0.45f * glowPulse).coerceIn(0f, 1f)),
+                        Color(0xFF9B51E0).copy(alpha = (0.40f + 0.40f * glowPulse).coerceIn(0f, 1f)),
+                        Color(0xFF64DCFF).copy(alpha = 0.50f)
+                    ),
+                    start = Offset(shimmerOffset * 80f, 0f),
+                    end = Offset((shimmerOffset + 1f) * 80f, 80f)
                 )
             ),
-            shadowElevation = 8.dp
+            shadowElevation = 6.dp
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                JadzumiPlaySymbol(Modifier.size(size * 0.66f))
+                JadzumiPlaySymbol(
+                    Modifier
+                        .size(size * 0.66f)
+                        .scale(symbolScale)
+                )
             }
         }
     }
@@ -1083,7 +1061,7 @@ private val settingsCategories = listOf(
 
                 LazyColumn(
                     Modifier.weight(1f).fillMaxHeight(),
-                    contentPadding = PaddingValues(top = 10.dp, bottom = 32.dp),
+                    contentPadding = PaddingValues(top = 10.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
                     item {
@@ -1098,7 +1076,8 @@ private val settingsCategories = listOf(
                                 else -> "Privacy & About"
                             },
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -1106,12 +1085,12 @@ private val settingsCategories = listOf(
                         "Video" -> {
                             item {
                                 Panel {
-                                    Text("Playback & Decoding", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Playback & Decoding", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                                     Text("Configure video decoding pipeline and screen scaling.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Video Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Video Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text(DeviceHardwareInspector.getDecoderDescription(context), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Auto (Recommended) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
@@ -1119,7 +1098,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Hardware Acceleration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Hardware Acceleration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text(DeviceHardwareInspector.getHardwareAccelerationDescription(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
@@ -1127,7 +1106,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Video Scaling Mode", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Video Scaling Mode", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text(DeviceHardwareInspector.getDisplayScalingDescription(context), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Fit (Keep aspect ratio) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
@@ -1135,7 +1114,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Brightness Boost & HDR", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Brightness Boost & HDR", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Force maximum panel luminance and enable wide color gamut HDR10/HDR10+/HLG", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = playback.brightnessBoost, onCheckedChange = { playback.updateBrightnessBoost(it) })
@@ -1175,7 +1154,7 @@ private val settingsCategories = listOf(
                                         ) {
                                             Icon(Icons.Rounded.Tv, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(24.dp))
                                             Column {
-                                                Text(panelTitle, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                                Text(panelTitle, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
                                                 Text(panelDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                         }
@@ -1187,12 +1166,12 @@ private val settingsCategories = listOf(
                         "Audio" -> {
                             item {
                                 Panel {
-                                    Text("Audio Output & Surround", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Audio Output & Surround", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                                     Text("NextLib Media3 FFmpeg decoder for Dolby Atmos / 5.1 / 7.1 surround tracks.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Audio Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Audio Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Bundled FFmpeg: EAC-3, AC-3, TrueHD, DTS-HD, FLAC, AAC", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Auto (NextLib FFmpeg) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
@@ -1200,7 +1179,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Downmix to Stereo", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Downmix to Stereo", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text(DeviceHardwareInspector.getStereoDownmixDescription(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
@@ -1208,7 +1187,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Screen-Off Background Audio", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Screen-Off Background Audio", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Continue playback when turning off screen or locking device", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
@@ -1225,7 +1204,7 @@ private val settingsCategories = listOf(
                                     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
                                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                             Column(Modifier.weight(1f)) {
-                                                Text("Bluetooth Audio Delay Compensation", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Bluetooth Audio Delay Compensation", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                                 Text("Calibrate audio lip-sync delay for Bluetooth earbuds & wireless speakers", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Text("${playback.audioDelayMs} ms", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
@@ -1243,7 +1222,7 @@ private val settingsCategories = listOf(
                             }
                             item {
                                 Panel {
-                                    Text("Active Stream Format", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Active Stream Format", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                                     Spacer(Modifier.height(8.dp))
                                     val currentTrack = playback.audioTracks.firstOrNull()
                                     val audioLabel = if (currentTrack != null) {
@@ -1273,7 +1252,7 @@ private val settingsCategories = listOf(
                                 var subEdge by remember { mutableStateOf(SubtitlePreferences.getEdge(context)) }
 
                                 Panel {
-                                    Text("Subtitle Appearance", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Subtitle Appearance", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                                     Text("Customization and live rendering for SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
 
                                     // Live Subtitle Preview Card
@@ -1319,7 +1298,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(16.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Font Family", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Font Family", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.fontOptions.forEach { font ->
                                             FilterChip(
@@ -1336,7 +1315,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Text Size", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Text Size", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.sizeOptions.forEach { (sz, label) ->
                                             FilterChip(
@@ -1353,7 +1332,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Text Color", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Text Color", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.colorOptions.forEach { colorName ->
                                             val dotColor = Color(SubtitlePreferences.getColorInt(colorName))
@@ -1374,7 +1353,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Background Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Background Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.backgroundOptions.forEach { bgName ->
                                             FilterChip(
@@ -1391,7 +1370,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Edge & Shadow Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Edge & Shadow Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.edgeOptions.forEach { edgeName ->
                                             FilterChip(
@@ -1411,7 +1390,7 @@ private val settingsCategories = listOf(
                                     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
                                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                             Column(Modifier.weight(1f)) {
-                                                Text("Subtitle Sync Offset Calibration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Subtitle Sync Offset Calibration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                                 Text("Fine-tune subtitle timing synchronization for out-of-sync SRT/ASS tracks", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Text("${playback.subtitleDelayMs} ms", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
@@ -1432,7 +1411,7 @@ private val settingsCategories = listOf(
                         "Display" -> {
                             item {
                                 Panel {
-                                    Text("Appearance Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Appearance Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                                     Text("Select base lighting mode for ambient viewing.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
 
                                     val themeItems = listOf(
@@ -1448,7 +1427,7 @@ private val settingsCategories = listOf(
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                     Text("Curvature geometry applied to cards, sheets, and dialogs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(Modifier.height(10.dp))
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1476,7 +1455,7 @@ private val settingsCategories = listOf(
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Bottom Navigation Dock Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text("Bottom Navigation Dock Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                     Text("Choose between classic icons with text labels or ultra-compact icons only", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(Modifier.height(10.dp))
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1504,7 +1483,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Auto-Minimize Dock on Scroll", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Auto-Minimize Dock on Scroll", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Smoothly collapse floating navigation into a bouncy mini-pill while scrolling movies or browsing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = dockAutoMinimize, onCheckedChange = onDockAutoMinimize)
@@ -1519,7 +1498,7 @@ private val settingsCategories = listOf(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                                Text("Glassify UI Elements", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Glassify UI Elements", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                                 Text("Adjust frosted glass translucency and depth across player pills, floating docks, and sheets", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Surface(
@@ -1557,7 +1536,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Cinema Ambient Aura", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Cinema Ambient Aura", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Soft fluid celestial gradient radiance blooming softly behind frosted glass surfaces", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = ambientAura, onCheckedChange = onAmbientAura)
@@ -1566,7 +1545,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Theme Transition Blend (Fade)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Theme Transition Blend (Fade)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Smooth fade in / fade out blend when switching themes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
@@ -1574,7 +1553,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Reduced Motion", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Reduced Motion", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Disable animations for instant screen transitions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = reduced, onCheckedChange = onReduced)
@@ -1582,7 +1561,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Lively UI Animations & Transitions", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Lively UI Animations & Transitions", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Fluid slide & spring transitions when navigating between folders, tabs, and details", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = livelyAnimations, onCheckedChange = onLivelyAnimations)
@@ -1597,7 +1576,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Replay Aurora Splash Screen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Replay Aurora Splash Screen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Play the cinematic opening animation in current theme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Preview ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
@@ -1609,10 +1588,10 @@ private val settingsCategories = listOf(
                         "Gestures" -> {
                             item {
                                 Panel {
-                                    Text("Player Gestures & Seeking", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Player Gestures & Seeking", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                                     Text("Configure double-tap seeking and edge swipe controls.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Text("Double-Tap Seek Interval", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(vertical = 8.dp))
+                                    Text("Double-Tap Seek Interval", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         listOf(5, 10, 15, 30).forEach { sec ->
                                             FilterChip(
@@ -1625,7 +1604,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Swipe Up/Down Gestures", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Swipe Up/Down Gestures", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Left side controls brightness; right side controls volume with deadzone protection", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = playback.swipeGesturesEnabled, onCheckedChange = { playback.updateSwipeGestures(it) })
@@ -1633,7 +1612,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Long-Press 2x Speed Up", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Long-Press 2x Speed Up", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Press and hold player surface to temporarily speed up to 2.0x", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
@@ -1658,7 +1637,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f)) {
-                                            Text("Indexed Folders", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                            Text("Indexed Folders", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Manage media directories scanned for movies and TV shows.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         FilledTonalButton(
@@ -1743,7 +1722,7 @@ private val settingsCategories = listOf(
                                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         Text("Your movies. Your space.", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
                                         Text(
-                                            "Jadzumi Player keeps your video library, playback history, and settings strictly on your device. No telemetry, no cloud sync, 100% offline-first.",
+                                            "Jadzumi Player keeps your video library, playback history, and settings strictly on your device. No telemetry, no cloud sync, offline-first cinema vault.",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
                                         )
@@ -1770,7 +1749,7 @@ private val settingsCategories = listOf(
                                 var onlineMetadata by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("online_metadata", false)) }
 
                                 Panel {
-                                    Text("Artwork & Metadata", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Artwork & Metadata", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                                     Text(
                                         "Configure local media thumbnail generation, offline sidecar scraping (.nfo, poster.jpg, fanart.jpg) and optional online metadata.",
                                         style = MaterialTheme.typography.bodySmall,
@@ -1786,7 +1765,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Local Thumbnail Extraction", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Local Thumbnail Extraction", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text(
                                                 "Hardware-accelerated on-device poster generation from local video keyframes when no sidecar image is present.",
                                                 style = MaterialTheme.typography.bodySmall,
@@ -1811,9 +1790,9 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Scan Local Sidecar Files", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Scan Local Sidecar Files", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text(
-                                                "100% Offline — Automatically discovers poster.jpg, fanart.jpg, and Kodi/Jellyfin .nfo files in your media folders.",
+                                                "Offline Sidecars — Automatically discovers poster.jpg, fanart.jpg, and Kodi/Jellyfin .nfo files in your media folders.",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -1836,7 +1815,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Fetch Online Metadata (Opt-In)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Fetch Online Metadata (Opt-In)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                             Text(
                                                 "Disabled by default. When enabled, fetches missing high-resolution posters and plot summaries from Wikipedia & TVMaze, strictly cached locally.",
                                                 style = MaterialTheme.typography.bodySmall,
@@ -1879,22 +1858,27 @@ private val settingsCategories = listOf(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
         border = border,
-        colors = CardDefaults.cardColors(containerColor = bg)
+        colors = CardDefaults.cardColors(
+            containerColor = bg,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
     ) {
-        Column(
-            Modifier.fillMaxWidth().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
-            Text(mode, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, softWrap = false)
-            Text(
-                if (selected) "Active" else subtitle,
-                fontSize = 11.sp,
-                maxLines = 1,
-                softWrap = false,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+            Column(
+                Modifier.fillMaxWidth().padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+                Text(mode, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, softWrap = false, color = MaterialTheme.colorScheme.onSurface)
+                Text(
+                    if (selected) "Active" else subtitle,
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    softWrap = false,
+                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -1931,7 +1915,7 @@ private val settingsCategories = listOf(
                 Column(Modifier.weight(1f, fill = false).padding(end = 12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        Text("Folder Access", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("Folder Access", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                     }
                     Text(
                         "Jadzumi only scans media directories granted explicitly by you. No background disk sweeps are performed.",
@@ -1959,7 +1943,7 @@ private val settingsCategories = listOf(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                    Text("Strict Local Sandbox", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text("Strict Local Sandbox", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                     Text(
                         "Enforces on-device isolated storage. Completely prohibits background telemetry and unrequested cloud sync.",
                         style = MaterialTheme.typography.bodySmall,
@@ -2126,7 +2110,7 @@ private val settingsCategories = listOf(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text("Jadzumi", fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                        Text("Jadzumi", fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, color = MaterialTheme.colorScheme.onSurface)
                         Surface(
                             shape = RoundedCornerShape(999.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
@@ -2156,7 +2140,7 @@ private val settingsCategories = listOf(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.padding(end = 12.dp)) {
                     Text("CREATION & PRODUCT DIRECTION", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Omkar Patil", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Text("Omkar Patil", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Text("Creator · Product & Design Direction", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
                 }
                 Surface(
@@ -2313,9 +2297,12 @@ private val settingsCategories = listOf(
         Modifier.fillMaxWidth(),
         shape = CinemaCorners.Lg,
         color = colors.glassCard.copy(alpha = (0.92f - 0.35f * glassIntensity).coerceIn(0.40f, 0.95f)),
+        contentColor = colors.inkPrimary,
         border = BorderStroke(1.dp, colors.glassBorder.copy(alpha = (0.30f + 0.50f * glassIntensity).coerceIn(0.25f, 0.90f)))
     ) {
-        Column(Modifier.padding(20.dp), content = content)
+        CompositionLocalProvider(LocalContentColor provides colors.inkPrimary) {
+            Column(Modifier.padding(20.dp), content = content)
+        }
     }
 }
 
