@@ -378,38 +378,94 @@ private fun ShowHeroCard(
                             overflow = TextOverflow.Ellipsis
                         )
 
-                        // Metadata badge chips
+                        // Metadata badge chips: unified CircleShape pills
                         FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            series.year?.let {
-                                Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
-                                Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
-                            }
-                            series.mpaa?.let {
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh
-                                ) {
-                                    Text(it, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                }
-                                Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
-                            }
-                            Text("${series.seasonCount} Seasons", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
-                            Text("${series.totalEpisodes} Episodes", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("•", fontSize = 12.sp, color = MaterialTheme.colorScheme.outlineVariant)
                             Surface(
-                                shape = RoundedCornerShape(6.dp),
+                                shape = CircleShape,
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
-                                    "1080p HEVC",
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    fontSize = 10.sp,
+                                    "TV Series",
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.secondaryContainer
+                            ) {
+                                Text(
+                                    "1080p HEVC",
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+
+                            series.mpaa?.let { mpaa ->
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                ) {
+                                    Text(
+                                        mpaa,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            series.year?.let { yr ->
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                ) {
+                                    Text(
+                                        yr,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            ) {
+                                Text(
+                                    "${series.seasonCount} Seasons",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            ) {
+                                Text(
+                                    "${series.totalEpisodes} Episodes",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -438,55 +494,60 @@ private fun ShowHeroCard(
                     )
                 }
 
-                // Action Buttons
+                // Action Buttons: Symmetrical and beautifully aligned pill buttons
                 if (isTablet) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(
                             onClick = onPlayNext,
+                            modifier = Modifier.height(44.dp),
                             shape = CircleShape,
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
                             Icon(Icons.Rounded.PlayArrow, null, Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text(buttonText, fontWeight = FontWeight.Bold)
+                            Text(buttonText, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
 
                         OutlinedButton(
                             onClick = onMarkSeasonWatched,
+                            modifier = Modifier.height(44.dp),
                             shape = CircleShape,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
+                            border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
                         ) {
-                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(16.dp))
+                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(6.dp))
-                            Text("Toggle Season Watched", fontSize = 12.sp)
+                            Text("Toggle Season Watched", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 } else {
                     // Mobile Portrait Action Buttons: Full-width primary button + secondary button below
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(
                             onClick = onPlayNext,
                             modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = CircleShape,
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
                             Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(buttonText, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(buttonText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
 
                         OutlinedButton(
                             onClick = onMarkSeasonWatched,
-                            modifier = Modifier.fillMaxWidth().height(42.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                            modifier = Modifier.fillMaxWidth().height(44.dp),
+                            shape = CircleShape,
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                            border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
                         ) {
-                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(16.dp))
+                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(6.dp))
-                            Text("Toggle Season Watched", fontSize = 12.sp)
+                            Text("Toggle Season Watched", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

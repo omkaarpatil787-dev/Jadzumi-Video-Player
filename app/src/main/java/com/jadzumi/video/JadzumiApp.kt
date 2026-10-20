@@ -5,8 +5,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -120,6 +128,7 @@ private val destinations = listOf(
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
     var theme by rememberSaveable { mutableStateOf(prefs.getString("theme", "Dark") ?: "Dark") }
     var reducedMotion by rememberSaveable { mutableStateOf(prefs.getBoolean("reducedMotion", false)) }
+    var livelyAnimations by rememberSaveable { mutableStateOf(prefs.getBoolean("livelyAnimations", true)) }
     var themeBloomEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("themeBloom", true)) }
     var firstLaunchCardShown by rememberSaveable { mutableStateOf(prefs.getBoolean("pad5_welcome_done", false)) }
 
@@ -404,9 +413,41 @@ private val destinations = listOf(
                                         }
                                     }
 
-                                    Crossfade(
+                                    AnimatedContent(
                                         targetState = selectedId ?: route,
-                                        animationSpec = tween(if (reducedMotion) 0 else 220),
+                                        transitionSpec = {
+                                            if (reducedMotion || !livelyAnimations) {
+                                                fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
+                                            } else {
+                                                val mainTabs = setOf("Home", "Library", "Movies", "Videos", "TV Shows", "Folders", "Settings", "Playlists")
+                                                val isTargetDetails = targetState !in mainTabs
+                                                val isInitialDetails = initialState !in mainTabs
+
+                                                if (!isInitialDetails && isTargetDetails) {
+                                                    // Navigating into Movie / TV Details: fluid slide in from right with subtle fade
+                                                    (slideInHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) { it } +
+                                                            fadeIn(animationSpec = tween(220)))
+                                                        .togetherWith(
+                                                            slideOutHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) { -it / 4 } +
+                                                                    fadeOut(animationSpec = tween(180))
+                                                        )
+                                                } else if (isInitialDetails && !isTargetDetails) {
+                                                    // Returning from Details back to Library: reverse slide out to right
+                                                    (slideInHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) { -it / 4 } +
+                                                            fadeIn(animationSpec = tween(180)))
+                                                        .togetherWith(
+                                                            slideOutHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) { it } +
+                                                                    fadeOut(animationSpec = tween(220))
+                                                        )
+                                                } else {
+                                                    // Navigating between tabs: subtle scale + fade blend
+                                                    (fadeIn(animationSpec = tween(220)) + scaleIn(initialScale = 0.98f, animationSpec = tween(220)))
+                                                        .togetherWith(
+                                                            fadeOut(animationSpec = tween(160)) + scaleOut(targetScale = 1.01f, animationSpec = tween(160))
+                                                        )
+                                                }
+                                            }
+                                        },
                                         modifier = Modifier.weight(1f),
                                         label = "screen"
                                     ) { current ->
@@ -463,6 +504,8 @@ private val destinations = listOf(
                                                 onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
                                                 reduced = reducedMotion,
                                                 onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
+                                                livelyAnimations = livelyAnimations,
+                                                onLivelyAnimations = { livelyAnimations = it; prefs.edit { putBoolean("livelyAnimations", it) } },
                                                 cornerStyle = cornerStyle,
                                                 onCornerStyle = {
                                                     cornerStyle = it
@@ -481,6 +524,8 @@ private val destinations = listOf(
                                                 onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
                                                 reduced = reducedMotion,
                                                 onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
+                                                livelyAnimations = livelyAnimations,
+                                                onLivelyAnimations = { livelyAnimations = it; prefs.edit { putBoolean("livelyAnimations", it) } },
                                                 cornerStyle = cornerStyle,
                                                 onCornerStyle = {
                                                     cornerStyle = it
@@ -705,6 +750,8 @@ private val settingsCategories = listOf(
     onThemeBloom: (Boolean) -> Unit,
     reduced: Boolean,
     onReduced: (Boolean) -> Unit,
+    livelyAnimations: Boolean = true,
+    onLivelyAnimations: (Boolean) -> Unit = {},
     cornerStyle: String,
     onCornerStyle: (String) -> Unit,
     onReplaySplash: () -> Unit,
@@ -1215,6 +1262,14 @@ private val settingsCategories = listOf(
                                             Text("Disable animations for instant screen transitions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = reduced, onCheckedChange = onReduced)
+                                    }
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Lively UI Animations & Transitions", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Fluid slide & spring transitions when navigating between folders, tabs, and details", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = livelyAnimations, onCheckedChange = onLivelyAnimations)
                                     }
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(

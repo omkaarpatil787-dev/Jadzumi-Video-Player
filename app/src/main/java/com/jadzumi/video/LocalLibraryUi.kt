@@ -10,8 +10,15 @@ import android.text.format.Formatter
 import android.util.LruCache
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -919,16 +926,27 @@ fun StorageSummaryCard(
                             FolderSummaryCard(folder, state, active == folder, { selected = folder.uri }, { remove = folder })
                         }
                     }
-                    LazyColumn(
-                        Modifier.weight(0.62f).fillMaxHeight(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 24.dp)
-                    ) {
-                        item {
-                            Text("${videos.size} indexed videos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        }
-                        items(videos, key = { it.uri }) { video ->
-                            LocalVideoCard(video, onDelete = { videoToDelete = video }) { select(video.uri) }
+                    Box(Modifier.weight(0.62f).fillMaxHeight()) {
+                        AnimatedContent(
+                            targetState = active?.uri,
+                            transitionSpec = {
+                                (fadeIn(tween(220)) + slideInVertically(tween(220)) { it / 10 })
+                                    .togetherWith(fadeOut(tween(140)))
+                            },
+                            label = "folderVideosTwoPane"
+                        ) { _ ->
+                            LazyColumn(
+                                Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(bottom = 24.dp)
+                            ) {
+                                item {
+                                    Text("${videos.size} indexed videos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                }
+                                items(videos, key = { "${active?.uri ?: ""}_${it.uri}" }) { video ->
+                                    LocalVideoCard(video, onDelete = { videoToDelete = video }) { select(video.uri) }
+                                }
+                            }
                         }
                     }
                 }
@@ -963,7 +981,7 @@ fun StorageSummaryCard(
                     Spacer(Modifier.height(4.dp))
                     Text("${videos.size} indexed videos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
-                items(videos, key = { it.uri }) { video ->
+                items(videos, key = { "${active?.uri ?: ""}_${it.uri}" }) { video ->
                     LocalVideoCard(video, onDelete = { videoToDelete = video }) { select(video.uri) }
                 }
             }
@@ -1059,13 +1077,21 @@ fun StorageSummaryCard(
     val context = LocalContext.current
     val folderVideos = remember(state.videos, folder.uri) { state.videos.filter { it.folder == folder.uri } }
     val folderBytes = remember(folderVideos) { folderVideos.sumOf { it.bytes.coerceAtLeast(0) } }
+    val borderColor by animateColorAsState(
+        if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+        animationSpec = tween(220),
+        label = "folderBorder"
+    )
+    val containerColor by animateColorAsState(
+        if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f) else MaterialTheme.colorScheme.surface,
+        animationSpec = tween(220),
+        label = "folderContainer"
+    )
     Card(
         onClick = onSelect,
         shape = RoundedCornerShape(22.dp),
-        border = if (isActive) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f) else MaterialTheme.colorScheme.surface
-        )
+        border = BorderStroke(if (isActive) 2.dp else 1.dp, borderColor),
+        colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
         Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
