@@ -195,10 +195,11 @@ fun TvShowDetailsPage(
                         }
                     }
 
-                    // Default Audio & Subtitle detected chips
-                    Row(
+                    // Default Audio & Subtitle detected chips: Adaptive FlowRow for phone portrait & tablet
+                    FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Surface(
                             shape = CircleShape,
@@ -212,7 +213,7 @@ fun TvShowDetailsPage(
                             ) {
                                 Icon(Icons.Rounded.Audiotrack, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary)
                                 Text("Default Audio:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("Multichannel 5.1 / EAC3", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Text("Multichannel 5.1 / EAC3", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
                             }
                         }
 
@@ -228,7 +229,7 @@ fun TvShowDetailsPage(
                             ) {
                                 Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary)
                                 Text("Default Subs:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("English [Styled ASS / SRT]", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Text("English [Styled ASS / SRT]", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
                             }
                         }
                     }
@@ -351,11 +352,12 @@ private fun ShowHeroCard(
             else -> "Start Series"
         }
 
+        val glassIntensity = LocalGlassIntensity.current
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLowest,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
         ) {
             Column(
                 modifier = Modifier.padding(heroPad),
@@ -694,145 +696,155 @@ private fun EpisodeCard(
             if (isNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
         )
     ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Episode Thumbnail with badges & progress
-            Box(
-                modifier = Modifier
-                    .width(160.dp)
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val isNarrow = maxWidth < 480.dp
+            val thumbWidth = if (isNarrow) 116.dp else 156.dp
+            val cardPad = if (isNarrow) 10.dp else 14.dp
+            val gap = if (isNarrow) 10.dp else 14.dp
+
+            Row(
+                modifier = Modifier.padding(cardPad),
+                horizontalArrangement = Arrangement.spacedBy(gap),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                LocalThumbnail(video = video, modifier = Modifier.fillMaxSize())
-
-                // Timecode
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = Color.Black.copy(alpha = 0.8f),
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+                // Episode Thumbnail with badges & progress
+                Box(
+                    modifier = Modifier
+                        .width(thumbWidth)
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 ) {
-                    Text(
-                        if (video.duration > 0) timecode(video.duration / 1000) else "24:00",
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                }
+                    LocalThumbnail(video = video, modifier = Modifier.fillMaxSize())
 
-                // Watched / Up Next Badge
-                if (isWatched) {
+                    // Timecode
                     Surface(
-                        shape = CircleShape,
-                        color = Color(0xFF1E8E3E),
-                        modifier = Modifier.align(Alignment.TopStart).padding(6.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(11.dp), tint = Color.White)
-                            Text("Watched", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-                    }
-                } else if (isNext) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.align(Alignment.TopStart).padding(6.dp)
-                    ) {
-                        Text("Up Next", modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                }
-
-                // Progress Bar at bottom
-                if (progressFraction > 0f) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .fillMaxWidth(progressFraction)
-                            .height(3.dp)
-                            .background(if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
-                    )
-                }
-            }
-
-            // Episode Details
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val epNumber = info?.episode ?: 1
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color.Black.copy(alpha = 0.8f),
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp)
                     ) {
                         Text(
-                            "EP %02d".format(epNumber),
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 11.sp,
+                            if (video.duration > 0) timecode(video.duration / 1000) else "24:00",
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                    }
+
+                    // Watched / Up Next Badge
+                    if (isWatched) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color(0xFF1E8E3E),
+                            modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(Icons.Rounded.CheckCircle, null, Modifier.size(10.dp), tint = Color.White)
+                                Text("Watched", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    } else if (isNext) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
+                        ) {
+                            Text("Up Next", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+
+                    // Progress Bar at bottom
+                    if (progressFraction > 0f) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .fillMaxWidth(progressFraction)
+                                .height(3.dp)
+                                .background(if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
+                        )
+                    }
+                }
+
+                // Episode Details Column
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val epNumber = info?.episode ?: 1
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh
+                        ) {
+                            Text(
+                                "EP %02d".format(epNumber),
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Text(
+                            text = info?.episodeTitle ?: "Episode $epNumber",
+                            style = if (isNarrow) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
                     Text(
-                        text = info?.episodeTitle ?: "Episode $epNumber",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        text = video.name,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+
+                    // Adaptive specs & Status (Wraps cleanly without letter-by-letter truncation)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val sizeStr = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "HD"
+                        Text(sizeStr, fontSize = 10.sp, color = MaterialTheme.colorScheme.outline)
+                        Text("•", fontSize = 10.sp, color = MaterialTheme.colorScheme.outlineVariant)
+                        val resStr = if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else "1080p FHD"
+                        Text(resStr, fontSize = 10.sp, color = MaterialTheme.colorScheme.outline)
+                        Text("•", fontSize = 10.sp, color = MaterialTheme.colorScheme.outlineVariant)
+                        Text(
+                            if (isWatched) "Completed" else if (inProgress) "Resume ${timecode(savedPos / 1000)}" else "Unwatched",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            color = if (isWatched) Color(0xFF1E8E3E) else if (inProgress) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+                    }
                 }
 
-                Text(
-                    text = video.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                // Tech specs & Status
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // Quick Play Icon
+                IconButton(
+                    onClick = onClick,
+                    modifier = Modifier.size(if (isNarrow) 38.dp else 44.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
                 ) {
-                    val sizeStr = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "HD"
-                    Text(sizeStr, fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
-                    Text("•", fontSize = 11.sp, color = MaterialTheme.colorScheme.outlineVariant)
-                    val resStr = if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else "1080p FHD"
-                    Text(resStr, fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
-                    Text("•", fontSize = 11.sp, color = MaterialTheme.colorScheme.outlineVariant)
-                    Text(
-                        if (isWatched) "Completed" else if (inProgress) "Resume ${timecode(savedPos / 1000)}" else "Unwatched",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (isWatched) Color(0xFF1E8E3E) else if (inProgress) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    Icon(
+                        if (isWatched) Icons.Rounded.Replay else Icons.Rounded.PlayArrow,
+                        contentDescription = "Play",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(if (isNarrow) 20.dp else 24.dp)
                     )
                 }
-            }
-
-            // Quick Play Icon
-            IconButton(
-                onClick = onClick,
-                modifier = Modifier.size(44.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
-            ) {
-                Icon(
-                    if (isWatched) Icons.Rounded.Replay else Icons.Rounded.PlayArrow,
-                    contentDescription = "Play",
-                    tint = MaterialTheme.colorScheme.primary
-                )
             }
         }
     }
@@ -840,11 +852,12 @@ private fun EpisodeCard(
 
 @Composable
 internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
+    val glassIntensity = LocalGlassIntensity.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
     ) {
         Column(
             modifier = Modifier.padding(18.dp),

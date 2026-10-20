@@ -27,7 +27,12 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 /**
- * Authentic Jadzumi Play Symbol with app icon's signature cyan, sapphire, and royal blue gradient
+ * Authentic Jadzumi Play Symbol from jadzumi_player_splash_final.html
+ * ViewBox 120x120:
+ * 1. Blue Wing: M41 18Q41 12 49 16L103 48Q111 53 111 62V93Q111 102 102 98L41 64Z
+ *    Gradient: #64DCFF (0%) -> #188AF5 (55%) -> #1659D9 (100%)
+ * 2. Front White Play: M20 40Q20 30 30 36L76 62Q86 68 76 75L30 104Q20 110 20 99Z
+ *    Gradient: #FFFFFF (0%) -> #D8EFFF (100%)
  */
 @Composable
 fun JadzumiPlaySymbol(modifier: Modifier = Modifier) {
@@ -37,7 +42,7 @@ fun JadzumiPlaySymbol(modifier: Modifier = Modifier) {
         val sx = w / 120f
         val sy = h / 120f
 
-        // 1. Blue Wing Path (App Icon signature color gradient: Cyan -> Azure -> Royal Blue)
+        // 1. Blue Wing Path
         val blueWing = Path().apply {
             moveTo(41f * sx, 18f * sy)
             quadraticTo(41f * sx, 12f * sy, 49f * sx, 16f * sy)
@@ -51,7 +56,11 @@ fun JadzumiPlaySymbol(modifier: Modifier = Modifier) {
         drawPath(
             path = blueWing,
             brush = Brush.linearGradient(
-                colors = listOf(Color(0xFF64DCFF), Color(0xFF188AF5), Color(0xFF1659D9)),
+                colorStops = arrayOf(
+                    0.0f to Color(0xFF64DCFF),
+                    0.55f to Color(0xFF188AF5),
+                    1.0f to Color(0xFF1659D9)
+                ),
                 start = Offset(0f, 0f),
                 end = Offset(w, h)
             )
@@ -70,7 +79,10 @@ fun JadzumiPlaySymbol(modifier: Modifier = Modifier) {
         drawPath(
             path = whitePlay,
             brush = Brush.linearGradient(
-                colors = listOf(Color.White, Color(0xFFE2F3FF)),
+                colorStops = arrayOf(
+                    0.0f to Color.White,
+                    1.0f to Color(0xFFD8EFFF)
+                ),
                 start = Offset(0f, 0f),
                 end = Offset(w, h)
             )
@@ -79,14 +91,16 @@ fun JadzumiPlaySymbol(modifier: Modifier = Modifier) {
 }
 
 /**
- * Adaptive Glowing Aurora Background: Seamlessly tailored to Light, Dark, and AMOLED palettes
- * using the app icon's iconic colors (#64DCFF, #188AF5, #1659D9) without harsh circular artifacts.
+ * Ambient background matching jadzumi_player_splash_final.html:
+ * Features ambient radial gradients, 3 floating blobs, and specular sheen.
+ * Adaptive to Light, Dark, and AMOLED themes.
  */
 @Composable
 private fun AuroraAmbientBackground(
     theme: String,
-    anim1: Float,
-    anim2: Float,
+    float1: Float,
+    float2: Float,
+    float3: Float,
     modifier: Modifier = Modifier
 ) {
     val isAmoled = theme == "AMOLED"
@@ -99,115 +113,176 @@ private fun AuroraAmbientBackground(
 
         when {
             isAmoled -> {
-                // Pure Pitch Black for OLED energy conservation and true zero black levels
+                // AMOLED: Pure True Pitch Black for OLED display power efficiency
                 drawRect(Color.Black)
 
-                // Ultra-soft, gentle specular aurora accent matching app icon colors
-                val shiftX = w * (0.45f + 0.10f * anim1)
-                val shiftY = h * (0.42f + 0.08f * anim2)
+                // Soft subtle accent glow matching app icon without destroying black levels
+                val b1X = w * (0.35f + 0.15f * float1)
+                val b1Y = h * (0.35f + 0.10f * float2)
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF188AF5).copy(alpha = 0.15f),
+                            Color(0xFF188AF5).copy(alpha = 0.18f),
                             Color(0xFF1659D9).copy(alpha = 0.08f),
-                            Color(0xFF64DCFF).copy(alpha = 0.03f),
                             Color.Transparent
                         ),
-                        center = Offset(shiftX, shiftY),
-                        radius = w * 0.75f
+                        center = Offset(b1X, b1Y),
+                        radius = w * 0.70f
                     )
                 )
             }
 
             isDark -> {
-                // Premium deep obsidian navy base
+                // Dark theme base: #091628
+                drawRect(Color(0xFF091628))
+
+                // Dark ambient gradient
                 drawRect(
                     brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFF090E1A), Color(0xFF0C1424), Color(0xFF0A0F1D)),
+                        colors = listOf(Color(0xFF09101D), Color(0xFF0B2445), Color(0xFF171E40)),
                         start = Offset(0f, 0f),
                         end = Offset(w, h)
                     )
                 )
 
-                // Flowing, diffused Aurora waves (blending icon's cyan, azure, and royal blues seamlessly)
-                val a1X = w * (0.25f + 0.20f * anim1)
-                val a1Y = h * (0.20f + 0.15f * anim2)
+                // Radial ellipse 1 at 30% 28%
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF188AF5).copy(alpha = 0.22f),
-                            Color(0xFF1659D9).copy(alpha = 0.12f),
-                            Color.Transparent
-                        ),
-                        center = Offset(a1X, a1Y),
-                        radius = w * 0.85f
+                        colors = listOf(Color(0xFF172E53).copy(alpha = 0.85f), Color.Transparent),
+                        center = Offset(w * 0.30f, h * 0.28f),
+                        radius = w * 0.65f
                     )
                 )
 
-                val a2X = w * (0.75f - 0.20f * anim2)
-                val a2Y = h * (0.65f - 0.15f * anim1)
+                // Radial ellipse 2 at 74% 64%
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF64DCFF).copy(alpha = 0.16f),
-                            Color(0xFF188AF5).copy(alpha = 0.08f),
-                            Color.Transparent
-                        ),
-                        center = Offset(a2X, a2Y),
-                        radius = w * 0.90f
+                        colors = listOf(Color(0xFF154A8B).copy(alpha = 0.70f), Color.Transparent),
+                        center = Offset(w * 0.74f, h * 0.64f),
+                        radius = w * 0.70f
                     )
                 )
 
-                // Diagonal specular sheen
+                // Floating Blobs (opacity .28)
+                val b1X = w * (-0.10f + 0.25f * float1)
+                val b1Y = h * (-0.05f + 0.12f * float2)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFF80C6FF).copy(alpha = 0.28f), Color.Transparent),
+                        center = Offset(b1X, b1Y),
+                        radius = w * 0.55f
+                    )
+                )
+
+                val b2X = w * (1.10f - 0.20f * float2)
+                val b2Y = h * (0.40f - 0.15f * float3)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFF8CAEFF).copy(alpha = 0.28f), Color.Transparent),
+                        center = Offset(b2X, b2Y),
+                        radius = w * 0.55f
+                    )
+                )
+
+                val b3X = w * (-0.05f + 0.18f * float3)
+                val b3Y = h * (0.95f - 0.15f * float1)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFFC2F1FF).copy(alpha = 0.28f), Color.Transparent),
+                        center = Offset(b3X, b3Y),
+                        radius = w * 0.50f
+                    )
+                )
+
+                // Sheen: linear-gradient(128deg, #ffffff0a, transparent 65%)
                 drawRect(
                     brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.03f),
-                            Color.Transparent,
-                            Color(0xFF64DCFF).copy(alpha = 0.02f),
-                            Color.Transparent
-                        ),
+                        colors = listOf(Color.White.copy(alpha = 0.04f), Color.Transparent),
                         start = Offset(0f, 0f),
-                        end = Offset(w, h)
+                        end = Offset(w * 0.65f, h * 0.65f)
                     )
                 )
             }
 
             else -> {
-                // Luminous, pristine Light Aurora
+                // Light theme base: #eaf4ff
+                drawRect(Color(0xFFEAF4FF))
+
+                // Ambient linear gradient: #eff9ff -> #cde6ff 52% -> #e9e5ff
                 drawRect(
                     brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFFF5FAFF), Color(0xFFEAF4FF), Color(0xFFF2F0FF)),
+                        colorStops = arrayOf(
+                            0.0f to Color(0xFFEFF9FF),
+                            0.52f to Color(0xFFCDE6FF),
+                            1.0f to Color(0xFFE9E5FF)
+                        ),
                         start = Offset(0f, 0f),
                         end = Offset(w, h)
                     )
                 )
 
-                val a1X = w * (0.25f + 0.18f * anim1)
-                val a1Y = h * (0.22f + 0.12f * anim2)
+                // Ellipse at 30% 28%: #fff
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF64DCFF).copy(alpha = 0.25f),
-                            Color(0xFF188AF5).copy(alpha = 0.12f),
-                            Color.Transparent
-                        ),
-                        center = Offset(a1X, a1Y),
+                        colors = listOf(Color.White.copy(alpha = 0.90f), Color.Transparent),
+                        center = Offset(w * 0.30f, h * 0.28f),
+                        radius = w * 0.65f
+                    )
+                )
+
+                // Ellipse at 74% 64%: #acd9ff
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFFACD9FF).copy(alpha = 0.80f), Color.Transparent),
+                        center = Offset(w * 0.74f, h * 0.64f),
                         radius = w * 0.70f
                     )
                 )
 
-                val a2X = w * (0.78f - 0.18f * anim2)
-                val a2Y = h * (0.62f - 0.14f * anim1)
+                // Blob 1: #80c6ff (opacity .55)
+                val b1X = w * (-0.10f + 0.25f * float1)
+                val b1Y = h * (-0.05f + 0.14f * float2)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFFBCE5FF).copy(alpha = 0.40f),
-                            Color(0xFFD6C8FF).copy(alpha = 0.20f),
-                            Color.Transparent
+                        colors = listOf(Color(0xFF80C6FF).copy(alpha = 0.55f), Color.Transparent),
+                        center = Offset(b1X, b1Y),
+                        radius = w * 0.58f
+                    )
+                )
+
+                // Blob 2: #8caeff (opacity .55)
+                val b2X = w * (1.10f - 0.20f * float2)
+                val b2Y = h * (0.42f - 0.16f * float3)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFF8CAEFF).copy(alpha = 0.55f), Color.Transparent),
+                        center = Offset(b2X, b2Y),
+                        radius = w * 0.58f
+                    )
+                )
+
+                // Blob 3: #c2f1ff (opacity .55)
+                val b3X = w * (-0.05f + 0.18f * float3)
+                val b3Y = h * (0.95f - 0.15f * float1)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFFC2F1FF).copy(alpha = 0.55f), Color.Transparent),
+                        center = Offset(b3X, b3Y),
+                        radius = w * 0.52f
+                    )
+                )
+
+                // Sheen: linear-gradient(128deg, #ffffff8a, transparent 35%, #ffffff3a 65%, transparent)
+                drawRect(
+                    brush = Brush.linearGradient(
+                        colorStops = arrayOf(
+                            0.0f to Color.White.copy(alpha = 0.54f),
+                            0.35f to Color.Transparent,
+                            0.65f to Color.White.copy(alpha = 0.22f),
+                            1.0f to Color.Transparent
                         ),
-                        center = Offset(a2X, a2Y),
-                        radius = w * 0.75f
+                        start = Offset(0f, 0f),
+                        end = Offset(w, h)
                     )
                 )
             }
@@ -216,7 +291,13 @@ private fun AuroraAmbientBackground(
 }
 
 /**
- * Full Aurora Splash Screen adaptive to Light, Dark, and AMOLED themes
+ * Final Jadzumi Player Splash Screen
+ * Pixel-perfect adaptation of jadzumi_player_splash_final.html:
+ * - Adaptive layout for small phones, large phones, landscape, and tablets
+ * - Compatible with Light, Dark, and AMOLED themes
+ * - Glass tile with spec-accurate gradient, border, shadows, breathe aura, and levitation
+ * - JADZUMI PLAYER letter-spaced typography
+ * - Dynamic loading track with "Preparing your cinema…" -> "Loading your library…"
  */
 @Composable
 fun JadzumiSplashScreen(
@@ -227,88 +308,112 @@ fun JadzumiSplashScreen(
     val isLight = theme == "Light"
     val isDark = !isAmoled && !isLight
 
+    // Spec colors from CSS
     val inkColor = when {
-        isLight -> Color(0xFF0F1E36)
-        else -> Color(0xFFF0F6FF)
+        isLight -> Color(0xFF16346B)
+        else -> Color(0xFFE9F2FF)
     }
     val mutedColor = when {
-        isLight -> Color(0xFF5A718F)
-        isAmoled -> Color(0xFF88A6C8)
+        isLight -> Color(0xFF6682A9)
         else -> Color(0xFF9CB9D9)
     }
 
-    // Ambient aurora motion
-    val infiniteTransition = rememberInfiniteTransition(label = "auroraMotion")
-    val anim1 by infiniteTransition.animateFloat(
+    // Infinite transitions for atmospheric animations
+    val infiniteTransition = rememberInfiniteTransition(label = "splashAtmosphere")
+
+    // Ambient floating blob movements
+    val float1 by infiniteTransition.animateFloat(
         initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(7500, easing = LinearEasing), RepeatMode.Reverse),
-        label = "anim1"
+        animationSpec = infiniteRepeatable(tween(10000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "float1"
     )
-    val anim2 by infiniteTransition.animateFloat(
+    val float2 by infiniteTransition.animateFloat(
         initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(9500, easing = LinearEasing), RepeatMode.Reverse),
-        label = "anim2"
+        animationSpec = infiniteRepeatable(tween(12000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "float2"
     )
+    val float3 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(13000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "float3"
+    )
+
+    // Logo levitate animation: translateY(-6px)
     val levitateY by infiniteTransition.animateFloat(
-        initialValue = 0f, targetValue = -5f,
-        animationSpec = infiniteRepeatable(tween(2600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        initialValue = 0f, targetValue = -6f,
+        animationSpec = infiniteRepeatable(tween(2500, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "levitate"
     )
-    val glowPulse by infiniteTransition.animateFloat(
-        initialValue = 0.40f, targetValue = 0.70f,
-        animationSpec = infiniteRepeatable(tween(2200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "glowPulse"
+
+    // Breathe glow pulse
+    val breatheGlow by infiniteTransition.animateFloat(
+        initialValue = 0.35f, targetValue = 0.55f,
+        animationSpec = infiniteRepeatable(tween(2000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "breathe"
     )
 
-    // Progress and Entrance/Exit Animators
-    val progress = remember { Animatable(0f) }
+    // Entrance and Exit Animators
     val entryAlpha = remember { Animatable(0f) }
-    val entryScale = remember { Animatable(0.85f) }
+    val entryScale = remember { Animatable(0.76f) }
     val exitAlpha = remember { Animatable(1f) }
     val exitScale = remember { Animatable(1f) }
+    val progress = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        entryAlpha.animateTo(1f, tween(650, easing = FastOutSlowInEasing))
+        entryAlpha.animateTo(1f, tween(1000, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)))
     }
     LaunchedEffect(Unit) {
-        entryScale.animateTo(1f, tween(800, easing = FastOutSlowInEasing))
+        entryScale.animateTo(1f, tween(1000, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)))
+    }
+
+    LaunchedEffect(Unit) {
+        // Simulated loading progress across ~2.4s matching HTML tick
+        progress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = 2400, easing = FastOutSlowInEasing)
+        )
+        delay(250)
+        // Exit transition: zoom to 1.09x and fade to 0
+        exitScale.animateTo(1.09f, tween(600, easing = FastOutSlowInEasing))
     }
 
     LaunchedEffect(Unit) {
         progress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 2100, easing = FastOutSlowInEasing)
+            animationSpec = tween(durationMillis = 2400, easing = FastOutSlowInEasing)
         )
-        delay(200)
-        exitScale.animateTo(1.05f, tween(450, easing = FastOutSlowInEasing))
-    }
-    LaunchedEffect(Unit) {
-        progress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 2100, easing = FastOutSlowInEasing)
-        )
-        delay(200)
-        exitAlpha.animateTo(0f, tween(400, easing = FastOutSlowInEasing))
+        delay(250)
+        exitAlpha.animateTo(0f, tween(550, easing = FastOutSlowInEasing))
         onFinished()
     }
 
     BackHandler { }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .alpha(exitAlpha.value)
             .scale(exitScale.value)
     ) {
-        // 1. Ambient Animated Background
+        val screenHeight = maxHeight
+        val isCompact = screenHeight < 680.dp
+
+        // Adaptive sizes per HTML media queries:
+        // @media(max-height: 680px) { .logo-glass { width: 140px; height: 140px; border-radius: 38px } .logo { width: 96px } }
+        val glassSize = if (isCompact) 140.dp else 172.dp
+        val glassRadius = if (isCompact) 38.dp else 46.dp
+        val logoSize = if (isCompact) 96.dp else 116.dp
+
+        // 1. Ambient Background Layer
         AuroraAmbientBackground(
             theme = theme,
-            anim1 = anim1,
-            anim2 = anim2,
+            float1 = float1,
+            float2 = float2,
+            float3 = float3,
             modifier = Modifier.fillMaxSize()
         )
 
-        // 2. Center Content: Logo + Brand + Loading Track
+        // 2. Main Splash Content Container
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -316,7 +421,7 @@ fun JadzumiSplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Glass Logo Tile with Soft Multi-stop Icon Glow
+            // Glass Logo Tile with Ambient Breathing Halo
             Box(
                 modifier = Modifier
                     .offset(y = levitateY.dp)
@@ -324,117 +429,121 @@ fun JadzumiSplashScreen(
                     .scale(entryScale.value),
                 contentAlignment = Alignment.Center
             ) {
-                // Wide, gentle diffuse aura (matching app icon colors with zero harsh circular borders)
-                Canvas(Modifier.size(280.dp)) {
+                // Breathing radial glow: radial-gradient(circle, #6ab7ff50, transparent 70%)
+                Canvas(Modifier.size(glassSize + 56.dp)) {
                     val w = size.width
                     val h = size.height
-                    val auraColors = when {
-                        isLight -> listOf(
-                            Color(0xFF64DCFF).copy(alpha = 0.28f * glowPulse),
-                            Color(0xFF188AF5).copy(alpha = 0.16f * glowPulse),
-                            Color(0xFF1659D9).copy(alpha = 0.05f * glowPulse),
-                            Color.Transparent
-                        )
-                        isAmoled -> listOf(
-                            Color(0xFF188AF5).copy(alpha = 0.20f * glowPulse),
-                            Color(0xFF64DCFF).copy(alpha = 0.10f * glowPulse),
-                            Color.Transparent
-                        )
-                        else -> listOf(
-                            Color(0xFF64DCFF).copy(alpha = 0.22f * glowPulse),
-                            Color(0xFF188AF5).copy(alpha = 0.16f * glowPulse),
-                            Color(0xFF1659D9).copy(alpha = 0.06f * glowPulse),
-                            Color.Transparent
-                        )
-                    }
                     drawCircle(
                         brush = Brush.radialGradient(
-                            colors = auraColors,
+                            colors = listOf(
+                                Color(0xFF6AB7FF).copy(alpha = breatheGlow),
+                                Color(0xFF188AF5).copy(alpha = breatheGlow * 0.5f),
+                                Color.Transparent
+                            ),
                             center = Offset(w * 0.5f, h * 0.5f),
-                            radius = w * 0.50f
+                            radius = w * 0.48f
                         )
                     )
                 }
 
                 // Frosted Glass Rounded Container
+                // HTML:
+                // Light: linear-gradient(145deg,#ffffffa8,#ffffff30 42%,#6db7ff36); border: 1px solid #ffffffcf
+                // Dark: linear-gradient(145deg,#a4d6ff2b,#ffffff09); border-color: #ffffff35
+                // Amoled: linear-gradient(145deg,#2d69a34d,#071c34a0)
                 Surface(
                     modifier = Modifier
-                        .size(164.dp)
+                        .size(glassSize)
                         .shadow(
-                            elevation = if (isLight) 12.dp else 20.dp,
-                            shape = RoundedCornerShape(44.dp),
-                            spotColor = if (isLight) Color(0xFF64DCFF).copy(alpha = 0.30f) else Color(0xFF188AF5).copy(alpha = 0.35f)
+                            elevation = if (isLight) 14.dp else 22.dp,
+                            shape = RoundedCornerShape(glassRadius),
+                            spotColor = when {
+                                isLight -> Color(0x443379C0)
+                                isAmoled -> Color(0xFF000000)
+                                else -> Color(0x80000000)
+                            }
                         ),
-                    shape = RoundedCornerShape(44.dp),
-                    color = when {
-                        isAmoled -> Color(0xFF061426).copy(alpha = 0.65f)
-                        isLight -> Color.White.copy(alpha = 0.75f)
-                        else -> Color(0xFF101B2E).copy(alpha = 0.55f)
-                    },
+                    shape = RoundedCornerShape(glassRadius),
+                    color = Color.Transparent,
                     border = BorderStroke(
                         width = 1.dp,
                         color = when {
-                            isLight -> Color.White.copy(alpha = 0.90f)
-                            isAmoled -> Color(0xFF188AF5).copy(alpha = 0.35f)
-                            else -> Color.White.copy(alpha = 0.22f)
+                            isLight -> Color(0xCFFFFFFF)
+                            isAmoled -> Color(0x3564DCFF)
+                            else -> Color(0x35FFFFFF)
                         }
                     )
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                when {
+                                    isAmoled -> Brush.linearGradient(
+                                        colors = listOf(Color(0x4D2D69A3), Color(0xA0071C34)),
+                                        start = Offset(0f, 0f),
+                                        end = Offset(glassSize.value, glassSize.value)
+                                    )
+                                    isDark -> Brush.linearGradient(
+                                        colors = listOf(Color(0x2BA4D6FF), Color(0x09FFFFFF)),
+                                        start = Offset(0f, 0f),
+                                        end = Offset(glassSize.value, glassSize.value)
+                                    )
+                                    else -> Brush.linearGradient(
+                                        colorStops = arrayOf(
+                                            0.0f to Color(0xA8FFFFFF),
+                                            0.42f to Color(0x30FFFFFF),
+                                            1.0f to Color(0x366DB7FF)
+                                        ),
+                                        start = Offset(0f, 0f),
+                                        end = Offset(glassSize.value, glassSize.value)
+                                    )
+                                }
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
-                        JadzumiPlaySymbol(modifier = Modifier.size(110.dp))
+                        JadzumiPlaySymbol(modifier = Modifier.size(logoSize))
                     }
                 }
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(if (isCompact) 24.dp else 33.dp))
 
-            // Brand Typography: JADZUMI PLAYER
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+            // Spec Brand Typography: <h1>JADZUMI PLAYER</h1>
+            Text(
+                text = "JADZUMI PLAYER",
+                color = inkColor,
+                fontSize = 19.sp,
+                fontWeight = FontWeight(650),
+                letterSpacing = 0.29.em,
                 modifier = Modifier.alpha(entryAlpha.value)
-            ) {
-                Text(
-                    text = "JADZUMI PLAYER",
-                    color = inkColor,
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.26.em
-                )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "Cinema & Offline Video Player",
-                    color = mutedColor,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.05.em
-                )
-            }
+            )
 
-            Spacer(Modifier.height(44.dp))
+            Spacer(Modifier.height(if (isCompact) 36.dp else 52.dp))
 
-            // Loading Track & Dynamic Status Text
+            // Dynamic Loading Track & Status Text
             val currentProgress = progress.value
-            val statusText = if (currentProgress < 0.45f) "Preparing cinema engine…" else "Loading media library…"
+            val statusText = if (currentProgress < 0.40f) "Preparing your cinema…" else "Loading your library…"
 
             Column(
                 modifier = Modifier
-                    .widthIn(max = 260.dp)
-                    .fillMaxWidth(0.68f)
+                    .widthIn(max = 250.dp)
+                    .fillMaxWidth(0.70f)
                     .alpha(entryAlpha.value),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Smooth pill progress track
+                // 3px Progress Track with gradient fill
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(3.5.dp)
+                        .height(3.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(
-                            if (isLight) Color(0xFF188AF5).copy(alpha = 0.15f)
-                            else Color(0xFF64DCFF).copy(alpha = 0.18f)
+                            when {
+                                isLight -> Color(0x466598C3)
+                                isAmoled -> Color(0x2564DCFF)
+                                else -> Color(0x25FFFFFF)
+                            }
                         )
                 ) {
                     Box(
@@ -444,19 +553,19 @@ fun JadzumiSplashScreen(
                             .clip(RoundedCornerShape(10.dp))
                             .background(
                                 Brush.horizontalGradient(
-                                    listOf(Color(0xFF188AF5), Color(0xFF64DCFF))
+                                    listOf(Color(0xFF1687F7), Color(0xFF71D8FF))
                                 )
                             )
                     )
                 }
 
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(15.dp))
 
                 Text(
                     text = statusText,
                     color = mutedColor,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Normal
                 )
             }
         }

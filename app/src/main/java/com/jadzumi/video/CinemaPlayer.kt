@@ -76,17 +76,20 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
-@Composable fun CinemaPlayer(playback: PlaybackController, reducedMotion: Boolean) {
+@Composable fun CinemaPlayer(
+    playback: PlaybackController,
+    reducedMotion: Boolean,
+    glassIntensity: Float = 0.75f,
+    theme: String = "Dark"
+) {
     val video = playback.video ?: return
     val activity = LocalActivity.current as? MainActivity ?: return
-    val appearancePrefs = remember { activity.getSharedPreferences("appearance", Context.MODE_PRIVATE) }
-    val glassIntensity = remember { appearancePrefs.getFloat("glassIntensity", 0.75f) }
     val isOled = remember { DeviceHardwareInspector.isOledOrAmoledDisplay(activity) }
-    val dynamicFrostedCircleBg = remember(glassIntensity) {
-        Color.White.copy(alpha = (0.08f + 0.12f * glassIntensity).coerceIn(0.06f, 0.35f))
+    val dynamicFrostedCircleBg = remember(glassIntensity, isOled, theme) {
+        GlassTheme.playerFrostedBg(theme, isOled, glassIntensity)
     }
-    val dynamicFrostedCircleRim = remember(glassIntensity) {
-        Color.White.copy(alpha = (0.15f + 0.25f * glassIntensity).coerceIn(0.12f, 0.55f))
+    val dynamicFrostedCircleRim = remember(glassIntensity, isOled, theme) {
+        GlassTheme.playerFrostedRim(theme, isOled, glassIntensity)
     }
     val previousBrightness = remember(activity) { activity.window.attributes.screenBrightness }
     val effectiveDuration = playback.duration.takeIf { it > 0 } ?: video.duration
@@ -439,7 +442,9 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 label = "Back ${playback.seekIncrementSeconds} seconds",
                                 onClick = { playback.skip(-seekDeltaMs); interaction++ },
                                 enabled = playback.seekable,
-                                size = 54.dp
+                                size = 54.dp,
+                                bgColor = dynamicFrostedCircleBg,
+                                rimColor = dynamicFrostedCircleRim
                             ) {
                                 Icon(Icons.Rounded.Replay10, null, Modifier.size(26.dp), tint = Color.White)
                             }
@@ -447,7 +452,9 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             FrostedCircleButton(
                                 label = if (playback.playRequested) "Pause" else "Play",
                                 onClick = { playback.toggle(); interaction++ },
-                                size = 82.dp
+                                size = 82.dp,
+                                bgColor = dynamicFrostedCircleBg,
+                                rimColor = dynamicFrostedCircleRim
                             ) {
                                 PlayPauseMorph(playback.playRequested, reducedMotion, Modifier.size(36.dp))
                             }
@@ -456,7 +463,9 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 label = "Forward ${playback.seekIncrementSeconds} seconds",
                                 onClick = { playback.skip(seekDeltaMs); interaction++ },
                                 enabled = playback.seekable,
-                                size = 54.dp
+                                size = 54.dp,
+                                bgColor = dynamicFrostedCircleBg,
+                                rimColor = dynamicFrostedCircleRim
                             ) {
                                 Icon(Icons.Rounded.Forward10, null, Modifier.size(26.dp), tint = Color.White)
                             }
@@ -541,8 +550,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                     // Row 1: Glassy Time Capsule Pill (Centered & adaptively padded)
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
-                                        color = FrostedCircleBg,
-                                        border = BorderStroke(1.dp, FrostedCircleRim),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim),
                                         modifier = Modifier.align(Alignment.CenterHorizontally)
                                     ) {
                                         Row(
@@ -583,8 +592,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                     // Row 2: Glassy Actions Dock (Centered & aligned with time pill)
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
-                                        color = FrostedCircleBg,
-                                        border = BorderStroke(1.dp, FrostedCircleRim),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim),
                                         modifier = Modifier.align(Alignment.CenterHorizontally)
                                     ) {
                                         Row(
@@ -634,8 +643,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                     // Bottom-Left: Glassy Time Capsule Pill
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
-                                        color = FrostedCircleBg,
-                                        border = BorderStroke(1.dp, FrostedCircleRim)
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
                                     ) {
                                         Row(
                                             Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
@@ -675,8 +684,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                     // Bottom-Right: Glassy Actions Dock
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
-                                        color = FrostedCircleBg,
-                                        border = BorderStroke(1.dp, FrostedCircleRim)
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
                                     ) {
                                         Row(
                                             Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
@@ -1283,6 +1292,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     size: Dp = 48.dp,
+    bgColor: Color = FrostedCircleBg,
+    rimColor: Color = FrostedCircleRim,
     icon: @Composable () -> Unit
 ) {
     Surface(
@@ -1290,8 +1301,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         enabled = enabled,
         modifier = modifier.size(size).semantics { contentDescription = label },
         shape = CircleShape,
-        color = if (enabled) FrostedCircleBg else FrostedCircleBg.copy(alpha = 0.06f),
-        border = BorderStroke(1.dp, if (enabled) FrostedCircleRim else FrostedCircleRim.copy(alpha = 0.10f))
+        color = if (enabled) bgColor else bgColor.copy(alpha = 0.06f),
+        border = BorderStroke(1.dp, if (enabled) rimColor else rimColor.copy(alpha = 0.10f))
     ) {
         Box(contentAlignment = Alignment.Center) {
             icon()

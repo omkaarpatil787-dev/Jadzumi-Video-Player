@@ -148,11 +148,12 @@ fun MovieDetailsPage(
 
             // 2. Movie Hero Banner Card
             item {
+                val glassIntensity = LocalGlassIntensity.current
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f))),
                     shadowElevation = 2.dp
                 ) {
                     val heroPad = if (isTablet) 22.dp else 16.dp
@@ -502,11 +503,12 @@ fun MovieDetailsPage(
 
 @Composable
 private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, context: Context) {
+    val glassIntensity = LocalGlassIntensity.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -534,11 +536,12 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
 
 @Composable
 private fun MovieAudioSubtitleCard(video: LocalVideo) {
+    val glassIntensity = LocalGlassIntensity.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),

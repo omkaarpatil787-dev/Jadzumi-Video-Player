@@ -27,6 +27,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -196,7 +197,8 @@ private val destinations = listOf(
             large = RoundedCornerShape((cornerRadiusDp + 4.dp).coerceAtLeast(0.dp))
         )
     ) {
-        Box(Modifier.fillMaxSize()) {
+        CompositionLocalProvider(LocalGlassIntensity provides glassIntensity) {
+            Box(Modifier.fillMaxSize()) {
             Surface(Modifier.fillMaxSize(), color = colors.background) {
                 BackHandler(selectedId != null || (route != "Home" && route != "Library")) {
                     if (selectedId != null) selectedId = null else route = "Home"
@@ -207,7 +209,7 @@ private val destinations = listOf(
                         if (showRail) {
                             AppRail(
                                 route = route,
-                                darkSurface = colors != Light,
+                                theme = theme,
                                 bottomBarStyle = bottomBarStyle,
                                 glassIntensity = glassIntensity,
                                 isMinimized = isDockMinimized,
@@ -271,8 +273,8 @@ private val destinations = listOf(
                                                     .fillMaxWidth()
                                                     .height(42.dp),
                                                 shape = RoundedCornerShape(21.dp),
-                                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                                color = GlassTheme.surfaceColor(theme, glassIntensity),
+                                                border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
                                             ) {
                                                 Row(
                                                     Modifier.fillMaxSize().padding(horizontal = 14.dp),
@@ -364,8 +366,8 @@ private val destinations = listOf(
                                                     .widthIn(min = 220.dp, max = 340.dp)
                                                     .height(42.dp),
                                                 shape = RoundedCornerShape(21.dp),
-                                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                                color = GlassTheme.surfaceColor(theme, glassIntensity),
+                                                border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
                                             ) {
                                                 Row(
                                                     Modifier
@@ -458,15 +460,16 @@ private val destinations = listOf(
                                                                     fadeOut(animationSpec = tween(220))
                                                         )
                                                 } else {
-                                                    // Navigating between tabs: subtle scale + fade blend
-                                                    (fadeIn(animationSpec = tween(220)) + scaleIn(initialScale = 0.98f, animationSpec = tween(220)))
+                                                    // Navigating between tabs: silky smooth instant crossfade (no heavy GPU scale redraw)
+                                                    fadeIn(animationSpec = tween(140))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(160)) + scaleOut(targetScale = 1.01f, animationSpec = tween(160))
+                                                            fadeOut(animationSpec = tween(100))
                                                         )
                                                 }
                                             }
                                         },
                                         modifier = Modifier.weight(1f),
+                                        contentKey = { it },
                                         label = "screen"
                                     ) { current ->
                                         val video = previewVideos.find { it.id == current }
@@ -601,17 +604,13 @@ private val destinations = listOf(
                                 if (!showRail && selectedId == null) {
                                     FloatingFrostedBottomBar(
                                         route = route,
-                                        darkSurface = colors != Light,
+                                        theme = theme,
                                         bottomBarStyle = bottomBarStyle,
                                         glassIntensity = glassIntensity,
                                         isMinimized = isDockMinimized,
                                         onToggleMinimize = { isDockMinimized = !isDockMinimized },
                                         onNavigate = {
-                                            if (isDockMinimized) {
-                                                isDockMinimized = false
-                                            } else if (route == it) {
-                                                isDockMinimized = true
-                                            }
+                                            if (isDockMinimized) isDockMinimized = false
                                             route = it
                                             selectedId = null
                                         },
@@ -637,7 +636,7 @@ private val destinations = listOf(
                 }
             }
 
-            CinemaPlayer(playback, reducedMotion)
+            CinemaPlayer(playback, reducedMotion, glassIntensity, theme)
 
             if (showSplash) {
                 JadzumiSplashScreen(
@@ -646,12 +645,13 @@ private val destinations = listOf(
                 )
             }
         }
+        }
     }
 }
 
 @Composable private fun AppRail(
     route: String,
-    darkSurface: Boolean,
+    theme: String,
     bottomBarStyle: String,
     glassIntensity: Float = 0.75f,
     isMinimized: Boolean,
@@ -674,7 +674,8 @@ private val destinations = listOf(
     )
 
     Surface(
-        color = MaterialTheme.colorScheme.surface,
+        color = GlassTheme.surfaceColor(theme, glassIntensity),
+        border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity)),
         modifier = Modifier.width(railWidth).fillMaxHeight()
     ) {
         Column(
@@ -691,7 +692,7 @@ private val destinations = listOf(
                     }
                     .padding(bottom = 16.dp)
             ) {
-                JadzumiLogo(size = if (isIconsOnly || isMinimized) 36.dp else 42.dp, darkSurface = darkSurface)
+                JadzumiLogo(size = if (isIconsOnly || isMinimized) 36.dp else 42.dp, darkSurface = theme != "Light")
                 if (!isIconsOnly && !isMinimized) {
                     Spacer(Modifier.height(4.dp))
                     Text("Jadzumi", fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
@@ -761,7 +762,7 @@ private val destinations = listOf(
 
 @Composable private fun FloatingFrostedBottomBar(
     route: String,
-    darkSurface: Boolean,
+    theme: String,
     bottomBarStyle: String,
     glassIntensity: Float = 0.75f,
     isMinimized: Boolean,
@@ -811,17 +812,6 @@ private val destinations = listOf(
         label = "dockCorner"
     )
 
-    val surfaceAlpha = if (darkSurface) {
-        (0.85f - 0.22f * (glassIntensity - 0.5f)).coerceIn(0.55f, 0.96f)
-    } else {
-        (0.92f - 0.20f * (glassIntensity - 0.5f)).coerceIn(0.65f, 0.98f)
-    }
-    val rimAlpha = if (darkSurface) {
-        (0.12f + 0.16f * glassIntensity).coerceIn(0.10f, 0.35f)
-    } else {
-        (0.50f + 0.30f * glassIntensity).coerceIn(0.40f, 0.90f)
-    }
-
     Surface(
         modifier = modifier
             .widthIn(max = dockWidth)
@@ -830,10 +820,10 @@ private val destinations = listOf(
             .height(dockHeight)
             .clip(RoundedCornerShape(cornerRadius)),
         shape = RoundedCornerShape(cornerRadius),
-        color = if (darkSurface) Color(0xFF101827).copy(alpha = surfaceAlpha) else Color.White.copy(alpha = surfaceAlpha),
+        color = GlassTheme.surfaceColor(theme, glassIntensity),
         border = BorderStroke(
             1.dp,
-            Color.White.copy(alpha = rimAlpha)
+            GlassTheme.borderColor(theme, glassIntensity)
         ),
         shadowElevation = if (isMinimized) 18.dp else 14.dp
     ) {
@@ -853,7 +843,7 @@ private val destinations = listOf(
                 )
             }
         } else {
-            // Full Floating Frosted Dock: Icons with text labels OR Icons only
+            // Full Floating Frosted Dock: Fluid single-action tap selection without double visual flashes
             Row(
                 modifier = Modifier
                     .fillMaxSize()
@@ -866,23 +856,29 @@ private val destinations = listOf(
                     val activeColor = MaterialTheme.colorScheme.primary
                     val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
 
-                    val pillWidth by animateDpAsState(
-                        targetValue = if (isSelected) (if (isIconsOnly) 52.dp else 46.dp) else 0.dp,
-                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
-                        label = "pill"
+                    val pillAlpha by animateFloatAsState(
+                        targetValue = if (isSelected) 1f else 0f,
+                        animationSpec = tween(180, easing = FastOutSlowInEasing),
+                        label = "pillAlpha"
+                    )
+                    val pillScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1f else 0.85f,
+                        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+                        label = "pillScale"
                     )
 
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable {
-                                if (isSelected) {
-                                    onToggleMinimize()
-                                } else {
+                            .clip(RoundedCornerShape(18.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = ripple(bounded = true, radius = 26.dp)
+                            ) {
+                                if (!isSelected) {
                                     onNavigate(d.name)
                                 }
                             }
-                            .padding(horizontal = 8.dp, vertical = if (isIconsOnly) 6.dp else 4.dp),
+                            .padding(horizontal = if (isIconsOnly) 12.dp else 8.dp, vertical = if (isIconsOnly) 6.dp else 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (isIconsOnly) {
@@ -893,11 +889,13 @@ private val destinations = listOf(
                                     .widthIn(min = 44.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (isSelected) {
+                                if (pillAlpha > 0.01f) {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .width(pillWidth.coerceAtLeast(44.dp))
+                                            .width(46.dp)
+                                            .scale(pillScale)
+                                            .alpha(pillAlpha)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
                                     )
@@ -918,14 +916,16 @@ private val destinations = listOf(
                                 Box(
                                     modifier = Modifier
                                         .height(28.dp)
-                                        .widthIn(min = 36.dp),
+                                        .widthIn(min = 38.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    if (isSelected) {
+                                    if (pillAlpha > 0.01f) {
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxHeight()
-                                                .width(pillWidth.coerceAtLeast(36.dp))
+                                                .width(40.dp)
+                                                .scale(pillScale)
+                                                .alpha(pillAlpha)
                                                 .clip(RoundedCornerShape(14.dp))
                                                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f))
                                         )
@@ -2265,11 +2265,12 @@ private val settingsCategories = listOf(
 }
 
 @Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
+    val glassIntensity = LocalGlassIntensity.current
     Surface(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.45f * glassIntensity).coerceIn(0.50f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.50f * glassIntensity).coerceIn(0.30f, 0.90f)))
     ) {
         Column(Modifier.padding(20.dp), content = content)
     }
