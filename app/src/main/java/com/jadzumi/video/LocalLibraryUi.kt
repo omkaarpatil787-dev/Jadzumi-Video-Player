@@ -742,88 +742,6 @@ fun StorageSummaryCard(
                     }
                 }
 
-                // 3. Category Quick Filter Cards (Adaptive 2x2 on phones, 1x4 on tablets)
-                item {
-                    if (isPhone) {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                CategoryQuickCard(
-                                    title = "Recently Added",
-                                    countText = "$recentCount videos",
-                                    icon = Icons.Rounded.AccessTime,
-                                    selected = category == "Recently Added",
-                                    onClick = { category = if (category == "Recently Added") "All videos" else "Recently Added" },
-                                    modifier = Modifier.weight(1f)
-                                )
-                                CategoryQuickCard(
-                                    title = "Movies",
-                                    countText = "$moviesCount videos",
-                                    icon = Icons.Rounded.Movie,
-                                    selected = category == "Movies",
-                                    onClick = { category = if (category == "Movies") "All videos" else "Movies" },
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                CategoryQuickCard(
-                                    title = "TV Shows",
-                                    countText = "$showsCount shows",
-                                    icon = Icons.Rounded.Tv,
-                                    selected = category == "TV Shows",
-                                    onClick = { category = if (category == "TV Shows") "All videos" else "TV Shows" },
-                                    modifier = Modifier.weight(1f)
-                                )
-                                CategoryQuickCard(
-                                    title = "Anime",
-                                    countText = "$animeCount shows",
-                                    icon = Icons.Rounded.Bolt,
-                                    selected = category == "Anime",
-                                    onClick = { category = if (category == "Anime") "All videos" else "Anime" },
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                    } else {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            CategoryQuickCard(
-                                title = "Recently Added",
-                                countText = "$recentCount videos",
-                                icon = Icons.Rounded.AccessTime,
-                                selected = category == "Recently Added",
-                                onClick = { category = if (category == "Recently Added") "All videos" else "Recently Added" },
-                                modifier = Modifier.weight(1f)
-                            )
-                            CategoryQuickCard(
-                                title = "Movies",
-                                countText = "$moviesCount videos",
-                                icon = Icons.Rounded.Movie,
-                                selected = category == "Movies",
-                                onClick = { category = if (category == "Movies") "All videos" else "Movies" },
-                                modifier = Modifier.weight(1f)
-                            )
-                            CategoryQuickCard(
-                                title = "TV Shows",
-                                countText = "$showsCount shows",
-                                icon = Icons.Rounded.Tv,
-                                selected = category == "TV Shows",
-                                onClick = { category = if (category == "TV Shows") "All videos" else "TV Shows" },
-                                modifier = Modifier.weight(1f)
-                            )
-                            CategoryQuickCard(
-                                title = "Anime",
-                                countText = "$animeCount shows",
-                                icon = Icons.Rounded.Bolt,
-                                selected = category == "Anime",
-                                onClick = { category = if (category == "Anime") "All videos" else "Anime" },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
                 if (category == "TV Shows") {
                     if (filteredSeries.isEmpty()) {
                         item {
@@ -849,7 +767,9 @@ fun StorageSummaryCard(
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                if (defaultCategory == "All videos") {
+                                    TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                }
                             }
                         }
 
@@ -887,7 +807,9 @@ fun StorageSummaryCard(
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                if (defaultCategory == "All videos") {
+                                    TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                }
                             }
                         }
 
@@ -1127,7 +1049,7 @@ fun StorageSummaryCard(
 }
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable private fun FolderSummaryCard(
+@Composable internal fun FolderSummaryCard(
     folder: LocalFolder,
     state: LocalLibraryState,
     isActive: Boolean,

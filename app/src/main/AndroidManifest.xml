@@ -7,9 +7,9 @@
     <application
         android:name=".JadzumiApplication"
         android:allowBackup="false"
-        android:icon="@drawable/ic_launcher_aura"
+        android:icon="@drawable/ic_launcher"
         android:label="Jadzumi Video"
-        android:roundIcon="@drawable/ic_launcher_aura"
+        android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
@@ -22,75 +22,5 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity-alias
-            android:name=".LauncherAura"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/ic_launcher_aura"
-            android:roundIcon="@drawable/ic_launcher_aura"
-            android:label="Jadzumi Video"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherFrost"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/ic_launcher_frost"
-            android:roundIcon="@drawable/ic_launcher_frost"
-            android:label="Jadzumi Video"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherNeo"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/ic_launcher_neo"
-            android:roundIcon="@drawable/ic_launcher_neo"
-            android:label="Jadzumi Video"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherSoft"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/ic_launcher_soft"
-            android:roundIcon="@drawable/ic_launcher_soft"
-            android:label="Jadzumi Video"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherPrism"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/ic_launcher_prism"
-            android:roundIcon="@drawable/ic_launcher_prism"
-            android:label="Jadzumi Video"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
     </application>
 </manifest>

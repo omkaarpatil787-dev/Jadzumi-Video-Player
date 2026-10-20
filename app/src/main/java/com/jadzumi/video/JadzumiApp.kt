@@ -1,8 +1,6 @@
 package com.jadzumi.video
 
-import android.content.ComponentName
 import android.content.Context
-import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
@@ -68,7 +66,6 @@ import androidx.core.content.edit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import kotlinx.coroutines.launch
-import kotlin.math.hypot
 
 private val Blue = Color(0xFF0B57D0)
 private val PaleBlue = Color(0xFFD3E3FD)
@@ -95,184 +92,11 @@ private val Dark = darkColorScheme(
     outlineVariant = Color(0xFF2E3C52)
 )
 
-private fun getExpressiveColorScheme(themeName: String, mode: String, isSysDark: Boolean): ColorScheme {
-    val actualMode = if (mode == "System") (if (isSysDark) "Dark" else "Light") else mode
-    return when (themeName) {
-        "Frost Crystal" -> when (actualMode) {
-            "Dark" -> darkColorScheme(
-                primary = Color(0xFF73BDEB),
-                primaryContainer = Color(0xFF1A374D),
-                onPrimaryContainer = Color(0xFFCDEBFA),
-                background = Color(0xFF0B1721),
-                surface = Color(0xFF122433),
-                surfaceVariant = Color(0xFF1B3347),
-                onSurface = Color(0xFFF0F8FF),
-                onSurfaceVariant = Color(0xFFA2BED4),
-                outlineVariant = Color(0xFF284863)
-            )
-            "AMOLED" -> darkColorScheme(
-                primary = Color(0xFF73BDEB),
-                primaryContainer = Color(0xFF152C3D),
-                onPrimaryContainer = Color(0xFFCDEBFA),
-                background = Color.Black,
-                surface = Color(0xFF081017),
-                surfaceVariant = Color(0xFF101F2C),
-                onSurface = Color(0xFFF0F8FF),
-                onSurfaceVariant = Color(0xFFA2BED4),
-                outlineVariant = Color(0xFF20384D)
-            )
-            else -> lightColorScheme(
-                primary = Color(0xFF3882B5),
-                primaryContainer = Color(0xFFCDEBFA),
-                onPrimaryContainer = Color(0xFF0C2B42),
-                background = Color(0xFFEAF4FA),
-                surface = Color(0xFFF5FBFF),
-                surfaceVariant = Color(0xFFDCEEF7),
-                onSurface = Color(0xFF18283C),
-                onSurfaceVariant = Color(0xFF4C657A),
-                outlineVariant = Color(0xFFCCE2EF)
-            )
-        }
-        "Neo Cinema" -> when (actualMode) {
-            "Dark" -> darkColorScheme(
-                primary = Color(0xFF48D8F0),
-                primaryContainer = Color(0xFF14354A),
-                onPrimaryContainer = Color(0xFFB8F2FF),
-                background = Color(0xFF08111E),
-                surface = Color(0xFF101F31),
-                surfaceVariant = Color(0xFF1A2F47),
-                onSurface = Color(0xFFE5F8FF),
-                onSurfaceVariant = Color(0xFF8AA8C4),
-                outlineVariant = Color(0xFF2A4866)
-            )
-            "AMOLED" -> darkColorScheme(
-                primary = Color(0xFF48D8F0),
-                primaryContainer = Color(0xFF102B3D),
-                onPrimaryContainer = Color(0xFFB8F2FF),
-                background = Color.Black,
-                surface = Color(0xFF08101A),
-                surfaceVariant = Color(0xFF122030),
-                onSurface = Color(0xFFE5F8FF),
-                onSurfaceVariant = Color(0xFF8AA8C4),
-                outlineVariant = Color(0xFF1F3A54)
-            )
-            else -> lightColorScheme(
-                primary = Color(0xFF008CA8),
-                primaryContainer = Color(0xFFD0F2F9),
-                onPrimaryContainer = Color(0xFF002A33),
-                background = Color(0xFFE8F1F5),
-                surface = Color.White,
-                surfaceVariant = Color(0xFFD3E4EC),
-                onSurface = Color(0xFF12222E),
-                onSurfaceVariant = Color(0xFF4B6475),
-                outlineVariant = Color(0xFFC5DCE6)
-            )
-        }
-        "Soft Motion" -> when (actualMode) {
-            "Dark" -> darkColorScheme(
-                primary = Color(0xFFCF9FFF),
-                primaryContainer = Color(0xFF38234D),
-                onPrimaryContainer = Color(0xFFF2E2FF),
-                background = Color(0xFF1A1124),
-                surface = Color(0xFF261A33),
-                surfaceVariant = Color(0xFF352547),
-                onSurface = Color(0xFFF9F2FD),
-                onSurfaceVariant = Color(0xFFBAA3C9),
-                outlineVariant = Color(0xFF493561)
-            )
-            "AMOLED" -> darkColorScheme(
-                primary = Color(0xFFCF9FFF),
-                primaryContainer = Color(0xFF2B1A3D),
-                onPrimaryContainer = Color(0xFFF2E2FF),
-                background = Color.Black,
-                surface = Color(0xFF12091A),
-                surfaceVariant = Color(0xFF221230),
-                onSurface = Color(0xFFF9F2FD),
-                onSurfaceVariant = Color(0xFFBAA3C9),
-                outlineVariant = Color(0xFF38234D)
-            )
-            else -> lightColorScheme(
-                primary = Color(0xFF935EC2),
-                primaryContainer = Color(0xFFF2E2FF),
-                onPrimaryContainer = Color(0xFF2D0D4E),
-                background = Color(0xFFFAF4FC),
-                surface = Color.White,
-                surfaceVariant = Color(0xFFEFE3F5),
-                onSurface = Color(0xFF2C1E38),
-                onSurfaceVariant = Color(0xFF6B537B),
-                outlineVariant = Color(0xFFE5D3ED)
-            )
-        }
-        "Prism" -> when (actualMode) {
-            "Dark" -> darkColorScheme(
-                primary = Color(0xFF9E8CFC),
-                primaryContainer = Color(0xFF2E2854),
-                onPrimaryContainer = Color(0xFFE7E0FF),
-                background = Color(0xFF141226),
-                surface = Color(0xFF1F1B38),
-                surfaceVariant = Color(0xFF2D284F),
-                onSurface = Color(0xFFF2F0FF),
-                onSurfaceVariant = Color(0xFFAFA7D6),
-                outlineVariant = Color(0xFF3F376E)
-            )
-            "AMOLED" -> darkColorScheme(
-                primary = Color(0xFF9E8CFC),
-                primaryContainer = Color(0xFF251F45),
-                onPrimaryContainer = Color(0xFFE7E0FF),
-                background = Color.Black,
-                surface = Color(0xFF0D0B1A),
-                surfaceVariant = Color(0xFF1A1733),
-                onSurface = Color(0xFFF2F0FF),
-                onSurfaceVariant = Color(0xFFAFA7D6),
-                outlineVariant = Color(0xFF302859)
-            )
-            else -> lightColorScheme(
-                primary = Color(0xFF6E56CF),
-                primaryContainer = Color(0xFFE7E0FF),
-                onPrimaryContainer = Color(0xFF211047),
-                background = Color(0xFFF4F2FB),
-                surface = Color.White,
-                surfaceVariant = Color(0xFFE6E1F7),
-                onSurface = Color(0xFF1D1B26),
-                onSurfaceVariant = Color(0xFF5D5778),
-                outlineVariant = Color(0xFFDDD6F2)
-            )
-        }
-        else -> when (actualMode) {
-            // Aura Flow (Default)
-            "Dark" -> Dark
-            "AMOLED" -> Dark.copy(background = Color.Black, surface = Color(0xFF0A0A0C), surfaceVariant = Color(0xFF141418))
-            else -> Light
-        }
-    }
-}
-
-private fun applyLauncherIcon(context: Context, themeName: String) {
-    try {
-        val aliasMap = mapOf(
-            "Aura Flow" to "LauncherAura",
-            "Frost Crystal" to "LauncherFrost",
-            "Neo Cinema" to "LauncherNeo",
-            "Soft Motion" to "LauncherSoft",
-            "Prism" to "LauncherPrism"
-        )
-        val target = aliasMap[themeName] ?: "LauncherAura"
-        val pm = context.packageManager
-        listOf("LauncherAura", "LauncherFrost", "LauncherNeo", "LauncherSoft", "LauncherPrism").forEach { alias ->
-            val comp = ComponentName(context, "com.jadzumi.video.$alias")
-            val state = if (alias == target) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-            pm.setComponentEnabledSetting(comp, state, PackageManager.DONT_KILL_APP)
-        }
-    } catch (_: Exception) {}
-}
-
 private data class Destination(val name: String, val icon: ImageVector)
 private val destinations = listOf(
     Destination("Home", Icons.Rounded.Home),
     Destination("Movies", Icons.Rounded.Movie),
     Destination("TV Shows", Icons.Rounded.Tv),
-    Destination("Folders", Icons.Rounded.Folder),
-    Destination("Playlists", Icons.AutoMirrored.Rounded.QueueMusic),
     Destination("Settings", Icons.Rounded.Settings)
 )
 
@@ -294,10 +118,7 @@ private val destinations = listOf(
 @Composable fun JadzumiApp(playback: PlaybackController) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
-    var expressiveTheme by rememberSaveable { mutableStateOf(prefs.getString("expressiveTheme", "Aura Flow") ?: "Aura Flow") }
     var theme by rememberSaveable { mutableStateOf(prefs.getString("theme", "Dark") ?: "Dark") }
-    var iconShape by rememberSaveable { mutableStateOf(prefs.getString("iconShape", "Squircle") ?: "Squircle") }
-    var iconFinish by rememberSaveable { mutableStateOf(prefs.getString("iconFinish", "Frosted") ?: "Frosted") }
     var reducedMotion by rememberSaveable { mutableStateOf(prefs.getBoolean("reducedMotion", false)) }
     var themeBloomEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("themeBloom", true)) }
     var firstLaunchCardShown by rememberSaveable { mutableStateOf(prefs.getBoolean("pad5_welcome_done", false)) }
@@ -321,28 +142,18 @@ private val destinations = listOf(
     var bloomOriginColor by remember { mutableStateOf<Color?>(null) }
 
     val sysDark = isSystemInDarkTheme()
-    val colors = getExpressiveColorScheme(expressiveTheme, theme, sysDark)
+    val colors = when (theme) {
+        "Light" -> Light
+        "Dark" -> Dark
+        "AMOLED" -> Dark.copy(background = Color.Black, surface = Color(0xFF0A0A0C), surfaceVariant = Color(0xFF141418))
+        else -> if (sysDark) Dark else Light
+    }
 
     fun switchThemeWithBloom(newTheme: String) {
         if (newTheme == theme) return
         val oldBg = colors.background
         theme = newTheme
         prefs.edit { putString("theme", newTheme) }
-        if (themeBloomEnabled && !reducedMotion) {
-            bloomOriginColor = oldBg
-            scope.launch {
-                bloomProgress.snapTo(0f)
-                bloomProgress.animateTo(1f, tween(320))
-                bloomOriginColor = null
-            }
-        }
-    }
-
-    fun switchExpressiveTheme(newExpTheme: String) {
-        if (newExpTheme == expressiveTheme) return
-        val oldBg = colors.background
-        expressiveTheme = newExpTheme
-        prefs.edit { putString("expressiveTheme", newExpTheme) }
         if (themeBloomEnabled && !reducedMotion) {
             bloomOriginColor = oldBg
             scope.launch {
@@ -414,30 +225,14 @@ private val destinations = listOf(
                                                     )
                                                 }
 
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                IconButton(
+                                                    onClick = { library.rescan() },
+                                                    enabled = !localState.busy && localState.folders.isNotEmpty()
                                                 ) {
-                                                    IconButton(
-                                                        onClick = { library.rescan() },
-                                                        enabled = !localState.busy && localState.folders.isNotEmpty()
-                                                    ) {
-                                                        if (localState.busy) {
-                                                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                                                        } else {
-                                                            Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-                                                        }
-                                                    }
-
-                                                    Surface(
-                                                        onClick = { route = "Settings"; selectedId = null },
-                                                        shape = CircleShape,
-                                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                                        modifier = Modifier.size(36.dp)
-                                                    ) {
-                                                        Box(contentAlignment = Alignment.Center) {
-                                                            Icon(Icons.Rounded.Person, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                                                        }
+                                                    if (localState.busy) {
+                                                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                                    } else {
+                                                        Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                                                     }
                                                 }
                                             }
@@ -606,17 +401,6 @@ private val destinations = listOf(
                                                     Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
                                                 }
                                             }
-
-                                            Surface(
-                                                onClick = { route = "Settings"; selectedId = null },
-                                                shape = CircleShape,
-                                                color = MaterialTheme.colorScheme.primaryContainer,
-                                                modifier = Modifier.size(40.dp)
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center) {
-                                                    Icon(Icons.Rounded.Person, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-                                                }
-                                            }
                                         }
                                     }
 
@@ -672,16 +456,9 @@ private val destinations = listOf(
                                             "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it })
                                             "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies")
                                             "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
-                                            "Folders" -> LocalFoldersPage(localState, library, contentWidth >= 840.dp) { selectedId = it }
-                                            "Settings" -> UnifiedSettingsAndPrivacyScreen(
-                                                expressiveTheme = expressiveTheme,
-                                                onExpressiveTheme = ::switchExpressiveTheme,
+                                            "Folders" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
                                                 onTheme = ::switchThemeWithBloom,
-                                                iconShape = iconShape,
-                                                onIconShape = { iconShape = it; prefs.edit { putString("iconShape", it) } },
-                                                iconFinish = iconFinish,
-                                                onIconFinish = { iconFinish = it; prefs.edit { putString("iconFinish", it) } },
                                                 themeBloom = themeBloomEnabled,
                                                 onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
                                                 reduced = reducedMotion,
@@ -695,7 +472,24 @@ private val destinations = listOf(
                                                 localState = localState,
                                                 library = library,
                                                 playback = playback,
-                                                onNavigateFolders = { route = "Folders" }
+                                                initialCategory = "Folders"
+                                            )
+                                            "Settings" -> UnifiedSettingsAndPrivacyScreen(
+                                                theme = theme,
+                                                onTheme = ::switchThemeWithBloom,
+                                                themeBloom = themeBloomEnabled,
+                                                onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
+                                                reduced = reducedMotion,
+                                                onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
+                                                cornerStyle = cornerStyle,
+                                                onCornerStyle = {
+                                                    cornerStyle = it
+                                                    prefs.edit { putString("cornerStyle", it) }
+                                                },
+                                                onReplaySplash = { showSplash = true },
+                                                localState = localState,
+                                                library = library,
+                                                playback = playback
                                             )
                                             "Playlists" -> EmptyPage(Icons.AutoMirrored.Rounded.QueueMusic, "Your collections, together", "Playlist creation is planned for a later update.")
                                             else -> if (playback.video != null) {
@@ -762,7 +556,7 @@ private val destinations = listOf(
                 Text("Jadzumi", fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
                 Text("Video", fontWeight = FontWeight.Medium, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             }
-            destinations.take(5).forEach { d ->
+            destinations.filter { it.name != "Settings" }.forEach { d ->
                 val isSelected = route == d.name || (d.name == "Home" && route == "Library")
                 NavigationRailItem(
                     selected = isSelected,
@@ -809,7 +603,6 @@ private val destinations = listOf(
             Destination("Home", Icons.Rounded.Home),
             Destination("Movies", Icons.Rounded.Movie),
             Destination("TV Shows", Icons.Rounded.Tv),
-            Destination("Folders", Icons.Rounded.Folder),
             Destination("Settings", Icons.Rounded.Settings)
         )
     }
@@ -900,19 +693,14 @@ private val settingsCategories = listOf(
     SettingsCategory("Subtitles", "Subtitles", Icons.Rounded.Subtitles),
     SettingsCategory("Display", "Display", Icons.Rounded.Palette),
     SettingsCategory("Gestures", "Gestures", Icons.Rounded.TouchApp),
+    SettingsCategory("Folders", "Storage & Folders", Icons.Rounded.Folder),
     SettingsCategory("Privacy", "Privacy & About", Icons.Rounded.Security)
 )
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun UnifiedSettingsAndPrivacyScreen(
-    expressiveTheme: String,
-    onExpressiveTheme: (String) -> Unit,
     theme: String,
     onTheme: (String) -> Unit,
-    iconShape: String,
-    onIconShape: (String) -> Unit,
-    iconFinish: String,
-    onIconFinish: (String) -> Unit,
     themeBloom: Boolean,
     onThemeBloom: (Boolean) -> Unit,
     reduced: Boolean,
@@ -923,13 +711,39 @@ private val settingsCategories = listOf(
     localState: LocalLibraryState,
     library: LocalLibrary,
     playback: PlaybackController,
-    onNavigateFolders: () -> Unit
+    initialCategory: String = "Video"
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("playback", 0) }
-    var activeCategory by rememberSaveable { mutableStateOf("Privacy") }
+    var activeCategory by rememberSaveable { mutableStateOf(initialCategory) }
     var statusNotice by remember { mutableStateOf<String?>(null) }
+    var folderToRemove by remember { mutableStateOf<LocalFolder?>(null) }
     val addFolder = rememberFolderPicker(library)
+
+    folderToRemove?.let { folder ->
+        AlertDialog(
+            onDismissRequest = { folderToRemove = null },
+            title = { Text("Remove ${folder.name}?") },
+            text = { Text("Remove this folder from Jadzumi Video. The videos on your device storage will remain unchanged.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        library.remove(folder)
+                        folderToRemove = null
+                        statusNotice = "Removed folder: ${folder.name}"
+                    },
+                    enabled = !localState.busy
+                ) {
+                    Text("Remove")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { folderToRemove = null }) {
+                    Text("Keep folder")
+                }
+            }
+        )
+    }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val twoPane = maxWidth >= 760.dp
@@ -1026,6 +840,7 @@ private val settingsCategories = listOf(
                                 "Subtitles" -> "Subtitle Settings"
                                 "Display" -> "Display & Appearance"
                                 "Gestures" -> "Gestures & Controls"
+                                "Folders" -> "Storage & Folders"
                                 else -> "Privacy & About"
                             },
                             style = MaterialTheme.typography.headlineMedium,
@@ -1043,7 +858,7 @@ private val settingsCategories = listOf(
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Video Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Snapdragon 860 hardware decoder with NextLib fallback", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(DeviceHardwareInspector.getDecoderDescription(context), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Auto (Recommended) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
@@ -1051,7 +866,7 @@ private val settingsCategories = listOf(
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Hardware Acceleration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Uses Qualcomm Adreno GPU for 60/120 FPS high-efficiency playback", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(DeviceHardwareInspector.getHardwareAccelerationDescription(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
                                     }
@@ -1059,7 +874,7 @@ private val settingsCategories = listOf(
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Video Scaling Mode", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Default aspect ratio preservation on 16:10 display", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(DeviceHardwareInspector.getDisplayScalingDescription(context), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Fit (Keep aspect ratio) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
@@ -1072,6 +887,7 @@ private val settingsCategories = listOf(
                                         Switch(checked = playback.brightnessBoost, onCheckedChange = { playback.updateBrightnessBoost(it) })
                                     }
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    val (hdrTitle, hdrDesc) = remember { DeviceHardwareInspector.getHdrCapabilitiesInfo(context) }
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
@@ -1085,8 +901,8 @@ private val settingsCategories = listOf(
                                         ) {
                                             Icon(Icons.Rounded.HdrOn, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                                             Column {
-                                                Text("Hardware HDR10 / HDR10+ Display Mode", fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
-                                                Text("Adreno 640 hardware video surface delivers direct 10-bit wide gamut HDR rendering", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Text(hdrTitle, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                                                Text(hdrDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                         }
                                     }
@@ -1111,7 +927,7 @@ private val settingsCategories = listOf(
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Downmix to Stereo", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Optimized for tablet multi-speaker arrays and stereo headphones", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(DeviceHardwareInspector.getStereoDownmixDescription(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
                                     }
@@ -1342,44 +1158,6 @@ private val settingsCategories = listOf(
                         "Display" -> {
                             item {
                                 Panel {
-                                    Text("Expressive Theme", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("One player. Five distinct visual personalities inspired by the Jadzumi Design Lab.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
-
-                                    val themeList = listOf(
-                                        Triple("Aura Flow", "Floating · fluid · soft", listOf(Color(0xFFE9F7FF), Color(0xFFA9D8FF), Color(0xFF3688D7))),
-                                        Triple("Frost Crystal", "Icy · crystalline · serene", listOf(Color(0xFFF4FCFF), Color(0xFFB9EDFF), Color(0xFF4A9CCF))),
-                                        Triple("Neo Cinema", "Angular · precise · cinematic", listOf(Color(0xFF142A44), Color(0xFF375B83), Color(0xFF74D9F5))),
-                                        Triple("Soft Motion", "Squishy · playful · bouncy", listOf(Color(0xFFFFF0FA), Color(0xFFE5D5FF), Color(0xFF9E7CE9))),
-                                        Triple("Prism", "Faceted · layered · luminous", listOf(Color(0xFFF0DBFF), Color(0xFFA8A0FF), Color(0xFF7551D8)))
-                                    )
-                                    val emojiMap = mapOf(
-                                        "Aura Flow" to "🩵",
-                                        "Frost Crystal" to "❄️",
-                                        "Neo Cinema" to "🎞️",
-                                        "Soft Motion" to "🌸",
-                                        "Prism" to "💜"
-                                    )
-
-                                    FlowRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        themeList.forEach { (name, descriptor, gradient) ->
-                                            ExpressiveThemeCard(
-                                                name = name,
-                                                emoji = emojiMap[name] ?: "✦",
-                                                descriptor = descriptor,
-                                                gradientColors = gradient,
-                                                selected = expressiveTheme == name,
-                                                onClick = { onExpressiveTheme(name) },
-                                                modifier = Modifier.widthIn(min = 140.dp).weight(1f, fill = false)
-                                            )
-                                        }
-                                    }
-
-                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-
                                     Text("Appearance Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("Select base lighting mode for ambient viewing.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
 
@@ -1455,99 +1233,6 @@ private val settingsCategories = listOf(
                                     }
                                 }
                             }
-
-                            item {
-                                Panel {
-                                    Row(
-                                        Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Column(Modifier.weight(1f)) {
-                                            Text("App Icon Studio ✦", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                            Text("Customize the folded-play app icon and apply directly to your home launcher.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Surface(
-                                            shape = RoundedCornerShape(12.dp),
-                                            color = MaterialTheme.colorScheme.primaryContainer
-                                        ) {
-                                            Text(
-                                                expressiveTheme,
-                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 12.sp,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(16.dp))
-
-                                    // Hero Live Preview Box
-                                    Surface(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(22.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 26.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            LiveAppIconPreview(
-                                                themeName = expressiveTheme,
-                                                shapeName = iconShape,
-                                                finishName = iconFinish
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(18.dp))
-
-                                    Text("Icon Silhouette", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                    FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        modifier = Modifier.padding(top = 8.dp, bottom = 14.dp)
-                                    ) {
-                                        listOf("Squircle", "Circle", "Soft square").forEach { shape ->
-                                            FilterChip(
-                                                selected = iconShape == shape,
-                                                onClick = { onIconShape(shape) },
-                                                label = { Text(shape, maxLines = 1, softWrap = false) }
-                                            )
-                                        }
-                                    }
-
-                                    Text("Icon Finish", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                    FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        modifier = Modifier.padding(top = 8.dp, bottom = 18.dp)
-                                    ) {
-                                        listOf("Frosted", "Solid", "Outlined").forEach { finish ->
-                                            FilterChip(
-                                                selected = iconFinish == finish,
-                                                onClick = { onIconFinish(finish) },
-                                                label = { Text(finish, maxLines = 1, softWrap = false) }
-                                            )
-                                        }
-                                    }
-
-                                    Button(
-                                        onClick = {
-                                            applyLauncherIcon(context, expressiveTheme)
-                                            statusNotice = "Applied '$expressiveTheme' home launcher icon! (Your launcher will refresh shortly)"
-                                        },
-                                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                                        shape = RoundedCornerShape(16.dp)
-                                    ) {
-                                        Icon(Icons.Rounded.Home, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Apply to Home Screen Launcher", fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
                         }
 
                         "Gestures" -> {
@@ -1586,6 +1271,95 @@ private val settingsCategories = listOf(
                             }
                         }
 
+                        "Folders" -> {
+                            item {
+                                StorageSummaryCard(
+                                    videoCount = localState.videos.size,
+                                    totalIndexedBytes = localState.videos.sumOf { it.bytes.coerceAtLeast(0) },
+                                    onAddFolder = addFolder
+                                )
+                            }
+                            item {
+                                Panel {
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(Modifier.weight(1f)) {
+                                            Text("Indexed Folders", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                            Text("Manage media directories scanned for movies and TV shows.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        FilledTonalButton(
+                                            onClick = addFolder,
+                                            shape = RoundedCornerShape(14.dp),
+                                            enabled = !localState.busy
+                                        ) {
+                                            Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
+                                            Spacer(Modifier.width(6.dp))
+                                            Text("Add Folder", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                    Row(
+                                        Modifier.fillMaxWidth().padding(top = 10.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        OutlinedButton(
+                                            onClick = {
+                                                library.rescan()
+                                                statusNotice = "Rescanning media folders..."
+                                            },
+                                            shape = RoundedCornerShape(12.dp),
+                                            enabled = !localState.busy && localState.folders.isNotEmpty()
+                                        ) {
+                                            Icon(Icons.Rounded.Sync, null, Modifier.size(16.dp))
+                                            Spacer(Modifier.width(6.dp))
+                                            Text("Rescan Folders", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                        }
+                                        OutlinedButton(
+                                            onClick = {
+                                                clearThumbnailMemoryCache()
+                                                statusNotice = "Thumbnail cache cleared successfully."
+                                            },
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.Cached, null, Modifier.size(16.dp))
+                                            Spacer(Modifier.width(6.dp))
+                                            Text("Clear Cache", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                        }
+                                    }
+                                    if (localState.folders.isEmpty()) {
+                                        Spacer(Modifier.height(16.dp))
+                                        Surface(
+                                            Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(16.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                        ) {
+                                            Text(
+                                                "No media folders added yet. Tap Add Folder to grant access to your movie and video directories.",
+                                                Modifier.padding(16.dp),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    } else {
+                                        Spacer(Modifier.height(14.dp))
+                                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            localState.folders.forEach { folder ->
+                                                FolderSummaryCard(
+                                                    folder = folder,
+                                                    state = localState,
+                                                    isActive = false,
+                                                    onSelect = { },
+                                                    onRemove = { folderToRemove = folder }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         else -> {
                             // "Privacy & About"
                             item {
@@ -1598,7 +1372,7 @@ private val settingsCategories = listOf(
                                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         Text("Your movies. Your space.", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
                                         Text(
-                                            "Jadzumi Video keeps your video library, playback history, and settings strictly on your tablet. No telemetry, no cloud sync, 100% offline-first.",
+                                            "Jadzumi Video keeps your video library, playback history, and settings strictly on your device. No telemetry, no cloud sync, 100% offline-first.",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
                                         )
@@ -1617,7 +1391,7 @@ private val settingsCategories = listOf(
                                 }
                             }
                             item {
-                                PrivacyLeftPane(localState, playback, addFolder, onNavigateFolders) { statusNotice = it }
+                                PrivacyLeftPane(localState, playback, addFolder, onManagePermissions = { activeCategory = "Folders" }) { statusNotice = it }
                             }
                             item {
                                 var scanSidecars by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("scan_sidecars", true)) }
@@ -1728,201 +1502,7 @@ private val settingsCategories = listOf(
     }
 }
 
-@Composable
-private fun ExpressiveThemeCard(
-    name: String,
-    emoji: String,
-    descriptor: String,
-    gradientColors: List<Color>,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(18.dp),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-        border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(Modifier.padding(12.dp)) {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Brush.linearGradient(gradientColors)),
-                contentAlignment = Alignment.Center
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.85f),
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(emoji, fontSize = 14.sp)
-                    }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                descriptor,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
 
-@Composable
-private fun LiveAppIconPreview(
-    themeName: String,
-    shapeName: String,
-    finishName: String,
-    modifier: Modifier = Modifier
-) {
-    val cornerShape = when (shapeName) {
-        "Circle" -> CircleShape
-        "Soft square" -> RoundedCornerShape(20.dp)
-        else -> RoundedCornerShape(32.dp) // Squircle
-    }
-
-    val palette = when (themeName) {
-        "Frost Crystal" -> listOf(Color(0xFFF4FCFF), Color(0xFFB9EDFF), Color(0xFF4A9CCF))
-        "Neo Cinema" -> listOf(Color(0xFF142A44), Color(0xFF375B83), Color(0xFF74D9F5))
-        "Soft Motion" -> listOf(Color(0xFFFFF0FA), Color(0xFFE5D5FF), Color(0xFF9E7CE9))
-        "Prism" -> listOf(Color(0xFFF0DBFF), Color(0xFFA8A0FF), Color(0xFF7551D8))
-        else -> listOf(Color(0xFFE9F7FF), Color(0xFFA9D8FF), Color(0xFF3688D7)) // Aura Flow
-    }
-
-    val isOutline = finishName == "Outlined"
-    val isSolid = finishName == "Solid"
-
-    val bgModifier: Modifier = when {
-        isOutline -> Modifier
-        isSolid -> Modifier.background(palette[2])
-        else -> Modifier.background(Brush.linearGradient(colors = palette))
-    }
-    val borderModifier: Modifier = if (isOutline) {
-        Modifier.border(3.dp, palette[2], cornerShape)
-    } else {
-        Modifier.border(1.2.dp, Color.White.copy(alpha = 0.6f), cornerShape)
-    }
-
-    Box(
-        modifier = modifier
-            .size(130.dp)
-            .shadow(16.dp, cornerShape, ambientColor = palette[2].copy(alpha = 0.35f), spotColor = palette[2].copy(alpha = 0.35f))
-            .clip(cornerShape)
-            .then(bgModifier)
-            .then(borderModifier),
-        contentAlignment = Alignment.Center
-    ) {
-        if (finishName == "Frosted") {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-                    .border(1.dp, Color.White.copy(alpha = 0.35f), cornerShape)
-            )
-        }
-
-        when (themeName) {
-            "Neo Cinema" -> {
-                Canvas(Modifier.size(52.dp)) {
-                    val w = size.width
-                    val h = size.height
-                    drawLine(
-                        color = palette[2],
-                        start = Offset(w * 0.22f, h * 0.18f),
-                        end = Offset(w * 0.22f, h * 0.82f),
-                        strokeWidth = 5.dp.toPx(),
-                        cap = StrokeCap.Round
-                    )
-                    val path = Path().apply {
-                        moveTo(w * 0.36f, h * 0.22f)
-                        lineTo(w * 0.82f, h * 0.50f)
-                        lineTo(w * 0.36f, h * 0.78f)
-                        close()
-                    }
-                    drawPath(path, color = Color.White, style = Stroke(width = 4.dp.toPx(), join = StrokeJoin.Bevel))
-                }
-            }
-            "Soft Motion" -> {
-                Canvas(Modifier.size(56.dp)) {
-                    val w = size.width
-                    val h = size.height
-                    val path = Path().apply {
-                        moveTo(w * 0.30f, h * 0.22f)
-                        quadraticTo(w * 0.26f, h * 0.16f, w * 0.38f, h * 0.23f)
-                        lineTo(w * 0.78f, h * 0.45f)
-                        quadraticTo(w * 0.88f, h * 0.50f, w * 0.78f, h * 0.55f)
-                        lineTo(w * 0.38f, h * 0.77f)
-                        quadraticTo(w * 0.26f, h * 0.84f, w * 0.30f, h * 0.78f)
-                        close()
-                    }
-                    drawPath(path, color = Color.White)
-                    drawCircle(color = palette[2], radius = 4.dp.toPx(), center = Offset(w * 0.44f, h * 0.50f))
-                }
-            }
-            "Frost Crystal" -> {
-                Canvas(Modifier.size(54.dp)) {
-                    val w = size.width
-                    val h = size.height
-                    val path = Path().apply {
-                        moveTo(w * 0.30f, h * 0.20f)
-                        lineTo(w * 0.78f, h * 0.50f)
-                        lineTo(w * 0.30f, h * 0.80f)
-                        close()
-                    }
-                    drawPath(path, color = Color.White)
-                    val foldPath = Path().apply {
-                        moveTo(w * 0.36f, h * 0.24f)
-                        lineTo(w * 0.54f, h * 0.50f)
-                        lineTo(w * 0.36f, h * 0.76f)
-                    }
-                    drawPath(foldPath, color = palette[2], style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
-                    val glint = Path().apply {
-                        moveTo(w * 0.78f, h * 0.16f)
-                        lineTo(w * 0.86f, h * 0.22f)
-                        lineTo(w * 0.78f, h * 0.28f)
-                        lineTo(w * 0.70f, h * 0.22f)
-                        close()
-                    }
-                    drawPath(glint, color = Color.White.copy(alpha = 0.85f))
-                }
-            }
-            else -> {
-                Canvas(Modifier.size(54.dp)) {
-                    val w = size.width
-                    val h = size.height
-                    val path = Path().apply {
-                        moveTo(w * 0.28f, h * 0.20f)
-                        lineTo(w * 0.78f, h * 0.50f)
-                        lineTo(w * 0.28f, h * 0.80f)
-                        close()
-                    }
-                    drawPath(path, color = Color.White)
-                    val foldPath = Path().apply {
-                        moveTo(w * 0.35f, h * 0.25f)
-                        lineTo(w * 0.55f, h * 0.50f)
-                        lineTo(w * 0.35f, h * 0.75f)
-                    }
-                    drawPath(foldPath, color = palette[2], style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
-                }
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun PrivacyLeftPane(

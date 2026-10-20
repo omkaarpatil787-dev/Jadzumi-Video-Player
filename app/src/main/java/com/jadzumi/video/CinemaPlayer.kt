@@ -988,7 +988,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     QuickSubMenuContainer(title = "Fit / Aspect ratio", onBack = { onSelectSection("main") }) {
                         listOf(
                             AspectRatioFrameLayout.RESIZE_MODE_FIT to "Fit to screen (Letterbox)",
-                            AspectRatioFrameLayout.RESIZE_MODE_ZOOM to "Crop to fill (Zoom 16:10)",
+                            AspectRatioFrameLayout.RESIZE_MODE_ZOOM to "Crop to fill (Zoom)",
                             AspectRatioFrameLayout.RESIZE_MODE_FILL to "Stretch to fill"
                         ).forEach { (mode, label) ->
                             QuickOptionItem(
