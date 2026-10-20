@@ -370,6 +370,8 @@ data class MovieMetadata(
     val backdropUri: String? = null
 )
 
+private val YEAR_REGEX = Regex("\\b((?:19|20)\\d{2})\\b")
+
 private fun CharSequence.containsAny(vararg keywords: String): Boolean {
     val s = this.toString()
     for (k in keywords) {

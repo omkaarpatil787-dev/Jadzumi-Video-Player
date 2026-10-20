@@ -132,11 +132,11 @@ fun MovieDetailsPage(
                     val fullSynopsis = metadata.synopsis
                         ?: "Offline Feature Film stored in your local library. High-efficiency playback with hardware-accelerated MediaCodec decoding."
 
-                    if (isTablet) {
-                        Column(
-                            modifier = Modifier.padding(heroPad),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
+                    Column(
+                        modifier = Modifier.padding(heroPad),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        if (isTablet) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 verticalAlignment = Alignment.Top
@@ -194,71 +194,67 @@ fun MovieDetailsPage(
                                     )
                                 }
                             }
-                        }
-                    } else {
-                        // Mobile Phone Optimized Layout: Full-width title, genre subtitle, side-by-side poster + badges, synopsis
-                        Column(
-                            modifier = Modifier.padding(heroPad),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = metadata.title,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
-
-                            if (metadata.genres.isNotEmpty()) {
+                        } else {
+                            // Mobile Phone Optimized Layout: Full-width title, genre subtitle, side-by-side poster + badges, synopsis
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Text(
-                                    metadata.genres.joinToString(" · "),
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
+                                    text = metadata.title,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
-                            }
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .width(posterWidth)
-                                        .aspectRatio(2f / 3f)
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                ) {
-                                    SidecarImage(
-                                        uri = metadata.posterUri ?: metadata.backdropUri,
-                                        fallbackVideo = video,
-                                        modifier = Modifier.fillMaxSize()
+                                if (metadata.genres.isNotEmpty()) {
+                                    Text(
+                                        metadata.genres.joinToString(" · "),
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
 
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.Top
                                 ) {
-                                    MovieBadgesFlow(metadata, video)
-                                }
-                            }
+                                    Box(
+                                        modifier = Modifier
+                                            .width(posterWidth)
+                                            .aspectRatio(2f / 3f)
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                    ) {
+                                        SidecarImage(
+                                            uri = metadata.posterUri ?: metadata.backdropUri,
+                                            fallbackVideo = video,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
 
-                            Text(
-                                text = fullSynopsis,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                lineHeight = 18.sp,
-                                maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
-                            )
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        MovieBadgesFlow(metadata, video)
+                                    }
+                                }
+
+                                Text(
+                                    text = fullSynopsis,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 18.sp,
+                                    maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
+                                )
+                            }
                         }
-                    }
 
                         // Action Buttons: Symmetrical and beautifully aligned pill buttons
                         if (isTablet) {
@@ -533,6 +529,123 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
             TechRow("Audio Streams", "Multi-channel 5.1 / Stereo Passthrough")
             TechRow("Subtitle Engine", "libass / System CaptionStyle Engine")
             TechRow("Supported Formats", "SubRip (.srt), SubStation Alpha (.ass), PGS")
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MovieBadgesFlow(metadata: MovieMetadata, video: LocalVideo) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer
+        ) {
+            Text(
+                "Featured Film",
+                modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+
+        // Quality / Codec Pill
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.secondaryContainer
+        ) {
+            val qualityText = when {
+                video.width >= 3840 -> "4K UHD"
+                video.width >= 1920 -> "1080p HEVC"
+                video.name.contains("hevc", true) || video.name.contains("x265", true) -> "HEVC"
+                else -> "HD"
+            }
+            Text(
+                qualityText,
+                modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+
+        // MPAA Rating Pill
+        metadata.mpaa?.let { mpaa ->
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Text(
+                    mpaa,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Star Rating Pill
+        metadata.rating?.let { rating ->
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Icon(Icons.Rounded.Star, null, Modifier.size(12.dp), tint = Color(0xFFF9AB00))
+                    Text(rating, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // Year Pill
+        metadata.year?.let { yr ->
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            ) {
+                Text(
+                    yr,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Duration Pill
+        if (video.duration > 0) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(Icons.Rounded.Schedule, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        timecode(video.duration / 1000),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
