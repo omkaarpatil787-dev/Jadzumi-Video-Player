@@ -54,12 +54,14 @@ fun MovieDetailsPage(
     val effectiveMetadata = remember(metadata, onlineMeta) {
         val meta = onlineMeta
         if (meta != null) {
+            val syn = metadata.synopsis
+            val isGenericSynopsis = syn.isNullOrBlank() || syn.contains("offline library", ignoreCase = true) || syn.contains("feature film stored", ignoreCase = true)
             metadata.copy(
                 title = meta.title.ifBlank { metadata.title },
                 year = meta.year ?: metadata.year,
                 rating = meta.rating ?: metadata.rating,
                 genres = if ((metadata.genres.isEmpty() || metadata.genres == listOf("Feature Film", "Cinema")) && meta.genres.isNotEmpty()) meta.genres else metadata.genres,
-                synopsis = if ((metadata.synopsis.isBlank() || metadata.synopsis.contains("offline library")) && !meta.synopsis.isNullOrBlank()) meta.synopsis else metadata.synopsis,
+                synopsis = if (isGenericSynopsis && !meta.synopsis.isNullOrBlank()) meta.synopsis else syn,
                 posterUri = metadata.posterUri ?: meta.localPosterPath ?: meta.posterUrl,
                 backdropUri = metadata.backdropUri ?: meta.backdropUrl ?: meta.localPosterPath ?: meta.posterUrl
             )

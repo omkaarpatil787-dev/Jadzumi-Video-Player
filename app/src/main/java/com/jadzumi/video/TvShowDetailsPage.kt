@@ -334,9 +334,11 @@ private fun ShowHeroCard(
     }
 
     val displayPoster = series.posterUri ?: onlineShow?.localPosterPath ?: onlineShow?.posterUrl
-    val displaySynopsis = if (series.synopsis.isNullOrBlank() || series.synopsis.contains("Offline TV Series")) {
-        onlineShow?.synopsis ?: series.synopsis ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
-    } else series.synopsis
+    val syn = series.synopsis
+    val isGenericSynopsis = syn.isNullOrBlank() || syn.contains("Offline TV Series", ignoreCase = true)
+    val displaySynopsis = if (isGenericSynopsis) {
+        onlineShow?.synopsis ?: syn ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
+    } else syn
 
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val isTablet = maxWidth >= 600.dp
