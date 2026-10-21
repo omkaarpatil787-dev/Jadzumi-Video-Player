@@ -157,13 +157,11 @@ fun WelcomeOnboardingCard(
 }
 
 @Composable private fun LocalPanel(content: @Composable ColumnScope.() -> Unit) {
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shadowElevation = 2.dp
     ) {
         Column(
@@ -451,14 +449,12 @@ private fun ContinueWatchingCard(
     durationMs: Long,
     onClick: () -> Unit
 ) {
-    val theme = LocalThemeName.current
-    val glassIntensity = LocalGlassIntensity.current
     Surface(
         onClick = onClick,
         modifier = Modifier.width(250.dp),
         shape = RoundedCornerShape(20.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column {
             Box(Modifier.fillMaxWidth().height(130.dp)) {
@@ -1296,8 +1292,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Surface(
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(18.dp),
-                                        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-                                        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+                                        color = GlassTheme.surfaceColor(theme, glassIntensity),
+                                        border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
                                     ) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp),
@@ -1786,17 +1782,14 @@ fun MovieSummaryCard(
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progress = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
 
-    val theme = LocalThemeName.current
-    val glassIntensity = LocalGlassIntensity.current
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -1959,17 +1952,14 @@ fun TvSeriesSummaryCard(
     val total = series.totalEpisodes
     val progress = if (total > 0) (watched.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
 
-    val theme = LocalThemeName.current
-    val glassIntensity = LocalGlassIntensity.current
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -2085,8 +2075,6 @@ fun TvSeriesSummaryCard(
     select: () -> Unit
 ) {
     val context = LocalContext.current
-    val theme = LocalThemeName.current
-    val glassIntensity = LocalGlassIntensity.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -2095,8 +2083,8 @@ fun TvSeriesSummaryCard(
                 onClick = select,
                 onLongClick = onLongClick
             ),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else GlassTheme.embossedBorderStroke(theme, glassIntensity),
+        color = MaterialTheme.colorScheme.surface,
+        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shape = RoundedCornerShape(22.dp)
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
@@ -2186,8 +2174,8 @@ private fun LocalPosterGridCard(
 
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else GlassTheme.embossedBorderStroke(theme, glassIntensity),
+        color = MaterialTheme.colorScheme.surface,
+        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))

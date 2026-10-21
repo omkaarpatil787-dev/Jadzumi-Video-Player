@@ -398,13 +398,11 @@ private fun ShowHeroCard(
         else -> "Start Series"
     }
 
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -744,24 +742,16 @@ private fun EpisodeCard(
     val isWatched = savedPos >= dur * 0.9f
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progressFraction = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = Color.Transparent,
-        border = if (isNext) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = if (isNext) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
-        ) {
-            BoxWithConstraints(Modifier.fillMaxWidth()) {
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
             val thumbWidth = if (isNarrow) 116.dp else 156.dp
             val cardPad = if (isNarrow) 10.dp else 14.dp
@@ -912,19 +902,16 @@ private fun EpisodeCard(
                 }
             }
         }
-        }
     }
 }
 
 @Composable
 internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
@@ -991,13 +978,11 @@ internal fun TechRow(label: String, value: String) {
 
 @Composable
 internal fun OfflineVerificationCard() {
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
             modifier = Modifier
@@ -1140,14 +1125,11 @@ private fun SeasonCompletionBar(
 ) {
     val progress = if (totalCount > 0) watchedCount.toFloat() / totalCount.toFloat() else 0f
     val percent = (progress * 100).toInt()
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
-
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -1190,15 +1172,12 @@ private fun UpNextSpotlightCard(
     val epInfo = remember(video.name) { EpisodePatterns.parse(video.name) }
     val title = epInfo?.episodeTitle ?: video.title
     val epLabel = if (epInfo != null) "S%02dE%02d".format(epInfo.season, epInfo.episode) else "Next"
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
-
     Surface(
         onClick = onPlay,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
             modifier = Modifier.padding(14.dp),

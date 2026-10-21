@@ -33,26 +33,23 @@ val LocalThemeName = compositionLocalOf { "Dark" }
  */
 object GlassTheme {
     /**
-     * Compute authentic frosted Gaussian blur surface color based on active theme and glass intensity (0.0f - 1.0f).
-     * Maintains high diffused opacity (0.88f - 0.98f) to prevent transparent see-through wash or two-tone background split.
+     * Compute authentic frosted surface color based on active theme and glass intensity (0.0f - 1.0f).
+     * Provides subtle translucent frosted glass for floating docks, overlay pills, and search capsules.
      */
     fun frostedSurfaceColor(theme: String, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
         return when (theme) {
             "AMOLED" -> {
-                // Pure deep OLED black frosted depth without transparent washout
-                val alpha = (0.99f - 0.05f * intensity).coerceIn(0.92f, 1.0f)
-                Color(0xFF030712).copy(alpha = alpha)
+                val alpha = (0.96f - 0.20f * intensity).coerceIn(0.72f, 0.98f)
+                Color(0xFF040914).copy(alpha = alpha)
             }
             "Light" -> {
-                // Crisp luminous frosted white surface
-                val alpha = (0.98f - 0.08f * intensity).coerceIn(0.88f, 0.98f)
-                Color(0xFFFFFFFF).copy(alpha = alpha)
+                val alpha = (0.95f - 0.18f * intensity).coerceIn(0.75f, 0.98f)
+                Color.White.copy(alpha = alpha)
             }
             else -> {
-                // Refined dark slate frosted Gaussian blur foundation
-                val alpha = (0.97f - 0.08f * intensity).coerceIn(0.88f, 0.98f)
-                Color(0xFF111827).copy(alpha = alpha)
+                val alpha = (0.94f - 0.20f * intensity).coerceIn(0.72f, 0.96f)
+                Color(0xFF0E1726).copy(alpha = alpha)
             }
         }
     }
@@ -63,22 +60,22 @@ object GlassTheme {
     fun surfaceColor(theme: String, glassIntensity: Float): Color = frostedSurfaceColor(theme, glassIntensity)
 
     /**
-     * Compute frosted border outline color.
-     * Uses a subtle monochromatic light catch to prevent two-tone color clashing.
+     * Compute subtle frosted specular border rim color.
+     * Uniform monochromatic light catch that prevents two-tone color clashing.
      */
     fun frostedBorderColor(theme: String, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
         return when (theme) {
             "AMOLED" -> {
-                val alpha = (0.11f + 0.08f * intensity).coerceIn(0.09f, 0.20f)
+                val alpha = (0.12f + 0.15f * intensity).coerceIn(0.10f, 0.32f)
                 Color.White.copy(alpha = alpha)
             }
             "Light" -> {
-                val alpha = (0.45f + 0.25f * intensity).coerceIn(0.40f, 0.70f)
-                Color(0xFFCBD5E1).copy(alpha = alpha)
+                val alpha = (0.40f + 0.25f * intensity).coerceIn(0.35f, 0.75f)
+                Color.White.copy(alpha = alpha)
             }
             else -> {
-                val alpha = (0.09f + 0.08f * intensity).coerceIn(0.08f, 0.18f)
+                val alpha = (0.12f + 0.16f * intensity).coerceIn(0.10f, 0.35f)
                 Color.White.copy(alpha = alpha)
             }
         }
@@ -90,53 +87,18 @@ object GlassTheme {
     fun borderColor(theme: String, glassIntensity: Float): Color = frostedBorderColor(theme, glassIntensity)
 
     /**
-     * Monochromatic Embossed Border Brush:
-     * Generates a delicate, tactile 3D frosted glass bevel along card perimeters:
-     * - Top edge catches subtle diffused white specular light.
-     * - Bottom edge tapers to a softer neutral highlight.
-     * - Strictly avoids colored tints (e.g. cyan/blue vs black) to eliminate two-tone banding.
+     * Clean, subtle specular border brush.
      */
     fun embossedBorderBrush(theme: String, glassIntensity: Float): Brush {
-        val intensity = glassIntensity.coerceIn(0f, 1f)
-        return when (theme) {
-            "AMOLED" -> {
-                val topAlpha = (0.18f + 0.10f * intensity).coerceIn(0.14f, 0.28f)
-                val midAlpha = (0.08f + 0.05f * intensity).coerceIn(0.06f, 0.14f)
-                val bottomAlpha = (0.04f + 0.04f * intensity).coerceIn(0.03f, 0.09f)
-                Brush.verticalGradient(
-                    0.0f to Color.White.copy(alpha = topAlpha),
-                    0.40f to Color.White.copy(alpha = midAlpha),
-                    1.0f to Color.White.copy(alpha = bottomAlpha)
-                )
-            }
-            "Light" -> {
-                val topAlpha = (0.80f + 0.15f * intensity).coerceIn(0.70f, 0.95f)
-                val midAlpha = (0.45f + 0.15f * intensity).coerceIn(0.35f, 0.60f)
-                val bottomAlpha = (0.28f + 0.12f * intensity).coerceIn(0.22f, 0.42f)
-                Brush.verticalGradient(
-                    0.0f to Color.White.copy(alpha = topAlpha),
-                    0.40f to Color(0xFFE2E8F0).copy(alpha = midAlpha),
-                    1.0f to Color(0xFFCBD5E1).copy(alpha = bottomAlpha)
-                )
-            }
-            else -> { // Dark / Midnight
-                val topAlpha = (0.16f + 0.10f * intensity).coerceIn(0.12f, 0.26f)
-                val midAlpha = (0.07f + 0.05f * intensity).coerceIn(0.05f, 0.13f)
-                val bottomAlpha = (0.04f + 0.04f * intensity).coerceIn(0.03f, 0.09f)
-                Brush.verticalGradient(
-                    0.0f to Color.White.copy(alpha = topAlpha),
-                    0.40f to Color.White.copy(alpha = midAlpha),
-                    1.0f to Color.White.copy(alpha = bottomAlpha)
-                )
-            }
-        }
+        val color = frostedBorderColor(theme, glassIntensity)
+        return Brush.verticalGradient(listOf(color, color))
     }
 
     /**
-     * Ready-to-use embossed border stroke with subtle tactile depth bevel.
+     * Clean specular rim border stroke for frosted glass elements.
      */
-    fun embossedBorderStroke(theme: String, glassIntensity: Float, strokeWidth: Dp = 1.1.dp): BorderStroke {
-        return BorderStroke(strokeWidth, embossedBorderBrush(theme, glassIntensity))
+    fun embossedBorderStroke(theme: String, glassIntensity: Float, strokeWidth: Dp = 1.dp): BorderStroke {
+        return BorderStroke(strokeWidth, frostedBorderColor(theme, glassIntensity))
     }
 
     /**

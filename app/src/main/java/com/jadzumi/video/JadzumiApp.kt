@@ -984,14 +984,12 @@ fun GeminiGlowingJadzumiLogo(
             .height(dockHeight)
             .clip(RoundedCornerShape(cornerRadius)),
         shape = RoundedCornerShape(cornerRadius),
-        color = Color.Transparent,
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
+        color = GlassTheme.surfaceColor(theme, glassIntensity),
+        border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity)),
         shadowElevation = if (isMinimized) 16.dp else 12.dp
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity)),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             // 1. Full Navigation Dock Content
@@ -2495,13 +2493,11 @@ private val settingsCategories = listOf(
 }
 
 @Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shadowElevation = 2.dp
     ) {
         Column(

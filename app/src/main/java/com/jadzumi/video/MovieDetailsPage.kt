@@ -157,13 +157,11 @@ fun MovieDetailsPage(
 
             // 2. Movie Hero Banner Card
             item {
-                val glassIntensity = LocalGlassIntensity.current
-                val theme = LocalThemeName.current
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-                    border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Box(
                         modifier = Modifier.fillMaxWidth()
@@ -470,13 +468,11 @@ fun MovieDetailsPage(
 
 @Composable
 private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, context: Context) {
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
@@ -507,13 +503,11 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MovieAudioSubtitleCard(video: LocalVideo) {
-    val glassIntensity = LocalGlassIntensity.current
-    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
