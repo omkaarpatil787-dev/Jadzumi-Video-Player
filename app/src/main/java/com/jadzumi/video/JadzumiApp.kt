@@ -1017,13 +1017,6 @@ fun GeminiGlowingJadzumiLogo(
                             .width(1.dp)
                             .background(GlassTheme.frostedBorderColor(theme, glassIntensity).copy(alpha = 0.35f))
                     )
-                            .width(1.dp)
-                            .height(currentDividerHeight)
-                            .background(
-                                if (theme == "Light") Color(0xFFD3E3FD).copy(alpha = 0.8f)
-                                else Color.White.copy(alpha = 0.16f)
-                            )
-                    )
 
                     // Navigation Destinations
                     navDestinations.forEach { d ->
