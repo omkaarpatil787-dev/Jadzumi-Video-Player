@@ -162,18 +162,15 @@ fun WelcomeOnboardingCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent,
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
         border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
-        shadowElevation = 4.dp
+        shadowElevation = 2.dp
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
-                .padding(20.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
-        }
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = content
+        )
     }
 }
 
@@ -1798,13 +1795,11 @@ fun MovieSummaryCard(
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = Color.Transparent,
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
         border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
+            modifier = Modifier.fillMaxWidth()
         ) {
             // Poster / Backdrop Thumbnail Container (16:10 aspect ratio)
             Box(
@@ -1973,13 +1968,11 @@ fun TvSeriesSummaryCard(
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = Color.Transparent,
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
         border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
+            modifier = Modifier.fillMaxWidth()
         ) {
             // Poster / Backdrop Thumbnail
             Box(

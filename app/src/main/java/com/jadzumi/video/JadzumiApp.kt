@@ -1274,26 +1274,29 @@ private val settingsCategories = listOf(
                     }
                 }
 
-                LazyColumn(
-                    Modifier.weight(1f).fillMaxHeight(),
-                    contentPadding = PaddingValues(top = 10.dp, bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                Column(
+                    Modifier.weight(1f).fillMaxHeight()
                 ) {
-                    item {
-                        Text(
-                            when (activeCategory) {
-                                "Video" -> "Video Settings"
-                                "Audio" -> "Audio Settings"
-                                "Subtitles" -> "Subtitle Settings"
-                                "Display" -> "Display & Appearance"
-                                "Gestures" -> "Gestures & Controls"
-                                "Folders" -> "Storage & Folders"
-                                else -> "Privacy & About"
-                            },
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text(
+                        when (activeCategory) {
+                            "Video" -> "Video Settings"
+                            "Audio" -> "Audio Settings"
+                            "Subtitles" -> "Subtitle Settings"
+                            "Display" -> "Display & Appearance"
+                            "Gestures" -> "Gestures & Controls"
+                            "Folders" -> "Storage & Folders"
+                            else -> "Privacy & About"
+                        },
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp, top = 2.dp)
+                    )
+
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 96.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
 
                     when (activeCategory) {
                         "Video" -> {
@@ -2496,18 +2499,16 @@ private val settingsCategories = listOf(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent,
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
         border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
-        shadowElevation = 4.dp
+        shadowElevation = 2.dp
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
-                .padding(20.dp)
-        ) {
-            Column(content = content)
-        }
+                .padding(20.dp),
+            content = content
+        )
     }
 }
 

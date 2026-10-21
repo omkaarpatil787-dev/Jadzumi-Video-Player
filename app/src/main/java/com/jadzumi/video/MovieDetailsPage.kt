@@ -85,33 +85,6 @@ fun MovieDetailsPage(
         val topPad = if (isTablet) 20.dp else 12.dp
         val scrollState = rememberLazyListState()
 
-        // Ambient Blurred Backdrop Glow
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(if (isTablet) 380.dp else 280.dp)
-                .graphicsLayer { alpha = 0.35f }
-        ) {
-            LocalThumbnail(
-                video = video,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { scaleX = 1.35f; scaleY = 1.35f }
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.65f),
-                                MaterialTheme.colorScheme.background
-                            )
-                        )
-                    )
-            )
-        }
 
         LazyColumn(
             state = scrollState,
@@ -189,13 +162,11 @@ fun MovieDetailsPage(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    color = Color.Transparent,
+                    color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
                     border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
                 ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         val heroPad = if (isTablet) 22.dp else 16.dp
                         val posterWidth = if (isTablet) 140.dp else 102.dp
@@ -504,13 +475,12 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = Color.Transparent,
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
         border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -542,13 +512,12 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = Color.Transparent,
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
         border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {

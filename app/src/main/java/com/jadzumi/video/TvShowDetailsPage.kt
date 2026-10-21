@@ -92,36 +92,6 @@ fun TvShowDetailsPage(
         val topPad = if (isTablet) 20.dp else 12.dp
         val scrollState = rememberLazyListState()
 
-        val backdropEp = remember(series) { series.seasons.values.firstOrNull()?.firstOrNull() }
-        // Ambient Blurred Backdrop Glow
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(if (isTablet) 380.dp else 280.dp)
-                .graphicsLayer { alpha = 0.35f }
-        ) {
-            if (backdropEp != null) {
-                LocalThumbnail(
-                    video = backdropEp,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { scaleX = 1.35f; scaleY = 1.35f }
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.65f),
-                                MaterialTheme.colorScheme.background
-                            )
-                        )
-                    )
-            )
-        }
 
         LazyColumn(
             state = scrollState,
@@ -433,13 +403,11 @@ private fun ShowHeroCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent,
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
         border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier.padding(heroPad),
@@ -955,13 +923,12 @@ internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = Color.Transparent,
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
         border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -1029,13 +996,12 @@ internal fun OfflineVerificationCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = Color.Transparent,
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
         border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
