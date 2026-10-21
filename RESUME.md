@@ -1,6 +1,6 @@
 # Jadzumi Video Player — Project Resume & Architecture Summary
 
-> **Status:** Production Ready | **Version:** 1.3.1 | **Platform:** Android (Phones, Foldables, Tablets) | **Updated:** 2026-10-21
+> | Universal Android (Phones, Foldables & Tablets) | Offline-First Cinema Player | Zero Tracking | Jetpack Compose & Media3
 
 ---
 
@@ -24,28 +24,32 @@
 | **Milestone 8 — Mobile Ergonomics** | Floating frosted dock, Gemini-style glowing brand emblem, alive greeting | `COMPLETED` |
 | **Milestone 9 — CineFlow Fluidity** | Natural 340ms cubic bezier navigation transitions, frosted glass depth, blend-fade scrolling | `COMPLETED` |
 | **Milestone 10 — Flagship 1.3 Overhaul** | Hold-to-2x speed, smart end-credit autoplay countdown, chapter tick marks & snapping, external subtitle loader, poster grid toggle, smart filter chips, batch multi-select | `COMPLETED` |
-| **Milestone 11 — Polishing & Fluid Exit (v1.3.1)** | Subtle 0.75dp specular card borders, decluttered header with grid/list toggle, dynamic System default appearance mode, fluid cubic-bezier exit transitions | `COMPLETED` |
+| **Milestone 11 — Polishing & Fluid Exit (v1.3.1)** | Subtle 0.75dp specular card borders, decluttered header with grid/list toggle, fluid cubic-bezier exit transitions | `COMPLETED` |
+| **Milestone 12 — Mobile Dock & Ambient Polish (v1.3.2)** | Universal mobile dock alignment (equal destination weighting), stutter-free card opening transitions, dynamic System default ambient theme matching for frosted glass surfaces, and portrait-optimized Glassify controls | `COMPLETED` |
 
 ---
 
-## Architecture & Technical Highlights (v1.3.1)
+## Architecture & Technical Highlights (v1.3.2)
 
 ### 1. In-Player Gesture Ergonomics & Fluid Transitions
 - **Symmetrical Fluid Opening & Exit Transitions**: CinemaPlayer scales gracefully (0.93 ↔ 1.0) with cubic-bezier easing (`(0.4, 0.0, 1.0, 1.0)`) on exit and (`(0.16, 1.0, 0.3, 1.0)`) on entry across back gesture, top-bar back, close buttons, and quick menu.
+- **Stutter-Free Movie & TV Details Navigation**: Eliminates outer top-bar height jumping on phones when inspecting cards, paired with hardware-accelerated 260ms Material decelerate curves and zero thumbnail grid scale thrash.
 - **Hold-to-2x Fast-Forward**: Press-and-hold anywhere on the screen temporarily accelerates playback to 2.0x with haptic feedback; releasing returns to the previous speed.
 - **Haptic Scrubbing & Chapter Snapping**: Real-time chapter marker extraction and visualization with tactile snapping within a 1.4% seek threshold.
 - **Intelligent End-Credit Detection**: Automatically calculates the credit lead-in boundary based on media runtime, triggering a smooth 12-second countdown with an unobtrusive "Watch Credits" option.
 - **HUD Voice Clarity Access**: Direct one-tap toggle for dialogue enhancement via `LoudnessEnhancer`.
 - **External Subtitle Loader**: Storage Access Framework picker allowing external `.srt`, `.vtt`, or `.ass` file attachment during playback.
 
-### 2. Adaptive Library & Collection Management
+### 2. Adaptive Library & Dock Ergonomics
+- **Universal Mobile Dock Architecture**: Floating bottom bar with equal destination distribution (`Modifier.weight(1f)`) ensuring Home, Movies, TV Shows, and Settings remain balanced, properly centered, and visible across all mobile aspect ratios.
 - **Streamlined Header & Grid/List Toggle**: Unified section header with a dedicated grid/list view toggle and clean visual balance without redundant filter chips.
 - **Poster Grid vs. Detailed List**: Responsive view mode adapting column density from 2 columns (phone portrait) to 3-4 columns (tablets/landscape).
 - **Batch Multi-Select Operations**: Long-press selection mode enabling batch status toggling (*Mark Watched*, *Mark Unwatched*, *Clear History*).
 - **Continue Watching Shelf**: Frosted horizontal shelf displaying in-progress thumbnails, remaining time, and progress bars.
 
 ### 3. Display Intelligence & Visual Aesthetics
-- **System Default Appearance Mode**: First-class "System default" option alongside Light, Dark, and AMOLED, dynamically adapting to the OS appearance and reacting instantly to system dark theme changes.
+- **Dynamic System Default Appearance**: Derives `effectiveTheme` in real time from `isSystemInDarkTheme()`, ensuring frosted search capsules, floating bottom docks, and cards render authentic light frosted surfaces on light devices and dark frosted surfaces on dark devices with zero color clashing.
+- **Portrait-Optimized Glassify Controls**: Adaptive single-line scale indicators (`Matte 20%`, `Balanced 65%`, `Frosted 100%`) for mobile portrait displays without text wrapping.
 - **Subtle 0.75dp Specular Card Rim**: Delicate, refined hairline borders across cards and panels (`0.75.dp` with soft `0.12f` alpha in dark mode and `0.08f` in light mode), replacing heavy/bold outlines while maintaining crisp edge definition.
 - **Ambient Blurred Backdrop Glow**: Samples video artwork into a luminous, theatrical background gradient on movie and show detail pages.
 - **TV Season Progress Gauges**: Real-time season completion percentages and "Up Next" spotlight cards.

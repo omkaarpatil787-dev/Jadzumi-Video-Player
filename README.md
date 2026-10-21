@@ -10,15 +10,19 @@
 
 ---
 
-## What's New in v1.3.0
+## What's New in v1.3.2
 
+- **Optimized Mobile Dock Alignment**: Balanced floating bottom bar with equal destination distribution (`Modifier.weight(1f)`) so Home, Movies, TV Shows, and Settings are always fully visible, centered, and accessible on any screen width.
+- **Dynamic System Default Appearance**: Frosted search capsules, bottom docks, and cards dynamically match device light and dark modes in real time with authentic frosted glass surfaces and zero color clashing.
+- **Stutter-Free Movie & TV Details Transitions**: Eliminated top bar layout thrash and thumbnail texture scaling hitches for buttery 60/120fps card opening and closing.
+- **Mobile Portrait Glassify Controls**: Streamlined single-line frosted blur scale markers (`Matte 20%`, `Balanced 65%`, `Frosted 100%`) for clean mobile portrait display.
+- **Subtle 0.75dp Specular Borders**: Refined hairline frosted borders across cards, dialogs, and dock capsules, eliminating harsh outlines while preserving crisp edge definition.
 - **Hold-to-2x Speed Fast-Forward**: Press and hold anywhere on the playback screen to instantly boost speed to 2.0x with haptic feedback; release to restore normal playback.
 - **Intelligent End-Credit Detection**: Automatically identifies credit sequences and presents a non-intrusive 12-second Next Episode countdown with a direct "Watch Credits" option.
 - **Haptic Timeline Scrubbing & Chapter Markers**: Visual chapter tick marks along the timeline with tactile magnetic snapping during seeking.
 - **Direct Voice Clarity / Dialogue Boost**: One-tap HUD button to enhance quiet dialogue and compress harsh audio spikes.
 - **External Subtitle Loader**: Integrated system file picker supporting loose `.srt`, `.vtt`, and `.ass` subtitles.
 - **Poster Grid & Detailed List Toggle**: One-tap toggle between a multi-column visual poster grid and rich metadata rows.
-- **Smart Filter & Sort Chips**: Quick filters (*All*, *In Progress*, *Unwatched*, *4K UHD*, *Recently Added*) and flexible sorting (*Date*, *Title*, *Duration*, *Size*).
 - **Batch Video Management**: Long-press selection mode for marking items watched/unwatched or clearing playback progress in bulk.
 - **Ambient Blurred Backdrop Glow**: Detail pages softly sample video artwork into a luminous, theatrical background glow.
 - **TV Season Progress & Up Next Spotlight**: Visual season completion gauges and prominent next-unwatched episode action cards.
