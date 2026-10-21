@@ -78,7 +78,7 @@ import kotlin.math.roundToInt
 private val QuickMenuBg = Color(0xFF151B26).copy(alpha = 0.90f)
 private val FrostedCircleBg = Color.White.copy(alpha = 0.16f)
 private val FrostedCircleRim = Color.White.copy(alpha = 0.30f)
-private val TimelineAccent = Color(0xFF8B9DFF)
+internal val TimelineAccent = Color(0xFF8B9DFF)
 
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)

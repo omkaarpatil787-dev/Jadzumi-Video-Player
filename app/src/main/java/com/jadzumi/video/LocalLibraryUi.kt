@@ -1002,6 +1002,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
+        val screenMaxWidth = maxWidth
         val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
         val isPhone = maxWidth < 600.dp
         val bottomPad = if (isPhone) 88.dp else 96.dp
@@ -1431,7 +1432,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                             }
 
                             if (isGridView) {
-                                val colCount = if (isPhone) 2 else if (maxWidth >= 900.dp) 4 else 3
+                                val colCount = if (isPhone) 2 else if (screenMaxWidth >= 900.dp) 4 else 3
                                 items(displayVideos.chunked(colCount), key = { chunk -> chunk.joinToString { it.uri } }) { chunk ->
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
