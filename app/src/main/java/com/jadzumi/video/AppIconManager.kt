@@ -3,7 +3,6 @@ package com.jadzumi.video
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -141,54 +140,22 @@ object AppIconManager {
             val pm = context.packageManager
             val targetComponent = ComponentName(context, targetIcon.aliasName)
 
-            // Try atomic batch update on Android 13+ (API 33+) if supported
-            var atomicSuccess = false
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                try {
-                    val settingsList = mutableListOf<PackageManager.ComponentEnabledSetting>()
-                    settingsList.add(
-                        PackageManager.ComponentEnabledSetting(
-                            targetComponent,
-                            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                            PackageManager.DONT_KILL_APP
-                        )
+            // Always enable target alias FIRST with DONT_KILL_APP
+            // This prevents the app from disappearing from launcher if interrupted
+            pm.setComponentEnabledSetting(
+                targetComponent,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+            )
+
+            // Then disable all other aliases
+            for (icon in ALL_ICONS) {
+                if (icon.id != targetIcon.id) {
+                    pm.setComponentEnabledSetting(
+                        ComponentName(context, icon.aliasName),
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP
                     )
-                    for (icon in ALL_ICONS) {
-                        if (icon.id != targetIcon.id) {
-                            settingsList.add(
-                                PackageManager.ComponentEnabledSetting(
-                                    ComponentName(context, icon.aliasName),
-                                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                                    PackageManager.DONT_KILL_APP
-                                )
-                            )
-                        }
-                    }
-                    pm.setComponentEnabledSettings(settingsList)
-                    atomicSuccess = true
-                } catch (e: Throwable) {
-                    Log.w(TAG, "Atomic setComponentEnabledSettings failed, falling back to sequential: ${e.message}")
-                    atomicSuccess = false
-                }
-            }
-
-            if (!atomicSuccess) {
-                // Sequential fallback: Always enable the target FIRST
-                pm.setComponentEnabledSetting(
-                    targetComponent,
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                    PackageManager.DONT_KILL_APP
-                )
-
-                // Then disable all other aliases
-                for (icon in ALL_ICONS) {
-                    if (icon.id != targetIcon.id) {
-                        pm.setComponentEnabledSetting(
-                            ComponentName(context, icon.aliasName),
-                            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                            PackageManager.DONT_KILL_APP
-                        )
-                    }
                 }
             }
 
