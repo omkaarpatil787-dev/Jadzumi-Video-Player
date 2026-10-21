@@ -644,10 +644,8 @@ private val destinations = listOf(
                                         },
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
-                                            .padding(
-                                                horizontal = if (isTablet) 24.dp else 14.dp,
-                                                bottom = if (isTablet) 12.dp else 8.dp
-                                            )
+                                            .padding(horizontal = if (isTablet) 24.dp else 14.dp)
+                                            .padding(bottom = if (isTablet) 12.dp else 8.dp)
                                     )
                                 }
                             }
