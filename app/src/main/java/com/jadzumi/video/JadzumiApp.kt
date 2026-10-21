@@ -465,20 +465,20 @@ private val destinations = listOf(
                                                 val isInitialDetails = initialState !in mainTabs
 
                                                 if (!isInitialDetails && isTargetDetails) {
-                                                    // Instant fluid depth reveal into Movie / TV Details
-                                                    (fadeIn(animationSpec = tween(170, easing = LinearOutSlowInEasing)) +
-                                                            scaleIn(initialScale = 0.96f, animationSpec = spring(dampingRatio = 0.86f, stiffness = Spring.StiffnessMediumLow)))
+                                                    // Natural, fluid, cinematic expansion into Movie / TV Details
+                                                    (fadeIn(animationSpec = tween(340, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))) +
+                                                            scaleIn(initialScale = 0.90f, animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(140, easing = FastOutLinearInEasing)) +
-                                                                    scaleOut(targetScale = 0.98f, animationSpec = tween(140))
+                                                            fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing)) +
+                                                                    scaleOut(targetScale = 0.96f, animationSpec = tween(220))
                                                         )
                                                 } else if (isInitialDetails && !isTargetDetails) {
-                                                    // Instant smooth reverse back to Library
-                                                    (fadeIn(animationSpec = tween(170, easing = LinearOutSlowInEasing)) +
-                                                            scaleIn(initialScale = 0.98f, animationSpec = spring(dampingRatio = 0.86f, stiffness = Spring.StiffnessMediumLow)))
+                                                    // Natural, fluid reverse back to Library
+                                                    (fadeIn(animationSpec = tween(300, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))) +
+                                                            scaleIn(initialScale = 0.96f, animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(140, easing = FastOutLinearInEasing)) +
-                                                                    scaleOut(targetScale = 0.96f, animationSpec = tween(140))
+                                                            fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing)) +
+                                                                    scaleOut(targetScale = 0.90f, animationSpec = tween(220))
                                                         )
                                                 } else {
                                                     // Navigating between tabs: silky smooth shared-axis animated crossfade (no fast flicker fade)
@@ -985,13 +985,13 @@ fun GeminiGlowingJadzumiLogo(
             .clip(RoundedCornerShape(cornerRadius)),
         shape = RoundedCornerShape(cornerRadius),
         color = Color.Transparent,
-        border = GlassTheme.liquidBorderStroke(theme, glassIntensity),
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
         shadowElevation = if (isMinimized) 16.dp else 12.dp
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(GlassTheme.liquidSurfaceBrush(theme, glassIntensity)),
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity)),
             contentAlignment = Alignment.Center
         ) {
             // 1. Full Navigation Dock Content
@@ -1010,9 +1010,13 @@ fun GeminiGlowingJadzumiLogo(
                         size = currentLogoSize
                     )
 
-                    // Subtle vertical liquid glass divider
+                    // Subtle vertical frosted glass divider
                     Box(
                         modifier = Modifier
+                            .height(currentDividerHeight)
+                            .width(1.dp)
+                            .background(GlassTheme.frostedBorderColor(theme, glassIntensity).copy(alpha = 0.35f))
+                    )
                             .width(1.dp)
                             .height(currentDividerHeight)
                             .background(
@@ -1715,8 +1719,8 @@ private val settingsCategories = listOf(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                                Text("Glassify UI Elements (Liquid Glass)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                                Text("Adjust liquid glass translucency, refractive sheen, and depth across player pills, floating docks, cards, and sheets", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Text("Glassify UI Elements (Frosted Glass)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Adjust frosted glass translucency, blur tint, and depth across player pills, floating docks, cards, and sheets", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Surface(
                                                 shape = RoundedCornerShape(999.dp),
@@ -1745,8 +1749,8 @@ private val settingsCategories = listOf(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Text("Solid (20%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            Text("Balanced Liquid (65%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            Text("Deep Liquid Glass (100%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Balanced Frosted (65%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Deep Frosted Glass (100%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     }
 
@@ -2500,13 +2504,13 @@ private val settingsCategories = listOf(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
-        border = GlassTheme.liquidBorderStroke(theme, glassIntensity),
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
         shadowElevation = 4.dp
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassTheme.liquidSurfaceBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(20.dp)
         ) {
             Column(content = content)

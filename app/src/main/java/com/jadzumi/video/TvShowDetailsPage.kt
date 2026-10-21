@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -88,9 +89,13 @@ fun TvShowDetailsPage(
         val isTablet = maxWidth >= 840.dp
         val horizontalPad = if (isTablet) 28.dp else 16.dp
         val topPad = if (isTablet) 20.dp else 12.dp
+        val scrollState = rememberLazyListState()
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            state = scrollState,
+            modifier = Modifier
+                .fillMaxSize()
+                .animatedScrollBlendFade(scrollState),
             contentPadding = PaddingValues(start = horizontalPad, top = topPad, end = horizontalPad, bottom = if (isTablet) 24.dp else 88.dp),
             verticalArrangement = Arrangement.spacedBy(if (isTablet) 22.dp else 16.dp)
         ) {
@@ -374,12 +379,12 @@ private fun ShowHeroCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
-        border = liquidBorderStroke(theme, glassIntensity)
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(liquidCardBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
         ) {
             Column(
                 modifier = Modifier.padding(heroPad),
@@ -726,12 +731,12 @@ private fun EpisodeCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = Color.Transparent,
-        border = if (isNext) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else liquidBorderStroke(theme, glassIntensity)
+        border = if (isNext) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(liquidSurfaceBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
         ) {
             BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
@@ -896,12 +901,12 @@ internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = Color.Transparent,
-        border = liquidBorderStroke(theme, glassIntensity)
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(liquidSurfaceBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -970,12 +975,12 @@ internal fun OfflineVerificationCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = Color.Transparent,
-        border = liquidBorderStroke(theme, glassIntensity)
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(liquidSurfaceBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically

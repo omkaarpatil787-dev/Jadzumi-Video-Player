@@ -160,13 +160,13 @@ fun WelcomeOnboardingCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
-        border = GlassTheme.liquidBorderStroke(theme, glassIntensity),
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
         shadowElevation = 4.dp
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassTheme.liquidSurfaceBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(20.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
@@ -963,7 +963,9 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .animatedScrollBlendFade(listState),
                 contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
@@ -1568,12 +1570,12 @@ fun MovieSummaryCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = Color.Transparent,
-        border = GlassTheme.liquidBorderStroke(theme, glassIntensity)
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassTheme.liquidCardBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
         ) {
             // Poster / Backdrop Thumbnail Container (16:10 aspect ratio)
             Box(
@@ -1743,12 +1745,12 @@ fun TvSeriesSummaryCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = Color.Transparent,
-        border = GlassTheme.liquidBorderStroke(theme, glassIntensity)
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassTheme.liquidCardBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
         ) {
             // Poster / Backdrop Thumbnail
             Box(
@@ -1861,10 +1863,9 @@ fun TvSeriesSummaryCard(
     val glassIntensity = LocalGlassIntensity.current
     Card(
         onClick = select,
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        border = GlassTheme.liquidBorderStroke(theme, glassIntensity),
-        shape = RoundedCornerShape(22.dp),
-        modifier = Modifier.background(GlassTheme.liquidCardBrush(theme, glassIntensity), RoundedCornerShape(22.dp))
+        colors = CardDefaults.cardColors(containerColor = GlassTheme.frostedSurfaceColor(theme, glassIntensity)),
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
+        shape = RoundedCornerShape(22.dp)
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
             val compact = maxWidth < 460.dp

@@ -7,6 +7,8 @@ import android.media.AudioManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -45,6 +47,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
@@ -173,10 +176,27 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         activity.updatePip()
     }
 
+    val playerEnterProgress = remember(video.identity) { Animatable(if (reducedMotion) 1f else 0f) }
+    LaunchedEffect(video.identity) {
+        if (!reducedMotion) {
+            playerEnterProgress.snapTo(0f)
+            playerEnterProgress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(340, easing = CubicBezierEasing(0.16f, 1.0f, 0.3f, 1.0f))
+            )
+        }
+    }
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
+            .graphicsLayer {
+                val p = playerEnterProgress.value
+                alpha = p
+                scaleX = 0.93f + 0.07f * p
+                scaleY = 0.93f + 0.07f * p
+            }
     ) {
         val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
         val haptic = LocalHapticFeedback.current

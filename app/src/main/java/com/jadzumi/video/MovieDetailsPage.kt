@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -80,9 +81,13 @@ fun MovieDetailsPage(
         val isTablet = maxWidth >= 840.dp
         val horizontalPad = if (isTablet) 28.dp else 16.dp
         val topPad = if (isTablet) 20.dp else 12.dp
+        val scrollState = rememberLazyListState()
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            state = scrollState,
+            modifier = Modifier
+                .fillMaxSize()
+                .animatedScrollBlendFade(scrollState),
             contentPadding = PaddingValues(start = horizontalPad, top = topPad, end = horizontalPad, bottom = if (isTablet) 24.dp else 88.dp),
             verticalArrangement = Arrangement.spacedBy(if (isTablet) 22.dp else 16.dp)
         ) {
@@ -155,12 +160,12 @@ fun MovieDetailsPage(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     color = Color.Transparent,
-                    border = liquidBorderStroke(theme, glassIntensity)
+                    border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(liquidCardBrush(theme, glassIntensity))
+                            .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                     ) {
                         val heroPad = if (isTablet) 22.dp else 16.dp
                         val posterWidth = if (isTablet) 140.dp else 102.dp
@@ -470,12 +475,12 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = Color.Transparent,
-        border = liquidBorderStroke(theme, glassIntensity)
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(liquidSurfaceBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -508,12 +513,12 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = Color.Transparent,
-        border = liquidBorderStroke(theme, glassIntensity)
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(liquidSurfaceBrush(theme, glassIntensity))
+                .background(GlassTheme.frostedSurfaceColor(theme, glassIntensity))
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
