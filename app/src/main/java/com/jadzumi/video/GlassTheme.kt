@@ -207,3 +207,8 @@ object GlassTheme {
         }
     }
 }
+
+fun liquidSurfaceBrush(theme: String, glassIntensity: Float): Brush = GlassTheme.liquidSurfaceBrush(theme, glassIntensity)
+fun liquidBorderBrush(theme: String, glassIntensity: Float): Brush = GlassTheme.liquidBorderBrush(theme, glassIntensity)
+fun liquidBorderStroke(theme: String, glassIntensity: Float, strokeWidth: Dp = 1.2.dp): BorderStroke = GlassTheme.liquidBorderStroke(theme, glassIntensity, strokeWidth)
+fun liquidCardBrush(theme: String, glassIntensity: Float): Brush = GlassTheme.liquidCardBrush(theme, glassIntensity)
