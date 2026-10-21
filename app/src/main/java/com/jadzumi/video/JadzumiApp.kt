@@ -2050,6 +2050,7 @@ private val settingsCategories = listOf(
         }
     }
 }
+}
 
 @Composable private fun ThemeOptionCard(
     mode: String,
