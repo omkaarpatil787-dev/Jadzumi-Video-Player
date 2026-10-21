@@ -279,8 +279,8 @@ private val destinations = listOf(
                                                         .fillMaxWidth()
                                                         .height(42.dp),
                                                     shape = RoundedCornerShape(21.dp),
-                                                    color = GlassTheme.surfaceColor(theme, glassIntensity),
-                                                    border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
+                                                    color = GlassTheme.surfaceColor(effectiveTheme, glassIntensity),
+                                                    border = BorderStroke(1.dp, GlassTheme.borderColor(effectiveTheme, glassIntensity))
                                                 ) {
                                                     Row(
                                                         Modifier.fillMaxSize().padding(horizontal = 14.dp),
@@ -375,8 +375,8 @@ private val destinations = listOf(
                                                     .widthIn(min = 220.dp, max = 340.dp)
                                                     .height(42.dp),
                                                 shape = RoundedCornerShape(21.dp),
-                                                color = GlassTheme.surfaceColor(theme, glassIntensity),
-                                                border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
+                                                color = GlassTheme.surfaceColor(effectiveTheme, glassIntensity),
+                                                border = BorderStroke(1.dp, GlassTheme.borderColor(effectiveTheme, glassIntensity))
                                             ) {
                                                 Row(
                                                     Modifier
@@ -547,6 +547,7 @@ private val destinations = listOf(
                                             "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "Folders" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
+                                                effectiveTheme = effectiveTheme,
                                                 onTheme = ::switchThemeWithBloom,
                                                 themeBloom = themeBloomEnabled,
                                                 onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
@@ -582,6 +583,7 @@ private val destinations = listOf(
                                             )
                                             "Settings" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
+                                                effectiveTheme = effectiveTheme,
                                                 onTheme = ::switchThemeWithBloom,
                                                 themeBloom = themeBloomEnabled,
                                                 onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
@@ -631,7 +633,7 @@ private val destinations = listOf(
                                 if (selectedId == null) {
                                     FloatingFrostedBottomBar(
                                         route = route,
-                                        theme = theme,
+                                        theme = effectiveTheme,
                                         bottomBarStyle = bottomBarStyle,
                                         glassIntensity = glassIntensity,
                                         isMinimized = isDockMinimized,
@@ -1128,6 +1130,7 @@ private val settingsCategories = listOf(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun UnifiedSettingsAndPrivacyScreen(
     theme: String,
+    effectiveTheme: String = theme,
     onTheme: (String) -> Unit,
     themeBloom: Boolean,
     onThemeBloom: (Boolean) -> Unit,
@@ -1711,7 +1714,12 @@ private val settingsCategories = listOf(
                                         ) {
                                             Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                                 Text("Frosted Glass Blur (Glassify)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                                Text("Adjust frosted Gaussian blur depth, specular bevel, and diffused tint across cards, docks, and player controls", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Text(
+                                                    if (twoPane) "Adjust frosted Gaussian blur depth, specular bevel, and diffused tint across cards, docks, and player controls"
+                                                    else "Adjust frosted blur depth and diffused surface tint",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
                                             }
                                             Surface(
                                                 shape = RoundedCornerShape(999.dp),
@@ -1739,9 +1747,30 @@ private val settingsCategories = listOf(
                                             Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Text("Solid Matte (20%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            Text("Balanced Frosted Blur (65%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            Text("Deep Frosted Blur (100%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(
+                                                if (twoPane) "Solid Matte (20%)" else "Matte 20%",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                            Text(
+                                                if (twoPane) "Balanced Frosted Blur (65%)" else "Balanced 65%",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                            Text(
+                                                if (twoPane) "Deep Frosted Blur (100%)" else "Frosted 100%",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
                                         }
                                     }
 
@@ -2036,7 +2065,7 @@ private val settingsCategories = listOf(
                                 }
                             }
                             item {
-                                AboutRightPane(darkSurface = theme == "Dark" || theme == "AMOLED")
+                                AboutRightPane(darkSurface = effectiveTheme != "Light")
                             }
                         }
                     }

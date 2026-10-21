@@ -161,6 +161,22 @@ fun subtleCardBorder(strokeWidth: Dp = 0.75.dp): BorderStroke {
     return GlassTheme.subtleCardBorder(theme, strokeWidth)
 }
 
+@Composable
+fun frostedSurfaceColor(glassIntensity: Float = LocalGlassIntensity.current): Color =
+    GlassTheme.frostedSurfaceColor(LocalThemeName.current, glassIntensity)
+
+@Composable
+fun frostedBorderColor(glassIntensity: Float = LocalGlassIntensity.current): Color =
+    GlassTheme.frostedBorderColor(LocalThemeName.current, glassIntensity)
+
+@Composable
+fun surfaceColor(glassIntensity: Float = LocalGlassIntensity.current): Color =
+    GlassTheme.frostedSurfaceColor(LocalThemeName.current, glassIntensity)
+
+@Composable
+fun borderColor(glassIntensity: Float = LocalGlassIntensity.current): Color =
+    GlassTheme.frostedBorderColor(LocalThemeName.current, glassIntensity)
+
 fun subtleCardBorderColor(theme: String = "Dark"): Color = GlassTheme.subtleCardBorderColor(theme)
 fun subtleCardBorder(theme: String = "Dark", strokeWidth: Dp = 0.75.dp): BorderStroke = GlassTheme.subtleCardBorder(theme, strokeWidth)
 fun frostedSurfaceColor(theme: String, glassIntensity: Float): Color = GlassTheme.frostedSurfaceColor(theme, glassIntensity)
