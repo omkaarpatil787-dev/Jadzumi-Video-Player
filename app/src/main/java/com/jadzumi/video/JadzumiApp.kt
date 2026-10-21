@@ -159,7 +159,11 @@ private val destinations = listOf(
     var bloomOriginColor by remember { mutableStateOf<Color?>(null) }
 
     val sysDark = isSystemInDarkTheme()
-    val colors = when (theme) {
+    val effectiveTheme = when (theme) {
+        "System default", "System" -> if (sysDark) "Dark" else "Light"
+        else -> theme
+    }
+    val colors = when (effectiveTheme) {
         "Light" -> Light
         "Dark" -> Dark
         "AMOLED" -> Dark.copy(background = Color.Black, surface = Color(0xFF0A0A0C), surfaceVariant = Color(0xFF141418))
@@ -202,7 +206,7 @@ private val destinations = listOf(
     ) {
         CompositionLocalProvider(
             LocalGlassIntensity provides glassIntensity,
-            LocalThemeName provides theme
+            LocalThemeName provides effectiveTheme
         ) {
             Box(Modifier.fillMaxSize()) {
             Surface(Modifier.fillMaxSize(), color = colors.background) {
@@ -663,11 +667,11 @@ private val destinations = listOf(
                 }
             }
 
-            CinemaPlayer(playback, reducedMotion, glassIntensity, theme)
+            CinemaPlayer(playback, reducedMotion, glassIntensity, effectiveTheme)
 
             if (showSplash) {
                 JadzumiSplashScreen(
-                    theme = theme,
+                    theme = effectiveTheme,
                     onFinished = { showSplash = false }
                 )
             }
@@ -1630,13 +1634,19 @@ private val settingsCategories = listOf(
                                     Text("Select base lighting mode for ambient viewing.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
 
                                     val themeItems = listOf(
+                                        Triple("System default", "Follow System", Icons.Rounded.BrightnessAuto),
                                         Triple("Light", "Airy Pale-Blue", Icons.Rounded.LightMode),
                                         Triple("Dark", "Night Slate", Icons.Rounded.DarkMode),
                                         Triple("AMOLED", "Pure Black", Icons.Rounded.Brightness1)
                                     )
-                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        themeItems.forEach { (mode, subtitle, icon) ->
-                                            ThemeOptionCard(mode, subtitle, icon, theme == mode, { onTheme(mode) }, Modifier.weight(1f))
+                                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            ThemeOptionCard(themeItems[0].first, themeItems[0].second, themeItems[0].third, theme == themeItems[0].first, { onTheme(themeItems[0].first) }, Modifier.weight(1f))
+                                            ThemeOptionCard(themeItems[1].first, themeItems[1].second, themeItems[1].third, theme == themeItems[1].first, { onTheme(themeItems[1].first) }, Modifier.weight(1f))
+                                        }
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            ThemeOptionCard(themeItems[2].first, themeItems[2].second, themeItems[2].third, theme == themeItems[2].first, { onTheme(themeItems[2].first) }, Modifier.weight(1f))
+                                            ThemeOptionCard(themeItems[3].first, themeItems[3].second, themeItems[3].third, theme == themeItems[3].first, { onTheme(themeItems[3].first) }, Modifier.weight(1f))
                                         }
                                     }
 
@@ -1656,7 +1666,7 @@ private val settingsCategories = listOf(
                                                 modifier = Modifier.weight(1f).clickable { onCornerStyle(style) },
                                                 shape = RoundedCornerShape(14.dp),
                                                 color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                                border = BorderStroke(if (isSel) 2.dp else 1.dp, if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
+                                                border = BorderStroke(if (isSel) 1.5.dp else 0.75.dp, if (isSel) MaterialTheme.colorScheme.primary else subtleCardBorderColor())
                                             ) {
                                                 Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                                     Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
@@ -2058,7 +2068,7 @@ private val settingsCategories = listOf(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    val border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder()
     val bg = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
     Card(
         onClick = onClick,

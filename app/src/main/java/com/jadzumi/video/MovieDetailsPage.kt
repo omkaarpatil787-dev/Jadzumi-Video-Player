@@ -283,7 +283,7 @@ fun MovieDetailsPage(
                                             modifier = Modifier.height(46.dp),
                                             shape = CircleShape,
                                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
-                                            border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
+                                            border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                         ) {
                                             Icon(Icons.Rounded.Replay, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                                             Spacer(Modifier.width(6.dp))
@@ -351,7 +351,7 @@ fun MovieDetailsPage(
                                                 modifier = Modifier.weight(1f).height(46.dp),
                                                 shape = CircleShape,
                                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                                                border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
+                                                border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                             ) {
                                                 Icon(Icons.Rounded.Replay, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                                                 Spacer(Modifier.width(4.dp))
@@ -472,7 +472,7 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Column(
             modifier = Modifier
@@ -507,7 +507,7 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Column(
             modifier = Modifier

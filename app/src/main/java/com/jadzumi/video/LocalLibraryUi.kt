@@ -107,7 +107,7 @@ fun WelcomeOnboardingCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = subtleCardBorder(),
         shadowElevation = 3.dp
     ) {
         Column(
@@ -161,7 +161,7 @@ fun WelcomeOnboardingCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = subtleCardBorder(),
         shadowElevation = 2.dp
     ) {
         Column(
@@ -454,7 +454,7 @@ private fun ContinueWatchingCard(
         modifier = Modifier.width(250.dp),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Column {
             Box(Modifier.fillMaxWidth().height(130.dp)) {
@@ -567,10 +567,7 @@ private fun CategoryQuickCard(
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(
-            1.dp,
-            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-        )
+        border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder()
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
@@ -627,7 +624,7 @@ fun StorageSummaryCard(
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = subtleCardBorder(),
         modifier = Modifier.fillMaxWidth()
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(18.dp)) {
@@ -1355,58 +1352,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                 }
                             }
 
-                            // Smart Filter Chips and Grid / List toggle
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    LazyRow(
-                                        modifier = Modifier.weight(1f),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        val filterChips = listOf("All", "In Progress", "Unwatched", "4K UHD", "Recently Added")
-                                        items(filterChips) { f ->
-                                            val isSelected = activeFilter == f
-                                            Surface(
-                                                shape = RoundedCornerShape(12.dp),
-                                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
-                                                border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-                                                modifier = Modifier.clickable { activeFilter = f }
-                                            ) {
-                                                Text(
-                                                    text = f,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    Spacer(Modifier.width(8.dp))
-
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        IconButton(onClick = { isGridView = !isGridView }, modifier = Modifier.fillMaxSize()) {
-                                            Icon(
-                                                if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
-                                                contentDescription = "Toggle Grid or List View",
-                                                tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
+                            // All Indexed Videos section header with clean Grid / List toggle
                             item {
                                 Row(
                                     Modifier.fillMaxWidth(),
@@ -1418,8 +1364,28 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    if (category != "All videos") {
-                                        TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        if (category != "All videos") {
+                                            TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                        }
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                            border = subtleCardBorder(strokeWidth = 0.75.dp),
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            IconButton(onClick = { isGridView = !isGridView }, modifier = Modifier.fillMaxSize()) {
+                                                Icon(
+                                                    if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
+                                                    contentDescription = "Toggle Grid or List View",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1686,8 +1652,9 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     val context = LocalContext.current
     val folderVideos = remember(state.videos, folder.uri) { state.videos.filter { it.folder == folder.uri } }
     val folderBytes = remember(folderVideos) { folderVideos.sumOf { it.bytes.coerceAtLeast(0) } }
+    val subtleBorder = subtleCardBorderColor()
     val borderColor by animateColorAsState(
-        if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+        if (isActive) MaterialTheme.colorScheme.primary else subtleBorder,
         animationSpec = tween(220),
         label = "folderBorder"
     )
@@ -1699,7 +1666,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     Card(
         onClick = onSelect,
         shape = RoundedCornerShape(22.dp),
-        border = BorderStroke(if (isActive) 2.dp else 1.dp, borderColor),
+        border = BorderStroke(if (isActive) 1.5.dp else 0.75.dp, borderColor),
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
         Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1789,7 +1756,7 @@ fun MovieSummaryCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -1959,7 +1926,7 @@ fun TvSeriesSummaryCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -2084,7 +2051,7 @@ fun TvSeriesSummaryCard(
                 onLongClick = onLongClick
             ),
         color = MaterialTheme.colorScheme.surface,
-        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder(),
         shape = RoundedCornerShape(22.dp)
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
@@ -2175,7 +2142,7 @@ private fun LocalPosterGridCard(
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder(),
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))

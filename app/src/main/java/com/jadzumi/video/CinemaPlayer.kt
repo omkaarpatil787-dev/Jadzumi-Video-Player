@@ -123,17 +123,39 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         }
     }
 
+    val coroutineScope = rememberCoroutineScope()
+    var isDismissing by remember { mutableStateOf(false) }
+    val playerEnterProgress = remember(video.identity) { Animatable(if (reducedMotion) 1f else 0f) }
+
+    val dismissPlayerWithFluidity: () -> Unit = {
+        if (!isDismissing) {
+            if (reducedMotion || playback.inPip) {
+                playback.close()
+            } else {
+                isDismissing = true
+                coroutineScope.launch {
+                    playerEnterProgress.animateTo(
+                        targetValue = 0f,
+                        animationSpec = tween(280, easing = CubicBezierEasing(0.4f, 0.0f, 1.0f, 1.0f))
+                    )
+                    playback.close()
+                }
+            }
+        }
+    }
+
     DisposableEffect(activity) {
         onDispose { activity.videoBounds = null; activity.updatePip() }
     }
 
     BackHandler(!playback.inPip) {
+        if (isDismissing) return@BackHandler
         if (quickMenuSection != null) {
             quickMenuSection = if (quickMenuSection == "main") null else "main"
         } else if (playback.locked) {
             controls = true; interaction++
         } else {
-            playback.close()
+            dismissPlayerWithFluidity()
         }
     }
 
@@ -179,7 +201,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         activity.updatePip()
     }
 
-    val playerEnterProgress = remember(video.identity) { Animatable(if (reducedMotion) 1f else 0f) }
     LaunchedEffect(video.identity) {
         if (!reducedMotion) {
             playerEnterProgress.snapTo(0f)
@@ -472,7 +493,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                FrostedCircleButton("Back to library", playback::close, size = 44.dp) {
+                                FrostedCircleButton("Back to library", dismissPlayerWithFluidity, size = 44.dp) {
                                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, Modifier.size(20.dp), tint = Color.White)
                                 }
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -718,7 +739,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                                     Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
                                                 }
                                             }
-                                            CinemaIcon("Close player", playback::close, modifier = Modifier.size(36.dp)) {
+                                            CinemaIcon("Close player", dismissPlayerWithFluidity, modifier = Modifier.size(36.dp)) {
                                                 Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
                                             }
                                         }
@@ -809,7 +830,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                                     Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
                                                 }
                                             }
-                                            CinemaIcon("Close player", playback::close, modifier = Modifier.size(36.dp)) {
+                                            CinemaIcon("Close player", dismissPlayerWithFluidity, modifier = Modifier.size(36.dp)) {
                                                 Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
                                             }
                                         }
@@ -845,7 +866,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             onSelectSection = { quickMenuSection = it; interaction++ },
                             onAddExternalSubtitle = { subtitleFileLauncher.launch(arrayOf("*/*")) },
                             onMessage = { message = it; interaction++ },
-                            onDismiss = { quickMenuSection = null }
+                            onDismiss = { quickMenuSection = null },
+                            onClosePlayer = dismissPlayerWithFluidity
                         )
                     }
                 }
@@ -891,7 +913,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             Text(error, color = Color.White)
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Button(onClick = playback::retry) { Text("Retry") }
-                                OutlinedButton(onClick = playback::close) { Text("Close", color = Color.White) }
+                                OutlinedButton(onClick = dismissPlayerWithFluidity) { Text("Close", color = Color.White) }
                             }
                         }
                     }
@@ -1033,7 +1055,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     onSelectSection: (String) -> Unit,
     onAddExternalSubtitle: () -> Unit,
     onMessage: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onClosePlayer: () -> Unit = playback::close
 ) {
     val activeAudio = playback.audioTracks.firstOrNull { it.isSelected }
     val audioSummary = activeAudio?.let { "${it.label} (${it.codec} ${it.channels})" } ?: "Default"
@@ -1299,7 +1322,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             icon = Icons.Rounded.Close,
                             label = "Close player",
                             value = "",
-                            onClick = { playback.close(); onDismiss() }
+                            onClick = { onClosePlayer(); onDismiss() }
                         )
                     }
                 }

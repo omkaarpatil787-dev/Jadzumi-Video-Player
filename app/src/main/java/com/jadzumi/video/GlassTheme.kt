@@ -123,6 +123,28 @@ object GlassTheme {
         return Color.White.copy(alpha = alpha)
     }
 
+    /**
+     * Subtle hairline border color for cards across Library, Movies, TV Shows, and Settings.
+     * Replaces harsh/thick outlines with a delicate 0.75dp specular rim:
+     * - Dark: soft white specular rim (alpha = 0.12f) that catches ambient light gracefully
+     * - AMOLED: deep dark rim (alpha = 0.10f)
+     * - Light: soft dark hairline (alpha = 0.08f) creating clean separation
+     */
+    fun subtleCardBorderColor(theme: String = "Dark"): Color {
+        return when (theme) {
+            "Light" -> Color(0xFF000000).copy(alpha = 0.08f)
+            "AMOLED" -> Color(0xFFFFFFFF).copy(alpha = 0.10f)
+            else -> Color(0xFFFFFFFF).copy(alpha = 0.12f)
+        }
+    }
+
+    /**
+     * Subtle hairline border stroke for cards.
+     */
+    fun subtleCardBorder(theme: String = "Dark", strokeWidth: Dp = 0.75.dp): BorderStroke {
+        return BorderStroke(strokeWidth, subtleCardBorderColor(theme))
+    }
+
     // Aliases for backwards compatibility with any callers
     fun liquidSurfaceBrush(theme: String, glassIntensity: Float): Brush = embossedBorderBrush(theme, glassIntensity)
     fun liquidBorderBrush(theme: String, glassIntensity: Float): Brush = embossedBorderBrush(theme, glassIntensity)
@@ -133,6 +155,14 @@ object GlassTheme {
 /**
  * Top-level convenience accessors
  */
+@Composable
+fun subtleCardBorder(strokeWidth: Dp = 0.75.dp): BorderStroke {
+    val theme = LocalThemeName.current
+    return GlassTheme.subtleCardBorder(theme, strokeWidth)
+}
+
+fun subtleCardBorderColor(theme: String = "Dark"): Color = GlassTheme.subtleCardBorderColor(theme)
+fun subtleCardBorder(theme: String = "Dark", strokeWidth: Dp = 0.75.dp): BorderStroke = GlassTheme.subtleCardBorder(theme, strokeWidth)
 fun frostedSurfaceColor(theme: String, glassIntensity: Float): Color = GlassTheme.frostedSurfaceColor(theme, glassIntensity)
 fun frostedBorderColor(theme: String, glassIntensity: Float): Color = GlassTheme.frostedBorderColor(theme, glassIntensity)
 fun embossedBorderStroke(theme: String, glassIntensity: Float, strokeWidth: Dp = 1.1.dp): BorderStroke = GlassTheme.embossedBorderStroke(theme, glassIntensity, strokeWidth)

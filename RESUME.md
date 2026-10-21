@@ -1,6 +1,6 @@
 # Jadzumi Video Player — Project Resume & Architecture Summary
 
-> **Status:** Production Ready | **Version:** 1.3.0 | **Platform:** Android (Phones, Foldables, Tablets) | **Updated:** 2026-10-21
+> **Status:** Production Ready | **Version:** 1.3.1 | **Platform:** Android (Phones, Foldables, Tablets) | **Updated:** 2026-10-21
 
 ---
 
@@ -24,12 +24,14 @@
 | **Milestone 8 — Mobile Ergonomics** | Floating frosted dock, Gemini-style glowing brand emblem, alive greeting | `COMPLETED` |
 | **Milestone 9 — CineFlow Fluidity** | Natural 340ms cubic bezier navigation transitions, frosted glass depth, blend-fade scrolling | `COMPLETED` |
 | **Milestone 10 — Flagship 1.3 Overhaul** | Hold-to-2x speed, smart end-credit autoplay countdown, chapter tick marks & snapping, external subtitle loader, poster grid toggle, smart filter chips, batch multi-select | `COMPLETED` |
+| **Milestone 11 — Polishing & Fluid Exit (v1.3.1)** | Subtle 0.75dp specular card borders, decluttered header with grid/list toggle, dynamic System default appearance mode, fluid cubic-bezier exit transitions | `COMPLETED` |
 
 ---
 
-## Architecture & Technical Highlights (v1.3.0)
+## Architecture & Technical Highlights (v1.3.1)
 
-### 1. In-Player Gesture Ergonomics & Feedback
+### 1. In-Player Gesture Ergonomics & Fluid Transitions
+- **Symmetrical Fluid Opening & Exit Transitions**: CinemaPlayer scales gracefully (0.93 ↔ 1.0) with cubic-bezier easing (`(0.4, 0.0, 1.0, 1.0)`) on exit and (`(0.16, 1.0, 0.3, 1.0)`) on entry across back gesture, top-bar back, close buttons, and quick menu.
 - **Hold-to-2x Fast-Forward**: Press-and-hold anywhere on the screen temporarily accelerates playback to 2.0x with haptic feedback; releasing returns to the previous speed.
 - **Haptic Scrubbing & Chapter Snapping**: Real-time chapter marker extraction and visualization with tactile snapping within a 1.4% seek threshold.
 - **Intelligent End-Credit Detection**: Automatically calculates the credit lead-in boundary based on media runtime, triggering a smooth 12-second countdown with an unobtrusive "Watch Credits" option.
@@ -37,16 +39,17 @@
 - **External Subtitle Loader**: Storage Access Framework picker allowing external `.srt`, `.vtt`, or `.ass` file attachment during playback.
 
 ### 2. Adaptive Library & Collection Management
+- **Streamlined Header & Grid/List Toggle**: Unified section header with a dedicated grid/list view toggle and clean visual balance without redundant filter chips.
 - **Poster Grid vs. Detailed List**: Responsive view mode adapting column density from 2 columns (phone portrait) to 3-4 columns (tablets/landscape).
-- **Smart Filter & Sort Engine**: Live category filtering (*All*, *In Progress*, *Unwatched*, *4K UHD*, *Recently Added*) and flexible sorting (*Date*, *Title*, *Duration*, *Size*).
 - **Batch Multi-Select Operations**: Long-press selection mode enabling batch status toggling (*Mark Watched*, *Mark Unwatched*, *Clear History*).
 - **Continue Watching Shelf**: Frosted horizontal shelf displaying in-progress thumbnails, remaining time, and progress bars.
 
 ### 3. Display Intelligence & Visual Aesthetics
+- **System Default Appearance Mode**: First-class "System default" option alongside Light, Dark, and AMOLED, dynamically adapting to the OS appearance and reacting instantly to system dark theme changes.
+- **Subtle 0.75dp Specular Card Rim**: Delicate, refined hairline borders across cards and panels (`0.75.dp` with soft `0.12f` alpha in dark mode and `0.08f` in light mode), replacing heavy/bold outlines while maintaining crisp edge definition.
 - **Ambient Blurred Backdrop Glow**: Samples video artwork into a luminous, theatrical background gradient on movie and show detail pages.
 - **TV Season Progress Gauges**: Real-time season completion percentages and "Up Next" spotlight cards.
 - **OLED / AMOLED Peak Luminance**: Calibrated HDR10, Dolby Vision, and HLG peak luminance engagement restricted to true OLED panels.
-- **Subtle Glassmorphism & Layered Surfaces**: Clean, layered surface architecture across all cards and panels (`MaterialTheme.colorScheme.surface`), eliminating two-tone color banding and dark backdrop patches, paired with subtle frosted translucent floating docks and player overlay controls.
 
 ---
 

@@ -402,7 +402,7 @@ private fun ShowHeroCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -594,7 +594,7 @@ private fun ShowHeroCard(
                             modifier = Modifier.height(46.dp),
                             shape = CircleShape,
                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
-                            border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
+                            border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         ) {
                             Icon(Icons.Rounded.CheckCircle, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(6.dp))
@@ -620,7 +620,7 @@ private fun ShowHeroCard(
                             modifier = Modifier.fillMaxWidth().height(46.dp),
                             shape = CircleShape,
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-                            border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
+                            border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         ) {
                             Icon(Icons.Rounded.CheckCircle, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(6.dp))
@@ -749,7 +749,7 @@ private fun EpisodeCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = if (isNext) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = if (isNext) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder()
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
@@ -911,7 +911,7 @@ internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Column(
             modifier = Modifier
@@ -982,7 +982,7 @@ internal fun OfflineVerificationCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Row(
             modifier = Modifier
@@ -1129,7 +1129,7 @@ private fun SeasonCompletionBar(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -1177,7 +1177,7 @@ private fun UpNextSpotlightCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = subtleCardBorder()
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
