@@ -1,0 +1,88 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Retro Matte Charcoal Squircle Background -->
+    <path android:pathData="M24,6 L84,6 C93.94,6 102,14.06 102,24 L102,84 C102,93.94 93.94,102 84,102 L24,102 C14.06,102 6,93.94 6,84 L6,24 C6,14.06 14.06,6 24,6 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="12"
+                android:startY="12"
+                android:endX="96"
+                android:endY="96"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF27272A" />
+                <item android:offset="0.6" android:color="#FF18181B" />
+                <item android:offset="1.0" android:color="#FF09090B" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Synthwave Retro Gradient Stripe Accent -->
+    <path android:pathData="M6,22 L102,22 L102,26 L6,26 Z" android:fillColor="#FFEF4444" />
+    <path android:pathData="M6,26 L102,26 L102,30 L6,30 Z" android:fillColor="#FFF97316" />
+    <path android:pathData="M6,30 L102,30 L102,34 L6,34 Z" android:fillColor="#FFFBBF24" />
+    <path android:pathData="M6,34 L102,34 L102,37 L6,37 Z" android:fillColor="#FF06B6D4" />
+
+    <!-- CRT Horizontal Scanlines (Subtle Analog Texture) -->
+    <path
+        android:strokeColor="#15FFFFFF"
+        android:strokeWidth="0.8"
+        android:pathData="M6,44 L102,44 M6,50 L102,50 M6,56 L102,56 M6,62 L102,62 M6,68 L102,68 M6,74 L102,74 M6,80 L102,80 M6,86 L102,86" />
+
+    <!-- Cassette Body Outer Shell -->
+    <path
+        android:fillColor="#FF202024"
+        android:strokeColor="#FF3F3F46"
+        android:strokeWidth="1.5"
+        android:pathData="M23,38 C23,35.2 25.2,33 28,33 L80,33 C82.8,33 85,35.2 85,38 L85,76 C85,78.8 82.8,81 80,81 L28,81 C25.2,81 23,78.8 23,76 Z" />
+
+    <!-- Cassette Corner Screw Rivets -->
+    <path android:fillColor="#FF71717A" android:pathData="M26,36 A1.2,1.2 0 1,1 26,38.4 A1.2,1.2 0 1,1 26,36 M82,36 A1.2,1.2 0 1,1 82,38.4 A1.2,1.2 0 1,1 82,36 M26,76 A1.2,1.2 0 1,1 26,78.4 A1.2,1.2 0 1,1 26,76 M82,76 A1.2,1.2 0 1,1 82,78.4 A1.2,1.2 0 1,1 82,76" />
+
+    <!-- Cassette Central Label Pocket -->
+    <path
+        android:fillColor="#FF18181B"
+        android:strokeColor="#FF52525B"
+        android:strokeWidth="1"
+        android:pathData="M30,42 L78,42 C80,42 81,43 81,45 L81,69 C81,71 80,72 78,72 L30,72 C28,72 27,71 27,69 L27,45 C27,43 28,42 30,42 Z" />
+
+    <!-- Left Tape Reel with Teeth -->
+    <path
+        android:strokeColor="#FFFAFAFA"
+        android:strokeWidth="1.2"
+        android:pathData="M38,50 A7,7 0 1,1 38,64 A7,7 0 1,1 38,50" />
+    <path android:fillColor="#FFFAFAFA" android:pathData="M37,56 L39,56 L39,58 L37,58 Z M37,52 L39,52 L39,54 L37,54 Z M37,60 L39,60 L39,62 L37,62 Z M34,56 L36,56 L36,58 L34,58 Z M40,56 L42,56 L42,58 L40,58 Z" />
+
+    <!-- Right Tape Reel with Teeth -->
+    <path
+        android:strokeColor="#FFFAFAFA"
+        android:strokeWidth="1.2"
+        android:pathData="M70,50 A7,7 0 1,1 70,64 A7,7 0 1,1 70,50" />
+    <path android:fillColor="#FFFAFAFA" android:pathData="M69,56 L71,56 L71,58 L69,58 Z M69,52 L71,52 L71,54 L69,54 Z M69,60 L71,60 L71,62 L69,62 Z M66,56 L68,56 L68,58 L66,58 Z M72,56 L74,56 L74,58 L72,58 Z" />
+
+    <!-- Center Magnetic Play Head Silhouette (Glowing Arcade Play Button) -->
+    <path android:pathData="M50,49 C50,47.5 51.6,46.5 53.0,47.3 L61.2,52.0 C62.5,52.8 62.5,54.8 61.2,55.6 L53.0,60.3 C51.6,61.1 50,60.1 50,58.6 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="50"
+                android:startY="47"
+                android:endX="62"
+                android:endY="60"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFDE047" />
+                <item android:offset="0.5" android:color="#FFF97316" />
+                <item android:offset="1.0" android:color="#FFEF4444" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- VHS Tracking Glitch Bar -->
+    <path
+        android:fillColor="#4406B6D4"
+        android:pathData="M23,73 L85,73 L85,76 L23,76 Z" />
+
+</vector>

@@ -49,6 +49,7 @@
 
 ### 3. Display Intelligence & Visual Aesthetics
 - **Dynamic System Default Appearance**: Derives `effectiveTheme` in real time from `isSystemInDarkTheme()`, ensuring frosted search capsules, floating bottom docks, and cards render authentic light frosted surfaces on light devices and dark frosted surfaces on dark devices with zero color clashing.
+- **10 Handcrafted Custom App Icons**: Native dynamic launcher icon switching with 10 distinct art profiles (Original, Neon Protocol, VHS Nostalgia, Anime Pop, Boo!, Zombumi, Pixel Quest, Chrome X, Cosmic Portal, and Funky Doodle) integrated into Settings → Appearance.
 - **Portrait-Optimized Glassify Controls**: Adaptive single-line scale indicators (`Matte 20%`, `Balanced 65%`, `Frosted 100%`) for mobile portrait displays without text wrapping.
 - **Subtle 0.75dp Specular Card Rim**: Delicate, refined hairline borders across cards and panels (`0.75.dp` with soft `0.12f` alpha in dark mode and `0.08f` in light mode), replacing heavy/bold outlines while maintaining crisp edge definition.
 - **Ambient Blurred Backdrop Glow**: Samples video artwork into a luminous, theatrical background gradient on movie and show detail pages.

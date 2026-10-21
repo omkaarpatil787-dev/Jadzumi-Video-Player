@@ -1,0 +1,126 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Sunny Daisy Yellow Squircle Background -->
+    <path android:pathData="M24,6 L84,6 C93.94,6 102,14.06 102,24 L102,84 C102,93.94 93.94,102 84,102 L24,102 C14.06,102 6,93.94 6,84 L6,24 C6,14.06 14.06,6 24,6 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="12"
+                android:startY="12"
+                android:endX="96"
+                android:endY="96"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFEF3C7" />
+                <item android:offset="0.6" android:color="#FFFDE68A" />
+                <item android:offset="1.0" android:color="#FFFCD34D" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Hand-Drawn Confetti Squiggles & Lightning Bolts -->
+    <!-- Doodle Turquoise Lightning Bolt (Top Left) -->
+    <path
+        android:fillColor="#FF06B6D4"
+        android:strokeColor="#FF18181B"
+        android:strokeWidth="1.2"
+        android:pathData="M24,20 L20,32 L27,30 L23,40 L33,26 L26,28 Z" />
+
+    <!-- Doodle Hot Pink Star (Top Right) -->
+    <path
+        android:fillColor="#FFEC4899"
+        android:strokeColor="#FF18181B"
+        android:strokeWidth="1.2"
+        android:pathData="M84,18 L86,24 L92,25 L87,29 L89,35 L84,31 L79,35 L81,29 L76,25 L82,24 Z" />
+
+    <!-- Doodle Purple Squiggle (Bottom Left) -->
+    <path
+        android:strokeColor="#FF8B5CF6"
+        android:strokeWidth="2.5"
+        android:strokeCap="round"
+        android:pathData="M16,74 C20,70 24,78 28,74 C32,70 36,78 40,74" />
+
+    <!-- Doodle Orange Sparkle (Bottom Right) -->
+    <path
+        android:fillColor="#FFF97316"
+        android:strokeColor="#FF18181B"
+        android:strokeWidth="1.2"
+        android:pathData="M80,72 L82,78 L88,80 L82,82 L80,88 L78,82 L72,80 L78,78 Z" />
+
+    <!-- Sticker Drop Shadow -->
+    <path
+        android:fillColor="#26000000"
+        android:pathData="M34,26 C31,23 26,25 26,30 L26,78 C26,83 31,85 34,82 L76,58 C80,55 80,49 76,46 Z" />
+
+    <!-- White Die-Cut Sticker Outline (Puffy Border) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:strokeColor="#FF18181B"
+        android:strokeWidth="2.8"
+        android:strokeLineJoin="round"
+        android:pathData="M32,24 C29,21 24,23 24,28 L24,76 C24,81 29,83 32,80 L74,56 C78,53 78,47 74,44 Z" />
+
+    <!-- Funky Coral / Orange Hand-Drawn Play Sticker Body -->
+    <path android:pathData="M32,28 C30,26 27,27.5 27,30.5 L27,73.5 C27,76.5 30,78 32,76 L69,54 C71.5,52.5 71.5,49.5 69,48 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="27"
+                android:startY="28"
+                android:endX="70"
+                android:endY="76"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFF43F5E" />
+                <item android:offset="0.5" android:color="#FFFB7185" />
+                <item android:offset="1.0" android:color="#FFF97316" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Cool Doodle Sunglasses Outline -->
+    <!-- Left Lens Frame -->
+    <path
+        android:fillColor="#FF18181B"
+        android:pathData="M34,44 L44,43 L43,53 C43,56 40,58 37,58 L34,58 C32,58 31,56 31,54 Z" />
+    <!-- Left Lens Glint -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.2"
+        android:strokeCap="round"
+        android:pathData="M34,47 L37,55" />
+
+    <!-- Sunglasses Bridge -->
+    <path
+        android:strokeColor="#FF18181B"
+        android:strokeWidth="2.5"
+        android:strokeCap="round"
+        android:pathData="M43,47 L48,47" />
+
+    <!-- Right Lens Frame -->
+    <path
+        android:fillColor="#FF18181B"
+        android:pathData="M48,44 L58,45 L58,54 C58,56 57,58 54,58 L51,58 C49,58 48,56 48,53 Z" />
+    <!-- Right Lens Glint -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.2"
+        android:strokeCap="round"
+        android:pathData="M51,48 L54,56" />
+
+    <!-- Cool Smirking Doodle Smile -->
+    <path
+        android:strokeColor="#FF18181B"
+        android:strokeWidth="2.2"
+        android:strokeCap="round"
+        android:pathData="M40,64 C44,68 50,66 52,63" />
+
+    <!-- Cute Comic Sweat/Sparkle Mark -->
+    <path
+        android:fillColor="#FF06B6D4"
+        android:strokeColor="#FF18181B"
+        android:strokeWidth="1"
+        android:pathData="M58,34 C58,32 61,30 62,34 C63,37 60,38 59,37 C58,36 58,35 58,34 Z" />
+
+</vector>

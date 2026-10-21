@@ -62,8 +62,11 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -1642,6 +1645,72 @@ private val settingsCategories = listOf(
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
+                                    Text("App Icon", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text("Choose from 10 distinct launcher icons crafted for Jadzumi Player", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(Modifier.height(10.dp))
+
+                                    var currentAppIconId by rememberSaveable { mutableStateOf(AppIconManager.getCurrentIconId(context)) }
+                                    val iconScope = rememberCoroutineScope()
+                                    val screenWidth = LocalConfiguration.current.screenWidthDp
+                                    val iconColumns = when {
+                                        screenWidth >= 840 -> 5
+                                        screenWidth >= 600 -> 4
+                                        screenWidth >= 440 -> 3
+                                        else -> 2
+                                    }
+
+                                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        AppIconManager.ALL_ICONS.chunked(iconColumns).forEach { rowGroup ->
+                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                                rowGroup.forEach { itemIcon ->
+                                                    AppIconOptionCard(
+                                                        appIcon = itemIcon,
+                                                        selected = currentAppIconId == itemIcon.id,
+                                                        onClick = {
+                                                            if (currentAppIconId != itemIcon.id) {
+                                                                currentAppIconId = itemIcon.id
+                                                                iconScope.launch {
+                                                                    val ok = AppIconManager.setAppIcon(context, itemIcon.id)
+                                                                    if (ok) {
+                                                                        statusNotice = "Applied \"${itemIcon.name}\" icon. Note: Launcher may take a few moments to refresh."
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        modifier = Modifier.weight(1f)
+                                                    )
+                                                }
+                                                val emptySlots = iconColumns - rowGroup.size
+                                                repeat(emptySlots) {
+                                                    Spacer(Modifier.weight(1f))
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.Info,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Text(
+                                            "Home-screen icon caching depends on your Android launcher and may update after a device unlock.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                        )
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
                                     Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                     Text("Curvature geometry applied to cards, sheets, and dialogs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(Modifier.height(10.dp))
@@ -2107,6 +2176,73 @@ private val settingsCategories = listOf(
                 softWrap = false,
                 color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable private fun AppIconOptionCard(
+    appIcon: AppIcon,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptic = LocalHapticFeedback.current
+    val border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder()
+    val bg = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+    Card(
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        border = border,
+        colors = CardDefaults.cardColors(containerColor = bg)
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = appIcon.iconRes),
+                    contentDescription = appIcon.name,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+                Text(
+                    text = appIcon.name,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = if (selected) "Active" else appIcon.subtitle,
+                    fontSize = 10.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Rounded.CheckCircle,
+                    contentDescription = "Selected",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(16.dp)
+                )
+            }
         }
     }
 }

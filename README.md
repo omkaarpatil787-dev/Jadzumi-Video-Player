@@ -48,6 +48,7 @@
 - **OLED / AMOLED Peak Luminance**: Automatically applies peak HDR brightness exclusively on OLED/AMOLED panels while protecting LCD backlights.
 - **Frosted Glass Engine**: Directional embossed border strokes, frosted surface diffusion, and customizable glass intensity (0% to 100%).
 - **Tri-Theme Fidelity**: Calibrated for Light, Dark (obsidian navy), and AMOLED (true pitch black).
+- **10 Handcrafted Custom App Icons**: Native dynamic launcher icon switching with 10 distinct art profiles (Original, Neon Protocol, VHS Nostalgia, Anime Pop, Boo!, Zombumi, Pixel Quest, Chrome X, Cosmic Portal, and Funky Doodle).
 - **Scroll Blend-Fade**: Hardware-accelerated edge fades during list scrolling.
 
 ### 4. Library & Series Organization

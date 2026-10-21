@@ -1,0 +1,108 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Brushed Obsidian Metal Squircle Background -->
+    <path android:pathData="M24,6 L84,6 C93.94,6 102,14.06 102,24 L102,84 C102,93.94 93.94,102 84,102 L24,102 C14.06,102 6,93.94 6,84 L6,24 C6,14.06 14.06,6 24,6 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="12"
+                android:startY="12"
+                android:endX="96"
+                android:endY="96"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF0B0D13" />
+                <item android:offset="0.5" android:color="#FF1A202C" />
+                <item android:offset="1.0" android:color="#FF05070A" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Chrome Outer Rim Flare (Circular Horizon Reflex) -->
+    <path
+        android:strokeWidth="1.2"
+        android:pathData="M24,24 C40,16 68,16 84,24 C96,36 96,72 84,84 C68,92 40,92 24,84 C12,72 12,36 24,24 Z">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="16"
+                android:startY="16"
+                android:endX="92"
+                android:endY="92"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF94A3B8" />
+                <item android:offset="0.3" android:color="#FFFFFFFF" />
+                <item android:offset="0.6" android:color="#FF334155" />
+                <item android:offset="1.0" android:color="#FFE2E8F0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Liquid Chrome Deep Bevel Base (Dark Metallic Horizon Underlayer) -->
+    <path android:pathData="M30,25 C30,20.8 34.6,18.2 38.2,20.3 L81.2,45.2 C84.8,47.3 84.8,52.7 81.2,54.8 L38.2,79.7 C34.6,81.8 30,79.2 30,75.0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="30"
+                android:startY="20"
+                android:endX="85"
+                android:endY="80"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF475569" />
+                <item android:offset="0.45" android:color="#FF0F172A" />
+                <item android:offset="0.5" android:color="#FFFFFFFF" />
+                <item android:offset="0.75" android:color="#FF1E293B" />
+                <item android:offset="1.0" android:color="#FF64748B" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Upper Chrome Facet (Specular Sky Reflection) -->
+    <path android:pathData="M33,28 C33,24.8 36.5,22.8 39.3,24.4 L79.0,47.3 C81.8,49.0 81.8,53.0 79.0,54.7 L56,54 L33,48 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="33"
+                android:startY="24"
+                android:endX="80"
+                android:endY="54"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFFFF" />
+                <item android:offset="0.25" android:color="#FFE2E8F0" />
+                <item android:offset="0.6" android:color="#FF94A3B8" />
+                <item android:offset="0.9" android:color="#FF334155" />
+                <item android:offset="1.0" android:color="#FFFFFFFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Lower Chrome Facet (Ground Dark Horizon & Platinum Bounce) -->
+    <path android:pathData="M33,48 L56,54 L79.0,54.7 C80.5,55.6 81.2,57.1 81.2,58.7 C81.2,62.0 77.5,64.1 74.7,62.5 L39.3,77.6 C36.5,79.2 33,77.2 33,74.0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="33"
+                android:startY="48"
+                android:endX="80"
+                android:endY="78"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF0F172A" />
+                <item android:offset="0.3" android:color="#FF1E293B" />
+                <item android:offset="0.65" android:color="#FFCBD5E1" />
+                <item android:offset="0.85" android:color="#FFFFFFFF" />
+                <item android:offset="1.0" android:color="#FF64748B" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Mirror Apex Specular Highlighting (Center Ridge) -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M33,26 L79,51 L33,76" />
+
+    <!-- Pure Platinum Flare Star on Apex (Gloss Burst) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M78,47 L80,51 L84,51 L81,53 L82,57 L78,54 L75,57 L76,53 L73,51 L77,51 Z" />
+
+</vector>

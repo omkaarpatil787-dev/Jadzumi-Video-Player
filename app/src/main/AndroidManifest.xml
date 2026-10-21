@@ -20,11 +20,147 @@
             android:name=".MainActivity"
             android:exported="true"
             android:supportsPictureInPicture="true"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
+
+        <!-- App Icon Launcher Aliases (10 Selectable Profiles) -->
+        <activity-alias
+            android:name=".MainActivityAliasOriginal"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="true"
+            android:icon="@drawable/ic_launcher_original"
+            android:roundIcon="@drawable/ic_launcher_original"
+            android:label="Jadzumi Player">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasNeonProtocol"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_neon_protocol"
+            android:roundIcon="@drawable/ic_launcher_neon_protocol"
+            android:label="Jadzumi Player">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasVhsNostalgia"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_vhs_nostalgia"
+            android:roundIcon="@drawable/ic_launcher_vhs_nostalgia"
+            android:label="Jadzumi Player">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasAnimePop"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_anime_pop"
+            android:roundIcon="@drawable/ic_launcher_anime_pop"
+            android:label="Jadzumi Player">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasBoo"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_boo"
+            android:roundIcon="@drawable/ic_launcher_boo"
+            android:label="Jadzumi Player">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasZombumi"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_zombumi"
+            android:roundIcon="@drawable/ic_launcher_zombumi"
+            android:label="Jadzumi Player">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasPixelQuest"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_pixel_quest"
+            android:roundIcon="@drawable/ic_launcher_pixel_quest"
+            android:label="Jadzumi Player">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasChromeX"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_chrome_x"
+            android:roundIcon="@drawable/ic_launcher_chrome_x"
+            android:label="Jadzumi Player">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasCosmicPortal"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_cosmic_portal"
+            android:roundIcon="@drawable/ic_launcher_cosmic_portal"
+            android:label="Jadzumi Player">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasFunkyDoodle"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_funky_doodle"
+            android:roundIcon="@drawable/ic_launcher_funky_doodle"
+            android:label="Jadzumi Player">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
     </application>
 </manifest>

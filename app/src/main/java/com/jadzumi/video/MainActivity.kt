@@ -60,6 +60,7 @@ class MainActivity : ComponentActivity() {
         }
 
         enableMaxRefreshRate()
+        AppIconManager.syncLauncherAlias(this)
 
         setContent { JadzumiApp(playback) }
     }

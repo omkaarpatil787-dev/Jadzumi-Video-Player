@@ -1,0 +1,73 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Retro 8-Bit Arcade Slate Squircle Background -->
+    <path android:pathData="M24,6 L84,6 C93.94,6 102,14.06 102,24 L102,84 C102,93.94 93.94,102 84,102 L24,102 C14.06,102 6,93.94 6,84 L6,24 C6,14.06 14.06,6 24,6 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="12"
+                android:startY="12"
+                android:endX="96"
+                android:endY="96"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF1E293B" />
+                <item android:offset="0.5" android:color="#FF0F172A" />
+                <item android:offset="1.0" android:color="#FF020617" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 8-Bit Pixel Dither Grid Background Pattern -->
+    <path
+        android:fillColor="#0D38BDF8"
+        android:pathData="M16,16 H92 V92 H16 Z M18,18 V90 H90 V18 Z" />
+
+    <!-- 8-Bit Pixel Heart (Top Right RPG Icon) -->
+    <path
+        android:fillColor="#FF020617"
+        android:pathData="M76,20 H80 V22 H84 V26 H86 V30 H84 V34 H80 V36 H76 V38 H74 V36 H70 V34 H66 V30 H68 V26 H72 V22 H76 Z" />
+    <path
+        android:fillColor="#FFEF4444"
+        android:pathData="M76,22 H78 V24 H82 V28 H84 V30 H82 V32 H78 V34 H76 V36 H74 V34 H70 V32 H68 V30 H70 V28 H74 V24 H76 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M72,26 H74 V28 H72 Z" />
+
+    <!-- 8-Bit Pixel Sparkle (Bottom Left RPG Mana Glint) -->
+    <path
+        android:fillColor="#FF38BDF8"
+        android:pathData="M22,76 H26 V80 H22 Z M18,80 H22 V84 H18 Z M26,80 H30 V84 H26 Z M22,84 H26 V88 H22 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M22,80 H26 V84 H22 Z" />
+
+    <!-- Chunky 8-Bit Pixel Play Button Outline (Black Stroke Matrix) -->
+    <path
+        android:fillColor="#FF020617"
+        android:pathData="M28,26 H38 V30 H46 V34 H54 V38 H62 V42 H70 V46 H78 V50 H84 V58 H78 V62 H70 V66 H62 V70 H54 V74 H46 V78 H38 V82 H28 Z" />
+
+    <!-- 8-Bit Play Button Gold Base Body -->
+    <path
+        android:fillColor="#FFEAB308"
+        android:pathData="M32,30 H38 V34 H46 V38 H54 V42 H62 V46 H70 V50 H78 V58 H70 V62 H62 V66 H54 V70 H46 V74 H38 V78 H32 Z" />
+
+    <!-- 8-Bit Pixel Top/Left Specular Highlight (Arcade Lemon Gold) -->
+    <path
+        android:fillColor="#FFFDE047"
+        android:pathData="M32,30 H38 V34 H32 Z M38,34 H46 V38 H38 Z M46,38 H54 V42 H46 Z M54,42 H62 V46 H54 Z M62,46 H70 V50 H62 Z M70,50 H78 V54 H70 Z M32,34 H36 V74 H32 Z" />
+
+    <!-- Pure White 8-Bit Specular Pixel Spark -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M34,32 H38 V36 H34 Z M40,36 H44 V40 H40 Z" />
+
+    <!-- 8-Bit Pixel Shadow Edge (Arcade Dark Bronze) -->
+    <path
+        android:fillColor="#FF854D0E"
+        android:pathData="M70,54 H78 V58 H70 Z M62,58 H70 V62 H62 Z M54,62 H62 V66 H54 Z M46,66 H54 V70 H46 Z M38,70 H46 V74 H38 Z M32,74 H38 V78 H32 Z" />
+
+</vector>
