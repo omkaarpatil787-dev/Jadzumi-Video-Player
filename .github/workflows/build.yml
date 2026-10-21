@@ -31,7 +31,7 @@ jobs:
         chmod +x gradlew
 
     - name: Run Unit Tests & Build APKs
-      run: ./gradlew test assembleRelease assembleDebug --no-daemon
+      run: ./gradlew test assembleRelease assembleDebug --no-daemon --stacktrace
 
     - name: Save Release APK (v1.0.0 Optimized & Shrunk)
       uses: actions/upload-artifact@v4
