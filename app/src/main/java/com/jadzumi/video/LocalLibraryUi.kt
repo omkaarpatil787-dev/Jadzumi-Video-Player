@@ -800,7 +800,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     var activeFilter by rememberSaveable { mutableStateOf("All") }
     var activeSort by rememberSaveable { mutableStateOf("Date Added") }
     var isSelectionMode by rememberSaveable { mutableStateOf(false) }
-    val selectedUris = rememberSaveable { mutableStateListOf<String>() }
+    val selectedUris = remember { mutableStateListOf<String>() }
 
     BackHandler(isSelectionMode) {
         isSelectionMode = false
