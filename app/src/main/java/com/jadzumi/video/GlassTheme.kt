@@ -194,6 +194,9 @@ fun Modifier.animatedScrollBlendFade(
         animationSpec = tween(240, easing = LinearOutSlowInEasing),
         label = "scrollFadeBottom"
     )
+    val hasFade = animatedTopPx > 0.5.dp || animatedBottomPx > 0.5.dp
+    if (!hasFade) return this
+
     return this
         .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
         .drawWithContent {

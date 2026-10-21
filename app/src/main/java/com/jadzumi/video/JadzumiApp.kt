@@ -8,10 +8,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -227,111 +229,106 @@ private val destinations = listOf(
 
                     Box(Modifier.fillMaxSize()) {
                         Column(Modifier.fillMaxSize()) {
-                                    if (isPhone && selectedId == null) {
-                                        // Adaptive Phone Top Bar (Greeting + Actions, Full-width frosted search capsule)
-                                        Column(Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 6.dp)) {
-                                            Row(
-                                                Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.SpaceBetween
-                                            ) {
-                                                if (route == "Home" || route == "Library") {
-                                                    InteractiveCinemaGreeting(
-                                                        localState = localState,
-                                                        playback = playback,
-                                                        isPhone = true,
-                                                        modifier = Modifier.weight(1f)
-                                                    )
-                                                } else {
-                                                    Text(
-                                                        route,
-                                                        Modifier.weight(1f),
-                                                        style = MaterialTheme.typography.titleLarge,
-                                                        fontWeight = FontWeight.Bold,
-                                                        maxLines = 1,
-                                                        overflow = TextOverflow.Ellipsis
-                                                    )
-                                                }
-
-                                                IconButton(
-                                                    onClick = { library.rescan() },
-                                                    enabled = !localState.busy && localState.folders.isNotEmpty()
-                                                ) {
-                                                    if (localState.busy) {
-                                                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                                                    } else {
-                                                        Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-                                                    }
-                                                }
-                                            }
-
-                                            Spacer(Modifier.height(6.dp))
-
-                                            Surface(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(42.dp),
-                                                shape = RoundedCornerShape(21.dp),
-                                                color = GlassTheme.surfaceColor(theme, glassIntensity),
-                                                border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
-                                            ) {
+                                    if (isPhone) {
+                                        AnimatedVisibility(
+                                            visible = selectedId == null,
+                                            enter = fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing)) + expandVertically(animationSpec = tween(220, easing = LinearOutSlowInEasing)),
+                                            exit = fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing)) + shrinkVertically(animationSpec = tween(180, easing = FastOutLinearInEasing))
+                                        ) {
+                                            // Adaptive Phone Top Bar (Greeting + Actions, Full-width frosted search capsule)
+                                            Column(Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 6.dp)) {
                                                 Row(
-                                                    Modifier.fillMaxSize().padding(horizontal = 14.dp),
+                                                    Modifier.fillMaxWidth(),
                                                     verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    horizontalArrangement = Arrangement.SpaceBetween
                                                 ) {
-                                                    Icon(
-                                                        Icons.Rounded.Search,
-                                                        contentDescription = "Search",
-                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.size(18.dp)
-                                                    )
-                                                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                                                        if (query.isEmpty()) {
-                                                            Text(
-                                                                "Search videos, shows...",
-                                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                                                fontSize = 13.sp,
-                                                                maxLines = 1,
-                                                                overflow = TextOverflow.Ellipsis
-                                                            )
-                                                        }
-                                                        BasicTextField(
-                                                            value = query,
-                                                            onValueChange = { newQuery ->
-                                                                query = newQuery
-                                                                if (newQuery.isNotBlank()) {
-                                                                    selectedId = null
-                                                                    if (route == "Folders") {
-                                                                        route = "Home"
-                                                                    }
-                                                                }
-                                                            },
-                                                            singleLine = true,
-                                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                                                color = MaterialTheme.colorScheme.onSurface,
-                                                                fontSize = 13.sp
-                                                            ),
-                                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
-                                                            modifier = Modifier.fillMaxWidth()
+                                                    if (route == "Home" || route == "Library") {
+                                                        InteractiveCinemaGreeting(
+                                                            localState = localState,
+                                                            playback = playback,
+                                                            isPhone = true,
+                                                            modifier = Modifier.weight(1f)
+                                                        )
+                                                    } else {
+                                                        Text(
+                                                            route,
+                                                            Modifier.weight(1f),
+                                                            style = MaterialTheme.typography.titleLarge,
+                                                            fontWeight = FontWeight.Bold,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
                                                         )
                                                     }
-                                                    if (query.isNotEmpty()) {
-                                                        IconButton(
-                                                            onClick = {
-                                                                query = ""
-                                                                keyboardController?.hide()
-                                                            },
-                                                            modifier = Modifier.size(24.dp)
-                                                        ) {
-                                                            Icon(
-                                                                Icons.Rounded.Close,
-                                                                contentDescription = "Clear search",
-                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                                modifier = Modifier.size(16.dp)
-                                                            )
+
+                                                    IconButton(
+                                                        onClick = { library.rescan() },
+                                                        enabled = !localState.busy && localState.folders.isNotEmpty()
+                                                    ) {
+                                                        if (localState.busy) {
+                                                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                                        } else {
+                                                            Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                                                        }
+                                                    }
+                                                }
+
+                                                Spacer(Modifier.height(6.dp))
+
+                                                Surface(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(42.dp),
+                                                    shape = RoundedCornerShape(21.dp),
+                                                    color = GlassTheme.surfaceColor(theme, glassIntensity),
+                                                    border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
+                                                ) {
+                                                    Row(
+                                                        Modifier.fillMaxSize().padding(horizontal = 14.dp),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        Icon(
+                                                            Icons.Rounded.Search,
+                                                            contentDescription = "Search",
+                                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            modifier = Modifier.size(18.dp)
+                                                        )
+                                                        BasicTextField(
+                                                            value = query,
+                                                            onValueChange = { query = it },
+                                                            modifier = Modifier.weight(1f),
+                                                            singleLine = true,
+                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+                                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                                                color = MaterialTheme.colorScheme.onSurface
+                                                            ),
+                                                            decorationBox = { innerTextField ->
+                                                                if (query.isEmpty()) {
+                                                                    Text(
+                                                                        "Search titles, directors, actors...",
+                                                                        style = MaterialTheme.typography.bodyMedium,
+                                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                                                    )
+                                                                }
+                                                                innerTextField()
+                                                            }
+                                                        )
+                                                        if (query.isNotEmpty()) {
+                                                            IconButton(
+                                                                onClick = {
+                                                                    query = ""
+                                                                    keyboardController?.hide()
+                                                                },
+                                                                modifier = Modifier.size(24.dp)
+                                                            ) {
+                                                                Icon(
+                                                                    Icons.Rounded.Close,
+                                                                    contentDescription = "Clear search",
+                                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                    modifier = Modifier.size(16.dp)
+                                                                )
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -469,20 +466,18 @@ private val destinations = listOf(
                                                 val isInitialDetails = initialState !in mainTabs
 
                                                 if (!isInitialDetails && isTargetDetails) {
-                                                    // Natural, fluid, cinematic expansion into Movie / TV Details
-                                                    (fadeIn(animationSpec = tween(340, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))) +
-                                                            scaleIn(initialScale = 0.90f, animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)))
+                                                    // Fluid, hardware-accelerated entrance into Details
+                                                    (fadeIn(animationSpec = tween(260, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))) +
+                                                            scaleIn(initialScale = 0.96f, animationSpec = tween(260, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing)) +
-                                                                    scaleOut(targetScale = 0.96f, animationSpec = tween(220))
+                                                            fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
                                                         )
                                                 } else if (isInitialDetails && !isTargetDetails) {
-                                                    // Natural, fluid reverse back to Library
-                                                    (fadeIn(animationSpec = tween(300, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))) +
-                                                            scaleIn(initialScale = 0.96f, animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)))
+                                                    // Clean, responsive return to Library
+                                                    (fadeIn(animationSpec = tween(240, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing)) +
-                                                                    scaleOut(targetScale = 0.90f, animationSpec = tween(220))
+                                                            fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing)) +
+                                                                    scaleOut(targetScale = 0.96f, animationSpec = tween(180, easing = FastOutLinearInEasing))
                                                         )
                                                 } else {
                                                     // Navigating between tabs: silky smooth shared-axis animated crossfade (no fast flicker fade)
@@ -649,7 +644,10 @@ private val destinations = listOf(
                                         },
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
-                                            .padding(bottom = if (isTablet) 12.dp else 6.dp)
+                                            .padding(
+                                                horizontal = if (isTablet) 24.dp else 14.dp,
+                                                bottom = if (isTablet) 12.dp else 8.dp
+                                            )
                                     )
                                 }
                             }
@@ -907,8 +905,8 @@ fun GeminiGlowingJadzumiLogo(
     val dockHeight by animateDpAsState(
         targetValue = when {
             isMinimized -> 48.dp
-            isIconsOnly -> 52.dp
-            else -> 64.dp
+            isIconsOnly -> if (isTablet) 56.dp else 52.dp
+            else -> if (isTablet) 64.dp else 60.dp
         },
         animationSpec = dockSpringDp,
         label = "dockHeight"
@@ -917,8 +915,8 @@ fun GeminiGlowingJadzumiLogo(
     val dockWidth by animateDpAsState(
         targetValue = when {
             isMinimized -> if (isTablet) 96.dp else 84.dp
-            isIconsOnly -> if (isTablet) 380.dp else 320.dp
-            else -> if (isTablet) 520.dp else 440.dp
+            isIconsOnly -> if (isTablet) 400.dp else 360.dp
+            else -> if (isTablet) 540.dp else 420.dp
         },
         animationSpec = dockSpringDp,
         label = "dockWidth"
@@ -927,8 +925,8 @@ fun GeminiGlowingJadzumiLogo(
     val cornerRadius by animateDpAsState(
         targetValue = when {
             isMinimized -> 24.dp
-            isIconsOnly -> 26.dp
-            else -> 32.dp
+            isIconsOnly -> if (isTablet) 28.dp else 26.dp
+            else -> if (isTablet) 32.dp else 28.dp
         },
         animationSpec = dockSpringDp,
         label = "dockCorner"
@@ -984,13 +982,11 @@ fun GeminiGlowingJadzumiLogo(
         modifier = modifier
             .widthIn(max = dockWidth)
             .then(if (!isMinimized) Modifier.fillMaxWidth() else Modifier.width(dockWidth))
-            .padding(horizontal = if (isMinimized) 0.dp else 18.dp, vertical = 4.dp)
-            .height(dockHeight)
-            .clip(RoundedCornerShape(cornerRadius)),
+            .height(dockHeight),
         shape = RoundedCornerShape(cornerRadius),
         color = GlassTheme.surfaceColor(theme, glassIntensity),
-        border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity)),
-        shadowElevation = if (isMinimized) 16.dp else 12.dp
+        border = BorderStroke(0.75.dp, GlassTheme.borderColor(theme, glassIntensity)),
+        shadowElevation = if (isMinimized) 16.dp else 10.dp
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -1002,23 +998,29 @@ fun GeminiGlowingJadzumiLogo(
                     modifier = Modifier
                         .fillMaxSize()
                         .alpha(fullDockAlpha)
-                        .padding(horizontal = if (isTablet) 12.dp else 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                        .padding(horizontal = if (isTablet) 14.dp else 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Non-clickable Google Gemini-style Alive Glooming Logo
-                    GeminiGlowingJadzumiLogo(
-                        darkSurface = theme != "Light",
-                        size = currentLogoSize
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = if (isTablet) 8.dp else 4.dp, end = if (isTablet) 8.dp else 4.dp)
+                    ) {
+                        GeminiGlowingJadzumiLogo(
+                            darkSurface = theme != "Light",
+                            size = currentLogoSize
+                        )
 
-                    // Subtle vertical frosted glass divider
-                    Box(
-                        modifier = Modifier
-                            .height(currentDividerHeight)
-                            .width(1.dp)
-                            .background(GlassTheme.frostedBorderColor(theme, glassIntensity).copy(alpha = 0.35f))
-                    )
+                        Spacer(Modifier.width(if (isTablet) 10.dp else 6.dp))
+
+                        // Subtle vertical frosted glass divider
+                        Box(
+                            modifier = Modifier
+                                .height(currentDividerHeight)
+                                .width(1.dp)
+                                .background(GlassTheme.frostedBorderColor(theme, glassIntensity).copy(alpha = 0.35f))
+                        )
+                    }
 
                     // Navigation Destinations
                     navDestinations.forEach { d ->
@@ -1027,32 +1029,41 @@ fun GeminiGlowingJadzumiLogo(
                         val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
 
                         val iconScale by animateFloatAsState(
-                            targetValue = if (isSelected) (if (isIconsOnly) 1.18f else 1.15f) else 1.0f,
+                            targetValue = if (isSelected) (if (isIconsOnly) 1.16f else 1.12f) else 1.0f,
                             animationSpec = spring(dampingRatio = 0.78f, stiffness = Spring.StiffnessMediumLow),
                             label = "dockIconScale_${d.name}"
                         )
 
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(18.dp))
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(16.dp))
                                 .clickable(
                                     interactionSource = remember(d.name) { MutableInteractionSource() },
-                                    indication = ripple(bounded = true, radius = 26.dp)
+                                    indication = ripple(bounded = true, radius = 24.dp)
                                 ) {
                                     if (!isSelected) {
                                         onNavigate(d.name)
                                     }
-                                }
-                                .padding(horizontal = currentItemPadding, vertical = if (isIconsOnly) 6.dp else 4.dp),
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             if (isIconsOnly) {
                                 // Ultra-sleek mode: Resized prominent icons, zero container shapes
-                                Box(
+                                Icon(
+                                    imageVector = d.icon,
+                                    contentDescription = d.name,
+                                    tint = if (isSelected) activeColor else inactiveColor,
                                     modifier = Modifier
-                                        .height(38.dp)
-                                        .widthIn(min = 44.dp),
-                                    contentAlignment = Alignment.Center
+                                        .size(currentIconSize)
+                                        .scale(iconScale)
+                                )
+                            } else {
+                                // Default mode: Resized icons + clean typography labels
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
                                 ) {
                                     Icon(
                                         imageVector = d.icon,
@@ -1062,28 +1073,6 @@ fun GeminiGlowingJadzumiLogo(
                                             .size(currentIconSize)
                                             .scale(iconScale)
                                     )
-                                }
-                            } else {
-                                // Default mode: Resized icons + clean typography labels
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(3.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .height(26.dp)
-                                            .widthIn(min = 36.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = d.icon,
-                                            contentDescription = d.name,
-                                            tint = if (isSelected) activeColor else inactiveColor,
-                                            modifier = Modifier
-                                                .size(currentIconSize)
-                                                .scale(iconScale)
-                                        )
-                                    }
                                     Text(
                                         text = d.name,
                                         fontSize = 10.sp,
