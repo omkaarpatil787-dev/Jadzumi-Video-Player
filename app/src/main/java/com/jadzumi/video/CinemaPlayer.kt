@@ -123,7 +123,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         }
     }
 
-    val coroutineScope = rememberCoroutineScope()
     var isDismissing by remember { mutableStateOf(false) }
     val playerEnterProgress = remember(video.identity) { Animatable(if (reducedMotion) 1f else 0f) }
 
