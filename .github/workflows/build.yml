@@ -32,14 +32,14 @@ jobs:
 
     - name: Run Unit Tests & Build APKs
       run: |
-        ./gradlew test assembleRelease assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log || (echo "=== GRADLE FAILURE LOG ===" && tail -n 120 build.log && exit 1)
+        set -o pipefail
+        ./gradlew test assembleRelease assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
 
-    - name: Upload Build Log on Failure
+    - name: Print Build Failure Log
       if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: Build-Failure-Log
-        path: build.log
+      run: |
+        echo "=== GRADLE FAILURE LOG ==="
+        tail -n 150 build.log
 
     - name: Save Release APK (v1.0.0 Optimized & Shrunk)
       uses: actions/upload-artifact@v4
