@@ -51,14 +51,10 @@ fun TvShowDetailsPage(
 ) {
     val context = LocalContext.current
     var onlineShow by remember(series.id, series.title) {
-        mutableStateOf(
-            OnlineMetadataFetcher.getCachedTvShow(context, series.title)
-                ?: OnlineMetadataFetcher.getCachedTvShow(context, series.id)
-        )
+        mutableStateOf(OnlineMetadataFetcher.getCachedTvShow(context, series.title))
     }
     LaunchedEffect(series.id, series.title) {
         val fetched = OnlineMetadataFetcher.fetchTvShowMetadata(context, series.title)
-            ?: OnlineMetadataFetcher.fetchTvShowMetadata(context, series.id)
         if (fetched != null) {
             onlineShow = fetched
         }
@@ -349,17 +345,18 @@ private fun ShowHeroCard(
     onMarkSeasonWatched: () -> Unit
 ) {
     var synopsisExpanded by rememberSaveable { mutableStateOf(false) }
-    val displayPoster = onlineShow?.localPosterPath
-        ?: onlineShow?.posterUrl
-        ?: series.posterUri
-        ?: series.backdropUri
+    val displayPoster = series.posterUri ?: onlineShow?.localPosterPath ?: onlineShow?.posterUrl
     val syn = series.synopsis
-    val displaySynopsis = onlineShow?.synopsis?.takeIf { it.isNotBlank() }
-        ?: syn
-        ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
+    val isGenericSynopsis = syn.isNullOrBlank() ||
+        syn.contains("Offline TV Series", ignoreCase = true) ||
+        syn.contains("offline library", ignoreCase = true) ||
+        syn.contains("feature film stored", ignoreCase = true)
+    val displaySynopsis = if (isGenericSynopsis && !onlineShow?.synopsis.isNullOrBlank()) {
+        onlineShow!!.synopsis!!
+    } else syn ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
 
-    val displayTitle = onlineShow?.title?.takeIf { it.isNotBlank() } ?: series.title
-    val displayYear = onlineShow?.year?.takeIf { it.isNotBlank() } ?: series.year ?: "2024"
+    val displayTitle = onlineShow?.title ?: series.title
+    val displayYear = onlineShow?.year ?: series.year ?: "2024"
     val displayGenres = (onlineShow?.genres?.takeIf { it.isNotEmpty() } ?: series.genres).filter { it != "Cinema" && it != "Feature Film" }
 
     val heroPad = if (isTablet) 22.dp else 16.dp
@@ -371,12 +368,12 @@ private fun ShowHeroCard(
         else -> "Start Series"
     }
 
+    val glassIntensity = LocalGlassIntensity.current
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Xl),
-        shape = CinemaCorners.Xl,
-        color = Color.Transparent
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
     ) {
             Column(
                 modifier = Modifier.padding(heroPad),
@@ -611,17 +608,13 @@ private fun SeasonTabPill(
     isCompleted: Boolean,
     onClick: () -> Unit
 ) {
-    val colors = LocalCinemaFlowColors.current
     Surface(
-        shape = CinemaCorners.Pill,
-        color = if (isSelected) colors.pillActiveBg else colors.pillBg,
-        modifier = Modifier
-            .clip(CinemaCorners.Pill)
-            .clickable(onClick = onClick)
-            .cinemaPill(active = isSelected)
+        shape = CircleShape,
+        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier.clip(CircleShape).clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -630,25 +623,25 @@ private fun SeasonTabPill(
                     Icons.Rounded.CheckCircle,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = if (isSelected) colors.pillActiveText else Color(0xFF1E8E3E)
+                    tint = if (isSelected) Color.White else MaterialTheme.colorScheme.primary
                 )
             }
             Text(
                 label,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isSelected) colors.pillActiveText else colors.inkPrimary
+                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Surface(
-                shape = CinemaCorners.Pill,
-                color = if (isSelected) colors.pillActiveText.copy(alpha = 0.15f) else colors.bgSecondary
+                shape = CircleShape,
+                color = if (isSelected) Color.White.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surfaceContainerHighest
             ) {
                 Text(
                     badgeText,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (isSelected) colors.pillActiveText else colors.inkMuted
+                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -711,7 +704,6 @@ private fun EpisodeCard(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val colors = LocalCinemaFlowColors.current
     val savedPos = playback.savedPosition(video)
     val dur = video.duration.takeIf { it > 0 } ?: 1000L
     val isWatched = savedPos >= dur * 0.9f
@@ -721,10 +713,14 @@ private fun EpisodeCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg)
+            .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
-        shape = CinemaCorners.Lg,
-        color = if (isNext) colors.accentPrimary.copy(alpha = 0.08f) else Color.Transparent
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        border = BorderStroke(
+            if (isNext) 2.dp else 1.dp,
+            if (isNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+        )
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
@@ -882,12 +878,12 @@ private fun EpisodeCard(
 
 @Composable
 internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
+    val glassIntensity = LocalGlassIntensity.current
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg),
-        shape = CinemaCorners.Lg,
-        color = Color.Transparent
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -953,11 +949,9 @@ internal fun TechRow(label: String, value: String) {
 @Composable
 internal fun OfflineVerificationCard() {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg),
-        shape = CinemaCorners.Lg,
-        color = Color.Transparent
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -1006,7 +1000,7 @@ internal fun decodeSampledBitmap(context: android.content.Context, uriString: St
                     val conn = java.net.URL(uriString).openConnection() as java.net.HttpURLConnection
                     conn.connectTimeout = 6000
                     conn.readTimeout = 8000
-                    conn.setRequestProperty("User-Agent", "JadzumiPlayer/1.3")
+                    conn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2")
                     if (conn.responseCode in 200..299) {
                         conn.inputStream.use { input ->
                             java.io.FileOutputStream(cachedFile).use { output ->

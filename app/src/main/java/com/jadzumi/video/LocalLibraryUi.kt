@@ -100,13 +100,12 @@ fun WelcomeOnboardingCard(
     onAddFolder: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalCinemaFlowColors.current
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Xl),
-        shape = CinemaCorners.Xl,
-        color = Color.Transparent
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shadowElevation = 3.dp
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -115,14 +114,14 @@ fun WelcomeOnboardingCard(
         ) {
             Surface(
                 shape = CircleShape,
-                color = colors.accentPrimary.copy(alpha = 0.18f),
+                color = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier.size(64.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Rounded.VideoLibrary,
                         contentDescription = null,
-                        tint = colors.accentPrimary,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -131,21 +130,20 @@ fun WelcomeOnboardingCard(
                 "Welcome to Jadzumi Player",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = colors.inkPrimary,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
             Text(
                 "100% Offline-First Cinema Player for your phone and tablet. Connect a folder on your device (e.g. Movies, TV Shows, or Downloads) to scan and play your media with hardware acceleration and automatic artwork detection.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = colors.inkMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 lineHeight = 20.sp
             )
             Button(
                 onClick = onAddFolder,
-                shape = CinemaCorners.Pill,
-                colors = ButtonDefaults.buttonColors(containerColor = colors.accentPrimary),
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 12.dp)
             ) {
                 Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -156,18 +154,13 @@ fun WelcomeOnboardingCard(
 }
 
 @Composable private fun LocalPanel(content: @Composable ColumnScope.() -> Unit) {
-    val colors = LocalCinemaFlowColors.current
     Surface(
-        Modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg),
-        shape = CinemaCorners.Lg,
-        color = Color.Transparent,
-        contentColor = colors.inkPrimary
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        CompositionLocalProvider(LocalContentColor provides colors.inkPrimary) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
-        }
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
     }
 }
 
@@ -324,11 +317,11 @@ private fun HeroMoviePager(
                             }
                             Box(
                                 Modifier.fillMaxSize().background(
-                                    Brush.linearGradient(
+                                    Brush.verticalGradient(
                                         colors = listOf(
-                                            Color(0xF2081424),
-                                            Color(0xC00C1C30),
-                                            Color(0x400E2036)
+                                            Color.Black.copy(alpha = 0.2f),
+                                            Color.Black.copy(alpha = 0.55f),
+                                            Color.Black.copy(alpha = 0.94f)
                                         )
                                     )
                                 )
@@ -339,34 +332,31 @@ private fun HeroMoviePager(
                             ) {
                                 if (item.badge != null) {
                                     Surface(
-                                        shape = CinemaCorners.Pill,
-                                        color = Color(0x33458AC9),
-                                        border = BorderStroke(1.dp, Color(0x66A7D7FF)),
+                                        shape = CircleShape,
+                                        color = Color(0xFF0B57D0).copy(alpha = 0.85f),
                                         modifier = Modifier.padding(bottom = 6.dp)
                                     ) {
                                         Text(
                                             item.badge,
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            letterSpacing = 0.16.sp,
-                                            color = Color(0xFFA7D7FF)
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
                                         )
                                     }
                                 }
                                 Text(
                                     item.title,
                                     color = Color.White,
-                                    fontSize = if (isPhone) 24.sp else 32.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    letterSpacing = (-0.03).sp,
+                                    fontSize = 28.sp,
+                                    fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     item.subtitle,
-                                    color = Color.White.copy(alpha = 0.82f),
+                                    color = Color.White.copy(alpha = 0.78f),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -375,35 +365,32 @@ private fun HeroMoviePager(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
+                                    Button(
+                                        onClick = item.onPlay,
+                                        shape = CircleShape,
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
+                                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                                    ) {
+                                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    }
                                     Surface(
                                         onClick = item.onPlay,
-                                        shape = CinemaCorners.Pill,
-                                        color = Color.Transparent,
-                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.40f)),
-                                        modifier = Modifier.height(42.dp)
+                                        shape = CircleShape,
+                                        color = Color.White.copy(alpha = 0.18f),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                                        modifier = Modifier.size(42.dp)
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .background(
-                                                    Brush.linearGradient(listOf(Color(0xFF6BB3F8), Color(0xFF4185C7)))
-                                                )
-                                                .padding(horizontal = 22.dp, vertical = 10.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                                Text("Watch Now", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                            }
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Rounded.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
                                         }
                                     }
                                     Surface(
                                         onClick = item.onInfo,
-                                        shape = CinemaCorners.Pill,
+                                        shape = CircleShape,
                                         color = Color.White.copy(alpha = 0.18f),
-                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.30f)),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
                                         modifier = Modifier.size(42.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
@@ -454,22 +441,15 @@ private fun ContinueWatchingCard(
     durationMs: Long,
     onClick: () -> Unit
 ) {
-    val colors = LocalCinemaFlowColors.current
-    Surface(
+    Card(
         onClick = onClick,
-        modifier = Modifier
-            .width(260.dp)
-            .cinemaGlassCard(CinemaCorners.Lg),
-        shape = CinemaCorners.Lg,
-        color = Color.Transparent
+        modifier = Modifier.width(240.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Column(Modifier.padding(10.dp)) {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(CinemaCorners.Md)
-            ) {
+        Column {
+            Box(Modifier.fillMaxWidth().height(130.dp)) {
                 if (video != null) {
                     LocalThumbnail(video, Modifier.fillMaxSize())
                 } else {
@@ -503,37 +483,24 @@ private fun ContinueWatchingCard(
                     }
                 }
             }
-            Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp)) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp)) {
                 val title = video?.title ?: previewFallback?.title ?: "Video"
                 Text(
                     title,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
-                    color = colors.inkPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(8.dp))
                 val durSafe = if (durationMs > 0) durationMs else 1L
                 val progress = (savedPos.toDouble() / durSafe).toFloat().coerceIn(0f, 1f)
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(CircleShape)
-                        .background(colors.bgSecondary)
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth(progress)
-                            .fillMaxHeight()
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(colors.accentPrimary, colors.accentSoft)
-                                )
-                            )
-                    )
-                }
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
                 Spacer(Modifier.height(6.dp))
                 Row(
                     Modifier.fillMaxWidth(),
@@ -545,13 +512,12 @@ private fun ContinueWatchingCard(
                     Text(
                         "${timecode(posSec)} / ${timecode(durSec)}",
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = colors.inkMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Icon(
                         Icons.Rounded.ChevronRight,
                         null,
-                        tint = colors.inkMuted,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -569,12 +535,17 @@ private fun CategoryQuickCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalCinemaFlowColors.current
-    Surface(
+    Card(
         onClick = onClick,
-        modifier = modifier.cinemaGlassCard(CinemaCorners.Md),
-        shape = CinemaCorners.Md,
-        color = if (selected) colors.accentPrimary.copy(alpha = 0.15f) else Color.Transparent
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+        )
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
@@ -588,27 +559,27 @@ private fun CategoryQuickCard(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = if (selected) colors.accentPrimary else colors.accentSoft.copy(alpha = 0.20f),
+                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier.size(34.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             icon,
                             null,
-                            tint = if (selected) Color.White else colors.accentPrimary,
+                            tint = if (selected) Color.White else MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
                 }
                 Column {
-                    Text(title, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, maxLines = 1, color = colors.inkPrimary)
-                    Text(countText, fontSize = 11.sp, color = colors.inkMuted, maxLines = 1)
+                    Text(title, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, maxLines = 1)
+                    Text(countText, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 }
             }
             Icon(
                 Icons.Rounded.ChevronRight,
                 null,
-                tint = if (selected) colors.accentPrimary else colors.inkMuted,
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -622,23 +593,21 @@ fun StorageSummaryCard(
     onAddFolder: () -> Unit
 ) {
     val context = LocalContext.current
-    val colors = LocalCinemaFlowColors.current
     val stat = remember { runCatching { android.os.StatFs(android.os.Environment.getDataDirectory().path) }.getOrNull() }
     val totalDeviceBytes = stat?.totalBytes ?: (256L * 1024 * 1024 * 1024)
     val freeDeviceBytes = stat?.availableBytes ?: (178L * 1024 * 1024 * 1024)
     val usedDeviceBytes = (totalDeviceBytes - freeDeviceBytes).coerceAtLeast(0)
     val storageRatio = (usedDeviceBytes.toDouble() / totalDeviceBytes.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f)
 
-    Surface(
-        shape = CinemaCorners.Xl,
-        color = Color.Transparent,
-        modifier = Modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Xl)
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        BoxWithConstraints(Modifier.fillMaxWidth().padding(22.dp)) {
+        BoxWithConstraints(Modifier.fillMaxWidth().padding(18.dp)) {
             val compact = maxWidth < 460.dp
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (compact) {
                     Row(
                         Modifier.fillMaxWidth(),
@@ -646,29 +615,28 @@ fun StorageSummaryCard(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Surface(
-                            shape = CinemaCorners.Sm,
-                            color = colors.accentPrimary.copy(alpha = 0.18f),
-                            modifier = Modifier.size(46.dp)
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(44.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
-                                Icon(Icons.Rounded.Folder, null, tint = colors.accentPrimary, modifier = Modifier.size(24.dp))
+                                Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                             }
                         }
                         Column(Modifier.weight(1f)) {
-                            Text("Internal Storage", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = colors.inkPrimary)
+                            Text("Internal Storage", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             Text(
                                 "$videoCount videos · ${Formatter.formatFileSize(context, totalIndexedBytes)}",
                                 fontSize = 12.sp,
-                                color = colors.inkMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                     Button(
                         onClick = onAddFolder,
-                        shape = CinemaCorners.Pill,
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.accentPrimary),
+                        shape = RoundedCornerShape(20.dp),
                         modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                     ) {
                         Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
@@ -682,44 +650,43 @@ fun StorageSummaryCard(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
                             Surface(
-                                shape = CinemaCorners.Sm,
-                                color = colors.accentPrimary.copy(alpha = 0.18f),
-                                modifier = Modifier.size(48.dp)
+                                shape = RoundedCornerShape(14.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(44.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Rounded.Folder, null, tint = colors.accentPrimary, modifier = Modifier.size(26.dp))
+                                    Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                                 }
                             }
                             Column {
-                                Text("Internal Storage", fontWeight = FontWeight.Bold, fontSize = 17.sp, color = colors.inkPrimary)
+                                Text("Internal Storage", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                 Text(
                                     "$videoCount videos · ${Formatter.formatFileSize(context, totalIndexedBytes)}",
                                     fontSize = 12.sp,
-                                    color = colors.inkMuted
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                         Button(
                             onClick = onAddFolder,
-                            shape = CinemaCorners.Pill,
-                            colors = ButtonDefaults.buttonColors(containerColor = colors.accentPrimary),
-                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
+                            shape = RoundedCornerShape(20.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                         ) {
                             Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Add Folder", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text("Add folder", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
                 LinearProgressIndicator(
                     progress = { storageRatio },
-                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
-                    color = colors.accentPrimary,
-                    trackColor = colors.accentSoft.copy(alpha = 0.25f)
+                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
                 Row(
                     Modifier.fillMaxWidth(),
@@ -729,10 +696,9 @@ fun StorageSummaryCard(
                     Text(
                         "Storage: ${Formatter.formatFileSize(context, freeDeviceBytes)} free of ${Formatter.formatFileSize(context, totalDeviceBytes)}",
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = colors.inkMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Icon(Icons.Rounded.Storage, null, tint = colors.inkMuted, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
                 }
             }
         }
@@ -782,7 +748,6 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     defaultCategory: String = "All videos",
     onScrollActive: ((Boolean) -> Unit)? = null
 ) {
-    val colors = LocalCinemaFlowColors.current
     val add = rememberFolderPicker(library)
     val listState = rememberLazyListState()
     val isHeroMinimized by remember(listState) {
@@ -1124,7 +1089,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = colors.inkPrimary)
+                                    Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                                     if (continueWatching.size > 1) {
                                         Text(
                                             "See all >",
@@ -1178,8 +1143,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text(
                                         "TV Series (${filteredSeries.size})",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = colors.inkPrimary
+                                        fontWeight = FontWeight.Bold
                                     )
                                     if (defaultCategory == "All videos") {
                                         TextButton(onClick = { category = "All videos" }) { Text("Show all") }
@@ -1272,8 +1236,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text(
                                         if (category == "All videos") "All Indexed Videos (${videos.size})" else "$category (${videos.size})",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = colors.inkPrimary
+                                        fontWeight = FontWeight.Bold
                                     )
                                     if (category != "All videos") {
                                         TextButton(onClick = { category = "All videos" }) { Text("Show all") }
@@ -1484,47 +1447,43 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     onRemove: () -> Unit
 ) {
     val context = LocalContext.current
-    val colors = LocalCinemaFlowColors.current
     val folderVideos = remember(state.videos, folder.uri) { state.videos.filter { it.folder == folder.uri } }
     val folderBytes = remember(folderVideos) { folderVideos.sumOf { it.bytes.coerceAtLeast(0) } }
-
-    Surface(
+    val borderColor by animateColorAsState(
+        if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+        animationSpec = tween(220),
+        label = "folderBorder"
+    )
+    val containerColor by animateColorAsState(
+        if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f) else MaterialTheme.colorScheme.surface,
+        animationSpec = tween(220),
+        label = "folderContainer"
+    )
+    Card(
         onClick = onSelect,
-        shape = CinemaCorners.Lg,
-        color = if (isActive) colors.accentPrimary.copy(alpha = 0.15f) else Color.Transparent,
-        modifier = Modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg)
+        shape = RoundedCornerShape(22.dp),
+        border = BorderStroke(if (isActive) 2.dp else 1.dp, borderColor),
+        colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
-        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f)) {
-                    Surface(
-                        shape = CinemaCorners.Sm,
-                        color = colors.accentPrimary.copy(alpha = 0.18f),
-                        modifier = Modifier.size(42.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.Folder, null, tint = colors.accentPrimary, modifier = Modifier.size(22.dp))
-                        }
-                    }
-                    Column {
-                        Text(folder.name, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = colors.inkPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(
-                            "${folderVideos.size} videos · ${Formatter.formatFileSize(context, folderBytes)} · ${folder.status}",
-                            fontSize = 12.sp,
-                            color = colors.inkMuted
-                        )
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary)
+                    Text(folder.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 TextButton(
                     onClick = onRemove,
                     enabled = !state.busy,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                 ) {
-                    Text("Remove", fontSize = 12.sp, color = MaterialTheme.colorScheme.error, maxLines = 1, softWrap = false)
+                    Text("Remove", fontSize = 12.sp, maxLines = 1, softWrap = false)
                 }
             }
+            Text(
+                "${folderVideos.size} videos · ${Formatter.formatFileSize(context, folderBytes)} · ${folder.status}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -1577,25 +1536,8 @@ fun MovieSummaryCard(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val colors = LocalCinemaFlowColors.current
     val metadata = remember(video, sidecars) {
         extractMovieMetadata(video, sidecars, context)
-    }
-    var dynamicPoster by remember(video.identity) {
-        mutableStateOf(
-            metadata.posterUri
-                ?: OnlineMetadataFetcher.getCachedMovie(context, metadata.title, metadata.year)?.localPosterPath
-                ?: OnlineMetadataFetcher.getCachedMovie(context, video.title, metadata.year)?.localPosterPath
-        )
-    }
-    LaunchedEffect(video.identity, metadata.title, metadata.year) {
-        if (dynamicPoster == null) {
-            val fetched = OnlineMetadataFetcher.fetchMovieMetadata(context, metadata.title, metadata.year)
-                ?: OnlineMetadataFetcher.fetchMovieMetadata(context, video.title, metadata.year)
-            if (fetched?.localPosterPath != null || fetched?.posterUrl != null) {
-                dynamicPoster = fetched.localPosterPath ?: fetched.posterUrl
-            }
-        }
     }
     val savedPos = playback.savedPosition(video)
     val dur = video.duration.takeIf { it > 0 } ?: 1000L
@@ -1606,22 +1548,22 @@ fun MovieSummaryCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg)
+            .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
-        shape = CinemaCorners.Lg,
-        color = Color.Transparent
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
-        Column(Modifier.padding(10.dp)) {
+        Column {
             // Poster / Backdrop Thumbnail Container (16:10 aspect ratio)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16f / 10f)
-                    .clip(CinemaCorners.Md)
-                    .background(colors.bgSecondary)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 SidecarImage(
-                    uri = dynamicPoster ?: metadata.backdropUri,
+                    uri = metadata.posterUri ?: metadata.backdropUri,
                     fallbackVideo = video,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -1634,13 +1576,13 @@ fun MovieSummaryCard(
                     else -> "HD"
                 }
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color.Black.copy(alpha = 0.70f),
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.75f),
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
                     Text(
                         badge,
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -1650,14 +1592,14 @@ fun MovieSummaryCard(
                 // Top Left Rating Badge
                 metadata.rating?.let { rating ->
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color.Black.copy(alpha = 0.70f),
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color.Black.copy(alpha = 0.75f),
                         modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Icon(Icons.Rounded.Star, null, Modifier.size(11.dp), tint = Color(0xFFF9AB00))
                             Text(rating, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -1672,24 +1614,21 @@ fun MovieSummaryCard(
                             .align(Alignment.BottomStart)
                             .fillMaxWidth(progress)
                             .height(3.5.dp)
-                            .background(
-                                if (isWatched) Brush.horizontalGradient(listOf(Color(0xFF1E8E3E), Color(0xFF34A853)))
-                                else Brush.horizontalGradient(listOf(colors.accentPrimary, colors.accentSoft))
-                            )
+                            .background(if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
                     )
                 }
             }
 
             // Info Section
             Column(
-                modifier = Modifier.padding(top = 10.dp, bottom = 4.dp, start = 4.dp, end = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = metadata.title,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = colors.inkPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1698,26 +1637,25 @@ fun MovieSummaryCard(
                 val sizeStr = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else ""
                 Text(
                     text = listOfNotNull(metadata.year, durStr, sizeStr.takeIf { it.isNotEmpty() }).joinToString(" · "),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = colors.inkMuted,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(Modifier.height(1.dp))
+                Spacer(Modifier.height(2.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     if (isWatched) {
-                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(12.dp), tint = Color(0xFF1E8E3E))
+                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(13.dp), tint = Color(0xFF1E8E3E))
                         Text("Watched", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E8E3E))
                     } else if (inProgress) {
-                        Text("Resume ${timecode(savedPos / 1000)}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = colors.accentPrimary)
+                        Text("Resume ${timecode(savedPos / 1000)}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                     } else {
-                        Text(metadata.genres.firstOrNull() ?: "Movie", fontSize = 11.sp, color = colors.inkMuted)
+                        Text(metadata.genres.firstOrNull() ?: "Movie", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
                     }
                 }
             }
@@ -1769,49 +1707,30 @@ fun TvSeriesSummaryCard(
     playback: PlaybackController,
     onClick: () -> Unit
 ) {
-    val context = LocalContext.current
     val watched = remember(series, playback.historyVersion) { series.watchedCount(playback) }
     val total = series.totalEpisodes
     val progress = if (total > 0) (watched.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
-    val colors = LocalCinemaFlowColors.current
-
-    var dynamicPoster by remember(series.id) {
-        mutableStateOf(
-            series.posterUri
-                ?: OnlineMetadataFetcher.getCachedTvShow(context, series.title)?.localPosterPath
-                ?: OnlineMetadataFetcher.getCachedTvShow(context, series.id)?.localPosterPath
-        )
-    }
-    LaunchedEffect(series.id, series.title) {
-        if (dynamicPoster == null) {
-            val fetched = OnlineMetadataFetcher.fetchTvShowMetadata(context, series.title)
-                ?: OnlineMetadataFetcher.fetchTvShowMetadata(context, series.id)
-            if (fetched?.localPosterPath != null || fetched?.posterUrl != null) {
-                dynamicPoster = fetched.localPosterPath ?: fetched.posterUrl
-            }
-        }
-    }
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg)
+            .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
-        shape = CinemaCorners.Lg,
-        color = Color.Transparent
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
-        Column(Modifier.padding(10.dp)) {
-            // Poster / Backdrop Thumbnail Container
+        Column {
+            // Poster / Backdrop Thumbnail
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16f / 10f)
-                    .clip(CinemaCorners.Md)
-                    .background(colors.bgSecondary)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 val firstEp = series.seasons.values.firstOrNull()?.firstOrNull()
                 SidecarImage(
-                    uri = dynamicPoster ?: series.backdropUri,
+                    uri = series.posterUri ?: series.backdropUri,
                     fallbackVideo = firstEp,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -1819,14 +1738,14 @@ fun TvSeriesSummaryCard(
                 // Top Left Rating Badge
                 series.rating?.let { rating ->
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color.Black.copy(alpha = 0.70f),
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color.Black.copy(alpha = 0.75f),
                         modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Icon(Icons.Rounded.Star, null, Modifier.size(11.dp), tint = Color(0xFFF9AB00))
                             Text(rating, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -1836,13 +1755,13 @@ fun TvSeriesSummaryCard(
 
                 // Seasons badge
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color.Black.copy(alpha = 0.70f),
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.75f),
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
                     Text(
                         "${series.seasonCount} Season${if (series.seasonCount > 1) "s" else ""}",
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -1856,48 +1775,44 @@ fun TvSeriesSummaryCard(
                             .align(Alignment.BottomStart)
                             .fillMaxWidth(progress)
                             .height(3.5.dp)
-                            .background(
-                                if (progress >= 1f) Brush.horizontalGradient(listOf(Color(0xFF1E8E3E), Color(0xFF34A853)))
-                                else Brush.horizontalGradient(listOf(colors.accentPrimary, colors.accentSoft))
-                            )
+                            .background(if (progress >= 1f) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
                     )
                 }
             }
 
             // Info Section
             Column(
-                modifier = Modifier.padding(top = 10.dp, bottom = 4.dp, start = 4.dp, end = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = series.title,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = colors.inkPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
                     text = "${series.totalEpisodes} Episodes · ${series.year ?: "2024"}",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = colors.inkMuted
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(Modifier.height(1.dp))
+                Spacer(Modifier.height(2.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     if (progress >= 1f) {
-                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(12.dp), tint = Color(0xFF1E8E3E))
+                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(13.dp), tint = Color(0xFF1E8E3E))
                         Text("All Watched", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E8E3E))
                     } else if (watched > 0) {
-                        Text("$watched/$total Watched", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = colors.accentPrimary)
+                        Text("$watched/$total Watched", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                     } else {
-                        Text("${series.seasonCount} Season${if (series.seasonCount > 1) "s" else ""}", fontSize = 11.sp, color = colors.inkMuted)
+                        Text("Unwatched", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
                     }
                 }
             }
@@ -1911,14 +1826,11 @@ fun TvSeriesSummaryCard(
     select: () -> Unit
 ) {
     val context = LocalContext.current
-    val colors = LocalCinemaFlowColors.current
-    Surface(
+    Card(
         onClick = select,
-        shape = CinemaCorners.Lg,
-        color = Color.Transparent,
-        modifier = Modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shape = RoundedCornerShape(22.dp)
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
             val compact = maxWidth < 460.dp
@@ -1930,13 +1842,12 @@ fun TvSeriesSummaryCard(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                LocalThumbnail(video, Modifier.size(thumbWidth, thumbHeight).clip(CinemaCorners.Sm))
+                LocalThumbnail(video, Modifier.size(thumbWidth, thumbHeight).clip(RoundedCornerShape(14.dp)))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         video.title,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = colors.inkPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodyLarge,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -1944,17 +1855,16 @@ fun TvSeriesSummaryCard(
                     val durText = if (video.duration > 0) timecode(video.duration / 1000) else "Duration unavailable"
                     Text(
                         durText + sizeText,
-                        fontSize = 12.sp,
-                        color = colors.inkMuted,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     video.episode?.let {
                         Text(
                             "Season ${it.season} · Episode ${it.episode}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colors.accentPrimary,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
                             maxLines = 1
                         )
                     }
@@ -1968,7 +1878,7 @@ fun TvSeriesSummaryCard(
                     Icon(
                         Icons.Rounded.ChevronRight,
                         "View file details",
-                        tint = colors.inkMuted
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -2189,37 +2099,6 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
     }
 }
 
-private fun Bitmap.isAlmostBlack(): Boolean {
-    return try {
-        val w = width
-        val h = height
-        if (w <= 0 || h <= 0) return true
-        val samplePoints = intArrayOf(
-            w / 2, h / 2,
-            w / 4, h / 4,
-            (w * 3) / 4, h / 4,
-            w / 4, (h * 3) / 4,
-            (w * 3) / 4, (h * 3) / 4,
-            w / 2, h / 4,
-            w / 2, (h * 3) / 4
-        )
-        var totalLum = 0L
-        val count = samplePoints.size / 2
-        for (i in 0 until count) {
-            val px = samplePoints[i * 2]
-            val py = samplePoints[i * 2 + 1]
-            val color = getPixel(px, py)
-            val r = (color shr 16) and 0xFF
-            val g = (color shr 8) and 0xFF
-            val b = color and 0xFF
-            totalLum += (r * 299 + g * 587 + b * 114) / 1000
-        }
-        (totalLum / count) < 18
-    } catch (_: Throwable) {
-        false
-    }
-}
-
 @Composable internal fun LocalThumbnail(video: LocalVideo, modifier: Modifier) {
     val context = LocalContext.current.applicationContext
     val key = "${video.uri}:${video.modified}:${video.bytes}"
@@ -2234,57 +2113,39 @@ private fun Bitmap.isAlmostBlack(): Boolean {
             ThumbnailMemory.permits.withPermit {
                 ThumbnailMemory.cache.get(key) ?: run {
                     var bmp: Bitmap? = null
-
-                    // 1. Anti-Black Frame Fallback: Sample video at 12% runtime (clamped between 10s and 180s)
-                    val retriever = MediaMetadataRetriever()
-                    try {
-                        retriever.setDataSource(context, video.uri.toUri())
-                        val sampleTimeUs = if (video.duration > 0) {
-                            (video.duration * 1000L * 0.12f).toLong().coerceIn(10_000_000L, 180_000_000L)
-                        } else {
-                            15_000_000L
+                    // 1. On Android 10+, request cached system thumbnail from ContentResolver
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        runCatching {
+                            bmp = context.contentResolver.loadThumbnail(video.uri.toUri(), android.util.Size(480, 270), null)
                         }
-                        if (Build.VERSION.SDK_INT >= 27) {
-                            val candidate = retriever.getScaledFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
-                            bmp = if (candidate != null && !candidate.isAlmostBlack()) {
-                                candidate
+                    }
+                    // 2. Sample frame at 12% into the movie (or 15s in) to bypass black intro frames
+                    if (bmp == null) {
+                        val retriever = MediaMetadataRetriever()
+                        try {
+                            retriever.setDataSource(context, video.uri.toUri())
+                            val sampleTimeUs = if (video.duration > 0) {
+                                (video.duration * 1000L * 0.12f).toLong().coerceIn(10_000_000L, 180_000_000L)
                             } else {
-                                val altTime = (sampleTimeUs * 2).coerceIn(25_000_000L, 240_000_000L)
-                                val altCandidate = retriever.getScaledFrameAtTime(altTime, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
-                                if (altCandidate != null && !altCandidate.isAlmostBlack()) {
-                                    altCandidate
-                                } else {
-                                    val halfCandidate = retriever.getScaledFrameAtTime(sampleTimeUs / 2, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
-                                    if (halfCandidate != null && !halfCandidate.isAlmostBlack()) {
-                                        halfCandidate
-                                    } else {
-                                        candidate ?: altCandidate ?: halfCandidate
-                                    }
+                                15_000_000L
+                            }
+                            if (Build.VERSION.SDK_INT >= 27) {
+                                bmp = retriever.getScaledFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                if (bmp == null) {
+                                    bmp = retriever.getScaledFrameAtTime(sampleTimeUs / 2, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                }
+                                if (bmp == null) {
+                                    bmp = retriever.getScaledFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
                                 }
                             }
-                        }
-                        if (bmp == null || bmp.isAlmostBlack()) {
-                            val fullCandidate = retriever.getFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-                            if (fullCandidate != null && !fullCandidate.isAlmostBlack()) {
-                                bmp = fullCandidate
+                            if (bmp == null) {
+                                bmp = retriever.getFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                                    ?: retriever.getFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
                             }
-                        }
-                    } catch (_: Exception) { } finally {
-                        runCatching { retriever.release() }
-                    }
-
-                    // 2. If MediaMetadataRetriever produced no frame or black frame, fallback to system ContentResolver thumbnail
-                    if (bmp == null || bmp.isAlmostBlack()) {
-                        if (Build.VERSION.SDK_INT >= 29) {
-                            runCatching {
-                                val sysThumb = context.contentResolver.loadThumbnail(video.uri.toUri(), android.util.Size(480, 270), null)
-                                if (sysThumb != null && (bmp == null || !sysThumb.isAlmostBlack())) {
-                                    bmp = sysThumb
-                                }
-                            }
+                        } catch (_: Exception) { } finally {
+                            runCatching { retriever.release() }
                         }
                     }
-
                     bmp?.also { ThumbnailMemory.cache.put(key, it) }
                 }
             }

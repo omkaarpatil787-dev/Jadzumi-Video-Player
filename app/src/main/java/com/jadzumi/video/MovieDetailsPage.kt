@@ -43,15 +43,9 @@ fun MovieDetailsPage(
         extractMovieMetadata(video, state.sidecars, context)
     }
 
-    var onlineMeta by remember(video.identity) {
-        mutableStateOf(
-            OnlineMetadataFetcher.getCachedMovie(context, metadata.title, metadata.year)
-                ?: OnlineMetadataFetcher.getCachedMovie(context, video.title, metadata.year)
-        )
-    }
+    var onlineMeta by remember(video.identity) { mutableStateOf<OnlineMediaMetadata?>(null) }
     LaunchedEffect(video.identity, metadata.title, metadata.year) {
         val fetched = OnlineMetadataFetcher.fetchMovieMetadata(context, metadata.title, metadata.year)
-            ?: OnlineMetadataFetcher.fetchMovieMetadata(context, video.title, metadata.year)
         if (fetched != null) {
             onlineMeta = fetched
         }
@@ -61,20 +55,13 @@ fun MovieDetailsPage(
         val meta = onlineMeta
         if (meta != null) {
             val syn = metadata.synopsis
-            val isGenericSynopsis = syn.isNullOrBlank()
-                || syn.contains("offline library", ignoreCase = true)
-                || syn.contains("feature film stored", ignoreCase = true)
-                || syn.contains("cinematic experience", ignoreCase = true)
-                || syn.contains("cinematic journey", ignoreCase = true)
-                || syn.contains("visionary journey", ignoreCase = true)
-                || syn.contains("animated spectacle", ignoreCase = true)
-                || syn.contains("psychological puzzle", ignoreCase = true)
+            val isGenericSynopsis = syn.isNullOrBlank() || syn.contains("offline library", ignoreCase = true) || syn.contains("feature film stored", ignoreCase = true)
             metadata.copy(
                 title = meta.title.ifBlank { metadata.title },
                 year = meta.year ?: metadata.year,
                 rating = meta.rating ?: metadata.rating,
-                genres = meta.genres.takeIf { it.isNotEmpty() } ?: metadata.genres,
-                synopsis = if ((isGenericSynopsis || syn.isNullOrBlank()) && !meta.synopsis.isNullOrBlank()) meta.synopsis else syn,
+                genres = if ((metadata.genres.isEmpty() || metadata.genres == listOf("Feature Film", "Cinema")) && meta.genres.isNotEmpty()) meta.genres else metadata.genres,
+                synopsis = if (isGenericSynopsis && !meta.synopsis.isNullOrBlank()) meta.synopsis else syn,
                 posterUri = metadata.posterUri ?: meta.localPosterPath ?: meta.posterUrl,
                 backdropUri = metadata.backdropUri ?: meta.backdropUrl ?: meta.localPosterPath ?: meta.posterUrl
             )
@@ -162,12 +149,12 @@ fun MovieDetailsPage(
 
             // 2. Movie Hero Banner Card
             item {
+                val glassIntensity = LocalGlassIntensity.current
                 Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .cinemaGlassCard(CinemaCorners.Xl),
-                    shape = CinemaCorners.Xl,
-                    color = Color.Transparent
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
                 ) {
                     val heroPad = if (isTablet) 22.dp else 16.dp
                     val posterWidth = if (isTablet) 140.dp else 102.dp
@@ -468,12 +455,12 @@ fun MovieDetailsPage(
 
 @Composable
 private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, context: Context) {
+    val glassIntensity = LocalGlassIntensity.current
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg),
-        shape = CinemaCorners.Lg,
-        color = Color.Transparent
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -502,12 +489,12 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MovieAudioSubtitleCard(video: LocalVideo) {
+    val glassIntensity = LocalGlassIntensity.current
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .cinemaGlassCard(CinemaCorners.Lg),
-        shape = CinemaCorners.Lg,
-        color = Color.Transparent
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),

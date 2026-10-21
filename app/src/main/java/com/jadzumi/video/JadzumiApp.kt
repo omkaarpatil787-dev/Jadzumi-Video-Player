@@ -78,38 +78,29 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import kotlinx.coroutines.launch
 
-private val CinemaFlowLight = lightColorScheme(
-    primary = Color(0xFF458AC9),
-    primaryContainer = Color(0xFFE1F0FF),
-    onPrimaryContainer = Color(0xFF2C689C),
-    background = Color(0xFFF7FAFF),
+private val Blue = Color(0xFF0B57D0)
+private val PaleBlue = Color(0xFFD3E3FD)
+private val Light = lightColorScheme(
+    primary = Blue,
+    primaryContainer = PaleBlue,
+    onPrimaryContainer = Color(0xFF041E49),
+    background = Color(0xFFF4F7FC),
     surface = Color.White,
-    surfaceVariant = Color(0xFFEAF4FF),
-    onSurface = Color(0xFF1C2B3D),
-    onSurfaceVariant = Color(0xFF586C82),
-    outlineVariant = Color(0xD9FFFFFF)
+    surfaceVariant = Color(0xFFE7EEF8),
+    onSurface = Color(0xFF1F1F1F),
+    onSurfaceVariant = Color(0xFF44474E),
+    outlineVariant = Color(0xFFE2E8F0)
 )
-private val CinemaFlowDark = darkColorScheme(
-    primary = Color(0xFF76B5EF),
+private val Dark = darkColorScheme(
+    primary = Color(0xFFADC7FF),
     primaryContainer = Color(0xFF1E3A5F),
     onPrimaryContainer = Color(0xFFD3E3FD),
-    background = Color(0xFF0E1724),
-    surface = Color(0xFF142032),
-    surfaceVariant = Color(0xFF1A283C),
-    onSurface = Color(0xFFF8FAFC),
-    onSurfaceVariant = Color(0xFFCBD5E1),
-    outlineVariant = Color(0x3D94A3B8)
-)
-private val CinemaFlowAmoled = darkColorScheme(
-    primary = Color(0xFF8AC3F7),
-    primaryContainer = Color(0xFF1E2838),
-    onPrimaryContainer = Color(0xFFBFE0FF),
-    background = Color.Black,
-    surface = Color(0xFF08080A),
-    surfaceVariant = Color(0xFF16161A),
-    onSurface = Color.White,
-    onSurfaceVariant = Color(0xFFE2E8F0),
-    outlineVariant = Color(0x33FFFFFF)
+    background = Color(0xFF0F1724),
+    surface = Color(0xFF182232),
+    surfaceVariant = Color(0xFF233044),
+    onSurface = Color(0xFFF1F5F9),
+    onSurfaceVariant = Color(0xFF94A3B8),
+    outlineVariant = Color(0xFF2E3C52)
 )
 
 private data class Destination(val name: String, val icon: ImageVector)
@@ -139,7 +130,6 @@ private val destinations = listOf(
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
     var theme by rememberSaveable { mutableStateOf(prefs.getString("theme", "Dark") ?: "Dark") }
-    var ambientAura by rememberSaveable { mutableStateOf(prefs.getBoolean("ambientAura", true)) }
     var reducedMotion by rememberSaveable { mutableStateOf(prefs.getBoolean("reducedMotion", false)) }
     var livelyAnimations by rememberSaveable { mutableStateOf(prefs.getBoolean("livelyAnimations", true)) }
     var themeBloomEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("themeBloom", true)) }
@@ -170,12 +160,11 @@ private val destinations = listOf(
 
     val sysDark = isSystemInDarkTheme()
     val colors = when (theme) {
-        "Light" -> CinemaFlowLight
-        "Dark" -> CinemaFlowDark
-        "AMOLED" -> CinemaFlowAmoled
-        else -> if (sysDark) CinemaFlowDark else CinemaFlowLight
+        "Light" -> Light
+        "Dark" -> Dark
+        "AMOLED" -> Dark.copy(background = Color.Black, surface = Color(0xFF0A0A0C), surfaceVariant = Color(0xFF141418))
+        else -> if (sysDark) Dark else Light
     }
-    val cinemaColors = GlassTheme.colors(theme, sysDark)
 
     fun switchThemeWithBloom(newTheme: String) {
         if (newTheme == theme) return
@@ -197,7 +186,7 @@ private val destinations = listOf(
     }
 
     DisposableEffect(colors) {
-        val style = if (colors == CinemaFlowLight) SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+        val style = if (colors == Light) SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
         else SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
         (context as? ComponentActivity)?.enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
         onDispose { }
@@ -211,75 +200,258 @@ private val destinations = listOf(
             large = RoundedCornerShape((cornerRadiusDp + 4.dp).coerceAtLeast(0.dp))
         )
     ) {
-        CompositionLocalProvider(
-            LocalGlassIntensity provides glassIntensity,
-            LocalCinemaFlowColors provides cinemaColors,
-            LocalContentColor provides colors.onSurface
-        ) {
+        CompositionLocalProvider(LocalGlassIntensity provides glassIntensity) {
             Box(Modifier.fillMaxSize()) {
-                // Dynamic Cinema Flow Ambient Aura
-                CinemaAmbientAura(
-                    enabled = ambientAura,
-                    reducedMotion = reducedMotion
-                )
-                Surface(
-                    Modifier.fillMaxSize(),
-                    color = if (ambientAura) colors.background.copy(alpha = 0.55f) else colors.background,
-                    contentColor = colors.onSurface
-                ) {
-                    CompositionLocalProvider(LocalContentColor provides colors.onSurface) {
-                        BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
-                            if (query.isNotEmpty()) {
-                                query = ""
-                            } else if (selectedId != null) {
-                                selectedId = null
-                            } else {
-                                route = "Home"
-                            }
-                        }
-                        BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
-                            val isTablet = maxWidth >= 720.dp
-                            val contentWidth = maxWidth
-                            val isPhone = contentWidth < 600.dp
-                            val topPad = if (contentWidth >= 720.dp) 20.dp else 14.dp
+            Surface(Modifier.fillMaxSize(), color = colors.background) {
+                BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
+                    if (query.isNotEmpty()) {
+                        query = ""
+                    } else if (selectedId != null) {
+                        selectedId = null
+                    } else {
+                        route = "Home"
+                    }
+                }
+                BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
+                    val isTablet = maxWidth >= 640.dp
+                    val contentWidth = maxWidth
+                    val isPhone = contentWidth < 600.dp
+                    val topPad = if (contentWidth >= 720.dp) 24.dp else 16.dp
 
-                            Box(Modifier.fillMaxSize()) {
-                                Column(Modifier.fillMaxSize()) {
-                                    CinemaFlowTopAppBar(
-                                    route = route,
-                                    query = query,
-                                    onQueryChange = { newQuery ->
-                                        query = newQuery
-                                        if (newQuery.isNotBlank()) {
-                                            selectedId = null
-                                            if (route == "Folders") {
-                                                route = "Home"
+                    Box(Modifier.fillMaxSize()) {
+                        Column(Modifier.fillMaxSize()) {
+                                    if (isPhone && selectedId == null) {
+                                        // Adaptive Phone Top Bar (Greeting + Actions, Full-width frosted search capsule)
+                                        Column(Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 6.dp)) {
+                                            Row(
+                                                Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                if (route == "Home" || route == "Library") {
+                                                    InteractiveCinemaGreeting(
+                                                        localState = localState,
+                                                        playback = playback,
+                                                        isPhone = true,
+                                                        modifier = Modifier.weight(1f)
+                                                    )
+                                                } else {
+                                                    Text(
+                                                        route,
+                                                        Modifier.weight(1f),
+                                                        style = MaterialTheme.typography.titleLarge,
+                                                        fontWeight = FontWeight.Bold,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+
+                                                IconButton(
+                                                    onClick = { library.rescan() },
+                                                    enabled = !localState.busy && localState.folders.isNotEmpty()
+                                                ) {
+                                                    if (localState.busy) {
+                                                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                                    } else {
+                                                        Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                                                    }
+                                                }
+                                            }
+
+                                            Spacer(Modifier.height(6.dp))
+
+                                            Surface(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(42.dp),
+                                                shape = RoundedCornerShape(21.dp),
+                                                color = GlassTheme.surfaceColor(theme, glassIntensity),
+                                                border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
+                                            ) {
+                                                Row(
+                                                    Modifier.fillMaxSize().padding(horizontal = 14.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Rounded.Search,
+                                                        contentDescription = "Search",
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                                                        if (query.isEmpty()) {
+                                                            Text(
+                                                                "Search videos, shows...",
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                                fontSize = 13.sp,
+                                                                maxLines = 1,
+                                                                overflow = TextOverflow.Ellipsis
+                                                            )
+                                                        }
+                                                        BasicTextField(
+                                                            value = query,
+                                                            onValueChange = { newQuery ->
+                                                                query = newQuery
+                                                                if (newQuery.isNotBlank()) {
+                                                                    selectedId = null
+                                                                    if (route == "Folders") {
+                                                                        route = "Home"
+                                                                    }
+                                                                }
+                                                            },
+                                                            singleLine = true,
+                                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                                                color = MaterialTheme.colorScheme.onSurface,
+                                                                fontSize = 13.sp
+                                                            ),
+                                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        )
+                                                    }
+                                                    if (query.isNotEmpty()) {
+                                                        IconButton(
+                                                            onClick = {
+                                                                query = ""
+                                                                keyboardController?.hide()
+                                                            },
+                                                            modifier = Modifier.size(24.dp)
+                                                        ) {
+                                                            Icon(
+                                                                Icons.Rounded.Close,
+                                                                contentDescription = "Clear search",
+                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
-                                    },
-                                    onClearQuery = {
-                                        query = ""
-                                        keyboardController?.hide()
-                                    },
-                                    selectedId = selectedId,
-                                    onBack = { selectedId = null },
-                                    onSync = { library.rescan() },
-                                    isSyncing = localState.busy,
-                                    canSync = !localState.busy && localState.folders.isNotEmpty(),
-                                    isTablet = isTablet,
-                                    greetingContent = if (route == "Home" || route == "Library") {
-                                        {
-                                            InteractiveCinemaGreeting(
-                                                localState = localState,
-                                                playback = playback,
-                                                isPhone = isPhone
-                                            )
-                                        }
-                                    } else null,
-                                    modifier = Modifier.padding(horizontal = topPad, vertical = if (isPhone) 6.dp else 10.dp)
-                                )
+                                    } else {
+                                        Row(
+                                            Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                        ) {
+                                            if (selectedId != null) {
+                                                IconButton(onClick = { selectedId = null }) {
+                                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library")
+                                                }
+                                                Text(
+                                                    "Library / Details",
+                                                    Modifier.weight(1f),
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            } else if (route == "Home" || route == "Library") {
+                                                InteractiveCinemaGreeting(
+                                                    localState = localState,
+                                                    playback = playback,
+                                                    isPhone = false,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                            } else {
+                                                Text(
+                                                    route,
+                                                    Modifier.weight(1f),
+                                                    style = MaterialTheme.typography.headlineMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
 
-                                AnimatedContent(
+                                            Surface(
+                                                modifier = Modifier
+                                                    .widthIn(min = 220.dp, max = 340.dp)
+                                                    .height(42.dp),
+                                                shape = RoundedCornerShape(21.dp),
+                                                color = GlassTheme.surfaceColor(theme, glassIntensity),
+                                                border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
+                                            ) {
+                                                Row(
+                                                    Modifier
+                                                        .fillMaxSize()
+                                                        .padding(horizontal = 14.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Rounded.Search,
+                                                        contentDescription = "Search",
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                                                        if (query.isEmpty()) {
+                                                            Text(
+                                                                "Search videos, shows...",
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                                fontSize = 13.sp,
+                                                                maxLines = 1,
+                                                                overflow = TextOverflow.Ellipsis
+                                                            )
+                                                        }
+                                                        BasicTextField(
+                                                            value = query,
+                                                            onValueChange = { newQuery ->
+                                                                query = newQuery
+                                                                if (newQuery.isNotBlank()) {
+                                                                    selectedId = null
+                                                                    if (route == "Folders") {
+                                                                        route = "Home"
+                                                                    }
+                                                                }
+                                                            },
+                                                            singleLine = true,
+                                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                                                color = MaterialTheme.colorScheme.onSurface,
+                                                                fontSize = 13.sp
+                                                            ),
+                                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        )
+                                                    }
+                                                    if (query.isNotEmpty()) {
+                                                        IconButton(
+                                                            onClick = {
+                                                                query = ""
+                                                                keyboardController?.hide()
+                                                            },
+                                                            modifier = Modifier.size(24.dp)
+                                                        ) {
+                                                            Icon(
+                                                                Icons.Rounded.Close,
+                                                                contentDescription = "Clear search",
+                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            IconButton(
+                                                onClick = { library.rescan() },
+                                                enabled = !localState.busy && localState.folders.isNotEmpty()
+                                            ) {
+                                                if (localState.busy) {
+                                                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                                                } else {
+                                                    Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    AnimatedContent(
                                         targetState = selectedId ?: route,
                                         transitionSpec = {
                                             if (reducedMotion || !livelyAnimations) {
@@ -400,11 +572,6 @@ private val destinations = listOf(
                                                     glassIntensity = it
                                                     prefs.edit { putFloat("glassIntensity", it) }
                                                 },
-                                                ambientAura = ambientAura,
-                                                onAmbientAura = {
-                                                    ambientAura = it
-                                                    prefs.edit { putBoolean("ambientAura", it) }
-                                                },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
                                                 library = library,
@@ -440,11 +607,6 @@ private val destinations = listOf(
                                                     glassIntensity = it
                                                     prefs.edit { putFloat("glassIntensity", it) }
                                                 },
-                                                ambientAura = ambientAura,
-                                                onAmbientAura = {
-                                                    ambientAura = it
-                                                    prefs.edit { putBoolean("ambientAura", it) }
-                                                },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
                                                 library = library,
@@ -463,7 +625,7 @@ private val destinations = listOf(
                                     }
                                 }
 
-                                // Floating Frosted Glass Bottom Navigation Bar (Centered universally across phone & tablet)
+                                // Floating Frosted Glass Bottom Navigation Bar (Universal across Phones, Foldables & Tablets)
                                 if (selectedId == null) {
                                     FloatingFrostedBottomBar(
                                         route = route,
@@ -480,13 +642,12 @@ private val destinations = listOf(
                                         },
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
-                                            .padding(bottom = if (isTablet) 14.dp else 6.dp)
+                                            .padding(bottom = if (isTablet) 12.dp else 6.dp)
                                     )
                                 }
                             }
                         }
                     }
-                }
 
             bloomOriginColor?.let { oldColor ->
                 val progress = bloomProgress.value
@@ -507,9 +668,9 @@ private val destinations = listOf(
                     onFinished = { showSplash = false }
                 )
             }
+            }
         }
     }
-}
 }
 
 @Composable
@@ -538,7 +699,7 @@ private fun InteractiveCinemaGreeting(
             "🎧 Studio audio: NextLib FFmpeg powers true 5.1 & 7.1 discrete surround sound.",
             "🎥 Trivia: The iconic Jurassic Park T-Rex roar was mixed from a baby elephant & alligator.",
             "🎞️ Fun fact: The iconic green falling code in The Matrix is actually sushi recipes.",
-            "🛡️ Pure privacy: Offline cinema vault, zero telemetry."
+            "🛡️ Pure privacy: 100% offline cinema vault, zero telemetry."
         )
     }
 
@@ -579,9 +740,8 @@ private fun InteractiveCinemaGreeting(
                     inProgressMovie != null -> "$baseGreeting · ${inProgressMovie.title}"
                     else -> baseGreeting
                 },
-                fontSize = if (isPhone) 17.sp else 19.sp,
+                style = if (isPhone) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -937,8 +1097,6 @@ private val settingsCategories = listOf(
     onDockAutoMinimize: (Boolean) -> Unit = {},
     glassIntensity: Float = 0.75f,
     onGlassIntensity: (Float) -> Unit = {},
-    ambientAura: Boolean = true,
-    onAmbientAura: (Boolean) -> Unit = {},
     onReplaySplash: () -> Unit,
     localState: LocalLibraryState,
     library: LocalLibrary,
@@ -1061,7 +1219,7 @@ private val settingsCategories = listOf(
 
                 LazyColumn(
                     Modifier.weight(1f).fillMaxHeight(),
-                    contentPadding = PaddingValues(top = 10.dp, bottom = 96.dp),
+                    contentPadding = PaddingValues(top = 10.dp, bottom = 32.dp),
                     verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
                     item {
@@ -1076,8 +1234,7 @@ private val settingsCategories = listOf(
                                 else -> "Privacy & About"
                             },
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -1085,12 +1242,12 @@ private val settingsCategories = listOf(
                         "Video" -> {
                             item {
                                 Panel {
-                                    Text("Playback & Decoding", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Playback & Decoding", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("Configure video decoding pipeline and screen scaling.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Video Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Video Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(DeviceHardwareInspector.getDecoderDescription(context), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Auto (Recommended) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
@@ -1098,7 +1255,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Hardware Acceleration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Hardware Acceleration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(DeviceHardwareInspector.getHardwareAccelerationDescription(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
@@ -1106,7 +1263,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Video Scaling Mode", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Video Scaling Mode", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(DeviceHardwareInspector.getDisplayScalingDescription(context), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Fit (Keep aspect ratio) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
@@ -1114,7 +1271,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Brightness Boost & HDR", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Brightness Boost & HDR", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Force maximum panel luminance and enable wide color gamut HDR10/HDR10+/HLG", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = playback.brightnessBoost, onCheckedChange = { playback.updateBrightnessBoost(it) })
@@ -1154,7 +1311,7 @@ private val settingsCategories = listOf(
                                         ) {
                                             Icon(Icons.Rounded.Tv, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(24.dp))
                                             Column {
-                                                Text(panelTitle, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+                                                Text(panelTitle, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSecondaryContainer)
                                                 Text(panelDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                         }
@@ -1166,12 +1323,12 @@ private val settingsCategories = listOf(
                         "Audio" -> {
                             item {
                                 Panel {
-                                    Text("Audio Output & Surround", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Audio Output & Surround", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("NextLib Media3 FFmpeg decoder for Dolby Atmos / 5.1 / 7.1 surround tracks.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Audio Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Audio Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Bundled FFmpeg: EAC-3, AC-3, TrueHD, DTS-HD, FLAC, AAC", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Auto (NextLib FFmpeg) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
@@ -1179,7 +1336,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Downmix to Stereo", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Downmix to Stereo", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(DeviceHardwareInspector.getStereoDownmixDescription(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
@@ -1187,7 +1344,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Screen-Off Background Audio", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Screen-Off Background Audio", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Continue playback when turning off screen or locking device", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
@@ -1204,7 +1361,7 @@ private val settingsCategories = listOf(
                                     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
                                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                             Column(Modifier.weight(1f)) {
-                                                Text("Bluetooth Audio Delay Compensation", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                                Text("Bluetooth Audio Delay Compensation", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                                 Text("Calibrate audio lip-sync delay for Bluetooth earbuds & wireless speakers", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Text("${playback.audioDelayMs} ms", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
@@ -1222,7 +1379,7 @@ private val settingsCategories = listOf(
                             }
                             item {
                                 Panel {
-                                    Text("Active Stream Format", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Active Stream Format", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Spacer(Modifier.height(8.dp))
                                     val currentTrack = playback.audioTracks.firstOrNull()
                                     val audioLabel = if (currentTrack != null) {
@@ -1252,7 +1409,7 @@ private val settingsCategories = listOf(
                                 var subEdge by remember { mutableStateOf(SubtitlePreferences.getEdge(context)) }
 
                                 Panel {
-                                    Text("Subtitle Appearance", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Subtitle Appearance", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("Customization and live rendering for SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
 
                                     // Live Subtitle Preview Card
@@ -1298,7 +1455,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(16.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Font Family", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Font Family", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.fontOptions.forEach { font ->
                                             FilterChip(
@@ -1315,7 +1472,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Text Size", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Text Size", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.sizeOptions.forEach { (sz, label) ->
                                             FilterChip(
@@ -1332,7 +1489,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Text Color", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Text Color", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.colorOptions.forEach { colorName ->
                                             val dotColor = Color(SubtitlePreferences.getColorInt(colorName))
@@ -1353,7 +1510,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Background Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Background Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.backgroundOptions.forEach { bgName ->
                                             FilterChip(
@@ -1370,7 +1527,7 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Edge & Shadow Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Edge & Shadow Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.edgeOptions.forEach { edgeName ->
                                             FilterChip(
@@ -1390,7 +1547,7 @@ private val settingsCategories = listOf(
                                     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
                                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                             Column(Modifier.weight(1f)) {
-                                                Text("Subtitle Sync Offset Calibration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                                Text("Subtitle Sync Offset Calibration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                                 Text("Fine-tune subtitle timing synchronization for out-of-sync SRT/ASS tracks", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Text("${playback.subtitleDelayMs} ms", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
@@ -1411,7 +1568,7 @@ private val settingsCategories = listOf(
                         "Display" -> {
                             item {
                                 Panel {
-                                    Text("Appearance Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Appearance Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("Select base lighting mode for ambient viewing.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
 
                                     val themeItems = listOf(
@@ -1427,7 +1584,7 @@ private val settingsCategories = listOf(
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                     Text("Curvature geometry applied to cards, sheets, and dialogs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(Modifier.height(10.dp))
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1455,7 +1612,7 @@ private val settingsCategories = listOf(
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Bottom Navigation Dock Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Bottom Navigation Dock Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                     Text("Choose between classic icons with text labels or ultra-compact icons only", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(Modifier.height(10.dp))
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1483,7 +1640,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Auto-Minimize Dock on Scroll", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Auto-Minimize Dock on Scroll", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Smoothly collapse floating navigation into a bouncy mini-pill while scrolling movies or browsing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = dockAutoMinimize, onCheckedChange = onDockAutoMinimize)
@@ -1498,7 +1655,7 @@ private val settingsCategories = listOf(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                                Text("Glassify UI Elements", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                                Text("Glassify UI Elements", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                                 Text("Adjust frosted glass translucency and depth across player pills, floating docks, and sheets", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Surface(
@@ -1533,19 +1690,10 @@ private val settingsCategories = listOf(
                                         }
                                     }
 
-                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Cinema Ambient Aura", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-                                            Text("Soft fluid celestial gradient radiance blooming softly behind frosted glass surfaces", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Switch(checked = ambientAura, onCheckedChange = onAmbientAura)
-                                    }
-
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Theme Transition Blend (Fade)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Theme Transition Blend (Fade)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Smooth fade in / fade out blend when switching themes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
@@ -1553,7 +1701,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Reduced Motion", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Reduced Motion", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Disable animations for instant screen transitions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = reduced, onCheckedChange = onReduced)
@@ -1561,7 +1709,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Lively UI Animations & Transitions", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Lively UI Animations & Transitions", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Fluid slide & spring transitions when navigating between folders, tabs, and details", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = livelyAnimations, onCheckedChange = onLivelyAnimations)
@@ -1576,7 +1724,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Replay Aurora Splash Screen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Replay Aurora Splash Screen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Play the cinematic opening animation in current theme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Preview ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
@@ -1588,10 +1736,10 @@ private val settingsCategories = listOf(
                         "Gestures" -> {
                             item {
                                 Panel {
-                                    Text("Player Gestures & Seeking", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Player Gestures & Seeking", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("Configure double-tap seeking and edge swipe controls.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Text("Double-Tap Seek Interval", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
+                                    Text("Double-Tap Seek Interval", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(vertical = 8.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         listOf(5, 10, 15, 30).forEach { sec ->
                                             FilterChip(
@@ -1604,7 +1752,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Swipe Up/Down Gestures", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Swipe Up/Down Gestures", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Left side controls brightness; right side controls volume with deadzone protection", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = playback.swipeGesturesEnabled, onCheckedChange = { playback.updateSwipeGestures(it) })
@@ -1612,7 +1760,7 @@ private val settingsCategories = listOf(
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Long-Press 2x Speed Up", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Long-Press 2x Speed Up", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Press and hold player surface to temporarily speed up to 2.0x", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
@@ -1637,7 +1785,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f)) {
-                                            Text("Indexed Folders", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Indexed Folders", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                             Text("Manage media directories scanned for movies and TV shows.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         FilledTonalButton(
@@ -1722,7 +1870,7 @@ private val settingsCategories = listOf(
                                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         Text("Your movies. Your space.", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
                                         Text(
-                                            "Jadzumi Player keeps your video library, playback history, and settings strictly on your device. No telemetry, no cloud sync, offline-first cinema vault.",
+                                            "Jadzumi Player keeps your video library, playback history, and settings strictly on your device. No telemetry, no cloud sync, 100% offline-first.",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
                                         )
@@ -1749,7 +1897,7 @@ private val settingsCategories = listOf(
                                 var onlineMetadata by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("online_metadata", false)) }
 
                                 Panel {
-                                    Text("Artwork & Metadata", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Artwork & Metadata", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text(
                                         "Configure local media thumbnail generation, offline sidecar scraping (.nfo, poster.jpg, fanart.jpg) and optional online metadata.",
                                         style = MaterialTheme.typography.bodySmall,
@@ -1765,7 +1913,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Local Thumbnail Extraction", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Local Thumbnail Extraction", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(
                                                 "Hardware-accelerated on-device poster generation from local video keyframes when no sidecar image is present.",
                                                 style = MaterialTheme.typography.bodySmall,
@@ -1790,9 +1938,9 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Scan Local Sidecar Files", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Scan Local Sidecar Files", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(
-                                                "Offline Sidecars — Automatically discovers poster.jpg, fanart.jpg, and Kodi/Jellyfin .nfo files in your media folders.",
+                                                "100% Offline — Automatically discovers poster.jpg, fanart.jpg, and Kodi/Jellyfin .nfo files in your media folders.",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -1815,7 +1963,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Fetch Online Metadata (Opt-In)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Fetch Online Metadata (Opt-In)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(
                                                 "Disabled by default. When enabled, fetches missing high-resolution posters and plot summaries from Wikipedia & TVMaze, strictly cached locally.",
                                                 style = MaterialTheme.typography.bodySmall,
@@ -1858,27 +2006,22 @@ private val settingsCategories = listOf(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
         border = border,
-        colors = CardDefaults.cardColors(
-            containerColor = bg,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        )
+        colors = CardDefaults.cardColors(containerColor = bg)
     ) {
-        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-            Column(
-                Modifier.fillMaxWidth().padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
-                Text(mode, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, softWrap = false, color = MaterialTheme.colorScheme.onSurface)
-                Text(
-                    if (selected) "Active" else subtitle,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    softWrap = false,
-                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        Column(
+            Modifier.fillMaxWidth().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+            Text(mode, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, softWrap = false)
+            Text(
+                if (selected) "Active" else subtitle,
+                fontSize = 11.sp,
+                maxLines = 1,
+                softWrap = false,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -1915,7 +2058,7 @@ private val settingsCategories = listOf(
                 Column(Modifier.weight(1f, fill = false).padding(end = 12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Rounded.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        Text("Folder Access", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("Folder Access", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                     Text(
                         "Jadzumi only scans media directories granted explicitly by you. No background disk sweeps are performed.",
@@ -1943,7 +2086,7 @@ private val settingsCategories = listOf(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                    Text("Strict Local Sandbox", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Strict Local Sandbox", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                     Text(
                         "Enforces on-device isolated storage. Completely prohibits background telemetry and unrequested cloud sync.",
                         style = MaterialTheme.typography.bodySmall,
@@ -2110,7 +2253,7 @@ private val settingsCategories = listOf(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text("Jadzumi", fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, color = MaterialTheme.colorScheme.onSurface)
+                        Text("Jadzumi", fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                         Surface(
                             shape = RoundedCornerShape(999.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
@@ -2140,7 +2283,7 @@ private val settingsCategories = listOf(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.padding(end = 12.dp)) {
                     Text("CREATION & PRODUCT DIRECTION", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Omkar Patil", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Omkar Patil", fontSize = 17.sp, fontWeight = FontWeight.Bold)
                     Text("Creator · Product & Design Direction", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
                 }
                 Surface(
@@ -2291,18 +2434,14 @@ private val settingsCategories = listOf(
 }
 
 @Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
-    val colors = LocalCinemaFlowColors.current
     val glassIntensity = LocalGlassIntensity.current
     Surface(
         Modifier.fillMaxWidth(),
-        shape = CinemaCorners.Lg,
-        color = colors.glassCard.copy(alpha = (0.92f - 0.35f * glassIntensity).coerceIn(0.40f, 0.95f)),
-        contentColor = colors.inkPrimary,
-        border = BorderStroke(1.dp, colors.glassBorder.copy(alpha = (0.30f + 0.50f * glassIntensity).coerceIn(0.25f, 0.90f)))
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.45f * glassIntensity).coerceIn(0.50f, 1.0f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.50f * glassIntensity).coerceIn(0.30f, 0.90f)))
     ) {
-        CompositionLocalProvider(LocalContentColor provides colors.inkPrimary) {
-            Column(Modifier.padding(20.dp), content = content)
-        }
+        Column(Modifier.padding(20.dp), content = content)
     }
 }
 
