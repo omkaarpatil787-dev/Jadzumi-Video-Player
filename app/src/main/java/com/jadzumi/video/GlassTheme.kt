@@ -33,25 +33,26 @@ val LocalThemeName = compositionLocalOf { "Dark" }
  */
 object GlassTheme {
     /**
-     * Compute authentic frosted background surface color based on active theme and glass intensity (0.0f - 1.0f).
+     * Compute authentic frosted Gaussian blur surface color based on active theme and glass intensity (0.0f - 1.0f).
+     * Maintains high diffused opacity (0.88f - 0.98f) to prevent transparent see-through wash or two-tone background split.
      */
     fun frostedSurfaceColor(theme: String, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
         return when (theme) {
             "AMOLED" -> {
-                // Pitch black OLED energy saver with subtle sapphire frosted depth at higher intensities
-                val alpha = (0.98f - 0.45f * intensity).coerceIn(0.50f, 1.0f)
-                Color(0xFF040914).copy(alpha = alpha)
+                // Pure deep OLED black frosted depth without transparent washout
+                val alpha = (0.99f - 0.05f * intensity).coerceIn(0.92f, 1.0f)
+                Color(0xFF030712).copy(alpha = alpha)
             }
             "Light" -> {
-                // Crisp luminous white frosted surface
-                val alpha = (0.96f - 0.45f * intensity).coerceIn(0.48f, 0.98f)
+                // Crisp luminous frosted white surface
+                val alpha = (0.98f - 0.08f * intensity).coerceIn(0.88f, 0.98f)
                 Color(0xFFFFFFFF).copy(alpha = alpha)
             }
             else -> {
-                // Deep obsidian navy frosted glass
-                val alpha = (0.95f - 0.45f * intensity).coerceIn(0.50f, 0.96f)
-                Color(0xFF0E1726).copy(alpha = alpha)
+                // Refined dark slate frosted Gaussian blur foundation
+                val alpha = (0.97f - 0.08f * intensity).coerceIn(0.88f, 0.98f)
+                Color(0xFF111827).copy(alpha = alpha)
             }
         }
     }
@@ -63,21 +64,22 @@ object GlassTheme {
 
     /**
      * Compute frosted border outline color.
+     * Uses a subtle monochromatic light catch to prevent two-tone color clashing.
      */
     fun frostedBorderColor(theme: String, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
         return when (theme) {
             "AMOLED" -> {
-                val alpha = (0.12f + 0.40f * intensity).coerceIn(0.10f, 0.55f)
-                Color(0xFF188AF5).copy(alpha = alpha)
-            }
-            "Light" -> {
-                val alpha = (0.32f + 0.55f * intensity).coerceIn(0.28f, 0.90f)
+                val alpha = (0.11f + 0.08f * intensity).coerceIn(0.09f, 0.20f)
                 Color.White.copy(alpha = alpha)
             }
+            "Light" -> {
+                val alpha = (0.45f + 0.25f * intensity).coerceIn(0.40f, 0.70f)
+                Color(0xFFCBD5E1).copy(alpha = alpha)
+            }
             else -> {
-                val alpha = (0.12f + 0.38f * intensity).coerceIn(0.10f, 0.50f)
-                Color(0xFF64DCFF).copy(alpha = alpha)
+                val alpha = (0.09f + 0.08f * intensity).coerceIn(0.08f, 0.18f)
+                Color.White.copy(alpha = alpha)
             }
         }
     }
@@ -88,42 +90,43 @@ object GlassTheme {
     fun borderColor(theme: String, glassIntensity: Float): Color = frostedBorderColor(theme, glassIntensity)
 
     /**
-     * Subtle Embossed Border Brush:
-     * Generates a delicate, tactile 3D emboss depth effect along card perimeters:
-     * - Top edge catches directional specular light (clean highlight bevel).
-     * - Bottom edge catches soft occlusion shadow (subtle depth bevel).
+     * Monochromatic Embossed Border Brush:
+     * Generates a delicate, tactile 3D frosted glass bevel along card perimeters:
+     * - Top edge catches subtle diffused white specular light.
+     * - Bottom edge tapers to a softer neutral highlight.
+     * - Strictly avoids colored tints (e.g. cyan/blue vs black) to eliminate two-tone banding.
      */
     fun embossedBorderBrush(theme: String, glassIntensity: Float): Brush {
         val intensity = glassIntensity.coerceIn(0f, 1f)
         return when (theme) {
             "AMOLED" -> {
-                val topAlpha = (0.24f + 0.32f * intensity).coerceIn(0.18f, 0.55f)
-                val midAlpha = (0.10f + 0.18f * intensity).coerceIn(0.08f, 0.28f)
-                val bottomAlpha = (0.35f + 0.30f * intensity).coerceIn(0.30f, 0.65f)
+                val topAlpha = (0.18f + 0.10f * intensity).coerceIn(0.14f, 0.28f)
+                val midAlpha = (0.08f + 0.05f * intensity).coerceIn(0.06f, 0.14f)
+                val bottomAlpha = (0.04f + 0.04f * intensity).coerceIn(0.03f, 0.09f)
                 Brush.verticalGradient(
-                    0.0f to Color(0xFF64B5F6).copy(alpha = topAlpha),
-                    0.35f to Color(0xFF188AF5).copy(alpha = midAlpha),
-                    1.0f to Color(0xFF000000).copy(alpha = bottomAlpha)
+                    0.0f to Color.White.copy(alpha = topAlpha),
+                    0.40f to Color.White.copy(alpha = midAlpha),
+                    1.0f to Color.White.copy(alpha = bottomAlpha)
                 )
             }
             "Light" -> {
-                val topAlpha = (0.75f + 0.22f * intensity).coerceIn(0.65f, 0.98f)
-                val midAlpha = (0.35f + 0.20f * intensity).coerceIn(0.25f, 0.55f)
-                val bottomAlpha = (0.28f + 0.25f * intensity).coerceIn(0.22f, 0.55f)
+                val topAlpha = (0.80f + 0.15f * intensity).coerceIn(0.70f, 0.95f)
+                val midAlpha = (0.45f + 0.15f * intensity).coerceIn(0.35f, 0.60f)
+                val bottomAlpha = (0.28f + 0.12f * intensity).coerceIn(0.22f, 0.42f)
                 Brush.verticalGradient(
                     0.0f to Color.White.copy(alpha = topAlpha),
                     0.40f to Color(0xFFE2E8F0).copy(alpha = midAlpha),
-                    1.0f to Color(0xFF94A3B8).copy(alpha = bottomAlpha)
+                    1.0f to Color(0xFFCBD5E1).copy(alpha = bottomAlpha)
                 )
             }
             else -> { // Dark / Midnight
-                val topAlpha = (0.22f + 0.28f * intensity).coerceIn(0.18f, 0.48f)
-                val midAlpha = (0.10f + 0.16f * intensity).coerceIn(0.08f, 0.26f)
-                val bottomAlpha = (0.35f + 0.30f * intensity).coerceIn(0.30f, 0.65f)
+                val topAlpha = (0.16f + 0.10f * intensity).coerceIn(0.12f, 0.26f)
+                val midAlpha = (0.07f + 0.05f * intensity).coerceIn(0.05f, 0.13f)
+                val bottomAlpha = (0.04f + 0.04f * intensity).coerceIn(0.03f, 0.09f)
                 Brush.verticalGradient(
                     0.0f to Color.White.copy(alpha = topAlpha),
-                    0.35f to Color(0xFF38BDF8).copy(alpha = midAlpha),
-                    1.0f to Color(0xFF030712).copy(alpha = bottomAlpha)
+                    0.40f to Color.White.copy(alpha = midAlpha),
+                    1.0f to Color.White.copy(alpha = bottomAlpha)
                 )
             }
         }
@@ -141,11 +144,11 @@ object GlassTheme {
      */
     fun playerFrostedBg(theme: String, isOled: Boolean, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
-        val alpha = (0.75f - 0.50f * intensity).coerceIn(0.18f, 0.85f)
+        val alpha = (0.86f - 0.10f * intensity).coerceIn(0.74f, 0.88f)
         return if (isOled || theme == "AMOLED") {
-            Color(0xFF040A14).copy(alpha = alpha)
+            Color(0xFF050811).copy(alpha = alpha)
         } else {
-            Color(0xFF0D1624).copy(alpha = alpha)
+            Color(0xFF0F172A).copy(alpha = alpha)
         }
     }
 
@@ -154,12 +157,8 @@ object GlassTheme {
      */
     fun playerFrostedRim(theme: String, isOled: Boolean, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
-        val alpha = (0.18f + 0.35f * intensity).coerceIn(0.14f, 0.60f)
-        return if (isOled || theme == "AMOLED") {
-            Color(0xFF188AF5).copy(alpha = alpha)
-        } else {
-            Color.White.copy(alpha = alpha)
-        }
+        val alpha = (0.16f + 0.10f * intensity).coerceIn(0.14f, 0.26f)
+        return Color.White.copy(alpha = alpha)
     }
 
     // Aliases for backwards compatibility with any callers

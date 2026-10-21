@@ -1712,8 +1712,8 @@ private val settingsCategories = listOf(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                                Text("Glassify UI Elements (Frosted Glass)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                                Text("Adjust frosted glass translucency, blur tint, and depth across player pills, floating docks, cards, and sheets", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Text("Frosted Glass Blur (Glassify)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Adjust frosted Gaussian blur depth, specular bevel, and diffused tint across cards, docks, and player controls", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Surface(
                                                 shape = RoundedCornerShape(999.dp),
@@ -1741,9 +1741,9 @@ private val settingsCategories = listOf(
                                             Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Text("Solid (20%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            Text("Balanced Frosted (65%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            Text("Deep Frosted Glass (100%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Solid Matte (20%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Balanced Frosted Blur (65%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Deep Frosted Blur (100%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     }
 
