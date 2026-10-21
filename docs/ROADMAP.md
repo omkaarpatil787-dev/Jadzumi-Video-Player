@@ -74,7 +74,7 @@
 
 ## Current Milestone
 
-### Milestone 10 (v1.2.0) — Expressive Themes, App Icon Studio, Audiophile DSP, Double-Tap Ripples & Phone Portrait Overhaul (Completed)
+### Milestone 10 (v1.2.0) — Expressive Themes, App Icon Studio, Audiophile DSP, Double-Tap Ripples & Phone Portrait Overhaul (Approved)
 - **Eradication of "Mockup" Feel & First-Run SAF Onboarding**:
   - Identified and removed legacy fallback cards with inert no-op click listeners that rendered on empty library state.
   - Introduced `WelcomeOnboardingCard` with direct, zero-friction "Select Video Folder" Storage Access Framework picker.
@@ -97,3 +97,29 @@
   - Silhouette selectors (`Squircle`, `Circle`, `Soft square`) and finish styles (`Frosted`, `Solid`, `Outlined`).
   - "Apply to Home Screen Launcher" button dynamically switching Android `<activity-alias>` (`LauncherAura`, `LauncherFrost`, `LauncherNeo`, `LauncherSoft`, `LauncherPrism`) via `PackageManager`.
 - **Version Tag**: `versionCode = 11`, `versionName = "1.2.0"`.
+
+---
+
+### Milestone 11 (v1.3.0) — Hold-to-2x, Smart Credits Autoplay, Haptic Chapters, External Subtitles, Poster Grid & Subtle Glassmorphism (Approved & Locked)
+- **Playback & Gesture Enhancements**:
+  - Hold-to-2x speed gesture with smooth acceleration and haptic confirmation.
+  - Smart credit autoplay trigger and seamless countdown transitions.
+  - Haptic chapter scrubbing and precision timeline seeking.
+  - External subtitle file loader (`.srt`, `.ass`, `.vtt`).
+- **Library & Organization**:
+  - Responsive poster grid view with toggleable layout modes.
+  - Multi-select batch video management (batch mark watched/unwatched, share, delete).
+- **Subtle Glassmorphism & UI Polish (Locked)**:
+  - Standardized layered surface architecture for all cards and panels (`MaterialTheme.colorScheme.surface`), completely eliminating two-tone splits, dark backdrop patches, and opacity clashes.
+  - Subtle frosted translucent floating elements (`FloatingFrostedBottomBar`, search capsules, player overlay controls) with crisp, monochromatic specular highlights.
+  - Anchored settings category header preventing overlap in tablet landscape view.
+  - Strictly excluded camera cutout and sleep timer, preserving an uncompromised video canvas.
+- **Version Tag**: `versionCode = 13`, `versionName = "1.3.0"`.
+
+---
+
+## Future Roadmap (Planned Next Update)
+1. **FFmpeg Audio Software Fallback (`extension-ffmpeg`)**: Automatic software decoding for unsupported OEM audio tracks (DTS, DTS-HD, TrueHD, older AC-3/E-AC-3).
+2. **Audio Delay / Sync Adjustment**: Fine-grained lip-sync slider (`±500ms` in 50ms increments).
+3. **Subtitle Sync Offset Tool**: Subtitle timing nudger (`±5.0s` in 100ms increments) for external `.srt` / `.ass`.
+4. **Auto Frame Rate (AFR) Matching**: Seamless display refresh rate switching (`Surface.setFrameRate`) with Auto / On / Off toggle under Now Playing customizations.

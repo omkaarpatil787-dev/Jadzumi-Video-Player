@@ -46,7 +46,7 @@
 - **Ambient Blurred Backdrop Glow**: Samples video artwork into a luminous, theatrical background gradient on movie and show detail pages.
 - **TV Season Progress Gauges**: Real-time season completion percentages and "Up Next" spotlight cards.
 - **OLED / AMOLED Peak Luminance**: Calibrated HDR10, Dolby Vision, and HLG peak luminance engagement restricted to true OLED panels.
-- **Embossed Frosted Glass**: Refined dual-stop directional border strokes providing tactile depth across all cards and sheets.
+- **Subtle Glassmorphism & Layered Surfaces**: Clean, layered surface architecture across all cards and panels (`MaterialTheme.colorScheme.surface`), eliminating two-tone color banding and dark backdrop patches, paired with subtle frosted translucent floating docks and player overlay controls.
 
 ---
 
