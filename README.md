@@ -1,6 +1,6 @@
 # Jadzumi Video Player
 
-> **Version 1.3.0** | Universal Android (Phones, Foldables & Tablets) | Offline-First Cinema Player | Zero Tracking | Jetpack Compose & Media3
+> | Universal Android (Phones, Foldables & Tablets) | Offline-First Cinema Player | Zero Tracking | Jetpack Compose & Media3
 
 ---
 
