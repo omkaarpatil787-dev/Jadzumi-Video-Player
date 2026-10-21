@@ -150,185 +150,125 @@ fun MovieDetailsPage(
             // 2. Movie Hero Banner Card
             item {
                 val glassIntensity = LocalGlassIntensity.current
+                val theme = LocalThemeName.current
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
+                    color = Color.Transparent,
+                    border = liquidBorderStroke(theme, glassIntensity)
                 ) {
-                    val heroPad = if (isTablet) 22.dp else 16.dp
-                    val posterWidth = if (isTablet) 140.dp else 102.dp
-
-                    val fullSynopsis = effectiveMetadata.synopsis
-                        ?: "Offline Feature Film stored in your local library. High-efficiency playback with hardware-accelerated MediaCodec decoding."
-
-                    Column(
-                        modifier = Modifier.padding(heroPad),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(liquidCardBrush(theme, glassIntensity))
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.Top
+                        val heroPad = if (isTablet) 22.dp else 16.dp
+                        val posterWidth = if (isTablet) 140.dp else 102.dp
+
+                        val fullSynopsis = effectiveMetadata.synopsis
+                            ?: "Offline Feature Film stored in your local library. High-efficiency playback with hardware-accelerated MediaCodec decoding."
+
+                        Column(
+                            modifier = Modifier.padding(heroPad),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Poster Thumbnail (2:3 aspect ratio)
-                            Box(
-                                modifier = Modifier
-                                    .width(posterWidth)
-                                    .aspectRatio(2f / 3f)
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.Top
                             ) {
-                                SidecarImage(
-                                    uri = effectiveMetadata.posterUri ?: effectiveMetadata.backdropUri,
-                                    fallbackVideo = video,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
+                                // Poster Thumbnail (2:3 aspect ratio)
+                                Box(
+                                    modifier = Modifier
+                                        .width(posterWidth)
+                                        .aspectRatio(2f / 3f)
+                                        .clip(RoundedCornerShape(18.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                ) {
+                                    SidecarImage(
+                                        uri = effectiveMetadata.posterUri ?: effectiveMetadata.backdropUri,
+                                        fallbackVideo = video,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
 
-                            // Movie Info Beside Poster
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = effectiveMetadata.title,
-                                    style = if (isTablet) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-
-                                if (effectiveMetadata.genres.isNotEmpty()) {
+                                // Movie Info Beside Poster
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
                                     Text(
-                                        effectiveMetadata.genres.joinToString(" · "),
-                                        fontSize = if (isTablet) 13.sp else 12.sp,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
+                                        text = effectiveMetadata.title,
+                                        style = if (isTablet) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                }
 
-                                MovieBadgesFlow(effectiveMetadata, video)
+                                    if (effectiveMetadata.genres.isNotEmpty()) {
+                                        Text(
+                                            effectiveMetadata.genres.joinToString(" · "),
+                                            fontSize = if (isTablet) 13.sp else 12.sp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
 
-                                if (isTablet) {
-                                    Text(
-                                        text = fullSynopsis,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        lineHeight = 18.sp,
-                                        maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
-                                    )
+                                    MovieBadgesFlow(effectiveMetadata, video)
+
+                                    if (isTablet) {
+                                        Text(
+                                            text = fullSynopsis,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            lineHeight = 18.sp,
+                                            maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        if (!isTablet) {
-                            Text(
-                                text = fullSynopsis,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                lineHeight = 18.sp,
-                                maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
-                            )
-                        }
+                            if (!isTablet) {
+                                Text(
+                                    text = fullSynopsis,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 18.sp,
+                                    maxLines = if (synopsisExpanded) Int.MAX_VALUE else 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.clickable { synopsisExpanded = !synopsisExpanded }
+                                )
+                            }
 
-                        // Action Buttons: Symmetrical and beautifully aligned pill buttons
-                        if (isTablet) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Button(
-                                    onClick = {
-                                        playback.open(video)
-                                        playback.fullscreen = true
-                                    },
-                                    modifier = Modifier.height(44.dp),
-                                    shape = CircleShape,
-                                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            // Action Buttons: Symmetrical and beautifully aligned pill buttons
+                            if (isTablet) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Rounded.PlayArrow, null, Modifier.size(18.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        if (inProgress) "Resume from ${timecode(savedPos / 1000)}" else "Play Movie",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
-                                    )
-                                }
-
-                                if (inProgress || isWatched) {
-                                    OutlinedButton(
+                                    Button(
                                         onClick = {
-                                            playback.markEpisodeWatched(video, false)
                                             playback.open(video)
                                             playback.fullscreen = true
                                         },
-                                        modifier = Modifier.height(44.dp),
+                                        modifier = Modifier.height(46.dp),
                                         shape = CircleShape,
-                                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
-                                        border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
+                                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                     ) {
-                                        Icon(Icons.Rounded.Replay, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
                                         Spacer(Modifier.width(6.dp))
-                                        Text("From Beginning", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            if (inProgress) "Resume from ${timecode(savedPos / 1000)}" else "Play Movie",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
                                     }
-                                }
 
-                                IconButton(
-                                    onClick = { playback.markEpisodeWatched(video, !isWatched) },
-                                    modifier = Modifier.size(44.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.CheckCircle,
-                                        contentDescription = "Toggle Watched",
-                                        tint = if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.outline
-                                    )
-                                }
-
-                                IconButton(
-                                    onClick = { confirmDelete = true },
-                                    modifier = Modifier.size(44.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.DeleteOutline,
-                                        contentDescription = "Delete",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
-                        } else {
-                            // Phone Portrait Action Buttons: Big prominent primary button + sleek secondary row
-                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Button(
-                                    onClick = {
-                                        playback.open(video)
-                                        playback.fullscreen = true
-                                    },
-                                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    shape = CircleShape,
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                ) {
-                                    Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(
-                                        if (inProgress) "Resume from ${timecode(savedPos / 1000)}" else "Play Movie",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                }
-
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
                                     if (inProgress || isWatched) {
                                         OutlinedButton(
                                             onClick = {
@@ -336,46 +276,115 @@ fun MovieDetailsPage(
                                                 playback.open(video)
                                                 playback.fullscreen = true
                                             },
-                                            modifier = Modifier.weight(1f).height(44.dp),
+                                            modifier = Modifier.height(46.dp),
                                             shape = CircleShape,
-                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
                                             border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
                                         ) {
-                                            Icon(Icons.Rounded.Replay, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-                                            Spacer(Modifier.width(4.dp))
-                                            Text("Restart", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                            Icon(Icons.Rounded.Replay, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                                            Spacer(Modifier.width(6.dp))
+                                            Text("From Beginning", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                                         }
                                     }
 
-                                    Button(
+                                    IconButton(
                                         onClick = { playback.markEpisodeWatched(video, !isWatched) },
-                                        modifier = Modifier.weight(1f).height(44.dp),
-                                        shape = CircleShape,
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (isWatched) Color(0xFF1E8E3E).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
-                                            contentColor = if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        modifier = Modifier.size(46.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
                                     ) {
                                         Icon(
-                                            if (isWatched) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
-                                            null,
-                                            Modifier.size(18.dp)
+                                            Icons.Rounded.CheckCircle,
+                                            contentDescription = "Toggle Watched",
+                                            modifier = Modifier.size(20.dp),
+                                            tint = if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.outline
                                         )
-                                        Spacer(Modifier.width(4.dp))
-                                        Text(if (isWatched) "Watched" else "Mark Done", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                                     }
 
                                     IconButton(
                                         onClick = { confirmDelete = true },
-                                        modifier = Modifier.size(44.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
+                                        modifier = Modifier.size(46.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
                                     ) {
                                         Icon(
                                             Icons.Rounded.DeleteOutline,
                                             contentDescription = "Delete",
-                                            tint = MaterialTheme.colorScheme.error,
-                                            modifier = Modifier.size(20.dp)
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.error
                                         )
+                                    }
+                                }
+                            } else {
+                                // Phone Portrait Action Buttons: Big prominent primary button + sleek secondary row
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Button(
+                                        onClick = {
+                                            playback.open(video)
+                                            playback.fullscreen = true
+                                        },
+                                        modifier = Modifier.fillMaxWidth().height(46.dp),
+                                        shape = CircleShape,
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                    ) {
+                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            if (inProgress) "Resume from ${timecode(savedPos / 1000)}" else "Play Movie",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        if (inProgress || isWatched) {
+                                            OutlinedButton(
+                                                onClick = {
+                                                    playback.markEpisodeWatched(video, false)
+                                                    playback.open(video)
+                                                    playback.fullscreen = true
+                                                },
+                                                modifier = Modifier.weight(1f).height(46.dp),
+                                                shape = CircleShape,
+                                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                                                border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
+                                            ) {
+                                                Icon(Icons.Rounded.Replay, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                                                Spacer(Modifier.width(4.dp))
+                                                Text("Restart", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+
+                                        Button(
+                                            onClick = { playback.markEpisodeWatched(video, !isWatched) },
+                                            modifier = Modifier.weight(1f).height(46.dp),
+                                            shape = CircleShape,
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = if (isWatched) Color(0xFF1E8E3E).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
+                                                contentColor = if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        ) {
+                                            Icon(
+                                                if (isWatched) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
+                                                null,
+                                                Modifier.size(20.dp)
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(if (isWatched) "Watched" else "Mark Done", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        }
+
+                                        IconButton(
+                                            onClick = { confirmDelete = true },
+                                            modifier = Modifier.size(46.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
+                                        ) {
+                                            Icon(
+                                                Icons.Rounded.DeleteOutline,
+                                                contentDescription = "Delete",
+                                                tint = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -456,14 +465,18 @@ fun MovieDetailsPage(
 @Composable
 private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, context: Context) {
     val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
+        color = Color.Transparent,
+        border = liquidBorderStroke(theme, glassIntensity)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(liquidSurfaceBrush(theme, glassIntensity))
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
@@ -490,14 +503,18 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
 @Composable
 private fun MovieAudioSubtitleCard(video: LocalVideo) {
     val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
+        color = Color.Transparent,
+        border = liquidBorderStroke(theme, glassIntensity)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(liquidSurfaceBrush(theme, glassIntensity))
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(
@@ -569,7 +586,7 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
                         color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text(
-                            "libass · System CaptionStyle",
+                            "libass • System CaptionStyle",
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -582,7 +599,7 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Text(
-                            "SubRip (.srt) · SubStation Alpha (.ass) · PGS",
+                            "SubRip (.srt) • SubStation Alpha (.ass) • PGS",
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -608,7 +625,7 @@ private fun MovieBadgesFlow(metadata: MovieMetadata, video: LocalVideo) {
         ) {
             Text(
                 "Featured Film",
-                modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -628,7 +645,7 @@ private fun MovieBadgesFlow(metadata: MovieMetadata, video: LocalVideo) {
             }
             Text(
                 qualityText,
-                modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -644,7 +661,7 @@ private fun MovieBadgesFlow(metadata: MovieMetadata, video: LocalVideo) {
             ) {
                 Text(
                     mpaa,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -660,11 +677,11 @@ private fun MovieBadgesFlow(metadata: MovieMetadata, video: LocalVideo) {
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Icon(Icons.Rounded.Star, null, Modifier.size(12.dp), tint = Color(0xFFF9AB00))
+                    Icon(Icons.Rounded.Star, null, Modifier.size(13.dp), tint = Color(0xFFF9AB00))
                     Text(rating, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
@@ -679,7 +696,7 @@ private fun MovieBadgesFlow(metadata: MovieMetadata, video: LocalVideo) {
             ) {
                 Text(
                     yr,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -695,11 +712,11 @@ private fun MovieBadgesFlow(metadata: MovieMetadata, video: LocalVideo) {
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Icon(Icons.Rounded.Schedule, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Rounded.Schedule, null, Modifier.size(13.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
                         timecode(video.duration / 1000),
                         fontSize = 11.sp,

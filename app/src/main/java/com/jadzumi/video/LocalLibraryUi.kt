@@ -154,13 +154,23 @@ fun WelcomeOnboardingCard(
 }
 
 @Composable private fun LocalPanel(content: @Composable ColumnScope.() -> Unit) {
+    val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
     Surface(
-        Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        color = Color.Transparent,
+        border = GlassTheme.liquidBorderStroke(theme, glassIntensity),
+        shadowElevation = 4.dp
     ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlassTheme.liquidSurfaceBrush(theme, glassIntensity))
+                .padding(20.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+        }
     }
 }
 
@@ -755,10 +765,13 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
             listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 60
         }
     }
-    LaunchedEffect(listState.isScrollInProgress) {
-        if (listState.isScrollInProgress) {
-            onScrollActive?.invoke(true)
+    val shouldMinimizeDock by remember(listState) {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 100
         }
+    }
+    LaunchedEffect(shouldMinimizeDock) {
+        onScrollActive?.invoke(shouldMinimizeDock)
     }
     var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
     val allVideos = remember(state.videos) { state.videos.distinctBy { it.identity } }
@@ -1545,16 +1558,23 @@ fun MovieSummaryCard(
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progress = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
 
+    val theme = LocalThemeName.current
+    val glassIntensity = LocalGlassIntensity.current
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = Color.Transparent,
+        border = GlassTheme.liquidBorderStroke(theme, glassIntensity)
     ) {
-        Column {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlassTheme.liquidCardBrush(theme, glassIntensity))
+        ) {
             // Poster / Backdrop Thumbnail Container (16:10 aspect ratio)
             Box(
                 modifier = Modifier
@@ -1568,7 +1588,7 @@ fun MovieSummaryCard(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Top Quality / Codec Badge
+                // Top Quality / Codec Badge - Uniform Capsule Pill
                 val badge = when {
                     video.width >= 3840 -> "4K UHD"
                     video.width >= 1920 -> "1080p"
@@ -1576,30 +1596,32 @@ fun MovieSummaryCard(
                     else -> "HD"
                 }
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Color.Black.copy(alpha = 0.75f),
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.70f),
+                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
                     Text(
                         badge,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                 }
 
-                // Top Left Rating Badge
+                // Top Left Rating Badge - Uniform Capsule Pill
                 metadata.rating?.let { rating ->
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = Color.Black.copy(alpha = 0.75f),
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.70f),
+                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
                         modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
                             Icon(Icons.Rounded.Star, null, Modifier.size(11.dp), tint = Color(0xFFF9AB00))
                             Text(rating, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -1711,16 +1733,23 @@ fun TvSeriesSummaryCard(
     val total = series.totalEpisodes
     val progress = if (total > 0) (watched.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
 
+    val theme = LocalThemeName.current
+    val glassIntensity = LocalGlassIntensity.current
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = Color.Transparent,
+        border = GlassTheme.liquidBorderStroke(theme, glassIntensity)
     ) {
-        Column {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlassTheme.liquidCardBrush(theme, glassIntensity))
+        ) {
             // Poster / Backdrop Thumbnail
             Box(
                 modifier = Modifier
@@ -1735,17 +1764,18 @@ fun TvSeriesSummaryCard(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Top Left Rating Badge
+                // Top Left Rating Badge - Uniform Capsule Pill
                 series.rating?.let { rating ->
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = Color.Black.copy(alpha = 0.75f),
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.70f),
+                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
                         modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
                             Icon(Icons.Rounded.Star, null, Modifier.size(11.dp), tint = Color(0xFFF9AB00))
                             Text(rating, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -1753,15 +1783,16 @@ fun TvSeriesSummaryCard(
                     }
                 }
 
-                // Seasons badge
+                // Seasons badge - Uniform Capsule Pill
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Color.Black.copy(alpha = 0.75f),
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.70f),
+                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
                     Text(
                         "${series.seasonCount} Season${if (series.seasonCount > 1) "s" else ""}",
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -1826,11 +1857,14 @@ fun TvSeriesSummaryCard(
     select: () -> Unit
 ) {
     val context = LocalContext.current
+    val theme = LocalThemeName.current
+    val glassIntensity = LocalGlassIntensity.current
     Card(
         onClick = select,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        shape = RoundedCornerShape(22.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        border = GlassTheme.liquidBorderStroke(theme, glassIntensity),
+        shape = RoundedCornerShape(22.dp),
+        modifier = Modifier.background(GlassTheme.liquidCardBrush(theme, glassIntensity), RoundedCornerShape(22.dp))
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
             val compact = maxWidth < 460.dp

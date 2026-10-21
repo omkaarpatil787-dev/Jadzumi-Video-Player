@@ -369,12 +369,18 @@ private fun ShowHeroCard(
     }
 
     val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
+        color = Color.Transparent,
+        border = liquidBorderStroke(theme, glassIntensity)
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(liquidCardBrush(theme, glassIntensity))
+        ) {
             Column(
                 modifier = Modifier.padding(heroPad),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -434,7 +440,7 @@ private fun ShowHeroCard(
                             ) {
                                 Text(
                                     "TV Series",
-                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -447,7 +453,7 @@ private fun ShowHeroCard(
                             ) {
                                 Text(
                                     "1080p HEVC",
-                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -462,7 +468,7 @@ private fun ShowHeroCard(
                                 ) {
                                     Text(
                                         mpaa,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -477,7 +483,7 @@ private fun ShowHeroCard(
                             ) {
                                 Text(
                                     displayYear,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -491,7 +497,7 @@ private fun ShowHeroCard(
                             ) {
                                 Text(
                                     "${series.seasonCount} Seasons",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -505,7 +511,7 @@ private fun ShowHeroCard(
                             ) {
                                 Text(
                                     "${series.totalEpisodes} Episodes",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -547,24 +553,24 @@ private fun ShowHeroCard(
                     ) {
                         Button(
                             onClick = onPlayNext,
-                            modifier = Modifier.height(44.dp),
+                            modifier = Modifier.height(46.dp),
                             shape = CircleShape,
                             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
-                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(18.dp))
+                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(buttonText, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
 
                         OutlinedButton(
                             onClick = onMarkSeasonWatched,
-                            modifier = Modifier.height(44.dp),
+                            modifier = Modifier.height(46.dp),
                             shape = CircleShape,
                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
                             border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
                         ) {
-                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(6.dp))
                             Text("Toggle Season Watched", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
@@ -574,7 +580,7 @@ private fun ShowHeroCard(
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(
                             onClick = onPlayNext,
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            modifier = Modifier.fillMaxWidth().height(46.dp),
                             shape = CircleShape,
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
@@ -585,12 +591,12 @@ private fun ShowHeroCard(
 
                         OutlinedButton(
                             onClick = onMarkSeasonWatched,
-                            modifier = Modifier.fillMaxWidth().height(44.dp),
+                            modifier = Modifier.fillMaxWidth().height(46.dp),
                             shape = CircleShape,
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                             border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outlineVariant)
                         ) {
-                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Rounded.CheckCircle, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(6.dp))
                             Text("Toggle Season Watched", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
@@ -598,6 +604,7 @@ private fun ShowHeroCard(
                 }
             }
         }
+    }
 }
 
 @Composable
@@ -709,6 +716,8 @@ private fun EpisodeCard(
     val isWatched = savedPos >= dur * 0.9f
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progressFraction = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
+    val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
 
     Surface(
         modifier = Modifier
@@ -716,13 +725,15 @@ private fun EpisodeCard(
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(
-            if (isNext) 2.dp else 1.dp,
-            if (isNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-        )
+        color = Color.Transparent,
+        border = if (isNext) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else liquidBorderStroke(theme, glassIntensity)
     ) {
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(liquidSurfaceBrush(theme, glassIntensity))
+        ) {
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
             val thumbWidth = if (isNarrow) 116.dp else 156.dp
             val cardPad = if (isNarrow) 10.dp else 14.dp
@@ -873,20 +884,25 @@ private fun EpisodeCard(
                 }
             }
         }
+        }
     }
 }
 
 @Composable
 internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
     val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = (0.98f - 0.40f * glassIntensity).coerceIn(0.55f, 1.0f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.45f * glassIntensity).coerceIn(0.30f, 0.85f)))
+        color = Color.Transparent,
+        border = liquidBorderStroke(theme, glassIntensity)
     ) {
         Column(
-            modifier = Modifier.padding(18.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(liquidSurfaceBrush(theme, glassIntensity))
+                .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
@@ -911,10 +927,10 @@ internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
             ) {
                 Text("HW Acceleration", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
+                    shape = CircleShape,
                     color = Color(0xFFE6F4EA)
                 ) {
-                    Text("Detected (MediaCodec HW+)", modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF137333))
+                    Text("Detected (MediaCodec HW+)", modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF137333))
                 }
             }
 
@@ -948,13 +964,19 @@ internal fun TechRow(label: String, value: String) {
 
 @Composable
 internal fun OfflineVerificationCard() {
+    val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = Color.Transparent,
+        border = liquidBorderStroke(theme, glassIntensity)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(liquidSurfaceBrush(theme, glassIntensity))
+                .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

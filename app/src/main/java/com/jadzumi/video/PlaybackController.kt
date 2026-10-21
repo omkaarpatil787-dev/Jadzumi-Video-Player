@@ -335,12 +335,14 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             // Automatically discover sibling episodes if part of a TV series
             val app = getApplication<Application>() as? JadzumiApplication
             val allVideos = app?.library?.state?.value?.videos ?: emptyList()
-            val info = EpisodePatterns.parse(v.name)
+            val info = v.episode ?: EpisodePatterns.parse(v.name)
             if (info != null && allVideos.isNotEmpty()) {
-                val seriesEpisodes = allVideos.filter {
-                    val other = EpisodePatterns.parse(it.name)
-                    other != null && other.seriesTitle.equals(info.seriesTitle, ignoreCase = true) && other.season == info.season
-                }.sortedBy { EpisodePatterns.parse(it.name)?.episode ?: 0 }
+                val seriesEpisodes = allVideos.mapNotNull { candidate ->
+                    val other = candidate.episode ?: EpisodePatterns.parse(candidate.name)
+                    if (other != null && other.seriesTitle.equals(info.seriesTitle, ignoreCase = true) && other.season == info.season) {
+                        candidate to other.episode
+                    } else null
+                }.sortedBy { it.second }.map { it.first }
                 currentQueue = if (seriesEpisodes.isNotEmpty()) seriesEpisodes else listOf(v)
             } else if (currentQueue.none { it.identity == v.identity }) {
                 currentQueue = listOf(v)

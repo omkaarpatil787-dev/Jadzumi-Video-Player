@@ -200,7 +200,10 @@ private val destinations = listOf(
             large = RoundedCornerShape((cornerRadiusDp + 4.dp).coerceAtLeast(0.dp))
         )
     ) {
-        CompositionLocalProvider(LocalGlassIntensity provides glassIntensity) {
+        CompositionLocalProvider(
+            LocalGlassIntensity provides glassIntensity,
+            LocalThemeName provides theme
+        ) {
             Box(Modifier.fillMaxSize()) {
             Surface(Modifier.fillMaxSize(), color = colors.background) {
                 BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
@@ -462,20 +465,20 @@ private val destinations = listOf(
                                                 val isInitialDetails = initialState !in mainTabs
 
                                                 if (!isInitialDetails && isTargetDetails) {
-                                                    // Navigating into Movie / TV Details: fluid slide in from right with subtle fade
-                                                    (slideInHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) { it } +
-                                                            fadeIn(animationSpec = tween(220)))
+                                                    // Instant fluid depth reveal into Movie / TV Details
+                                                    (fadeIn(animationSpec = tween(170, easing = LinearOutSlowInEasing)) +
+                                                            scaleIn(initialScale = 0.96f, animationSpec = spring(dampingRatio = 0.86f, stiffness = Spring.StiffnessMediumLow)))
                                                         .togetherWith(
-                                                            slideOutHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) { -it / 4 } +
-                                                                    fadeOut(animationSpec = tween(180))
+                                                            fadeOut(animationSpec = tween(140, easing = FastOutLinearInEasing)) +
+                                                                    scaleOut(targetScale = 0.98f, animationSpec = tween(140))
                                                         )
                                                 } else if (isInitialDetails && !isTargetDetails) {
-                                                    // Returning from Details back to Library: reverse slide out to right
-                                                    (slideInHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) { -it / 4 } +
-                                                            fadeIn(animationSpec = tween(180)))
+                                                    // Instant smooth reverse back to Library
+                                                    (fadeIn(animationSpec = tween(170, easing = LinearOutSlowInEasing)) +
+                                                            scaleIn(initialScale = 0.98f, animationSpec = spring(dampingRatio = 0.86f, stiffness = Spring.StiffnessMediumLow)))
                                                         .togetherWith(
-                                                            slideOutHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) { it } +
-                                                                    fadeOut(animationSpec = tween(220))
+                                                            fadeOut(animationSpec = tween(140, easing = FastOutLinearInEasing)) +
+                                                                    scaleOut(targetScale = 0.96f, animationSpec = tween(140))
                                                         )
                                                 } else {
                                                     // Navigating between tabs: silky smooth shared-axis animated crossfade (no fast flicker fade)
@@ -540,9 +543,9 @@ private val destinations = listOf(
                                             }
                                         } else if (video != null) DetailPage(video)
                                         else when (current) {
-                                            "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, onScrollActive = { if (dockAutoMinimize) isDockMinimized = true })
-                                            "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies", onScrollActive = { if (dockAutoMinimize) isDockMinimized = true })
-                                            "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { if (dockAutoMinimize) isDockMinimized = true })
+                                            "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "Folders" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
                                                 onTheme = ::switchThemeWithBloom,
@@ -891,37 +894,86 @@ fun GeminiGlowingJadzumiLogo(
     val activeDestination = navDestinations.firstOrNull { it.name == route || (it.name == "Home" && route == "Library") }
         ?: navDestinations.first()
 
-    // Fluid smooth animations (Apple / M3 smooth settling, no excessive bounce)
+    // Organic Apple/M3 Fluid Spring Specification (Damped, natural settling - no harsh snaps)
+    val dockSpringDp = spring<Dp>(
+        dampingRatio = 0.82f,
+        stiffness = Spring.StiffnessLow
+    )
+
     val dockHeight by animateDpAsState(
         targetValue = when {
-            isMinimized -> 52.dp
-            isIconsOnly -> 54.dp
+            isMinimized -> 48.dp
+            isIconsOnly -> 52.dp
             else -> 64.dp
         },
-        animationSpec = spring(
-            dampingRatio = 0.88f,
-            stiffness = Spring.StiffnessMediumLow
-        ),
+        animationSpec = dockSpringDp,
         label = "dockHeight"
     )
 
     val dockWidth by animateDpAsState(
         targetValue = when {
-            isMinimized -> if (isTablet) 100.dp else 88.dp
-            isIconsOnly -> if (isTablet) 420.dp else 360.dp
-            else -> if (isTablet) 540.dp else 470.dp
+            isMinimized -> if (isTablet) 96.dp else 84.dp
+            isIconsOnly -> if (isTablet) 380.dp else 320.dp
+            else -> if (isTablet) 520.dp else 440.dp
         },
-        animationSpec = spring(
-            dampingRatio = 0.88f,
-            stiffness = Spring.StiffnessMediumLow
-        ),
+        animationSpec = dockSpringDp,
         label = "dockWidth"
     )
 
     val cornerRadius by animateDpAsState(
-        targetValue = if (isMinimized) 26.dp else 32.dp,
-        animationSpec = spring(dampingRatio = 0.88f, stiffness = Spring.StiffnessMediumLow),
+        targetValue = when {
+            isMinimized -> 24.dp
+            isIconsOnly -> 26.dp
+            else -> 32.dp
+        },
+        animationSpec = dockSpringDp,
         label = "dockCorner"
+    )
+
+    // Dynamic icon, logo and divider scaling as dock takes shape (e.g. Ultra sleek mode)
+    val currentIconSize by animateDpAsState(
+        targetValue = when {
+            isMinimized -> 19.dp
+            isIconsOnly -> 25.dp
+            else -> 21.dp
+        },
+        animationSpec = dockSpringDp,
+        label = "dockIconSize"
+    )
+
+    val currentLogoSize by animateDpAsState(
+        targetValue = when {
+            isMinimized -> 22.dp
+            isIconsOnly -> 26.dp
+            else -> 30.dp
+        },
+        animationSpec = dockSpringDp,
+        label = "dockLogoSize"
+    )
+
+    val currentDividerHeight by animateDpAsState(
+        targetValue = if (isIconsOnly) 20.dp else 26.dp,
+        animationSpec = dockSpringDp,
+        label = "dockDividerHeight"
+    )
+
+    val currentItemPadding by animateDpAsState(
+        targetValue = if (isIconsOnly) 14.dp else 8.dp,
+        animationSpec = dockSpringDp,
+        label = "dockItemPad"
+    )
+
+    // Smooth fluid crossfade between full dock and minimized pill
+    val fullDockAlpha by animateFloatAsState(
+        targetValue = if (isMinimized) 0f else 1f,
+        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
+        label = "fullDockAlpha"
+    )
+
+    val minPillAlpha by animateFloatAsState(
+        targetValue = if (isMinimized) 1f else 0f,
+        animationSpec = tween(durationMillis = 260, delayMillis = 60, easing = FastOutSlowInEasing),
+        label = "minPillAlpha"
     )
 
     Surface(
@@ -932,114 +984,75 @@ fun GeminiGlowingJadzumiLogo(
             .height(dockHeight)
             .clip(RoundedCornerShape(cornerRadius)),
         shape = RoundedCornerShape(cornerRadius),
-        color = GlassTheme.surfaceColor(theme, glassIntensity),
-        border = BorderStroke(
-            1.dp,
-            GlassTheme.borderColor(theme, glassIntensity)
-        ),
-        shadowElevation = if (isMinimized) 18.dp else 14.dp
+        color = Color.Transparent,
+        border = GlassTheme.liquidBorderStroke(theme, glassIntensity),
+        shadowElevation = if (isMinimized) 16.dp else 12.dp
     ) {
-        if (isMinimized) {
-            // Minimized Floating Pill: Tap to expand with fluid bouncy pop
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(onClick = onToggleMinimize)
-                    .padding(horizontal = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                GeminiGlowingJadzumiLogo(
-                    darkSurface = theme != "Light",
-                    size = 22.dp
-                )
-                Spacer(Modifier.width(6.dp))
-                Icon(
-                    imageVector = activeDestination.icon,
-                    contentDescription = "Expand navigation",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        } else {
-            // Full Floating Frosted Dock: Fluid single-action tap selection without double visual flashes
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = if (isTablet) 12.dp else 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                // 1. Non-clickable Google Gemini-style Alive Glooming Logo
-                GeminiGlowingJadzumiLogo(
-                    darkSurface = theme != "Light",
-                    size = if (isIconsOnly) 28.dp else 32.dp
-                )
-
-                // Subtle frosted vertical glass divider
-                Box(
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(GlassTheme.liquidSurfaceBrush(theme, glassIntensity)),
+            contentAlignment = Alignment.Center
+        ) {
+            // 1. Full Navigation Dock Content
+            if (fullDockAlpha > 0.02f) {
+                Row(
                     modifier = Modifier
-                        .width(1.dp)
-                        .height(if (isIconsOnly) 22.dp else 28.dp)
-                        .background(
-                            if (theme == "Light") Color(0xFFD3E3FD).copy(alpha = 0.8f)
-                            else Color.White.copy(alpha = 0.16f)
-                        )
-                )
-
-                // 2. Navigation Destinations
-                navDestinations.forEach { d ->
-                    val isSelected = route == d.name || (d.name == "Home" && route == "Library")
-                    val activeColor = MaterialTheme.colorScheme.primary
-                    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-
-                    val iconScale by animateFloatAsState(
-                        targetValue = if (isSelected) 1.15f else 1.0f,
-                        animationSpec = spring(dampingRatio = 0.80f, stiffness = Spring.StiffnessMediumLow),
-                        label = "dockIconScale_${d.name}"
+                        .fillMaxSize()
+                        .alpha(fullDockAlpha)
+                        .padding(horizontal = if (isTablet) 12.dp else 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // Non-clickable Google Gemini-style Alive Glooming Logo
+                    GeminiGlowingJadzumiLogo(
+                        darkSurface = theme != "Light",
+                        size = currentLogoSize
                     )
 
+                    // Subtle vertical liquid glass divider
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(18.dp))
-                            .clickable(
-                                interactionSource = remember(d.name) { MutableInteractionSource() },
-                                indication = ripple(bounded = true, radius = 26.dp)
-                            ) {
-                                if (!isSelected) {
-                                    onNavigate(d.name)
+                            .width(1.dp)
+                            .height(currentDividerHeight)
+                            .background(
+                                if (theme == "Light") Color(0xFFD3E3FD).copy(alpha = 0.8f)
+                                else Color.White.copy(alpha = 0.16f)
+                            )
+                    )
+
+                    // Navigation Destinations
+                    navDestinations.forEach { d ->
+                        val isSelected = route == d.name || (d.name == "Home" && route == "Library")
+                        val activeColor = MaterialTheme.colorScheme.primary
+                        val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+
+                        val iconScale by animateFloatAsState(
+                            targetValue = if (isSelected) (if (isIconsOnly) 1.18f else 1.15f) else 1.0f,
+                            animationSpec = spring(dampingRatio = 0.78f, stiffness = Spring.StiffnessMediumLow),
+                            label = "dockIconScale_${d.name}"
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(18.dp))
+                                .clickable(
+                                    interactionSource = remember(d.name) { MutableInteractionSource() },
+                                    indication = ripple(bounded = true, radius = 26.dp)
+                                ) {
+                                    if (!isSelected) {
+                                        onNavigate(d.name)
+                                    }
                                 }
-                            }
-                            .padding(horizontal = if (isIconsOnly) 14.dp else 10.dp, vertical = if (isIconsOnly) 6.dp else 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isIconsOnly) {
-                            // Ultra-sleek Snapchat-style Icons Only Mode (Pure icons, zero container shapes)
-                            Box(
-                                modifier = Modifier
-                                    .height(38.dp)
-                                    .widthIn(min = 44.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = d.icon,
-                                    contentDescription = d.name,
-                                    tint = if (isSelected) activeColor else inactiveColor,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .scale(iconScale)
-                                )
-                            }
-                        } else {
-                            // Default Icons + Labels Mode (Snapchat-style alive spring icon + clear label)
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(3.dp)
-                            ) {
+                                .padding(horizontal = currentItemPadding, vertical = if (isIconsOnly) 6.dp else 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isIconsOnly) {
+                                // Ultra-sleek mode: Resized prominent icons, zero container shapes
                                 Box(
                                     modifier = Modifier
-                                        .height(26.dp)
-                                        .widthIn(min = 36.dp),
+                                        .height(38.dp)
+                                        .widthIn(min = 44.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -1047,21 +1060,68 @@ fun GeminiGlowingJadzumiLogo(
                                         contentDescription = d.name,
                                         tint = if (isSelected) activeColor else inactiveColor,
                                         modifier = Modifier
-                                            .size(21.dp)
+                                            .size(currentIconSize)
                                             .scale(iconScale)
                                     )
                                 }
-                                Text(
-                                    text = d.name,
-                                    fontSize = 10.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) activeColor else inactiveColor,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                            } else {
+                                // Default mode: Resized icons + clean typography labels
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .height(26.dp)
+                                            .widthIn(min = 36.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = d.icon,
+                                            contentDescription = d.name,
+                                            tint = if (isSelected) activeColor else inactiveColor,
+                                            modifier = Modifier
+                                                .size(currentIconSize)
+                                                .scale(iconScale)
+                                        )
+                                    }
+                                    Text(
+                                        text = d.name,
+                                        fontSize = 10.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) activeColor else inactiveColor,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
                         }
                     }
+                }
+            }
+
+            // 2. Minimized Floating Pill Content (Tapping expands dock smoothly)
+            if (minPillAlpha > 0.02f) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .alpha(minPillAlpha)
+                        .clickable(enabled = isMinimized, onClick = onToggleMinimize)
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    GeminiGlowingJadzumiLogo(
+                        darkSurface = theme != "Light",
+                        size = currentLogoSize
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Icon(
+                        imageVector = activeDestination.icon,
+                        contentDescription = "Expand navigation",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(currentIconSize)
+                    )
                 }
             }
         }
@@ -1655,8 +1715,8 @@ private val settingsCategories = listOf(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                                Text("Glassify UI Elements", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                                Text("Adjust frosted glass translucency and depth across player pills, floating docks, and sheets", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Text("Glassify UI Elements (Liquid Glass)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Adjust liquid glass translucency, refractive sheen, and depth across player pills, floating docks, cards, and sheets", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Surface(
                                                 shape = RoundedCornerShape(999.dp),
@@ -1685,8 +1745,8 @@ private val settingsCategories = listOf(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Text("Solid (20%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            Text("Balanced (65%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            Text("Deep Glass (100%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Balanced Liquid (65%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Deep Liquid Glass (100%)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     }
 
@@ -2435,13 +2495,22 @@ private val settingsCategories = listOf(
 
 @Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
     val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
     Surface(
-        Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = (0.98f - 0.45f * glassIntensity).coerceIn(0.50f, 1.0f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = (0.35f + 0.50f * glassIntensity).coerceIn(0.30f, 0.90f)))
+        color = Color.Transparent,
+        border = GlassTheme.liquidBorderStroke(theme, glassIntensity),
+        shadowElevation = 4.dp
     ) {
-        Column(Modifier.padding(20.dp), content = content)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlassTheme.liquidSurfaceBrush(theme, glassIntensity))
+                .padding(20.dp)
+        ) {
+            Column(content = content)
+        }
     }
 }
 

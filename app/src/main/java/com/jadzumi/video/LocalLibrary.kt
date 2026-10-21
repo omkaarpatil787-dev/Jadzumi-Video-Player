@@ -25,8 +25,8 @@ data class LocalVideo(
         val parsed = uri.toUri()
         return "${parsed.authority}:${Docs.getDocumentId(parsed)}"
     }
-    val episode get() = parseEpisode(name)
-    val title get() = name.substringBeforeLast('.', name).replace('_', ' ')
+    val episode: EpisodeHint? by lazy { parseEpisode(name) }
+    val title: String by lazy { name.substringBeforeLast('.', name).replace('_', ' ') }
     val dirId: String get() = if (parentDir.isNotEmpty()) parentDir else try {
         Docs.getDocumentId(uri.toUri()).substringBeforeLast('/', "")
     } catch (_: Exception) { "" }
