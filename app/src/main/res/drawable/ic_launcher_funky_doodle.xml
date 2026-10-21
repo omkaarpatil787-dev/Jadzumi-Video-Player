@@ -40,7 +40,7 @@
     <path
         android:strokeColor="#FF8B5CF6"
         android:strokeWidth="2.5"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M16,74 C20,70 24,78 28,74 C32,70 36,78 40,74" />
 
     <!-- Doodle Orange Sparkle (Bottom Right) -->
@@ -88,14 +88,14 @@
     <path
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="1.2"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M34,47 L37,55" />
 
     <!-- Sunglasses Bridge -->
     <path
         android:strokeColor="#FF18181B"
         android:strokeWidth="2.5"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M43,47 L48,47" />
 
     <!-- Right Lens Frame -->
@@ -106,14 +106,14 @@
     <path
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="1.2"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M51,48 L54,56" />
 
     <!-- Cool Smirking Doodle Smile -->
     <path
         android:strokeColor="#FF18181B"
         android:strokeWidth="2.2"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M40,64 C44,68 50,66 52,63" />
 
     <!-- Cute Comic Sweat/Sparkle Mark -->

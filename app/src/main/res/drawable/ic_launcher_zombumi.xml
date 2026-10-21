@@ -58,7 +58,7 @@
     <path
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="1.2"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M31,29 L35,32 M37,26 L39,30 M42,28 L41,33 M33,36 L37,39" />
 
     <!-- Playful Purple Play Bandana / Headband across forehead -->
@@ -92,14 +92,14 @@
     <path
         android:strokeColor="#FF14532D"
         android:strokeWidth="3.2"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M63,53 L73,63 M73,53 L63,63" />
 
     <!-- Cute Zombie Mouth with Tiny Fang -->
     <path
         android:strokeColor="#FF14532D"
         android:strokeWidth="2"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M42,71 C48,74 60,74 66,70" />
     <!-- Tiny White Zombie Fang -->
     <path
@@ -112,7 +112,7 @@
     <path
         android:strokeColor="#FF166534"
         android:strokeWidth="1.2"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M68,69 L74,72 M70,69 L69,73 M72,70 L71,74" />
 
 </vector>

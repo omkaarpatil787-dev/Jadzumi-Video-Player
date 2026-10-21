@@ -63,7 +63,7 @@
     <path
         android:strokeColor="#FF1E1B4B"
         android:strokeWidth="2.5"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M41,40 C43,36 47,36 49,40 M59,40 C61,36 65,36 67,40" />
 
     <!-- Rosy Blush Cheeks -->
@@ -73,7 +73,7 @@
     <path
         android:strokeColor="#FF1E1B4B"
         android:strokeWidth="1.8"
-        android:strokeCap="round"
+        android:strokeLineCap="round"
         android:pathData="M51,45 C52.5,47 54,47 54,45 C54,47 55.5,47 57,45" />
 
     <!-- Glowing Mint Play Belly Symbol (Mascot's Play Identity) -->
