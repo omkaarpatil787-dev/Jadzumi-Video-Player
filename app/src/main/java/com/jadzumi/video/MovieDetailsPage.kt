@@ -20,7 +20,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -82,6 +84,34 @@ fun MovieDetailsPage(
         val horizontalPad = if (isTablet) 28.dp else 16.dp
         val topPad = if (isTablet) 20.dp else 12.dp
         val scrollState = rememberLazyListState()
+
+        // Ambient Blurred Backdrop Glow
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(if (isTablet) 380.dp else 280.dp)
+                .graphicsLayer { alpha = 0.35f }
+        ) {
+            LocalThumbnail(
+                video = video,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { scaleX = 1.35f; scaleY = 1.35f }
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.65f),
+                                MaterialTheme.colorScheme.background
+                            )
+                        )
+                    )
+            )
+        }
 
         LazyColumn(
             state = scrollState,

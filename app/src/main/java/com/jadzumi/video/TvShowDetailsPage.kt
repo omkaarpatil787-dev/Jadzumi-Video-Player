@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -90,6 +91,37 @@ fun TvShowDetailsPage(
         val horizontalPad = if (isTablet) 28.dp else 16.dp
         val topPad = if (isTablet) 20.dp else 12.dp
         val scrollState = rememberLazyListState()
+
+        val backdropEp = remember(series) { series.seasons.values.firstOrNull()?.firstOrNull() }
+        // Ambient Blurred Backdrop Glow
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(if (isTablet) 380.dp else 280.dp)
+                .graphicsLayer { alpha = 0.35f }
+        ) {
+            if (backdropEp != null) {
+                LocalThumbnail(
+                    video = backdropEp,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { scaleX = 1.35f; scaleY = 1.35f }
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.65f),
+                                MaterialTheme.colorScheme.background
+                            )
+                        )
+                    )
+            )
+        }
 
         LazyColumn(
             state = scrollState,
@@ -254,6 +286,29 @@ fun TvShowDetailsPage(
                                 Text("English [Styled ASS / SRT]", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
                             }
                         }
+                    }
+                }
+            }
+
+            // 3.5. Season Progress & Up Next Spotlight
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    val watchedInSeason = currentSeasonEpisodes.count { playback.isWatched(it) }
+                    SeasonCompletionBar(
+                        watchedCount = watchedInSeason,
+                        totalCount = currentSeasonEpisodes.size,
+                        seasonNumber = selectedSeason
+                    )
+
+                    if (nextUnwatched != null) {
+                        UpNextSpotlightCard(
+                            video = nextUnwatched,
+                            playback = playback,
+                            onPlay = {
+                                playback.open(nextUnwatched, currentSeasonEpisodes)
+                                playback.fullscreen = true
+                            }
+                        )
                     }
                 }
             }
@@ -1108,5 +1163,134 @@ internal fun SidecarImage(
         LocalThumbnail(fallbackVideo, modifier)
     } else {
         CinematicFallbackPoster(title = "Cinema Series", name = "", modifier = modifier)
+    }
+}
+
+@Composable
+private fun SeasonCompletionBar(
+    watchedCount: Int,
+    totalCount: Int,
+    seasonNumber: Int
+) {
+    val progress = if (totalCount > 0) watchedCount.toFloat() / totalCount.toFloat() else 0f
+    val percent = (progress * 100).toInt()
+    val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (seasonNumber == 0) "Specials Progress" else "Season $seasonNumber Progress",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "$watchedCount / $totalCount watched ($percent%)",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (percent == 100) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary
+                )
+            }
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                color = if (percent == 100) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun UpNextSpotlightCard(
+    video: LocalVideo,
+    playback: PlaybackController,
+    onPlay: () -> Unit
+) {
+    val epInfo = remember(video.name) { EpisodePatterns.parse(video.name) }
+    val title = epInfo?.episodeTitle ?: video.title
+    val epLabel = if (epInfo != null) "S%02dE%02d".format(epInfo.season, epInfo.episode) else "Next"
+    val glassIntensity = LocalGlassIntensity.current
+    val theme = LocalThemeName.current
+
+    Surface(
+        onClick = onPlay,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(100.dp)
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(10.dp))
+            ) {
+                LocalThumbnail(video = video, modifier = Modifier.fillMaxSize())
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                        .align(Alignment.Center)
+                ) {
+                    Icon(
+                        Icons.Rounded.PlayArrow,
+                        contentDescription = "Play",
+                        tint = Color.White,
+                        modifier = Modifier.align(Alignment.Center).size(20.dp)
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        "UP NEXT • $epLabel",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Text(
+                    title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    if (video.duration > 0) timecode(video.duration / 1000) else "Episode",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }

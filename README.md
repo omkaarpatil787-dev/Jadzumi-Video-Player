@@ -1,123 +1,83 @@
-# 🎬 Jadzumi Player — Modern Cinema & TV Player for Android
+# Jadzumi Video Player
 
-> **Version 1.2.0 (Release)** · 📱 Universal Android: Phones, Foldables & Tablets · 📴 Offline-First with Smart Artwork · 🛡️ Zero Tracking · ⚡ Jetpack Compose & NextLib Media3 Engine
-
----
-
-## 🌟 Overview
-
-**Jadzumi Player** is a high-performance, private, modern cinema and TV video player engineered for all Android devices. Built with **Jetpack Compose** and **NextLib Media3 (ExoPlayer + bundled FFmpeg C++ decoders)**, Jadzumi delivers fluid gesture controls, intelligent hardware & display detection, audiophile audio DSP, online album artwork scraping with local disk caching, and an adaptive glassmorphic interface that scales seamlessly from handheld phones to foldables and large-screen tablets.
+> **Version 1.3.0** | Universal Android (Phones, Foldables & Tablets) | Offline-First Cinema Player | Zero Tracking | Jetpack Compose & Media3
 
 ---
 
-## ✨ Key Features & Highlights
+## Overview
 
-### 📱 1. Universal Phone & Tablet Ergonomics
-- 🏝️ **Universal Floating Frosted Dock (Phones & Tablets)**: Unified navigation ergonomics across handheld phones, foldables, and large-screen tablets. Replaces rigid edge-to-edge side rails with an adaptive frosted glass dock centered at the bottom, unlocking full-width cinema breathing room on tablets while maintaining 100% UX consistency.
-- ✨ **Google Gemini-Style Alive Glooming Logo**: The floating dock is anchored by a strictly non-clickable Jadzumi emblem with diffuse ambient backlight bloom, animated gradient shimmer border, and breathing inner play glyph that gently pulses as if alive while using the app.
-- 🫧 **Snapchat-Style Pure Dock Icons**: Ultra-clean, alive navigation icons with natural spring scaling (`1.15x`) and vibrant primary tints. No intrusive bounding shapes or squished glow capsules when auto-minimizing on tablets or phones!
-- 🎛️ **Dock Style Toggle**: Choose between **Icons & labels** (default) or **Icons only** (ultra-sleek 54dp dock) under Settings › Display.
-- 📐 **Mobile Portrait TV Show & Movie Alignment Parity**: Pixel-perfect layout alignment on phones without empty black gaps. Binds breadcrumbs with strict `.weight(1f, fill = false)` constraints and optimized `topPad (12dp)` for seamless, immediate content flow.
-- 🎴 **Tab-Focused Clean Collections**: Top featured swiping cards are exclusively showcased on the Home tab, keeping the Movies and TV Shows tabs uncluttered, focused directly on Continue Watching and collection grids.
-- 🌟 **Interactive Alive Cinema Greeting**: Upper-left Home greeting dynamically tracks your recent episodes and movies (*"Good afternoon · Back to Dragon Ball Super?"* / *"Watching S01E02 · Tap to cycle fun facts 🍿"*), featuring interactive click-to-cycle cinema trivia and a lively presence indicator.
-- 🪗 **Auto-Minimizing Live Suggestions Carousel**: Home swiping cards intelligently curate real-time "Up Next" episodes and resume recommendations, naturally minimizing into a sleek 74dp live bar as you scroll, blooming back with organic spring physics on return.
-- 🎬 **Unified Single-Surface Design**: Pixel-perfect parity across hero cards, genre subtitles, click-to-expand synopses, rating stars, and single-surface styling without elevation tinting or two-tone borders.
-- 🏷️ **FlowRow Audio & Subtitle Chips**: Modern badge chips for Multi-channel 5.1 passthrough, FFmpeg 6.1 libavcodec, libass, and PGS/SRT formats that never clip or wrap awkwardly on portrait phones.
-- 🔄 **One-Tap Orientation Switcher**: In-player button instantly cycles between **Landscape**, **Portrait**, and **Auto-Sensor** rotation.
-- ✨ **Shared-Axis Premium Tab Transitions**: Directional horizontal parallax (`slideIn/Out` + overlapping fade) for a continuous, silky-smooth 120 FPS navigation feel.
+**Jadzumi Video Player** is a high-performance, private offline cinema and TV player built for Android. Powered by **Jetpack Compose** and **NextLib Media3 (ExoPlayer + bundled FFmpeg JNI decoders)**, Jadzumi combines fluid gesture controls, intelligent display calibration, audiophile audio DSP, and an adaptive frosted glassmorphic interface tailored for phones and tablets.
 
 ---
 
-### ☀️ 2. OLED / AMOLED Exclusive Auto HDR Peak Luminance
-- 🌈 **Auto HDR Detection**: Real-time detection of **HDR10**, **HDR10+**, **Dolby Vision** (`dv`/`dovi`), and **HLG** content.
-- 🖤 **OLED-Exclusive Peak Luminance**: Automatically boosts display luminance to peak (`1.0f`) with `COLOR_MODE_HDR` **only on OLED / AMOLED displays** for piercing highlights with infinite true blacks.
-- 🛡️ **LCD Backlight Protection**: Bypasses auto peak luminance on LCD tablets (Xiaomi Pad 5/6, OnePlus Pad, Galaxy Tab S7/S8 base, Lenovo Tab) to eliminate backlight bleeding and preserve natural contrast.
-- 🔍 **Hardware & Panel Inspector**: Live inspection of display panel technology, SoC chipset model, and screen aspect ratios (`19.5:9`, `20:9`, `21:9` for phones; `16:10` / `4:3` for tablets).
+## What's New in v1.3.0
+
+- **Hold-to-2x Speed Fast-Forward**: Press and hold anywhere on the playback screen to instantly boost speed to 2.0x with haptic feedback; release to restore normal playback.
+- **Intelligent End-Credit Detection**: Automatically identifies credit sequences and presents a non-intrusive 12-second Next Episode countdown with a direct "Watch Credits" option.
+- **Haptic Timeline Scrubbing & Chapter Markers**: Visual chapter tick marks along the timeline with tactile magnetic snapping during seeking.
+- **Direct Voice Clarity / Dialogue Boost**: One-tap HUD button to enhance quiet dialogue and compress harsh audio spikes.
+- **External Subtitle Loader**: Integrated system file picker supporting loose `.srt`, `.vtt`, and `.ass` subtitles.
+- **Poster Grid & Detailed List Toggle**: One-tap toggle between a multi-column visual poster grid and rich metadata rows.
+- **Smart Filter & Sort Chips**: Quick filters (*All*, *In Progress*, *Unwatched*, *4K UHD*, *Recently Added*) and flexible sorting (*Date*, *Title*, *Duration*, *Size*).
+- **Batch Video Management**: Long-press selection mode for marking items watched/unwatched or clearing playback progress in bulk.
+- **Ambient Blurred Backdrop Glow**: Detail pages softly sample video artwork into a luminous, theatrical background glow.
+- **TV Season Progress & Up Next Spotlight**: Visual season completion gauges and prominent next-unwatched episode action cards.
 
 ---
 
-### 🖼️ 3. Online Poster Album & Rich Metadata Scraping (Movies & TV Series)
-- 🌐 **Dual-Engine Online Metadata Scraper**: When local sidecars are missing, Jadzumi fetches official high-resolution posters, official plot synopses, critic ratings, and release years via **Wikipedia REST** and **TVMaze** for both feature films and TV shows with automatic fallback.
-- 💾 **Local Disk Caching**: Downloaded posters and metadata are cached locally on disk (`cacheDir/poster_cache/`) so they load instantly and remain available 100% offline with verified `☁ Online Art` status pills.
-- 🎯 **Accurate Genre Detection**: Intelligently categorizes movies and shows into Horror, Sci-Fi, Action, Animation, Crime, Thriller, and Comedy.
-- 🎞️ **Anti-Black Frame Fallback**: Samples local video frames at 12% runtime (`10s`–`180s`) to ensure local thumbnails never display black intros.
+## Core Capabilities
+
+### 1. Playback & Gesture Ergonomics
+- **Fluid Gestures**: Vertical swipes for brightness and volume with deadzone touch protection; double-tap ripple seek with accumulator.
+- **Hold-to-2x Speed**: Seamless acceleration on press down, instant restore on release.
+- **Haptic Timeline Bar**: Periwinkle accent bar with chapter markers and tactile snapping.
+- **Quick Audio & Subtitle Adjustments**: On-the-fly subtitle sync (`±10s`) and Bluetooth lip-sync compensation (`±500ms`).
+- **Aspect Ratio Control**: Fit to screen (letterbox), Crop to fill (zoom), and Stretch modes.
+- **Picture-in-Picture (PiP)**: Smooth background playback preserving source aspect ratios.
+
+### 2. Audio Architecture & Decoders
+- **Bundled FFmpeg Decoders**: Lossless decoding for Dolby Atmos, AC-3, E-AC-3, TrueHD, DTS-HD, FLAC, and AAC.
+- **Dialogue Voice Boost**: Dynamic range compression via Android `LoudnessEnhancer`.
+- **Background Audio**: Lock-screen and screen-off playback.
+
+### 3. Display Calibration & Visual Polish
+- **OLED / AMOLED Peak Luminance**: Automatically applies peak HDR brightness exclusively on OLED/AMOLED panels while protecting LCD backlights.
+- **Frosted Glass Engine**: Directional embossed border strokes, frosted surface diffusion, and customizable glass intensity (0% to 100%).
+- **Tri-Theme Fidelity**: Calibrated for Light, Dark (obsidian navy), and AMOLED (true pitch black).
+- **Scroll Blend-Fade**: Hardware-accelerated edge fades during list scrolling.
+
+### 4. Library & Series Organization
+- **Automated Series Parsing**: Intelligent detection of season and episode patterns (`S01E01`, `1x04`).
+- **Continue Watching Shelf**: Quick-resume carousel with progress indicators and remaining time badges.
+- **Dual Metadata Pipeline**: Offline `.nfo` sidecars with Wikipedia REST & TVMaze online fallback caching.
 
 ---
 
-### 🎛️ 4. Glassify UI Elements Intensity Slider
-- 🧪 **Adjustable Glass Translucency**: Interactive slider in **Settings › Display** adjusting frosted glass intensity from **0% (Solid)** to **100% (Deep Glass)**.
-- 💎 **Universal Live UI Engine (`GlassTheme`)**: Dynamically modulates background opacity and specular frosted rims across the floating dock, tablet rail, search capsules, settings panels, and CinemaPlayer overlay pills and controls.
-- 🌓 **Full Tri-Theme Fidelity**: Calibrated for **Light** (frosted white crystal), **Dark** (frosted obsidian navy), and **AMOLED** (pure pitch black scaling into sapphire dark glass).
-
----
-
-### 🌌 5. Final Aurora Splash Screen
-- 🎨 **HTML-Spec Accurate Aurora**: Ethereal liquid aurora based on `jadzumi_player_splash_final.html`, blending Electric Cyan (`#64DCFF`), Sapphire Azure (`#188AF5`), and Royal Blue (`#1659D9`).
-- 📱 **Adaptive Screen Sizing**: Dynamically scales glass tile and logo dimensions across compact phones (<680dp), standard phones, and large-screen tablets.
-- 🌓 **Adaptive Display Palettes**:
-  - 🌙 **Dark Mode**: Deep obsidian navy (`#091628`) with ambient radial ellipses and screen-blend floating blobs.
-  - 🖤 **AMOLED Mode**: Pure `#000000` pitch black background for zero OLED battery consumption with a soft ambient sapphire aura.
-  - ☀️ **Light Mode**: Luminous morning sky gradient (`#EAF4FF`) with airy azure floating blobs and diagonal specular sheen.
-- ✨ **Levitating Glass Tile & SVG Logo**: Levitating frosted tile (`translateY(-6px)`) with breathing radial aura, 120x120 vector play symbol, and 3dp gradient loading track with dynamic status text (*"Preparing your cinema…"* ➔ *"Loading your library…"*) and 1.09x smooth zoom exit.
-
----
-
-### 🎮 6. Studio Player Gestures & Seek Controls
-- 💫 **YouTube-Style 54dp Seek Ripples**: Proportioned double-tap seek ripple overlay (`54dp` matching seek control buttons) with dynamic chevrons (`«««` / `»»»`), seek accumulator, and smooth circular clipping.
-- 🎚️ **Dual-Side Edge Swipes**: Left side controls screen brightness; right side controls audio volume with deadzone touch protection.
-- ⏩ **Long-Press 2x Speed**: Press and hold anywhere on the player surface to temporarily accelerate playback to 2.0x.
-- ⏭️ **Contextual "Skip Intro (+85s)" Capsule**: One-tap intro skipper in the opening minutes of episodes and movies.
-- 🖼️ **Hardware Picture-in-Picture (PiP)**: Smooth background playback with source aspect ratio matching.
-
----
-
-### 🔊 7. Audiophile Cinema DSP & NextLib FFmpeg
-- 🌙 **Dialogue Voice Boost / Night Mode**: Speech clarity enhancement via Android `LoudnessEnhancer` dynamic range compression.
-- 📶 **Bluetooth Lip-Sync Calibration**: Wireless audio delay offset calibration (`±500ms` in 50ms steps).
-- ⏱️ **Live Subtitle Sync Calibration**: On-the-fly subtitle timing adjustments (`±10s` in 100ms increments).
-- 🎼 **Bundled NextLib FFmpeg Decoders**: Lossless decoding for **Dolby Atmos**, **Dolby Digital (AC-3)**, **Dolby Digital Plus (E-AC-3)**, **TrueHD**, **DTS-HD**, **FLAC**, and **AAC**.
-- 🔒 **Screen-Off Background Audio**: Continue listening to concerts, commentary, and podcasts with your device locked.
-
----
-
-### 📁 8. Smart Library, Search & Folder Management
-- 🔍 **Tokenized Smart Search Engine**: Multi-word normalized search matcher across movies, TV series, episodes, and folder paths. Handles dots, underscores, hyphens, and brackets (`"the dark knight"`, `"batman 2022"`, `"spider man"`), with automatic detail view reset, keyboard IME actions, and dedicated categorized search result sections.
-- 🏷️ **Automated Series & Seasons Grouping**: Automatically groups episode patterns (`S01E01`, `1x04`) into organized series hubs and season carousels.
-- ⏳ **Next-Episode Autoplay Countdown**: 10-second autoplay countdown banner with instant "Play Now" and "Cancel" buttons.
-- ⚙️ **Settings-Integrated Storage Hub**: Comprehensive folder management under **Settings → Storage & Folders** featuring storage breakdown bars, active directory lists, and deletion protection dialogs.
-
----
-
-## 🛠️ Tech Stack
+## Technical Specifications
 
 | Component | Technology |
 | :--- | :--- |
 | **Language** | Kotlin 2.0 (JVM 17 Target) |
-| **UI Toolkit** | Jetpack Compose (Material 3 Expressive Design) |
-| **Media Engine** | AndroidX Media3 (ExoPlayer) + NextLib FFmpeg JNI decoders |
-| **Image Loading** | High-performance sampled bitmap pipeline + local disk LRU cache |
-| **Metadata** | 100% Offline sidecars (`.nfo`, `poster.jpg`) + Wikipedia REST & TVMaze |
-| **Build System** | Gradle 8.11.1 + Android Gradle Plugin 8.7.2 |
-| **Optimization** | R8 code shrinking + resource optimization with ProGuard rules |
+| **UI Toolkit** | Jetpack Compose (Material 3 Expressive) |
+| **Media Framework** | AndroidX Media3 (ExoPlayer 1.11.1) |
+| **Native Codecs** | NextLib Media3 FFmpeg 6.1 JNI |
+| **Minimum SDK** | Android 8.0 (API 26) |
+| **Target SDK** | Android 15 (API 35) / Compile SDK 36 |
+| **Architecture** | ARM64 (`arm64-v8a`) |
+| **Minification** | R8 Code Shrinking + Resource Optimization |
 
 ---
 
-## 📦 Building from Source
+## Build & Verification
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player.git
-cd Jadzumi-Video-Player
-
-# 2. Build Debug APK
-./gradlew assembleDebug
-
-# 3. Build Production Release APK
-./gradlew assembleRelease
+# Run unit tests and generate release bundle
+./gradlew test assembleRelease assembleDebug --no-daemon
 ```
 
 ---
 
-## 📄 License
+## License & Privacy
 
-Licensed under the Apache License, Version 2.0.
+- **Privacy First**: 100% offline-capable, zero analytics, zero telemetric beacons.
+- **Open Source**: Licensed under the MIT License. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for decoder compliance.

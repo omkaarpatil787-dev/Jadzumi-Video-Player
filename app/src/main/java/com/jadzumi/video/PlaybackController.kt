@@ -36,6 +36,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.Locale
+import android.net.Uri
+
+data class ChapterMarker(
+    val timeMs: Long,
+    val title: String,
+    val fraction: Float
+)
 
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 class PlaybackController(application: Application) : AndroidViewModel(application) {
@@ -61,6 +68,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var subtitleTracks by mutableStateOf<List<SubtitleTrackInfo>>(emptyList()); private set
     var isHdr by mutableStateOf(false); private set
     var videoCodecBadge by mutableStateOf<String?>(null); private set
+
+    // Chapters & External Subtitles
+    var chapters by mutableStateOf<List<ChapterMarker>>(emptyList()); private set
+    var externalSubtitles by mutableStateOf<List<MediaItem.SubtitleConfiguration>>(emptyList()); private set
 
     // Milestone 5A: Queue, Next Episode Continuity & Autoplay
     var currentQueue by mutableStateOf<List<LocalVideo>>(emptyList()); private set
@@ -109,19 +120,34 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 player?.let { p ->
                     if (mediaItemAssigned) position = p.currentPosition.coerceAtLeast(0)
                     val currentDur = p.duration.takeIf { it > 0 } ?: video?.duration?.takeIf { it > 0 } ?: 0
-                    if (currentDur > 0) duration = currentDur
+                    if (currentDur > 0) {
+                        if (duration != currentDur) updateChapters(currentDur)
+                        duration = currentDur
+                    }
                     if (++pollCount % 10 == 0) save()
 
-                    // Milestone 5A: 10-Second Next-Episode Autoplay Countdown
+                    // Intelligent End-Credit Detection & Next-Episode Autoplay Countdown
                     val next = nextEpisode
                     if (next != null && countdownDismissedForVideo != video?.identity && currentDur > 30_000) {
-                        val remMs = currentDur - position
-                        if (remMs in 500..15_000 && p.isPlaying) {
-                            val seconds = ((remMs + 500) / 1000).toInt().coerceIn(1, 10)
-                            nextEpisodeCountdown = seconds
-                        } else if (remMs <= 500 && p.isPlaying) {
-                            playNextEpisode()
-                        } else if (remMs > 15_000) {
+                        val creditLeadMs = when {
+                            currentDur >= 70 * 60_000L -> 110_000L // 70m+ movies: 110s credits
+                            currentDur >= 35 * 60_000L -> 80_000L  // 45-60m drama: 80s credits
+                            else -> 60_000L                        // 20-30m anime/sitcoms: 60s credits
+                        }.coerceAtMost(currentDur / 3)
+
+                        val creditStartPos = currentDur - creditLeadMs
+                        val elapsedInCredits = position - creditStartPos
+                        val countdownWindowMs = 12_000L
+
+                        if (position >= creditStartPos && p.isPlaying) {
+                            if (elapsedInCredits in 0..countdownWindowMs) {
+                                val seconds = ((countdownWindowMs - elapsedInCredits + 999) / 1000).toInt().coerceIn(1, 12)
+                                nextEpisodeCountdown = seconds
+                            } else if (elapsedInCredits > countdownWindowMs && nextEpisodeCountdown != null) {
+                                nextEpisodeCountdown = null
+                                playNextEpisode()
+                            }
+                        } else {
                             if (nextEpisodeCountdown != null) nextEpisodeCountdown = null
                         }
                     } else {
@@ -132,6 +158,32 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 }
             }
         }
+    }
+
+    private fun updateChapters(dur: Long) {
+        if (dur <= 60_000L) {
+            chapters = emptyList()
+            return
+        }
+        val creditLeadMs = when {
+            dur >= 70 * 60_000L -> 110_000L
+            dur >= 35 * 60_000L -> 80_000L
+            else -> 60_000L
+        }.coerceAtMost(dur / 3)
+        val creditPos = dur - creditLeadMs
+
+        val list = mutableListOf<ChapterMarker>()
+        val numIntervals = if (dur > 60 * 60_000L) 5 else 3
+        for (i in 1..numIntervals) {
+            val time = (dur * i) / (numIntervals + 1)
+            if (time < creditPos - 20_000L) {
+                list.add(ChapterMarker(time, "Chapter $i", time.toFloat() / dur.toFloat()))
+            }
+        }
+        if (creditPos > 30_000L) {
+            list.add(ChapterMarker(creditPos, "End Credits", creditPos.toFloat() / dur.toFloat()))
+        }
+        chapters = list
     }
 
     private fun createNotificationChannel() {
@@ -317,6 +369,80 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         historyVersion++
     }
 
+    fun markVideosWatched(videos: List<LocalVideo>, watched: Boolean) {
+        prefs.edit {
+            videos.forEach { v ->
+                val k = key(v)
+                val dur = v.duration.takeIf { it > 0 } ?: 1000L
+                if (watched) {
+                    putLong(k, dur)
+                    putBoolean("$k.done", true)
+                } else {
+                    remove(k)
+                    remove("$k.done")
+                }
+            }
+        }
+        historyVersion++
+    }
+
+    fun clearProgress(videos: List<LocalVideo>) {
+        prefs.edit {
+            videos.forEach { v ->
+                val k = key(v)
+                remove(k)
+                remove("$k.done")
+            }
+        }
+        historyVersion++
+    }
+
+    fun isWatched(v: LocalVideo): Boolean {
+        val pos = savedPosition(v)
+        val dur = v.duration.takeIf { it > 0 } ?: 1000L
+        return pos >= dur * 0.9f
+    }
+
+    fun isInProgress(v: LocalVideo): Boolean {
+        val pos = savedPosition(v)
+        val dur = v.duration.takeIf { it > 0 } ?: 1000L
+        return pos in 1 until (dur * 0.9f).toLong()
+    }
+
+    fun addExternalSubtitle(uri: Uri, label: String = "External Subtitle") {
+        val uriStr = uri.toString().lowercase(Locale.ROOT)
+        val mimeType = when {
+            uriStr.endsWith(".vtt") -> MimeTypes.TEXT_VTT
+            uriStr.endsWith(".ass") || uriStr.endsWith(".ssa") -> MimeTypes.TEXT_SSA
+            else -> MimeTypes.APPLICATION_SUBRIP
+        }
+        val config = MediaItem.SubtitleConfiguration.Builder(uri)
+            .setMimeType(mimeType)
+            .setLabel(label)
+            .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+            .build()
+        externalSubtitles = externalSubtitles + config
+
+        val p = player ?: return
+        val v = video ?: return
+        val curPos = p.currentPosition
+        val isPlay = p.isPlaying
+        val mediaMetadata = MediaMetadata.Builder()
+            .setTitle(v.title)
+            .setArtist("Jadzumi Cinema Player")
+            .build()
+        val mediaItem = MediaItem.Builder()
+            .setUri(v.uri)
+            .setMediaId(v.identity)
+            .setMediaMetadata(mediaMetadata)
+            .setSubtitleConfigurations(externalSubtitles)
+            .build()
+        p.setMediaItem(mediaItem)
+        p.prepare()
+        if (curPos > 0) p.seekTo(curPos)
+        if (isPlay) p.play()
+    }
+
     fun dismissNextEpisodeCountdown() {
         nextEpisodeCountdown = null
         countdownDismissedForVideo = video?.identity
@@ -352,6 +478,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
         nextEpisodeCountdown = null
         countdownDismissedForVideo = null
+        if (video?.identity != v.identity) {
+            externalSubtitles = emptyList()
+            chapters = emptyList()
+        }
 
         if (video?.identity == v.identity && player != null) {
             fullscreen = true; locked = false
@@ -531,6 +661,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .setUri(v.uri)
                 .setMediaId(v.identity)
                 .setMediaMetadata(mediaMetadata)
+                .setSubtitleConfigurations(externalSubtitles)
                 .build()
 
             p.setMediaItem(mediaItem)
@@ -727,6 +858,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         audioTracks = emptyList(); subtitleTracks = emptyList()
         currentQueue = emptyList()
         nextEpisodeCountdown = null
+        chapters = emptyList()
+        externalSubtitles = emptyList()
     }
 
     private fun release() {

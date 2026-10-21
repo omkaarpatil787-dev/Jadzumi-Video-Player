@@ -8,6 +8,7 @@ import android.os.Environment
 import android.os.StatFs
 import android.text.format.Formatter
 import android.util.LruCache
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -19,9 +20,11 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -451,12 +454,14 @@ private fun ContinueWatchingCard(
     durationMs: Long,
     onClick: () -> Unit
 ) {
-    Card(
+    val theme = LocalThemeName.current
+    val glassIntensity = LocalGlassIntensity.current
+    Surface(
         onClick = onClick,
-        modifier = Modifier.width(240.dp),
+        modifier = Modifier.width(250.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
+        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
     ) {
         Column {
             Box(Modifier.fillMaxWidth().height(130.dp)) {
@@ -492,6 +497,23 @@ private fun ContinueWatchingCard(
                         Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(22.dp))
                     }
                 }
+
+                // Remaining time pill
+                val remMs = (durationMs - savedPos).coerceAtLeast(0)
+                val remMins = (remMs / 60_000L).coerceAtLeast(1)
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.70f),
+                    modifier = Modifier.padding(8.dp).align(Alignment.BottomEnd)
+                ) {
+                    Text(
+                        "${remMins}m left",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                    )
+                }
             }
             Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp)) {
                 val title = video?.title ?: previewFallback?.title ?: "Video"
@@ -508,8 +530,8 @@ private fun ContinueWatchingCard(
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    color = TimelineAccent,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 )
                 Spacer(Modifier.height(6.dp))
                 Row(
@@ -774,6 +796,17 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         onScrollActive?.invoke(shouldMinimizeDock)
     }
     var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
+    var isGridView by rememberSaveable { mutableStateOf(false) }
+    var activeFilter by rememberSaveable { mutableStateOf("All") }
+    var activeSort by rememberSaveable { mutableStateOf("Date Added") }
+    var isSelectionMode by rememberSaveable { mutableStateOf(false) }
+    val selectedUris = rememberSaveable { mutableStateListOf<String>() }
+
+    BackHandler(isSelectionMode) {
+        isSelectionMode = false
+        selectedUris.clear()
+    }
+
     val allVideos = remember(state.videos) { state.videos.distinctBy { it.identity } }
 
     val seriesList = remember(state.videos, state.sidecars) { state.tvSeries }
@@ -847,6 +880,22 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
             }
         }.let { list ->
             if (category == "Recently Added") list.sortedByDescending { it.modified } else list
+        }
+    }
+
+    val displayVideos = remember(videos, activeFilter, activeSort, playback.historyVersion) {
+        val filtered = when (activeFilter) {
+            "In Progress" -> videos.filter { playback.isInProgress(it) }
+            "Unwatched" -> videos.filter { playback.savedPosition(it) == 0L }
+            "4K UHD" -> videos.filter { it.width >= 3840 || it.height >= 2160 || it.name.contains("2160", true) || it.name.contains("4k", true) || it.name.contains("uhd", true) }
+            "Recently Added" -> videos.sortedByDescending { it.modified }
+            else -> videos
+        }
+        when (activeSort) {
+            "Title (A-Z)" -> filtered.sortedBy { it.title.lowercase() }
+            "Duration" -> filtered.sortedByDescending { it.duration }
+            "File Size" -> filtered.sortedByDescending { it.bytes }
+            else -> if (activeFilter == "Recently Added" || category == "Recently Added") filtered else filtered.sortedByDescending { it.modified }
         }
     }
 
@@ -1242,6 +1291,128 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                 }
                             }
                         } else {
+                            if (isSelectionMode) {
+                                item {
+                                    val theme = LocalThemeName.current
+                                    val glassIntensity = LocalGlassIntensity.current
+                                    Surface(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(18.dp),
+                                        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
+                                        border = GlassTheme.embossedBorderStroke(theme, glassIntensity)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                IconButton(
+                                                    onClick = { isSelectionMode = false; selectedUris.clear() },
+                                                    modifier = Modifier.size(32.dp)
+                                                ) {
+                                                    Icon(Icons.Rounded.Close, "Exit selection", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
+                                                }
+                                                Text(
+                                                    "${selectedUris.size} selected",
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+
+                                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                val selectedVideos = remember(selectedUris.toList(), displayVideos) {
+                                                    displayVideos.filter { it.uri in selectedUris }
+                                                }
+                                                TextButton(
+                                                    onClick = {
+                                                        if (selectedUris.size == displayVideos.size) selectedUris.clear()
+                                                        else {
+                                                            selectedUris.clear()
+                                                            selectedUris.addAll(displayVideos.map { it.uri })
+                                                        }
+                                                    }
+                                                ) {
+                                                    Text(if (selectedUris.size == displayVideos.size) "Deselect" else "Select All", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                }
+                                                TextButton(
+                                                    onClick = {
+                                                        playback.markVideosWatched(selectedVideos, true)
+                                                        isSelectionMode = false
+                                                        selectedUris.clear()
+                                                    },
+                                                    enabled = selectedVideos.isNotEmpty()
+                                                ) {
+                                                    Text("Watched", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                }
+                                                TextButton(
+                                                    onClick = {
+                                                        playback.clearProgress(selectedVideos)
+                                                        isSelectionMode = false
+                                                        selectedUris.clear()
+                                                    },
+                                                    enabled = selectedVideos.isNotEmpty()
+                                                ) {
+                                                    Text("Clear", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Smart Filter Chips and Grid / List toggle
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    LazyRow(
+                                        modifier = Modifier.weight(1f),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        val filterChips = listOf("All", "In Progress", "Unwatched", "4K UHD", "Recently Added")
+                                        items(filterChips) { f ->
+                                            val isSelected = activeFilter == f
+                                            Surface(
+                                                shape = RoundedCornerShape(12.dp),
+                                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
+                                                border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                                                modifier = Modifier.clickable { activeFilter = f }
+                                            ) {
+                                                Text(
+                                                    text = f,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(Modifier.width(8.dp))
+
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        IconButton(onClick = { isGridView = !isGridView }, modifier = Modifier.fillMaxSize()) {
+                                            Icon(
+                                                if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
+                                                contentDescription = "Toggle Grid or List View",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
                             item {
                                 Row(
                                     Modifier.fillMaxWidth(),
@@ -1249,7 +1420,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        if (category == "All videos") "All Indexed Videos (${videos.size})" else "$category (${videos.size})",
+                                        if (category == "All videos") "All Indexed Videos (${displayVideos.size})" else "$category (${displayVideos.size})",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -1259,8 +1430,65 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                 }
                             }
 
-                            items(videos, key = { it.uri }) { video ->
-                                LocalVideoCard(video) { select(video.uri) }
+                            if (isGridView) {
+                                val colCount = if (isPhone) 2 else if (maxWidth >= 900.dp) 4 else 3
+                                items(displayVideos.chunked(colCount), key = { chunk -> chunk.joinToString { it.uri } }) { chunk ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        for (video in chunk) {
+                                            Box(Modifier.weight(1f)) {
+                                                LocalPosterGridCard(
+                                                    video = video,
+                                                    isSelectionMode = isSelectionMode,
+                                                    isSelected = video.uri in selectedUris,
+                                                    playback = playback,
+                                                    onClick = {
+                                                        if (isSelectionMode) {
+                                                            if (video.uri in selectedUris) selectedUris.remove(video.uri)
+                                                            else selectedUris.add(video.uri)
+                                                        } else {
+                                                            select(video.uri)
+                                                        }
+                                                    },
+                                                    onLongClick = {
+                                                        if (!isSelectionMode) {
+                                                            isSelectionMode = true
+                                                            selectedUris.add(video.uri)
+                                                        }
+                                                    }
+                                                )
+                                            }
+                                        }
+                                        val fillSlots = colCount - chunk.size
+                                        for (i in 0 until fillSlots) {
+                                            Spacer(Modifier.weight(1f))
+                                        }
+                                    }
+                                }
+                            } else {
+                                items(displayVideos, key = { it.uri }) { video ->
+                                    LocalVideoCard(
+                                        video = video,
+                                        isSelectionMode = isSelectionMode,
+                                        isSelected = video.uri in selectedUris,
+                                        onLongClick = {
+                                            if (!isSelectionMode) {
+                                                isSelectionMode = true
+                                                selectedUris.add(video.uri)
+                                            }
+                                        },
+                                        select = {
+                                            if (isSelectionMode) {
+                                                if (video.uri in selectedUris) selectedUris.remove(video.uri)
+                                                else selectedUris.add(video.uri)
+                                            } else {
+                                                select(video.uri)
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -1853,18 +2081,28 @@ fun TvSeriesSummaryCard(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable private fun LocalVideoCard(
     video: LocalVideo,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
     onDelete: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     select: () -> Unit
 ) {
     val context = LocalContext.current
     val theme = LocalThemeName.current
     val glassIntensity = LocalGlassIntensity.current
-    Card(
-        onClick = select,
-        colors = CardDefaults.cardColors(containerColor = GlassTheme.frostedSurfaceColor(theme, glassIntensity)),
-        border = GlassTheme.embossedBorderStroke(theme, glassIntensity),
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .combinedClickable(
+                onClick = select,
+                onLongClick = onLongClick
+            ),
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
+        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else GlassTheme.embossedBorderStroke(theme, glassIntensity),
         shape = RoundedCornerShape(22.dp)
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
@@ -1877,6 +2115,15 @@ fun TvSeriesSummaryCard(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (isSelectionMode) {
+                    Icon(
+                        if (isSelected) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
+                        contentDescription = if (isSelected) "Selected" else "Unselected",
+                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
                 LocalThumbnail(video, Modifier.size(thumbWidth, thumbHeight).clip(RoundedCornerShape(14.dp)))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -1905,17 +2152,141 @@ fun TvSeriesSummaryCard(
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (onDelete != null) {
+                    if (onDelete != null && !isSelectionMode) {
                         IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
                             Icon(Icons.Rounded.DeleteOutline, "Delete video from storage", tint = MaterialTheme.colorScheme.error)
                         }
                     }
-                    Icon(
-                        Icons.Rounded.ChevronRight,
-                        "View file details",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (!isSelectionMode) {
+                        Icon(
+                            Icons.Rounded.ChevronRight,
+                            "View file details",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun LocalPosterGridCard(
+    video: LocalVideo,
+    isSelectionMode: Boolean,
+    isSelected: Boolean,
+    playback: PlaybackController,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
+    val context = LocalContext.current
+    val theme = LocalThemeName.current
+    val glassIntensity = LocalGlassIntensity.current
+    val savedPos = playback.savedPosition(video)
+    val dur = video.duration.takeIf { it > 0 } ?: 1000L
+    val isWatched = savedPos >= dur * 0.9f
+    val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
+    val progress = (savedPos.toDouble() / dur).toFloat().coerceIn(0f, 1f)
+    val is4k = video.width >= 3840 || video.height >= 2160 || video.name.contains("2160", true) || video.name.contains("4k", true) || video.name.contains("uhd", true)
+
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = GlassTheme.frostedSurfaceColor(theme, glassIntensity),
+        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else GlassTheme.embossedBorderStroke(theme, glassIntensity),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+            ) {
+                LocalThumbnail(video = video, modifier = Modifier.fillMaxSize())
+
+                // 4K Badge top-left
+                if (is4k) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color.Black.copy(alpha = 0.65f),
+                        modifier = Modifier.padding(6.dp).align(Alignment.TopStart)
+                    ) {
+                        Text(
+                            "4K UHD",
+                            color = TimelineAccent,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                // Selection checkmark top-right
+                if (isSelectionMode) {
+                    Surface(
+                        shape = CircleShape,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.55f),
+                        border = BorderStroke(1.dp, Color.White),
+                        modifier = Modifier.padding(6.dp).size(22.dp).align(Alignment.TopEnd)
+                    ) {
+                        if (isSelected) {
+                            Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+
+                // Timecode bottom-right
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color.Black.copy(alpha = 0.70f),
+                    modifier = Modifier.padding(6.dp).align(Alignment.BottomEnd)
+                ) {
+                    Text(
+                        if (video.duration > 0) timecode(video.duration / 1000) else "--:--",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
+
+                // In-progress / watched bar
+                if (inProgress || isWatched) {
+                    LinearProgressIndicator(
+                        progress = { if (isWatched) 1f else progress },
+                        modifier = Modifier.fillMaxWidth().height(3.5.dp).align(Alignment.BottomCenter),
+                        color = if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary,
+                        trackColor = Color.Transparent
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = video.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                val sizeText = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else ""
+                Text(
+                    text = sizeText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 11.sp,
+                    maxLines = 1
+                )
             }
         }
     }

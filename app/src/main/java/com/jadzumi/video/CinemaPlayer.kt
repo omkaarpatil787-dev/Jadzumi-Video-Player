@@ -6,6 +6,8 @@ import android.graphics.Rect
 import android.media.AudioManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
@@ -70,6 +72,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 private val QuickMenuBg = Color(0xFF151B26).copy(alpha = 0.90f)
@@ -87,6 +90,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 ) {
     val video = playback.video ?: return
     val activity = LocalActivity.current as? MainActivity ?: return
+    val coroutineScope = rememberCoroutineScope()
     val isOled = remember { DeviceHardwareInspector.isOledOrAmoledDisplay(activity) }
     val dynamicFrostedCircleBg = remember(glassIntensity, isOled, theme) {
         GlassTheme.playerFrostedBg(theme, isOled, glassIntensity)
@@ -102,7 +106,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 
     var controls by remember(video.identity) { mutableStateOf(true) }
     var quickMenuSection by remember(video.identity) { mutableStateOf<String?>(null) }
-    var sleepTimerMinutes by remember(video.identity) { mutableIntStateOf(0) }
+    var isFastForwarding by remember(video.identity) { mutableStateOf(false) }
+    var speedBeforeHold by remember(video.identity) { mutableFloatStateOf(1f) }
     var scrub by remember(video.identity) { mutableStateOf<Float?>(null) }
     var message by remember(video.identity) { mutableStateOf<String?>(null) }
     var hudSide by remember(video.identity) { mutableStateOf<String?>(null) }
@@ -110,13 +115,11 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     var interaction by remember(video.identity) { mutableIntStateOf(0) }
     val seekDeltaMs = playback.seekIncrementSeconds * 1000L
 
-    // Working Sleep Timer coroutine
-    LaunchedEffect(sleepTimerMinutes, video.identity) {
-        if (sleepTimerMinutes > 0) {
-            delay(sleepTimerMinutes * 60_000L)
-            if (playback.playing) playback.toggle()
-            sleepTimerMinutes = 0
-            message = "Sleep timer paused playback"
+    val subtitleFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let {
+            playback.addExternalSubtitle(it)
+            message = "External Subtitle Added"
+            interaction++
         }
     }
 
@@ -238,15 +241,37 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                 val audio = remember { activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
                 Box(
                     Modifier.fillMaxSize()
-                        .pointerInput(video.identity, playback.locked, seekDeltaMs) {
+                        .pointerInput(video.identity, playback.locked, seekDeltaMs, playback.playing) {
                             detectTapGestures(
+                                onPress = { offset ->
+                                    var activated = false
+                                    val job = coroutineScope.launch {
+                                        delay(320)
+                                        if (!playback.locked && playback.playing) {
+                                            activated = true
+                                            speedBeforeHold = playback.speed
+                                            isFastForwarding = true
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            playback.changeSpeed(2.0f)
+                                        }
+                                    }
+                                    val released = tryAwaitRelease()
+                                    job.cancel()
+                                    if (activated || isFastForwarding) {
+                                        isFastForwarding = false
+                                        playback.changeSpeed(speedBeforeHold)
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                },
                                 onTap = {
-                                    if (quickMenuSection != null) quickMenuSection = null
-                                    else controls = !controls
-                                    interaction++
+                                    if (!isFastForwarding) {
+                                        if (quickMenuSection != null) quickMenuSection = null
+                                        else controls = !controls
+                                        interaction++
+                                    }
                                 },
                                 onDoubleTap = { offset ->
-                                    if (!playback.locked) {
+                                    if (!isFastForwarding && !playback.locked) {
                                         val isLeft = offset.x < size.width / 2
                                         val targetSide = if (isLeft) "left" else "right"
                                         lastActiveSide = targetSide
@@ -388,6 +413,33 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     }
                 }
 
+                // 2.0X Fast Forward Floating Frosted Pill
+                AnimatedVisibility(
+                    visible = isFastForwarding,
+                    enter = fadeIn(tween(140)) + scaleIn(initialScale = 0.88f),
+                    exit = fadeOut(tween(180)) + scaleOut(targetScale = 0.94f),
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .safeDrawingPadding()
+                        .padding(top = 28.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(999.dp),
+                        color = QuickMenuBg,
+                        border = BorderStroke(1.dp, TimelineAccent.copy(alpha = 0.6f)),
+                        shadowElevation = 16.dp
+                    ) {
+                        Row(
+                            Modifier.padding(horizontal = 18.dp, vertical = 9.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Rounded.FastForward, null, tint = TimelineAccent, modifier = Modifier.size(18.dp))
+                            Text("2.0X SPEED", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+                        }
+                    }
+                }
+
                 val enterAnim = if (reducedMotion) EnterTransition.None else fadeIn(spring(stiffness = Spring.StiffnessMediumLow))
                 val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(tween(180))
 
@@ -447,6 +499,22 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 
                             // Top-Right Icons: Clean and uncluttered glassy controls
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                FrostedCircleButton(
+                                    label = if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off",
+                                    onClick = {
+                                        playback.updateNightMode(!playback.nightModeVoiceBoost)
+                                        message = if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off"
+                                        interaction++
+                                    },
+                                    size = 44.dp
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.GraphicEq,
+                                        null,
+                                        Modifier.size(22.dp),
+                                        tint = if (playback.nightModeVoiceBoost) TimelineAccent else Color.White
+                                    )
+                                }
                                 FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
                                     Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
                                 }
@@ -554,6 +622,7 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                                 bufferedFraction = bufferedFraction,
                                 isScrubbing = scrub != null,
                                 enabled = playback.seekable && playback.duration > 0,
+                                chapters = playback.chapters,
                                 onScrub = { scrub = it; interaction++ },
                                 onScrubFinished = {
                                     scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
@@ -773,13 +842,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                         RightSideQuickMenu(
                             playback = playback,
                             section = section,
-                            sleepTimerMinutes = sleepTimerMinutes,
                             onSelectSection = { quickMenuSection = it; interaction++ },
-                            onSleepTimer = { mins ->
-                                sleepTimerMinutes = mins
-                                message = if (mins > 0) "Sleep timer: $mins min" else "Sleep timer: Off"
-                                interaction++
-                            },
+                            onAddExternalSubtitle = { subtitleFileLauncher.launch(arrayOf("*/*")) },
                             onMessage = { message = it; interaction++ },
                             onDismiss = { quickMenuSection = null }
                         )
@@ -836,44 +900,65 @@ private val TimelineAccent = Color(0xFF8B9DFF)
         }
     }
 
-/** Panel 1 & 3: Ultra-Thin Periwinkle-Blue Timeline with Prominent White Circular Thumb */
+/** Panel 1 & 3: Ultra-Thin Periwinkle-Blue Timeline with Chapter Marks & Haptic Snap */
 @Composable private fun CinemaTimelineBar(
     fraction: Float,
     bufferedFraction: Float,
     isScrubbing: Boolean,
     enabled: Boolean,
+    chapters: List<ChapterMarker> = emptyList(),
     onScrub: (Float) -> Unit,
     onScrubFinished: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val trackHeight by animateDpAsState(if (isScrubbing) 5.dp else 3.dp, label = "trackHeight")
     val thumbRadius by animateDpAsState(if (isScrubbing) 8.5.dp else 6.5.dp, label = "thumbRadius")
     val density = LocalDensity.current
+    var lastHapticStep by remember { mutableIntStateOf(-1) }
+
+    fun processScrubFraction(rawF: Float) {
+        var snapped = rawF
+        val snapThreshold = 0.014f
+        for (chap in chapters) {
+            if (kotlin.math.abs(rawF - chap.fraction) < snapThreshold) {
+                snapped = chap.fraction
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                break
+            }
+        }
+        val step = (snapped * 20).toInt()
+        if (step != lastHapticStep) {
+            lastHapticStep = step
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+        onScrub(snapped)
+    }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(26.dp)
-            .pointerInput(enabled) {
+            .pointerInput(enabled, chapters) {
                 if (!enabled) return@pointerInput
                 detectTapGestures { offset ->
                     val f = (offset.x / size.width.coerceAtLeast(1)).coerceIn(0f, 1f)
-                    onScrub(f)
+                    processScrubFraction(f)
                     onScrubFinished()
                 }
             }
-            .pointerInput(enabled) {
+            .pointerInput(enabled, chapters) {
                 if (!enabled) return@pointerInput
                 detectHorizontalDragGestures(
                     onDragStart = { offset ->
                         val f = (offset.x / size.width.coerceAtLeast(1)).coerceIn(0f, 1f)
-                        onScrub(f)
+                        processScrubFraction(f)
                     },
                     onDragEnd = onScrubFinished,
                     onDragCancel = onScrubFinished
                 ) { change, _ ->
                     change.consume()
                     val f = (change.position.x / size.width.coerceAtLeast(1)).coerceIn(0f, 1f)
-                    onScrub(f)
+                    processScrubFraction(f)
                 }
             },
         contentAlignment = Alignment.Center
@@ -911,6 +996,16 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     cornerRadius = corner
                 )
             }
+            // Subtle Chapter tick marks
+            for (chap in chapters) {
+                val cx = size.width * chap.fraction.coerceIn(0f, 1f)
+                drawLine(
+                    color = Color.White.copy(alpha = 0.70f),
+                    start = Offset(cx, yCenter - h * 1.5f),
+                    end = Offset(cx, yCenter + h * 1.5f),
+                    strokeWidth = with(density) { 1.5.dp.toPx() }
+                )
+            }
             // Crisp White Circular Thumb
             if (enabled) {
                 val thumbX = activeW.coerceIn(r, (size.width - r).coerceAtLeast(r))
@@ -935,9 +1030,8 @@ private val TimelineAccent = Color(0xFF8B9DFF)
 @Composable private fun RightSideQuickMenu(
     playback: PlaybackController,
     section: String,
-    sleepTimerMinutes: Int,
     onSelectSection: (String) -> Unit,
-    onSleepTimer: (Int) -> Unit,
+    onAddExternalSubtitle: () -> Unit,
     onMessage: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -945,7 +1039,6 @@ private val TimelineAccent = Color(0xFF8B9DFF)
     val audioSummary = activeAudio?.let { "${it.label} (${it.codec} ${it.channels})" } ?: "Default"
     val activeSub = playback.subtitleTracks.firstOrNull { it.isSelected }
     val subSummary = activeSub?.let { "${it.label} (${it.format})" } ?: "Off"
-    val sleepSummary = if (sleepTimerMinutes > 0) "${sleepTimerMinutes}m" else "Off"
 
     BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)).clickable(onClick = onDismiss)) {
         val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
@@ -988,12 +1081,6 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                             label = "Fit / Aspect ratio",
                             value = fitName,
                             onClick = { onSelectSection("aspect") }
-                        )
-                        QuickMenuRow(
-                            icon = Icons.Rounded.Timer,
-                            label = "Sleep timer",
-                            value = sleepSummary,
-                            onClick = { onSelectSection("sleep") }
                         )
                         QuickMenuRow(
                             icon = Icons.Rounded.GraphicEq,
@@ -1048,17 +1135,6 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                     }
                 }
 
-                "sleep" -> {
-                    QuickSubMenuContainer(title = "Sleep timer", onBack = { onSelectSection("main") }) {
-                        listOf(0 to "Off", 15 to "15 minutes", 30 to "30 minutes", 60 to "60 minutes").forEach { (mins, label) ->
-                            QuickOptionItem(
-                                label = label,
-                                selected = sleepTimerMinutes == mins,
-                                onClick = { onSleepTimer(mins); onSelectSection("main") }
-                            )
-                        }
-                    }
-                }
 
                 "audio" -> {
                     QuickSubMenuContainer(title = "Audio settings", onBack = { onSelectSection("main") }) {
@@ -1143,6 +1219,13 @@ private val TimelineAccent = Color(0xFF8B9DFF)
                         }
 
                         HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Add,
+                            label = "Add external subtitle (.srt, .vtt, .ass)",
+                            value = "",
+                            onClick = { onAddExternalSubtitle(); onDismiss() }
+                        )
 
                         // Subtitle Timing Calibration
                         Row(
@@ -1453,7 +1536,7 @@ private fun NextEpisodeAutoplayBanner(
             }
 
             // Linear Countdown Progress Line
-            val progress = (countdownSeconds / 10f).coerceIn(0f, 1f)
+            val progress = (countdownSeconds / 12f).coerceIn(0f, 1f)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1494,7 +1577,7 @@ private fun NextEpisodeAutoplayBanner(
                     shape = CircleShape,
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
                 ) {
-                    Text("Cancel", fontSize = 12.sp, color = Color.White)
+                    Text("Watch Credits", fontSize = 12.sp, color = Color.White)
                 }
             }
         }
