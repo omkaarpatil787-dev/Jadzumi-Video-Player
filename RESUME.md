@@ -26,7 +26,6 @@
 | **Milestone 10 — Flagship 1.3 Overhaul** | Hold-to-2x speed, smart end-credit autoplay countdown, chapter tick marks & snapping, external subtitle loader, poster grid toggle, smart filter chips, batch multi-select | `COMPLETED` |
 | **Milestone 11 — Polishing & Fluid Exit (v1.3.1)** | Subtle 0.75dp specular card borders, decluttered header with grid/list toggle, fluid cubic-bezier exit transitions | `COMPLETED` |
 | **Milestone 12 — Mobile Dock & Ambient Polish (v1.3.2)** | Universal mobile dock alignment (equal destination weighting), stutter-free card opening transitions, dynamic System default ambient theme matching for frosted glass surfaces, and portrait-optimized Glassify controls | `COMPLETED` |
-
 | **Milestone 13 — Privacy, Signing & License Corrections (v1.3.3)** | Default-off online requests, shared email-free User-Agent, external release credentials, offline license viewer, versioned CI APKs | `IMPLEMENTED; SEE CI FOR RELEASE VALIDATION` |
 
 ---
@@ -97,3 +96,8 @@
   passed for commit ca76b2d (the preceding 1.3.2 privacy/signing patch), producing
   debug and signed release artifacts. This confirms the configured CI signing flow;
   it does not establish that the new 1.3.3 release candidate has passed CI yet.
+
+- Release candidate v1.3.3 passed signed CI in
+  [run 40123315296](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/actions/runs/40123315296)
+  at commit cd06625, producing versioned debug and release artifacts. Later changes
+  add release notes and documentation only. Public release status is tracked in GitHub Releases.
