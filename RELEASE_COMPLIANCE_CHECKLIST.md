@@ -1,6 +1,6 @@
 # ✅ Jadzumi Player — Pre-Release Compliance & Safety Checklist
 
-> **Application:** Jadzumi Player (Android) · Version: `1.3.2` · Package: `com.jadzumi.video`
+> **Application:** Jadzumi Player (Android) · Version: `1.3.3` · Package: `com.jadzumi.video`
 > **Target Release Environment:** GitHub Releases / F-Droid / Direct Free APK Distribution  
 > **Audit Status:** Technical updates made; release review pending · **Date:** 2026-10-20
 
@@ -75,8 +75,8 @@
 
 ## Remaining release tasks
 
-- [ ] Configure the four GitHub Actions signing secrets described in [README](README.md#release-signing).
+- [x] GitHub Actions signing secrets configured: corrected CI run 40122767980 succeeded and produced a signed release artifact for the privacy/signing patch.
 - [ ] Plan upgrade continuity: a new key cannot update the previously development-key-signed APK.
 - [ ] Verify artwork provenance for `hero.jpg`, `cosmos.jpg`, and `anime.jpg`.
 - [ ] Complete native Corresponding Source / notice review and outstanding legal review.
-- [ ] Increment `versionCode` before publishing a new APK; this patch keeps version 1.3.2 unchanged.
+- [x] Incremented release candidate to 1.3.3 (versionCode 16).

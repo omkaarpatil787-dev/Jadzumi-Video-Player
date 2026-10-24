@@ -1,7 +1,7 @@
 # 🛡️ Jadzumi Player — Mandatory Codec & Open-Source License Audit
 
 > **Document Type:** Pre-Release Legal Compliance, Codec Licensing & Distribution Safety Audit  
-> **Target Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.3.2`
+> **Target Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.3.3`
 > **Distribution Model:** Free forever, 100% non-commercial, zero ads, zero subscriptions, zero paid features  
 > **Audit Status:** Completed Technical & Regulatory Analysis · **Date:** 2026-10-20  
 > **Auditor Disclaimer:** *This technical audit document provides an evidence-based engineering and licensing analysis of the actual source code, dependencies, and native binaries. It does not constitute formal legal counsel. Items requiring formal legal review are explicitly flagged in `LEGAL_REVIEW_REQUIRED.md`.*
@@ -95,12 +95,12 @@ Earlier comments in the UI referenced `"libass / System CaptionStyle Engine"`. T
   - Items for specialized legal review documented in `LEGAL_REVIEW_REQUIRED.md`.
 
 
-## 1.3.2 verification limits
+## 1.3.3 verification limits
 
 This document is a technical inventory, **not legal clearance**. Historical patent,
 OEM licensing, and worldwide exemption claims above have not been independently
 revalidated; free GPL distribution alone does not establish patent permission.
 The existing **NEEDS REVIEW** items remain open. See the verified native versions,
 AAR contents, LGPL license evidence, and mbedTLS caveat in
-[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md#native-dependency-verification-132).
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md#native-dependency-verification-133).
 All codecs/playback features remain enabled; this change does not validate device playback.

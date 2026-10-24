@@ -1,6 +1,6 @@
 # 📜 Jadzumi Player — Third-Party Software Licenses & Notices
 
-> **Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.3.2`
+> **Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.3.3`
 > **Distribution:** Free & Open Source · **Primary Project License:** GNU General Public License v3.0 (GPL-3.0)  
 > **Updated:** 2026-10-20
 
@@ -88,7 +88,7 @@ and no `--enable-gpl` in their embedded configuration. Keep the full
 [LGPL-3.0 text](licenses/FFmpeg-LGPL-3.0.txt) together with [GPL-3.0](LICENSE).
 NextLib's own POM/license remains GPL-3.0; the app is released under GPL-3.0.
 
-## Native dependency verification (1.3.2)
+## Native dependency verification (1.3.3)
 
 Inspected the [published POM](https://repo.maven.apache.org/maven2/io/github/anilbeesetti/nextlib-media3ext/1.11.1-0.16.0/nextlib-media3ext-1.11.1-0.16.0.pom),
 the Maven Central AAR, and upstream tag

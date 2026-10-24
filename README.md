@@ -10,7 +10,17 @@
 
 ---
 
-## What's New in v1.3.2
+## What's New in v1.3.3
+
+- Online metadata and poster downloads now require the default-off privacy toggle.
+- HTTP requests use a shared versioned User-Agent with no personal email.
+- Release signing uses private credentials; the development key is for debug builds only.
+- About includes the public source link and bundled licenses for offline viewing.
+- GPL-3.0 and verified native dependency notices are included. Artwork provenance and
+  outstanding legal review remain unresolved; see THIRD_PARTY_LICENSES.md.
+- GitHub Actions builds versioned APK artifacts and publishes signed releases from main.
+
+### Previous changes in v1.3.2
 
 - **Optimized Mobile Dock Alignment**: Balanced floating bottom bar with equal destination distribution (`Modifier.weight(1f)`) so Home, Movies, TV Shows, and Settings are always fully visible, centered, and accessible on any screen width.
 - **Dynamic System Default Appearance**: Frosted search capsules, bottom docks, and cards dynamically match device light and dark modes in real time with authentic frosted glass surfaces and zero color clashing.

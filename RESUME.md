@@ -27,9 +27,11 @@
 | **Milestone 11 — Polishing & Fluid Exit (v1.3.1)** | Subtle 0.75dp specular card borders, decluttered header with grid/list toggle, fluid cubic-bezier exit transitions | `COMPLETED` |
 | **Milestone 12 — Mobile Dock & Ambient Polish (v1.3.2)** | Universal mobile dock alignment (equal destination weighting), stutter-free card opening transitions, dynamic System default ambient theme matching for frosted glass surfaces, and portrait-optimized Glassify controls | `COMPLETED` |
 
+| **Milestone 13 — Privacy, Signing & License Corrections (v1.3.3)** | Default-off online requests, shared email-free User-Agent, external release credentials, offline license viewer, versioned CI APKs | `IMPLEMENTED; 1.3.3 VALIDATION PENDING` |
+
 ---
 
-## Architecture & Technical Highlights (v1.3.2)
+## Architecture & Technical Highlights (v1.3.3)
 
 ### 1. In-Player Gesture Ergonomics & Fluid Transitions
 - **Symmetrical Fluid Opening & Exit Transitions**: CinemaPlayer scales gracefully (0.93 ↔ 1.0) with cubic-bezier easing (`(0.4, 0.0, 1.0, 1.0)`) on exit and (`(0.16, 1.0, 0.3, 1.0)`) on entry across back gesture, top-bar back, close buttons, and quick menu.
@@ -60,8 +62,37 @@
 
 ## Core Technology Stack
 
-- **Language:** Kotlin 2.0 (JVM 17 Target)
+- **Language:** Kotlin 2.2.10 (JVM 17 Target)
 - **UI Framework:** Jetpack Compose, Material 3 Expressive
-- **Media Engine:** AndroidX Media3 (ExoPlayer 1.11.1) + NextLib Media3 FFmpeg 6.1
+- **Media Engine:** AndroidX Media3 (ExoPlayer 1.11.1) + NextLib Media3 FFmpeg 9.0.1
 - **Storage & Security:** Android Storage Access Framework (SAF), zero network telemetry
-- **Build Tooling:** Gradle 8.11.1, AGP 8.7.2, R8 full-mode shrinking
+- **Build Tooling:** Gradle 8.11.1, AGP 8.10.1, R8 full-mode shrinking
+
+
+## Release handoff — v1.3.3 (versionCode 16)
+
+- App is GPL-3.0; full text is in root LICENSE and bundled in About → Licenses.
+- All direct metadata/image HTTP connections check the `playback` preference
+  `online_metadata` (default false). Existing disk/memory caches remain usable offline.
+- About → Source code opens the confirmed public GitHub repository in the browser.
+- Debug signing alone uses `signing/development.keystore`. Release credentials come
+  from environment variables or ignored `keystore.properties`; incomplete credentials
+  yield unsigned output. No production key or password is committed.
+- CI decodes a temporary release keystore from repository secrets, tests/builds APKs,
+  uploads versioned artifacts, publishes signed releases only from main, and cleans up
+  the temporary key. Required secret names and local signing steps are in README.md.
+- The last completed local validation of the privacy/signing patch passed 30 tests
+  per debug/release variant and assembled the debug APK. This is not device playback
+  verification, signed-release validation, or legal clearance.
+- NextLib AAR inspection confirmed FFmpeg 9.0.1 and dav1d 1.5.4. Upstream configures
+  mbedTLS 3.6.7, but retained mbedTLS code/version in this AAR remains unverified.
+- Unknown origins/licenses for hero.jpg, cosmos.jpg and anime.jpg are documented and
+  the images remain unchanged. Native Corresponding Source and legal review items
+  remain open in THIRD_PARTY_LICENSES.md and LEGAL_REVIEW_REQUIRED.md.
+- New production signatures cannot update the previously development-signed APK;
+  existing users need a reinstall/migration, which can erase local app settings/history.
+
+- GitHub Actions run [40122767980](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/actions/runs/40122767980)
+  passed for commit ca76b2d (the preceding 1.3.2 privacy/signing patch), producing
+  debug and signed release artifacts. This confirms the configured CI signing flow;
+  it does not establish that the new 1.3.3 release candidate has passed CI yet.
