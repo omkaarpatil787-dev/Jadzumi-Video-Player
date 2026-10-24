@@ -43,7 +43,7 @@ object LocalBackup {
 
     /** Merge records; preserve folder grants and online consent. Roll back on write failure. */
     fun restore(context: Context, data: Map<String, Map<String, Any>>) {
-        require(data.all { (name, values) -> values.all { (key, value) -> BackupCodec.accepts(name, key, value) } })
+        require(data.all { (name, values) -> name in BackupCodec.namespaces && values.all { (key, value) -> BackupCodec.accepts(name, key, value) } })
         val before = data.keys.associateWith { preferences(context, it).all.toMap() }
         try {
             data.forEach { (name, values) ->

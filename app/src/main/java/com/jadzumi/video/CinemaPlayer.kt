@@ -73,6 +73,8 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import kotlin.math.roundToInt
 
 private val QuickMenuBg = Color(0xFF151B26).copy(alpha = 0.90f)
@@ -115,9 +117,50 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     var interaction by remember(video.identity) { mutableIntStateOf(0) }
     val seekDeltaMs = playback.seekIncrementSeconds * 1000L
 
+    var subtitleSearchCues by remember(video.identity) { mutableStateOf<List<SubtitleSearchCue>?>(null) }
+    var subtitleSearchBusy by remember(video.identity) { mutableStateOf(false) }
+    val subtitleSearchLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) coroutineScope.launch {
+            subtitleSearchBusy = true
+            try {
+                val cues = withContext(Dispatchers.IO) {
+                    require(uri.scheme == "content" || uri.scheme == "file") { "Only local subtitle files are supported" }
+                    val bytes = java.io.ByteArrayOutputStream()
+                    requireNotNull(activity.contentResolver.openInputStream(uri)).use { input ->
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            require(bytes.size() + count <= SubtitleSearch.MAX_BYTES)
+                            bytes.write(buffer, 0, count)
+                        }
+                    }
+                    SubtitleSearch.parse(bytes.toString("UTF-8"))
+                }
+                if (cues.isEmpty()) message = "No searchable cues. Choose a UTF-8 SRT or VTT file."
+                else subtitleSearchCues = cues
+            } catch (_: Exception) {
+                message = "Cannot search this file. Choose a local UTF-8 SRT/VTT file up to 2 MB."
+            } finally { subtitleSearchBusy = false }
+        }
+    }
+    subtitleSearchCues?.let { cues ->
+        SubtitleSearchDialog(cues, onSeek = { target ->
+            if (playback.seekable) {
+                playback.seekTo(target)
+                subtitleSearchCues = null
+                message = "Jumped to subtitle line"
+            } else message = "This video cannot seek yet"
+        }, onDismiss = { subtitleSearchCues = null })
+    }
     val subtitleFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
-            playback.addExternalSubtitle(it)
+            val label = runCatching {
+                activity.contentResolver.query(it, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) cursor.getString(0) else null
+                }
+            }.getOrNull() ?: "External Subtitle"
+            playback.addExternalSubtitle(it, label)
             message = "External Subtitle Added"
             interaction++
         }
@@ -880,6 +923,9 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             section = section,
                             onSelectSection = { quickMenuSection = it; interaction++ },
                             onAddExternalSubtitle = { subtitleFileLauncher.launch(arrayOf("*/*")) },
+                            onSearchSubtitles = {
+                                if (!subtitleSearchBusy) subtitleSearchLauncher.launch(arrayOf("*/*"))
+                            },
                             onMessage = { message = it; interaction++ },
                             onDismiss = { quickMenuSection = null },
                             onClosePlayer = dismissPlayerWithFluidity
@@ -1069,6 +1115,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     section: String,
     onSelectSection: (String) -> Unit,
     onAddExternalSubtitle: () -> Unit,
+    onSearchSubtitles: () -> Unit,
     onMessage: (String) -> Unit,
     onDismiss: () -> Unit,
     onClosePlayer: () -> Unit = playback::close
@@ -1263,6 +1310,13 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             label = "Add external subtitle (.srt, .vtt, .ass)",
                             value = "",
                             onClick = { onAddExternalSubtitle(); onDismiss() }
+                        )
+
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Search,
+                            label = "Search a local SRT / VTT file",
+                            value = "",
+                            onClick = { onSearchSubtitles(); onDismiss() }
                         )
 
                         // Subtitle Timing Calibration

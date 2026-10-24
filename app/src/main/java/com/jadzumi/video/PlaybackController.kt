@@ -405,7 +405,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     fun addExternalSubtitle(uri: Uri, label: String = "External Subtitle") {
-        val uriStr = uri.toString().lowercase(Locale.ROOT)
+        val uriStr = (if (label != "External Subtitle") label else uri.toString()).lowercase(Locale.ROOT)
         val mimeType = when {
             uriStr.endsWith(".vtt") -> MimeTypes.TEXT_VTT
             uriStr.endsWith(".ass") || uriStr.endsWith(".ssa") -> MimeTypes.TEXT_SSA

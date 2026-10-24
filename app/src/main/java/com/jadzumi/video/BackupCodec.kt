@@ -46,6 +46,7 @@ object BackupCodec {
                 properties.setProperty("$namespace.$encodedKey", "$type:$value")
             }
         } }
+        require(properties.size <= 10_002) { "Too many backup entries" }
         return StringWriter().also { properties.store(it, "Jadzumi local settings and viewing history") }.toString()
             .also { require(it.toByteArray(Charsets.UTF_8).size <= MAX_BYTES) { "Backup exceeds 1 MB" } }
     }

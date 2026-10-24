@@ -286,7 +286,7 @@ object OnlineMetadataFetcher {
 
                 // Release year extraction
                 val yearMatch = Regex("\\b(19\\d{2}|20\\d{2})\\b").find(desc + " " + (synopsis ?: ""))
-                val detectedYear = yearMatch?.groupValues?.get(1) ?: hintYear ?: "2024"
+                val detectedYear = yearMatch?.groupValues?.get(1) ?: hintYear
 
                 // Accurate genre detection from plot summary
                 val combinedText = (desc + " " + (synopsis ?: "") + " " + officialTitle).lowercase(Locale.US)
@@ -439,10 +439,10 @@ object OnlineMetadataFetcher {
                 val ratingObj = showJson.optJSONObject("rating")
                 val ratingVal = if (ratingObj != null && !ratingObj.isNull("average")) {
                     displayRating(ratingObj.optDouble("average"))
-                } else "8.7"
+                } else null
 
                 val premiered = showJson.optString("premiered")
-                val yearVal = premiered.take(4).ifEmpty { "2024" }
+                val yearVal = premiered.take(4).takeIf { it.matches(Regex("[0-9]{4}")) }
 
                 val genresList = mutableListOf<String>()
                 val genresArr = showJson.optJSONArray("genres")
@@ -535,7 +535,7 @@ object OnlineMetadataFetcher {
                     ?: sumJson.optJSONObject("thumbnail")?.optString("source")
 
                 val yearMatch = Regex("\\b(19\\d{2}|20\\d{2})\\b").find(desc + " " + (synopsis ?: ""))
-                val detectedYear = yearMatch?.groupValues?.get(1) ?: "2024"
+                val detectedYear = yearMatch?.groupValues?.get(1)
 
                 val combinedText = (desc + " " + (synopsis ?: "") + " " + officialTitle).lowercase(Locale.US)
                 val detectedGenres = mutableListOf<String>()

@@ -22,7 +22,10 @@ Branch: feature/library-playback-tools. Changes remain separate from the publish
 - Stage 2 validation: ./gradlew test assembleDebug passed; 37 tests per variant, zero failures/errors/skips. Backup tests cover round trips, type/range validation, unsupported/corrupt files, limits and consent exclusion.
 - Stage 3 complete: player HUD now offers “What did they say?” (previous ten seconds, bounded at the beginning). Temporary voice boost never changes the saved preference. Precise seek mode is restored afterward; manual seek, pause, playback error and release cancel the temporary effect. If replay started paused, it returns to pause at the original position.
 - Stage 3 validation: ./gradlew test assembleDebug passed; 39 tests per variant, zero failures/errors/skips. Replay-window tests cover duration bounds and the original-position endpoint. Audio effects/lifecycle still need device checks.
-- Next: local SRT/VTT subtitle search, final accuracy review, and preview packaging. No device playback/file-picker checks performed.
+- Stage 4 complete: player subtitle settings can search a local UTF-8 SRT/VTT file (2 MB / 50,000 cue limit); case-insensitive results are capped at 100, and tapping a result seeks to its timestamp. Embedded/ASS/bitmap subtitle search is not supported. File display names now select the correct MIME when adding VTT/ASS via content providers.
+- Stage 4 validation: ./gradlew test assembleDebug passed; 43 tests per variant, zero failures/errors/skips. Parser tests cover SRT/VTT timing, BOM/CRLF, tags, malformed/unsupported cues, search bounds and ordering.
+- Preview version is 1.4.0-alpha.1 (build 17); public v1.3.3 is unchanged.
+- Final review still pending: remove remaining library-level invented ratings/years and make subtitle search seeks exact. No device playback/file-picker checks performed.
 
 ## Validation and continuation
 
