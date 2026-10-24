@@ -5,20 +5,20 @@
   "status": "passed",
   "unitTests": {
     "testDebugUnitTest": {
-      "tests": 44,
+      "tests": 45,
       "failures": 0,
       "errors": 0,
       "skipped": 0
     },
     "testReleaseUnitTest": {
-      "tests": 44,
+      "tests": 45,
       "failures": 0,
       "errors": 0,
       "skipped": 0
     }
   },
   "deviceChecks": "NOT RUN",
-  "signedReleaseBuild": "pending GitHub Actions; credentials remain in GitHub secrets",
+  "signedReleaseBuild": "Prior full-preview checkpoint passed; follow-up CI pending",
   "lint": {
     "Error": 0,
     "Fatal": 0,
@@ -26,7 +26,17 @@
     "Information": 0,
     "Hint": 2
   },
-  "apkSHA256": "ab1dab4fdea697163d5e50ce575f343360d07a5803509e1c2472b7c2f45ba857",
   "nativeLibrariesRetained": 5,
-  "bundledLicenseFilesVerified": 6
+  "bundledLicenseFilesVerified": 6,
+  "debugApkSHA256": "1b3822968b698efff985d89e65dbe436d610ad8936ed2fa7ab0e138fb31532a1",
+  "priorSignedCI": {
+    "run": "https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/actions/runs/40127402354",
+    "commit": "05af368",
+    "status": "passed",
+    "scope": "full preview before watched-history follow-up",
+    "artifacts": [
+      "Jadzumi-Video-v1.4.0-alpha.1-Debug",
+      "Jadzumi-Video-v1.4.0-alpha.1-Release"
+    ]
+  }
 }

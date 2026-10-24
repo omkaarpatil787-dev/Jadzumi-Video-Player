@@ -393,16 +393,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     fun isWatched(v: LocalVideo): Boolean {
-        val pos = savedPosition(v)
-        val dur = v.duration.takeIf { it > 0 } ?: 1000L
-        return pos >= dur * 0.9f
+        @Suppress("UNUSED_EXPRESSION")
+        historyVersion
+        if (!rememberProgress) return false
+        val done = prefs.getBoolean(key(v) + ".done", false) ||
+            (video?.identity == v.identity && completed)
+        return watchHistoryIsComplete(savedPosition(v), v.duration, done)
     }
 
-    fun isInProgress(v: LocalVideo): Boolean {
-        val pos = savedPosition(v)
-        val dur = v.duration.takeIf { it > 0 } ?: 1000L
-        return pos in 1 until (dur * 0.9f).toLong()
-    }
+    fun isInProgress(v: LocalVideo): Boolean = !isWatched(v) && savedPosition(v) > 0L
 
     fun addExternalSubtitle(uri: Uri, label: String = "External Subtitle") {
         val uriStr = (if (label != "External Subtitle") label else uri.toString()).lowercase(Locale.ROOT)

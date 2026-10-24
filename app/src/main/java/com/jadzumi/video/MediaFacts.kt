@@ -22,3 +22,7 @@ fun measuredVideoBadge(mime: String?, width: Int, height: Int, hdr: Boolean): St
 }
 
 fun isWatchHistoryKey(key: String): Boolean = Regex("[a-f0-9]{64}(\\.done)?").matches(key)
+
+/** Completion is independent of the zero resume position used for a finished video. */
+fun watchHistoryIsComplete(positionMs: Long, durationMs: Long, completed: Boolean): Boolean =
+    completed || (durationMs > 0 && positionMs.toDouble() >= durationMs.toDouble() * 0.9)

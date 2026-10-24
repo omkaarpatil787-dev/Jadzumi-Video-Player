@@ -12,10 +12,13 @@ Branch: `feature/library-playback-tools`. This preview is not merged into main.
 | Local backup/restore | `3c8a7c9` | 37 unit tests per variant; debug APK build passed |
 | Dialogue replay | `3fe21bd` | 39 unit tests per variant; debug APK build passed |
 | Local subtitle search | `cda20e3` | 43 unit tests per variant; debug APK build passed |
+| Accuracy review and lint | `05af368` | 44 tests per variant; debug build/lint passed; signed CI run 40127402354 passed |
+| Watched-history follow-up | See latest checkpoint commit | 45 tests per variant; debug build/lint passed; CI pending |
 
 The final review also removes library-level invented scores, years, classifications,
 studios and synopses; missing facts stay unavailable. Search-result seeks use exact
-positioning. Final verification is recorded in CHECKPOINT.md.
+positioning. Completed viewing records remain watched even though their resume position
+is zero; watched and in-progress states no longer overlap. Final verification is recorded in CHECKPOINT.md.
 
 ## Where to find the additions
 
@@ -53,7 +56,8 @@ unless you have intentionally accepted the loss of its local data.
 3. Modify the settings/progress, open Restore backup and cancel the confirmation.
    Nothing should be changed.
 4. Restore the saved file, restart Jadzumi, and confirm saved settings/progress return.
-   Verify online lookup consent remains exactly as it was before restore.
+   Verify completed titles remain watched, resumed titles remain in progress, and online
+   lookup consent remains exactly as it was before restore.
 5. Try an invalid, unsupported-version, oversized, unreadable or permission-revoked file.
    Confirm no existing settings/history are modified.
 6. Clear watch history and verify online consent, voice boost, delay and appearance

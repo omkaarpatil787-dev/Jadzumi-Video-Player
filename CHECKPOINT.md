@@ -27,7 +27,7 @@ Branch: feature/library-playback-tools. Changes remain separate from the publish
 - Preview version is 1.4.0-alpha.1 (build 17); public v1.3.3 is unchanged.
 - Final review complete: library-level fabricated scores, years, classifications, studios and synopses removed; unknown values remain unavailable. A regression test checks missing metadata stays missing. Subtitle-result jumps now use exact seeking.
 - Corrected existing Media3 opt-in declarations and the folder animation's ignored target state; no lint rules were disabled.
-- Final validation: ./gradlew test assembleDebug lintDebug passed; 44 tests per debug/release variant, zero failures/errors/skips; lint has zero errors/fatal issues (24 warnings and 2 hints). Debug APK signature, version 1.4.0-alpha.1/build 17, five NextLib native libraries and six bundled license files verified.
+- Final validation: ./gradlew test assembleDebug lintDebug passed; 45 tests per debug/release variant, zero failures/errors/skips; lint has zero errors/fatal issues (24 warnings and 2 hints). Debug APK signature, version 1.4.0-alpha.1/build 17, five NextLib native libraries and six bundled license files verified.
 - Evidence: docs/verification/features-1.4.0-alpha.1/result.json. Progress and next device checks: docs/FEATURE-PROGRESS.md.
 - Ready for device evaluation, not a stable release. Device playback/file-picker/audio-effect checks remain NOT RUN. Next: collect results from the documented device checklist and fix feedback on this branch. Do not merge main just to save progress.
 
@@ -38,3 +38,17 @@ Record exact test/build outcomes and commit after each stage. Do not describe un
 Keep codec dependencies, signing credentials and released v1.3.3 unchanged.
 Feature branches produce CI artifacts; pushing main automatically publishes a release. Do not merge unfinished features into main.
 Save final device-check instructions for backup/restore, replay cleanup and subtitle timing before release.
+
+## Watched-history follow-up
+
+Completed flags are now read separately from resume positions: finished titles remain
+watched when resume is zero, and watched/in-progress states cannot overlap. Unknown
+durations no longer invent a completion threshold. Regression test added.
+
+Latest local command: ./gradlew test assembleDebug lintDebug --no-daemon --console=plain.
+Passed: 45 tests per variant, zero failures/errors/skips; lint zero errors, 24 warnings,
+2 hints; debug APK rebuilt with native libraries and current license assets verified.
+
+The preceding full preview at 05af368 passed signed GitHub CI run 40127402354 and
+produced debug/release artifacts. The watched-history follow-up requires its own CI
+result; do not describe the prior run as validation of this later commit.

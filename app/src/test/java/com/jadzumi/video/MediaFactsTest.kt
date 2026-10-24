@@ -4,6 +4,14 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class MediaFactsTest {
+    @Test fun finishedHistoryRemainsWatchedEvenWhenResumePositionIsZero() {
+        assertTrue(watchHistoryIsComplete(0, 60_000, true))
+        assertTrue(watchHistoryIsComplete(54_000, 60_000, false))
+        assertFalse(watchHistoryIsComplete(53_999, 60_000, false))
+        assertFalse(watchHistoryIsComplete(0, 60_000, false))
+        assertFalse(watchHistoryIsComplete(60_000, 0, false))
+    }
+
     @Test fun unavailableRatingsStayUnavailable() {
         listOf(null, Double.NaN, Double.POSITIVE_INFINITY, -1.0, 11.0).forEach { assertNull(displayRating(it)) }
         assertEquals("8.8", displayRating(8.8))
