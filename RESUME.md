@@ -8,6 +8,38 @@
 
 **Jadzumi Video Player** is a modern, privacy-first multimedia player engineered for Android. Built using **Kotlin**, **Jetpack Compose**, and **NextLib Media3 (ExoPlayer + bundled FFmpeg JNI C++ decoders)**, Jadzumi delivers an uncompromised cinema viewing experience across form factors. Highlights include universal phone and tablet ergonomics, OLED-exclusive HDR peak luminance calibration, intelligent end-credit detection, tactile haptic scrubbing, multi-column poster browsing, and audiophile-grade audio DSP.
 
+## App screenshots
+
+<p align="center">
+  <a href="docs/screenshots/home.jpg"><img src="docs/screenshots/home.jpg" alt="Jadzumi tablet home screen with continue watching and navigation" width="1000"></a>
+</p>
+<p align="center"><sub>Home · Continue watching · Your local video library</sub></p>
+
+<details>
+<summary><strong>Explore the library, player, and settings</strong></summary>
+
+<table>
+  <tr>
+    <td width="50%" align="center"><strong>Movies</strong><br><a href="docs/screenshots/movies.jpg"><img src="docs/screenshots/movies.jpg" alt="Movie library with poster cards" width="100%"></a></td>
+    <td width="50%" align="center"><strong>TV shows</strong><br><a href="docs/screenshots/tv-shows.jpg"><img src="docs/screenshots/tv-shows.jpg" alt="TV show library and continue watching" width="100%"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Series details</strong><br><a href="docs/screenshots/series-details.jpg"><img src="docs/screenshots/series-details.jpg" alt="Series metadata, seasons, and viewing progress" width="100%"></a></td>
+    <td align="center"><strong>Episodes &amp; inspector</strong><br><a href="docs/screenshots/episodes.jpg"><img src="docs/screenshots/episodes.jpg" alt="Episode list and technical inspector" width="100%"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Playback</strong><br><a href="docs/screenshots/playback.jpg"><img src="docs/screenshots/playback.jpg" alt="Video player with subtitle and playback controls" width="100%"></a></td>
+    <td align="center"><strong>Video settings</strong><br><a href="docs/screenshots/video-settings.jpg"><img src="docs/screenshots/video-settings.jpg" alt="Video decoding, scaling, and display settings" width="100%"></a></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><strong>Privacy &amp; About</strong><br><a href="docs/screenshots/about.jpg"><img src="docs/screenshots/about.jpg" alt="Privacy and About screen from an earlier build" width="800"></a></td>
+  </tr>
+</table>
+
+</details>
+
+<sub>User-provided tablet screenshots from an earlier build (About shows v1.3.1). UI labels, decoder information, and version details may differ from the current release.</sub>
+
 ---
 
 ## Milestone Evolution Matrix
