@@ -84,3 +84,23 @@ completed changes on the feature branch; keep main/stable unchanged for device r
 An optional scope question asks whether to include the remaining ideas too. Default
 is to finish the agreed set first; incorporate any later reply as further steering.
 Keep saving local checkpoint commits for additional work.
+
+## Expanded batch — explicit user scope
+
+User explicitly requests all remaining ideas: episode continuity, sleep controls,
+travel check, private handoff and scene bookmarks. Save local checkpoint commits
+throughout; HOLD PUSH until the entire expanded batch is implemented and verified.
+Keep stable/main unchanged.
+
+Implementation choices:
+- Continuity: per-series language preferences, explicit missing/uncertain episode confirmation,
+  and end-of-file continuation without skipping content on guessed credit timestamps.
+- Sleep: timed fade/pause, end-current-episode and stop-after-N-episodes controls.
+- Travel: local access/subtitle/episode-gap checks and clearly distinguished previous
+  playback evidence; no claim that header inspection proves a file will play.
+- Handoff: portable progress via a user-exported file, without accounts or an app server.
+  Match a local media fingerprint, confirm before applying; no automatic network transfer.
+- Bookmarks: named timestamps and personal notes saved locally, with timestamp/notes export.
+
+Next: implement continuity/sleep/bookmark foundations, test and checkpoint locally,
+then wire travel checks and portable handoff. Do not push partial stages.
