@@ -67,13 +67,13 @@ A comprehensive codebase and dependency search confirms:
 - ❌ **Zero Advertising SDKs:** No Google AdMob, Unity Ads, AppLovin, or IronSource.
 - ❌ **Zero Crash Reporters:** No Crashlytics, Sentry, or Bugsnag. All crash logs remain strictly local in Android Logcat.
 - ❌ **Zero Cloud Sync Services:** No AWS Cognito, Firebase Auth, or proprietary backend connections.
-- 🛡️ **Network Scope:** The single optional network feature in Jadzumi Player is the user-facing online poster and metadata fetcher ([`OnlineMetadataFetcher.kt`](file:///C:/Users/onkar/OneDrive/Documents/GitHub/Jadzumi-Video-Player/app/src/main/java/com/jadzumi/video/OnlineMetadataFetcher.kt)), which queries public Wikipedia REST and TVMaze endpoints and caches artwork locally to disk (`cacheDir/poster_cache/`). It never transmits device identifiers, user accounts, or playback logs.
+- 🛡️ **Network Scope:** The single optional network feature in Jadzumi Player is the user-facing online poster and metadata fetcher ([`OnlineMetadataFetcher.kt`](app/src/main/java/com/jadzumi/video/OnlineMetadataFetcher.kt)), which queries public Wikipedia REST and TVMaze endpoints and caches artwork locally to disk (`cacheDir/poster_cache/`). It never transmits device identifiers, user accounts, or playback logs.
 
 ---
 
 ## 4. ProGuard / R8 Rules Optimization
 
-The production optimization rules in [`proguard-rules.pro`](file:///C:/Users/onkar/OneDrive/Documents/GitHub/Jadzumi-Video-Player/app/proguard-rules.pro) have been audited:
+The production optimization rules in [`proguard-rules.pro`](app/proguard-rules.pro) have been audited:
 
 1. **JNI Reflection Protection:**
    ```pro

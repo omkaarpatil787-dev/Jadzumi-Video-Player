@@ -21,6 +21,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -2457,6 +2459,34 @@ private val settingsCategories = listOf(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun AboutRightPane(darkSurface: Boolean) {
+    val context = LocalContext.current
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    var showLicenses by remember { mutableStateOf(false) }
+    if (showLicenses) {
+        val notices = remember {
+            buildString {
+                append(context.assets.open("THIRD_PARTY_LICENSES.md").bufferedReader().use { it.readText() })
+                append("\n\n")
+                append(context.assets.open("LICENSE").bufferedReader().use { it.readText() })
+                context.assets.list("licenses").orEmpty().sorted().forEach { name ->
+                    append("\n\n$name\n")
+                    append(context.assets.open("licenses/$name").bufferedReader().use { it.readText() })
+                }
+            }
+        }
+        AlertDialog(
+            onDismissRequest = { showLicenses = false },
+            title = { Text("Open-source licenses") },
+            text = {
+                androidx.compose.foundation.text.selection.SelectionContainer {
+                    Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState())) {
+                        Text(notices, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showLicenses = false }) { Text("Close") } }
+        )
+    }
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2464,6 +2494,13 @@ private val settingsCategories = listOf(
                 Text("ABOUT JADZUMI", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text("App Identity", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+
+        Panel {
+            TextButton(onClick = {
+                uriHandler.openUri("https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player")
+            }) { Text("Source code") }
+            TextButton(onClick = { showLicenses = true }) { Text("Licenses") }
         }
 
         Panel {

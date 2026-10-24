@@ -28,6 +28,21 @@ data class OnlineMediaMetadata(
 )
 
 object OnlineMetadataFetcher {
+    val USER_AGENT = "JadzumiPlayer/" + BuildConfig.VERSION_NAME + " (Android; Media3)"
+
+    fun isOnlineMetadataEnabled(context: Context): Boolean =
+        context.getSharedPreferences("playback", Context.MODE_PRIVATE)
+            .getBoolean("online_metadata", false)
+
+    // Check before EVERY request (including fallbacks and images). Opt-out never opens
+    // a connection; existing memory/disk metadata and posters remain readable offline.
+    fun openOnlineConnection(context: Context, url: String): HttpURLConnection? {
+        if (!isOnlineMetadataEnabled(context)) return null
+        return (URL(url).openConnection() as HttpURLConnection).apply {
+            setRequestProperty("User-Agent", USER_AGENT)
+        }
+    }
+
     private const val TAG = "OnlineMetadata"
     private val memoryCache = ConcurrentHashMap<String, OnlineMediaMetadata>()
 
@@ -154,11 +169,9 @@ object OnlineMetadataFetcher {
                 return@withContext posterFile.absolutePath
             }
 
-            val url = URL(imageUrl)
-            val conn = url.openConnection() as HttpURLConnection
+            val conn = openOnlineConnection(context, imageUrl) ?: return@withContext null
             conn.connectTimeout = 8000
             conn.readTimeout = 12000
-            conn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2 (Android; Media3)")
             conn.instanceFollowRedirects = true
             if (conn.responseCode in 200..299) {
                 conn.inputStream.use { input ->
@@ -225,7 +238,7 @@ object OnlineMetadataFetcher {
         }
 
         // 3. Network Fetch
-        if (!isNetworkConnected(context)) return@withContext null
+        if (!isOnlineMetadataEnabled(context) || !isNetworkConnected(context)) return@withContext null
 
         try {
             // Query Wikipedia Search API
@@ -233,10 +246,9 @@ object OnlineMetadataFetcher {
             val searchUrl = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
                     URLEncoder.encode(searchQuery, "UTF-8") + "&format=json"
 
-            val conn = URL(searchUrl).openConnection() as HttpURLConnection
+            val conn = openOnlineConnection(context, searchUrl) ?: return@withContext null
             conn.connectTimeout = 6000
             conn.readTimeout = 8000
-            conn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2 (omkaar.patil787@gmail.com)")
 
             var pageTitle: String? = null
             if (conn.responseCode == 200) {
@@ -256,10 +268,9 @@ object OnlineMetadataFetcher {
             val summaryUrl = "https://en.wikipedia.org/api/rest_v1/page/summary/" +
                     URLEncoder.encode(pageTitle.replace(' ', '_'), "UTF-8")
 
-            val sumConn = URL(summaryUrl).openConnection() as HttpURLConnection
+            val sumConn = openOnlineConnection(context, summaryUrl) ?: return@withContext null
             sumConn.connectTimeout = 6000
             sumConn.readTimeout = 8000
-            sumConn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2 (omkaar.patil787@gmail.com)")
 
             if (sumConn.responseCode == 200) {
                 val sumBody = sumConn.inputStream.bufferedReader().use { it.readText() }
@@ -401,7 +412,7 @@ object OnlineMetadataFetcher {
             } catch (_: Exception) { }
         }
 
-        if (!isNetworkConnected(context)) return@withContext null
+        if (!isOnlineMetadataEnabled(context) || !isNetworkConnected(context)) return@withContext null
 
         val queryName = cleanTitle.replace(Regex("\\b(19\\d{2}|20\\d{2})\\b"), "").trim().ifEmpty { cleanTitle }
 
@@ -409,10 +420,9 @@ object OnlineMetadataFetcher {
             val tvMazeUrl = "https://api.tvmaze.com/singlesearch/shows?q=" +
                     URLEncoder.encode(queryName, "UTF-8")
 
-            val conn = URL(tvMazeUrl).openConnection() as HttpURLConnection
+            val conn = openOnlineConnection(context, tvMazeUrl) ?: return@withContext null
             conn.connectTimeout = 6000
             conn.readTimeout = 8000
-            conn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2 (omkaar.patil787@gmail.com)")
 
             if (conn.responseCode == 200) {
                 val body = conn.inputStream.bufferedReader().use { it.readText() }
@@ -486,10 +496,9 @@ object OnlineMetadataFetcher {
             val searchUrl = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
                     URLEncoder.encode(searchQuery, "UTF-8") + "&format=json"
 
-            val conn = URL(searchUrl).openConnection() as HttpURLConnection
+            val conn = openOnlineConnection(context, searchUrl) ?: return@withContext null
             conn.connectTimeout = 6000
             conn.readTimeout = 8000
-            conn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2 (omkaar.patil787@gmail.com)")
 
             var pageTitle: String? = null
             if (conn.responseCode == 200) {
@@ -508,10 +517,9 @@ object OnlineMetadataFetcher {
             val summaryUrl = "https://en.wikipedia.org/api/rest_v1/page/summary/" +
                     URLEncoder.encode(pageTitle.replace(' ', '_'), "UTF-8")
 
-            val sumConn = URL(summaryUrl).openConnection() as HttpURLConnection
+            val sumConn = openOnlineConnection(context, summaryUrl) ?: return@withContext null
             sumConn.connectTimeout = 6000
             sumConn.readTimeout = 8000
-            sumConn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2 (omkaar.patil787@gmail.com)")
 
             if (sumConn.responseCode == 200) {
                 val sumBody = sumConn.inputStream.bufferedReader().use { it.readText() }

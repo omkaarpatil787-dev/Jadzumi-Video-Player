@@ -1,6 +1,6 @@
 # 📜 Jadzumi Player — Third-Party Software Licenses & Notices
 
-> **Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.2.0`  
+> **Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.3.2`
 > **Distribution:** Free & Open Source · **Primary Project License:** GNU General Public License v3.0 (GPL-3.0)  
 > **Updated:** 2026-10-20
 
@@ -10,7 +10,7 @@
 
 Jadzumi Player relies on world-class open-source software libraries to provide high-fidelity video decoding, modern Material 3 user interfaces, and audio DSP processing. We extend our sincere gratitude to the developers, maintainers, and open-source communities behind these projects.
 
-In compliance with open-source license agreements (including **GNU GPL v3.0**, **Apache 2.0**, **BSD 2-Clause**, and **BSD 3-Clause**), this document provides complete copyright notices, license texts, and source code availability statements for all components bundled or linked into Jadzumi Player.
+In compliance with open-source license agreements (including **GNU GPL v3.0**, **Apache 2.0**, **BSD 2-Clause**, and **BSD 3-Clause**), this document records component notices and verified license evidence. It is not legal clearance or a claim that Corresponding Source obligations have been fully satisfied. Unresolved items are listed below.
 
 ---
 
@@ -19,14 +19,15 @@ In compliance with open-source license agreements (including **GNU GPL v3.0**, *
 | Component / Library | Version | Copyright Holder(s) | Primary License | Repository / Origin |
 | :--- | :---: | :--- | :---: | :--- |
 | **NextLib Media3 Extension (`nextlib-media3ext`)** | `1.11.1-0.16.0` | Copyright © 2023–2026 Anil Kumar Beesetti | **GPL-3.0** | [github.com/anilbeesetti/nextlib](https://github.com/anilbeesetti/nextlib) |
-| **The FFmpeg Project (`libavcodec`, `libavutil`, `libswresample`, `libswscale`)** | `6.x / 7.x` (bundled in NextLib) | Copyright © 2000–2026 The FFmpeg Developers | **GPL-3.0 / LGPL-2.1+** | [ffmpeg.org](https://ffmpeg.org) |
-| **dav1d AV1 Decoder** | `1.x` (embedded in `libavcodec`) | Copyright © 2018–2026 VideoLAN, Two Orioles, LLC | **BSD 2-Clause** | [code.videolan.org/videolan/dav1d](https://code.videolan.org/videolan/dav1d) |
+| **The FFmpeg Project (`libavcodec`, `libavutil`, `libswresample`, `libswscale`)** | `9.0.1` (bundled in NextLib) | Copyright © 2000–2026 The FFmpeg Developers | **LGPL-3.0-or-later** | [ffmpeg.org](https://ffmpeg.org) |
+| **Mbed TLS** | `3.6.7` (upstream build; AAR retention unverified) | Mbed TLS contributors | **Apache-2.0 OR GPL-2.0-or-later** | [Mbed-TLS/mbedtls](https://github.com/Mbed-TLS/mbedtls/tree/mbedtls-3.6.7) |
+| **dav1d AV1 Decoder** | `1.5.4` (embedded in `libavcodec`) | Copyright © 2018–2026 VideoLAN, Two Orioles, LLC | **BSD 2-Clause** | [code.videolan.org/videolan/dav1d](https://code.videolan.org/videolan/dav1d) |
 | **AndroidX Media3 (ExoPlayer, UI, Session)** | `1.11.1` | Copyright © 2022–2026 The Android Open Source Project | **Apache 2.0** | [github.com/androidx/media](https://github.com/androidx/media) |
 | **Android Jetpack Compose UI Suite** | BOM `2025.04.01` | Copyright © 2019–2026 The Android Open Source Project | **Apache 2.0** | [android.googlesource.com](https://android.googlesource.com) |
 | **AndroidX Activity & Lifecycle Compose** | `1.10.1` | Copyright © 2018–2026 The Android Open Source Project | **Apache 2.0** | [android.googlesource.com](https://android.googlesource.com) |
 | **AndroidX Graphics Path** | `1.0.1` (transitive) | Copyright © 2023–2026 The Android Open Source Project | **Apache 2.0** | [android.googlesource.com](https://android.googlesource.com) |
 | **Google Guava / ListenableFuture** | `1.0` (transitive) | Copyright © 2014–2026 Google LLC | **Apache 2.0** | [github.com/google/guava](https://github.com/google/guava) |
-| **Kotlin Standard Library & Coroutines** | `2.0.21` | Copyright © 2010–2026 JetBrains s.r.o. | **Apache 2.0** | [github.com/JetBrains/kotlin](https://github.com/JetBrains/kotlin) |
+| **Kotlin Standard Library & Coroutines** | `2.2.10` (stdlib; coroutines version resolved separately) | Copyright © 2010–2026 JetBrains s.r.o. | **Apache 2.0** | [github.com/JetBrains/kotlin](https://github.com/JetBrains/kotlin) |
 | **JUnit Testing Framework** | `4.13.2` (test scope) | Copyright © 2002–2026 JUnit Contributors | **EPL 1.0** | [junit.org](https://junit.org) |
 
 ---
@@ -48,57 +49,15 @@ In compliance with open-source license agreements (including **GNU GPL v3.0**, *
 ## 📄 License Texts
 
 ### 1. GNU General Public License, Version 3 (GPL-3.0)
-*Applies to Jadzumi Player binary distribution, `io.github.anilbeesetti:nextlib-media3ext`, and bundled FFmpeg software decoders.*
+*Applies to Jadzumi Player binary distribution, `io.github.anilbeesetti:nextlib-media3ext`, and the application linking to NextLib. The FFmpeg AAR binaries themselves identify as LGPL version 3 or later.*
 
-```text
-                    GNU GENERAL PUBLIC LICENSE
-                       Version 3, 29 June 2007
-
- Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
- Everyone is permitted to copy and distribute verbatim copies
- of this license document, but changing it is not allowed.
-
-                            Preamble
-
-  The GNU General Public License is a free, copyleft license for
-software and other kinds of works.
-
-  The licenses for most software and other practical works are designed
-to take away your freedom to share and change the works.  By contrast,
-the GNU General Public License is intended to guarantee your freedom to
-share and change all versions of a program--to make sure it remains free
-software for all its users.  We, the Free Software Foundation, use the
-GNU General Public License for most of our software; it applies also to
-any other work released this way by its authors.  You can apply it to
-your programs, too.
-
-  When we speak of free software, we are referring to freedom, not
-price.  Our General Public Licenses are designed to make sure that you
-have the freedom to distribute copies of free software (and charge for
-them if you wish), that you receive source code or can get it if you
-want it, that you can change the software or use pieces of it in new
-free programs, and that you know you can do these things.
-
-  To protect your rights, we need to prevent others from denying you
-these rights or asking you to surrender the rights.  Therefore, you have
-certain responsibilities if you distribute copies of the software, or if
-you modify it: responsibilities to respect the freedom of others.
-
-  For example, if you distribute copies of such a program, whether
-gratis or for a fee, you must pass on to the recipients the same
-freedoms that you received.  You must make sure that they, too, receive
-or can get the source code.  And you must show them these terms so they
-know their rights.
-
-  Developers that use the GNU GPL protect your rights with two steps:
-(1) assert copyright on the software, and (2) offer you this License
-giving you legal permission to copy, distribute and/or modify it.
-
-[Full text available at: https://www.gnu.org/licenses/gpl-3.0.txt]
-```
+The full, unmodified GPL-3.0 text is in [LICENSE](LICENSE), also bundled in the APK
+and available through About → Licenses. The direct GNU download was blocked by the
+cloud proxy (HTTP 403); the verbatim license was obtained from the GNU GCC mirror's
+[COPYING3](https://github.com/gcc-mirror/gcc/blob/master/COPYING3).
 
 #### Source Code Availability Statement (GPL-3.0 Section 6)
-In satisfaction of the GNU General Public License Version 3, the complete Corresponding Source Code of Jadzumi Player, including all build files and configuration scripts, is freely available to any recipient at:
+Application source and build scripts are publicly available at the confirmed public repository below. Release maintainers must also supply matching native dependency sources, patches, build scripts, and any other required Corresponding Source; completeness has not been certified:
 **[https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player.git](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player.git)**
 
 ---
@@ -106,93 +65,62 @@ In satisfaction of the GNU General Public License Version 3, the complete Corres
 ### 2. Apache License, Version 2.0
 *Applies to AndroidX Media3, Jetpack Compose, Kotlin Standard Library, AndroidX Lifecycle, and Guava.*
 
-```text
-                                 Apache License
-                           Version 2.0, January 2004
-                        http://www.apache.org/licenses/
-
-   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-   1. Definitions.
-
-      "License" shall mean the terms and conditions for use, reproduction,
-      and distribution as defined by Sections 1 through 9 of this document.
-
-      "Licensor" shall mean the copyright owner or entity authorized by
-      the copyright owner that is granting the License.
-
-      "Legal Entity" shall mean the union of the acting entity and all
-      other entities that control, are controlled by, or are under common
-      control with that entity. For the purposes of this definition,
-      "control" means (i) the power, direct or indirect, to cause the
-      direction or management of such entity, whether by contract or
-      otherwise, or (ii) ownership of fifty percent (50%) or more of the
-      outstanding shares, or (iii) beneficial ownership of such entity.
-
-      "You" (or "Your") shall mean an individual or Legal Entity
-      exercising permissions granted by this License.
-
-      "Source" form shall mean the preferred form for making modifications,
-      including but not limited to software source code, documentation
-      source, and configuration files.
-
-      "Object" form shall mean any form resulting from mechanical
-      transformation or translation of a Source form, including but
-      not limited to compiled object code, generated documentation,
-      and conversions to other media types.
-
-      "Work" shall mean the work of authorship, whether in Source or
-      Object form, made available under the License, as indicated by a
-      copyright notice that is included in or attached to the work.
-
-      "Derivative Works" shall mean any work, whether in Source or Object
-      form, that is based on (or derived from) the Work and for which the
-      editorial revisions, annotations, elaborations, or other modifications
-      represent, as a whole, an original work of authorship.
-
-   2. Grant of Copyright License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      copyright license to reproduce, prepare Derivative Works of,
-      publicly display, publicly perform, sublicense, and distribute the
-      Work and such Derivative Works in Source or Object form.
-
-   3. Grant of Patent License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      (except as stated in this section) patent license to make, have made,
-      use, offer to sell, sell, import, and otherwise transfer the Work.
-
-[Full text available at: https://www.apache.org/licenses/LICENSE-2.0]
-```
+Full text: [Apache-2.0](licenses/Apache-2.0.txt), bundled in About → Licenses.
 
 ---
 
 ### 3. The 2-Clause BSD License
 *Applies to `dav1d` AV1 video decoder (statically linked into `libavcodec.so`).*
 
-```text
-Copyright (c) 2018-2026, VideoLAN and dav1d authors
-All rights reserved.
+Verbatim upstream notice: [dav1d 1.5.4 COPYING](licenses/dav1d-1.5.4-COPYING.txt), bundled in About → Licenses.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
+### 4. Mbed TLS 3.6.7
 
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+Upstream offers **Apache-2.0 OR GPL-2.0-or-later**. The complete, unmodified dual
+license text from the `mbedtls-3.6.7` tag is retained in
+[mbedTLS-3.6.7-LICENSE.txt](licenses/mbedTLS-3.6.7-LICENSE.txt) and bundled in About → Licenses.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-```
+### 5. FFmpeg 9.0.1
+
+The ARM64 AAR binaries identify as **LGPL version 3 or later**, with `--enable-version3`
+and no `--enable-gpl` in their embedded configuration. Keep the full
+[LGPL-3.0 text](licenses/FFmpeg-LGPL-3.0.txt) together with [GPL-3.0](LICENSE).
+NextLib's own POM/license remains GPL-3.0; the app is released under GPL-3.0.
+
+## Native dependency verification (1.3.2)
+
+Inspected the [published POM](https://repo.maven.apache.org/maven2/io/github/anilbeesetti/nextlib-media3ext/1.11.1-0.16.0/nextlib-media3ext-1.11.1-0.16.0.pom),
+the Maven Central AAR, and upstream tag
+[`v1.11.1-0.16.0`](https://github.com/anilbeesetti/nextlib/tree/v1.11.1-0.16.0)
+(commit `2dc77cd2d9352bc308aa26782f9c77a320df510b`), including README and `ffmpeg/setup.sh`.
+
+- AAR SHA-256: `998b4ff249fd3be3dfe2bf0757d47cb7cd903c4bf02a702efc4789574c679839`;
+  matches the artifact resolved into the Gradle dependency cache.
+- AAR contains `libavcodec.so`, `libavutil.so`, `libswresample.so`, `libswscale.so`,
+  and `libmedia3ext.so` for ARM64, ARMv7, x86 and x86_64. This app selects ARM64 only.
+- ARM64 binary strings confirm FFmpeg **9.0.1**, dav1d **1.5.4**, and
+  `--enable-libdav1d --enable-mbedtls --enable-version3`. dav1d is statically linked.
+- The tagged README/build script pins **mbedTLS 3.6.7** and builds it statically.
+  However, the media3ext AAR does not ship `libavformat.so`, and ARM64 shipped
+  binaries expose no mbedTLS version/symbol evidence. The build configuration
+  establishes mbedTLS usage upstream, but actual retained TLS code/version in this
+  AAR could not be independently established. Its license is included conservatively.
+- No separate libvpx or libass library is listed in the AAR. VP8/VP9 use FFmpeg's
+  built-in decoders per upstream README. A full source-level audit of every static
+  object and vendored internal component has **not** been performed.
+
+**TODO before release:** retain exact dependency sources/build scripts and verify
+all native redistribution notices and Corresponding Source. Patent/trademark items
+in [LEGAL_REVIEW_REQUIRED.md](LEGAL_REVIEW_REQUIRED.md) remain open.
+
+## Bundled artwork provenance — TODO / UNKNOWN LICENSE
+
+| File | What can be established | Required follow-up |
+| --- | --- | --- |
+| `app/src/main/res/drawable-nodpi/hero.jpg` | Present in initial project upload; no attribution or EXIF provenance | **TODO:** identify creator, original URL, license, and redistribution permission |
+| `app/src/main/res/drawable-nodpi/cosmos.jpg` | Present in initial project upload; no attribution or EXIF provenance | **TODO:** identify creator, original URL, license, and redistribution permission |
+| `app/src/main/res/drawable-nodpi/anime.jpg` | Present in initial project upload; no attribution or EXIF provenance | **TODO:** identify creator, original URL, license, and redistribution permission |
+
+Files are retained unchanged. Their presence does not establish permission to distribute
+them or that they are covered by the application's GPL license.

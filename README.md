@@ -62,10 +62,10 @@
 
 | Component | Technology |
 | :--- | :--- |
-| **Language** | Kotlin 2.0 (JVM 17 Target) |
+| **Language** | Kotlin 2.2.10 (JVM 17 Target) |
 | **UI Toolkit** | Jetpack Compose (Material 3 Expressive) |
 | **Media Framework** | AndroidX Media3 (ExoPlayer 1.11.1) |
-| **Native Codecs** | NextLib Media3 FFmpeg 6.1 JNI |
+| **Native Codecs** | NextLib Media3 FFmpeg 9.0.1 JNI |
 | **Minimum SDK** | Android 8.0 (API 26) |
 | **Target SDK** | Android 15 (API 35) / Compile SDK 36 |
 | **Architecture** | ARM64 (`arm64-v8a`) |
@@ -77,7 +77,9 @@
 
 ```bash
 # Run unit tests and generate release bundle
-./gradlew test assembleRelease assembleDebug --no-daemon
+./gradlew test assembleDebug --no-daemon
+# With release signing configured (see below):
+./gradlew assembleRelease --no-daemon
 ```
 
 ---
@@ -85,4 +87,47 @@
 ## License & Privacy
 
 - **Privacy First**: 100% offline-capable, zero analytics, zero telemetric beacons.
-- **Open Source**: Licensed under the MIT License. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for decoder compliance.
+- **Open Source**: Licensed under [GPL-3.0](LICENSE). See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for decoder compliance.
+
+## Online metadata privacy
+
+Online lookups default to **off**. The Privacy settings toggle (`playback` preferences,
+`online_metadata`) gates Wikipedia/TVMaze lookups, fallbacks, and remote image requests.
+Cached metadata and posters remain readable while disabled. Enabling lookups sends
+search titles to those services and requests artwork from their image hosts; it does
+not send playback history. Opening the About screen's source link explicitly launches
+an external browser; licenses are bundled for offline viewing.
+
+## Release signing
+
+Debug builds alone use the checked-in development key. Release builds read these
+environment variables, or the corresponding keys in an ignored root `keystore.properties`:
+
+| Environment variable | Property |
+| --- | --- |
+| `ANDROID_KEYSTORE_FILE` | `storeFile` |
+| `ANDROID_KEYSTORE_PASSWORD` | `storePassword` |
+| `ANDROID_KEY_ALIAS` | `keyAlias` |
+| `ANDROID_KEY_PASSWORD` | `keyPassword` |
+
+`storeFile` is absolute or relative to the repository root. Missing credentials produce
+an **unsigned** release, never a release signed with the debug key. Keep keys and
+passwords outside Git. Create a key locally with interactive password prompts:
+
+```sh
+keytool -genkeypair -v -keystore "$HOME/jadzumi-release.jks" -storetype JKS -alias jadzumi-release -keyalg RSA -keysize 4096 -validity 10000
+```
+
+In GitHub Actions, add `RELEASE_KEYSTORE_BASE64` (the base64-encoded keystore),
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD` as
+repository secrets. CI builds and publishes a signed release only when all four are
+present; otherwise it runs tests and produces the debug APK. Artifacts use `versionName`.
+For GNU/Linux, `base64 -w 0 "$HOME/jadzumi-release.jks" > "$HOME/jadzumi-release.base64"`
+writes the secret input to a local file without printing it. Protect and remove that
+file after secure secret entry, and back up the keystore securely.
+
+**Existing installations:** a new signing key cannot update APKs signed with the old
+development key. Plan signing continuity or a reinstall/migration before replacing
+the public APK. Increment `versionCode` for the next release. Publishing this source
+does not by itself establish complete Corresponding Source for native dependencies;
+see the remaining review tasks in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

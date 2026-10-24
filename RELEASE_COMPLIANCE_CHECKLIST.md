@@ -1,8 +1,8 @@
 # ✅ Jadzumi Player — Pre-Release Compliance & Safety Checklist
 
-> **Application:** Jadzumi Player (Android) · Version: `1.2.0` · Package: `com.jadzumi.video`  
+> **Application:** Jadzumi Player (Android) · Version: `1.3.2` · Package: `com.jadzumi.video`
 > **Target Release Environment:** GitHub Releases / F-Droid / Direct Free APK Distribution  
-> **Audit Status:** Completed Pre-Release Verification · **Date:** 2026-10-20
+> **Audit Status:** Technical updates made; release review pending · **Date:** 2026-10-20
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Pillar | Status | Summary & Verification |
 | :--- | :---: | :--- |
-| **1. Binary Security & Signing** | ⚠️ **ACTION REQUIRED** | Release build is non-debuggable with R8 shrinking active, but currently signs with `development.keystore`. Dedicated release keystore must be configured before official public store release. |
-| **2. Open-Source GPLv3 Compliance** | ✅ **PASSED** | Full corresponding source code is maintained on public GitHub repository. GPLv3 notice and license text included in project. |
-| **3. Third-Party Notices & Attribution** | ✅ **PASSED** | Comprehensive registry and attribution documented in `THIRD_PARTY_LICENSES.md` covering NextLib, FFmpeg, dav1d, Media3, Compose, and Kotlin. |
+| **1. Binary Security & Signing** | ⚠️ **ACTION REQUIRED** | Release build is non-debuggable with R8 shrinking active, and cannot fall back to the development key. Dedicated release credentials must be configured; missing credentials yield unsigned output. |
+| **2. Open-Source GPLv3 Compliance** | ⚠️ **REVIEW PENDING** | Public application source and full GPL text are present. Complete native Corresponding Source must still be verified. |
+| **3. Third-Party Notices & Attribution** | ⚠️ **REVIEW PENDING** | Verified NextLib/native evidence and license texts are recorded; artwork provenance and complete static-component audit remain unresolved. |
 | **4. Trademark & Certification Boundaries** | ✅ **PASSED** | Zero claims of "Dolby Certified" or "DTS Certified". Explicit trademark disclaimers added in `THIRD_PARTY_LICENSES.md`. |
-| **5. Privacy & Permission Scopes** | ✅ **PASSED** | 100% offline-first playback. Network permission restricted strictly to opt-in Wikipedia/TVMaze poster scraping with local caching. Zero analytics or ads. |
+| **5. Privacy & Permission Scopes** | ✅ **PASSED** | 100% offline-first playback. Network requests are gated by the default-off online metadata setting; cached results remain available offline. The Android INTERNET permission itself is not a per-host restriction. Zero analytics or ads. |
 | **6. Codec & Playback Integrity** | ✅ **PASSED** | 100% of approved media capabilities preserved (H.264, HEVC Main10, AC-3, E-AC-3, TrueHD, DTS, AV1, VP9, Subtitles, Downmixing). Zero codec removal. |
 
 ---
@@ -22,20 +22,20 @@
 ## 2. Detailed Verification Checklist
 
 ### Pillar 1: Binary Security & Signing Credentials
-- [x] **Non-Debuggable Release Build:** In [`app/build.gradle.kts`](file:///C:/Users/onkar/OneDrive/Documents/GitHub/Jadzumi-Video-Player/app/build.gradle.kts#L43-L48), `isDebuggable` is `false` for `release` builds. `isMinifyEnabled = true` and `isShrinkResources = true` are active.
-- [x] **No Hardcoded Secrets or Passwords in Source Code:** Verified zero API keys, tokens, or personal credentials committed in Kotlin source files.
+- [x] **Non-Debuggable Release Build:** In [`app/build.gradle.kts`](app/build.gradle.kts#L43-L48), `isDebuggable` is `false` for `release` builds. `isMinifyEnabled = true` and `isShrinkResources = true` are active.
+- [x] **Release Credentials Externalized:** Release signing reads environment variables or ignored properties. Public development credentials remain for debug signing only; HTTP User-Agent strings contain no personal email.
 - [ ] **Dedicated Production Release Keystore (Action Required):**
-  - **Current State:** `signingConfigs.release` references `signing/development.keystore` with default development credentials (`"android"` / `"androiddebugkey"`).
+  - **Current State:** Release signing uses `ANDROID_KEYSTORE_FILE`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`, or root `keystore.properties`; incomplete configuration yields unsigned output.
   - **Required Action:** For official public distribution (e.g. F-Droid, Google Play, or GitHub signed releases), generate a dedicated 4096-bit RSA or EC production release keystore, store it securely outside of version control (or via encrypted CI/CD secrets), and inject credentials via environment variables (`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_PASSWORD`).
 
 ### Pillar 2: Open-Source GPL-3.0 License Compliance
-- [x] **Source Code Availability (GPL-3.0 § 6):** Complete corresponding source code is publicly hosted and version-controlled at `https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player.git`.
-- [x] **GPL-3.0 License Text Included:** Complete license text included in [`THIRD_PARTY_LICENSES.md`](file:///C:/Users/onkar/OneDrive/Documents/GitHub/Jadzumi-Video-Player/THIRD_PARTY_LICENSES.md).
-- [x] **No Closed-Source Binary Blobs:** Verified that all bundled C/C++ libraries (`libavcodec.so`, `libavutil.so`, `libswresample.so`, `libswscale.so`, `libmedia3ext.so`) originate from open-source repositories with publicly inspectable build scripts.
+- [x] **Source Code Availability (GPL-3.0 § 6):** Application source code is publicly hosted and version-controlled; complete native Corresponding Source still needs verification at `https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player.git`.
+- [x] **GPL-3.0 License Text Included:** Complete license text included in [LICENSE](LICENSE), bundled with the offline About license viewer.
+- [ ] **Native Corresponding Source:** The published AAR and upstream build scripts were inspected. Archive exact source inputs, patches and build instructions; verify all static component notices before release.
 
 ### Pillar 3: Third-Party Notices & Attribution
 - [x] **NextLib & Anil Kumar Beesetti Attribution:** Explicitly recognized for `nextlib-media3ext` in `THIRD_PARTY_LICENSES.md` and `CODEC_LICENSE_AUDIT.md`.
-- [x] **The FFmpeg Developers Attribution:** Complete copyright notice for FFmpeg 6.x/7.x included.
+- [x] **The FFmpeg Developers Attribution:** FFmpeg 9.0.1 attribution and LGPL-3.0 text included; exact source archive verification remains pending.
 - [x] **VideoLAN & dav1d Attribution:** BSD 2-Clause copyright notice for `dav1d` retained.
 - [x] **Google & AndroidX Attribution:** Apache 2.0 notices for Media3 and Jetpack Compose included.
 
@@ -71,3 +71,12 @@
    - Because Jadzumi Player is 100% open-source under GPLv3 with zero proprietary tracking SDKs, it is an ideal candidate for inclusion in the official F-Droid repository.
 3. **Google Play Store (Optional):**
    - Ensure the Play Store listing references the open-source license and avoids trademarked certification terms in screenshots or promotional copy.
+
+
+## Remaining release tasks
+
+- [ ] Configure the four GitHub Actions signing secrets described in [README](README.md#release-signing).
+- [ ] Plan upgrade continuity: a new key cannot update the previously development-key-signed APK.
+- [ ] Verify artwork provenance for `hero.jpg`, `cosmos.jpg`, and `anime.jpg`.
+- [ ] Complete native Corresponding Source / notice review and outstanding legal review.
+- [ ] Increment `versionCode` before publishing a new APK; this patch keeps version 1.3.2 unchanged.

@@ -10,68 +10,88 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
+    env:
+      RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/jadzumi-release.jks
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-
-    - name: Set up Java 17
-      uses: actions/setup-java@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
       with:
-        distribution: 'temurin'
+        distribution: temurin
         java-version: '17'
-        cache: 'gradle'
+        cache: gradle
 
-    - name: Accept Licenses & Install Android 36
+    - name: Install Android SDK packages
+      shell: bash
       run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;35.0.0"
-
-    - name: Fix Windows Line Endings & Permissions
-      run: |
-        sed -i 's/\r$//' gradlew
-        chmod +x gradlew
-
-    - name: Run Unit Tests & Build APKs
-      run: |
+        set -euo pipefail
+        # sdkmanager closes stdin after the last license; preserve its status, not yes's SIGPIPE.
+        set +o pipefail
+        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+        sdk_status=${PIPESTATUS[1]}
         set -o pipefail
-        ./gradlew test assembleRelease assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+        test "$sdk_status" -eq 0
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;35.0.0"
 
-    - name: Print Build Failure Log
-      if: failure()
+    - name: Read app version
       run: |
-        echo "=== GRADLE FAILURE LOG ==="
-        tail -n 150 build.log
+        VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)
+        test -n "$VERSION"
+        echo "APP_VERSION=v$VERSION" >> "$GITHUB_ENV"
 
-    - name: Save Release APK (v1.0.0 Optimized & Shrunk)
+    - name: Prepare release signing
+      id: signing
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [[ -n "$RELEASE_KEYSTORE_BASE64" && -n "$ANDROID_KEYSTORE_PASSWORD" && -n "$ANDROID_KEY_ALIAS" && -n "$ANDROID_KEY_PASSWORD" ]]; then
+          umask 077
+          printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_FILE"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "Release signing secrets are incomplete; building tests and debug APK only."
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Run unit tests and build debug APK
+      run: bash gradlew test assembleDebug --no-daemon --stacktrace
+
+    - name: Build signed release APK
+      if: steps.signing.outputs.ready == 'true'
+      run: bash gradlew assembleRelease --no-daemon --stacktrace
+
+    - name: Save debug APK
       uses: actions/upload-artifact@v4
       with:
-        name: Jadzumi-Video-v1.0.0-Release
-        path: app/build/outputs/apk/release/*.apk
-
-    - name: Save Debug APK (v1.0.0)
-      uses: actions/upload-artifact@v4
-      with:
-        name: Jadzumi-Video-v1.0.0-Debug
+        name: Jadzumi-Video-${{ env.APP_VERSION }}-Debug
         path: app/build/outputs/apk/debug/*.apk
+        if-no-files-found: error
 
-    - name: Get App Version
-      if: github.ref == 'refs/heads/main'
-      run: |
-        VERSION=$(grep 'versionName = ' app/build.gradle.kts | cut -d '"' -f 2)
-        echo "APP_VERSION=v$VERSION" >> $GITHUB_ENV
+    - name: Save signed release APK
+      if: steps.signing.outputs.ready == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Jadzumi-Video-${{ env.APP_VERSION }}-Release
+        path: app/build/outputs/apk/release/*.apk
+        if-no-files-found: error
 
-    - name: Prepare Named Release APK
-      if: github.ref == 'refs/heads/main'
-      run: |
-        cp app/build/outputs/apk/release/*.apk Jadzumi-Player-${{ env.APP_VERSION }}.apk
+    - name: Prepare named release APK
+      if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
+      run: cp app/build/outputs/apk/release/*.apk "Jadzumi-Player-${APP_VERSION}.apk"
 
-    - name: Auto-Update GitHub Release with APK
-      if: github.ref == 'refs/heads/main'
+    - name: Update GitHub Release
+      if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ env.APP_VERSION }}
-        name: ${{ env.APP_VERSION }} ✨
+        name: ${{ env.APP_VERSION }}
         files: Jadzumi-Player-${{ env.APP_VERSION }}.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Remove temporary release keystore
+      if: always()
+      run: rm -f "$ANDROID_KEYSTORE_FILE"

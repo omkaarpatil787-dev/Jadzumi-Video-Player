@@ -1030,10 +1030,9 @@ internal fun decodeSampledBitmap(context: android.content.Context, uriString: St
             val cachedFile = java.io.File(posterDir, "$key.jpg")
             if (!cachedFile.exists() || cachedFile.length() < 500) {
                 try {
-                    val conn = java.net.URL(uriString).openConnection() as java.net.HttpURLConnection
+                    val conn = OnlineMetadataFetcher.openOnlineConnection(context, uriString) ?: return null
                     conn.connectTimeout = 6000
                     conn.readTimeout = 8000
-                    conn.setRequestProperty("User-Agent", "JadzumiPlayer/1.2")
                     if (conn.responseCode in 200..299) {
                         conn.inputStream.use { input ->
                             java.io.FileOutputStream(cachedFile).use { output ->
@@ -1043,7 +1042,7 @@ internal fun decodeSampledBitmap(context: android.content.Context, uriString: St
                     }
                 } catch (_: Exception) { }
             }
-            if (cachedFile.exists() && cachedFile.length() > 500) cachedFile.absolutePath else uriString
+            if (cachedFile.exists() && cachedFile.length() > 500) cachedFile.absolutePath else return null
         } else {
             uriString
         }

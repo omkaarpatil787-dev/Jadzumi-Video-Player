@@ -1,9 +1,29 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+// Local properties are optional and ignored by Git; environment variables take precedence.
+val keystoreProperties = Properties().apply {
+    rootProject.file("keystore.properties").takeIf { it.isFile }?.inputStream()?.use { load(it) }
+}
+fun signingValue(env: String, property: String): String? =
+    System.getenv(env)?.takeIf { it.isNotBlank() }
+        ?: keystoreProperties.getProperty(property)?.takeIf { it.isNotBlank() }
+val releaseStoreFile = signingValue("ANDROID_KEYSTORE_FILE", "storeFile")
+val releaseStorePassword = signingValue("ANDROID_KEYSTORE_PASSWORD", "storePassword")
+val releaseKeyAlias = signingValue("ANDROID_KEY_ALIAS", "keyAlias")
+val releaseKeyPassword = signingValue("ANDROID_KEY_PASSWORD", "keyPassword")
+val hasReleaseSigning = listOf(releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword)
+    .all { it != null }
+if (!hasReleaseSigning) {
+    logger.warn("Release signing is not configured: release output will be UNSIGNED. " +
+        "Set ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, " +
+        "ANDROID_KEY_PASSWORD or the matching keystore.properties entries.")
 }
 
 android {
@@ -19,17 +39,21 @@ android {
         ndk { abiFilters += "arm64-v8a" }
     }
 
+    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/licenseAssets"))
+
     buildFeatures {
         compose = true
         buildConfig = true
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = rootProject.file("signing/development.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(requireNotNull(releaseStoreFile))
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
         }
         getByName("debug") {
             storeFile = rootProject.file("signing/development.keystore")
@@ -44,7 +68,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else null
         }
         debug {
             isMinifyEnabled = false
@@ -77,3 +101,12 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     testImplementation("junit:junit:4.13.2")
 }
+
+val generateLicenseAssets by tasks.registering(Copy::class) {
+    from(rootProject.projectDir) {
+        include("LICENSE", "THIRD_PARTY_LICENSES.md")
+    }
+    from(rootProject.file("licenses")) { into("licenses") }
+    into(layout.buildDirectory.dir("generated/licenseAssets"))
+}
+tasks.named("preBuild").configure { dependsOn(generateLicenseAssets) }

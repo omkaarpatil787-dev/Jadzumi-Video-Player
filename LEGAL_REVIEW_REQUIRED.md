@@ -1,7 +1,7 @@
 # ⚖️ Jadzumi Player — Matters Flagged for Qualified Legal Review
 
 > **Document Type:** Unresolved Intellectual Property & Regulatory Disclosure  
-> **Application:** Jadzumi Player (Android) · Version: `1.2.0` · Package: `com.jadzumi.video`  
+> **Application:** Jadzumi Player (Android) · Version: `1.3.2` · Package: `com.jadzumi.video`
 > **Purpose:** Identifies specific patent, trademark, and licensing questions that cannot be conclusively resolved by technical inspection alone and warrant qualified IP legal counsel.  
 > **Date:** 2026-10-20
 
@@ -52,7 +52,7 @@ The following items are flagged for review by qualified intellectual property le
 - **Legal Consideration:**
   - Jadzumi Player does NOT use the Dolby double-D graphic trademark, does NOT claim certification, and does NOT imply sponsorship.
   - Under United States trademark law (*New Kids on the Block v. News America Publishing, Inc.*) and European trademark directives, nominative fair use permits using a trademark strictly necessary to identify a product or format, provided no affiliation or endorsement is implied.
-  - Jadzumi Player has published an explicit trademark disclaimer in [`THIRD_PARTY_LICENSES.md`](file:///C:/Users/onkar/OneDrive/Documents/GitHub/Jadzumi-Video-Player/THIRD_PARTY_LICENSES.md).
+  - Jadzumi Player has published an explicit trademark disclaimer in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md).
 - **Recommended Counsel Inquiry:** *"Are the trademark disclaimers and nominative track labels in Jadzumi Player sufficient to prevent any trademark infringement or false endorsement claims under Lanham Act § 43(a) and EU trademark regulations?"*
 
 ---
