@@ -111,7 +111,7 @@
   yield unsigned output. No production key or password is committed.
 - CI decodes a temporary release keystore from repository secrets, tests/builds APKs,
   uploads versioned artifacts, publishes signed releases only from main, and cleans up
-  the temporary key. Required secret names and local signing steps are in README.md.
+  the temporary key. Required secret names and local signing steps are in [the developer guide](docs/DEVELOPMENT.md).
 - The last completed local validation of the privacy/signing patch passed 30 tests
   per debug/release variant and assembled the debug APK. This is not device playback
   verification, signed-release validation, or legal clearance.
