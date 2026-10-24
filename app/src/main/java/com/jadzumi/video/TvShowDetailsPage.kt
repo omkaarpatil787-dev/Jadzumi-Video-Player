@@ -929,10 +929,10 @@ internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
-            TechRow("Container & Codec", "MKV / HEVC Main 10-bit")
-            TechRow("Resolution", if (sampleVideo != null && sampleVideo.width > 0) "${sampleVideo.width} × ${sampleVideo.height} FHD" else "1920 × 1080 FHD")
-            TechRow("Color Space", "BT.709 / 10-bit YUV420p")
-            TechRow("Frame Rate", "23.976 fps")
+            TechRow("Container / MIME", sampleVideo?.mime?.takeIf { it.isNotBlank() } ?: "Unavailable")
+            TechRow("Resolution", if (sampleVideo != null && sampleVideo.width > 0) "${sampleVideo.width} × ${sampleVideo.height} pixels" else "Unavailable")
+            TechRow("Color Space", "Unavailable")
+            TechRow("Frame Rate", "Unavailable")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -944,12 +944,12 @@ internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
                     shape = CircleShape,
                     color = Color(0xFFE6F4EA)
                 ) {
-                    Text("Detected (MediaCodec HW+)", modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF137333))
+                    Text("Not inspected", modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF137333))
                 }
             }
 
-            TechRow("Audio Decoder", "FFmpeg 6.1 (libavcodec)")
-            TechRow("Subtitle Engine", "libass / System CaptionStyle")
+            TechRow("Audio Decoder", "Unavailable")
+            TechRow("Subtitle Engine", "AndroidX Media3")
         }
     }
 }

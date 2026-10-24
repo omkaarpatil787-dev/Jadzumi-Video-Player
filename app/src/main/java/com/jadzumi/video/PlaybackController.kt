@@ -320,19 +320,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     fun clearWatchHistory() {
-        val bg = backgroundAudioEnabled
-        val rem = rememberProgress
-        val trk = saveTrackPrefs
-        val swp = swipeGesturesEnabled
-        val sek = seekIncrementSeconds
-        prefs.edit {
-            clear()
-            putBoolean("bg_audio", bg)
-            putBoolean("remember_progress", rem)
-            putBoolean("save_track_prefs", trk)
-            putBoolean("swipe_gestures", swp)
-            putInt("seek_seconds", sek)
-        }
+        // Remove only hashed viewing records. Clearing history must preserve consent/settings.
+        prefs.edit { prefs.all.keys.filter(::isWatchHistoryKey).forEach { remove(it) } }
         suspendedPosition = 0L
         historyVersion++
     }
@@ -585,11 +574,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                             it.contains("hlg", ignoreCase = true)
                         } ?: false
                         isHdr = isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR) || nameHdr
-                        videoCodecBadge = when {
-                            format.sampleMimeType == MimeTypes.VIDEO_H265 -> if (isHdr) "4K HDR10" else "HEVC Main10"
-                            format.sampleMimeType == MimeTypes.VIDEO_H264 -> "1080p AVC"
-                            else -> if (isHdr) "HDR" else null
-                        }
+                        videoCodecBadge = measuredVideoBadge(
+                            format.sampleMimeType, format.width, format.height,
+                            isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR)
+                        )
                     }
 
                     if (player.playbackState == Player.STATE_READY || player.playbackState == Player.STATE_BUFFERING) error = null

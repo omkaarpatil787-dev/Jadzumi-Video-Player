@@ -495,7 +495,7 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
             TechRow("File Size", if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "Unavailable")
             TechRow("Duration", if (video.duration > 0) timecode(video.duration / 1000) else "Unavailable")
             TechRow("Resolution", if (video.width > 0 && video.height > 0) "${video.width} × ${video.height} pixels" else "Unavailable")
-            TechRow("Format / Mime", video.mime.ifEmpty { "video/mkv" })
+            TechRow("Format / Mime", video.mime.ifEmpty { "Unavailable" })
         }
     }
 }
@@ -543,7 +543,7 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
-                            "Multi-channel 5.1 / Stereo Passthrough",
+                            "Track details available during playback",
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -556,7 +556,7 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Text(
-                            "FFmpeg 6.1 (libavcodec)",
+                            "Media3 / FFmpeg fallback available",
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -584,7 +584,7 @@ private fun MovieAudioSubtitleCard(video: LocalVideo) {
                         color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text(
-                            "libass • System CaptionStyle",
+                            "AndroidX Media3",
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,

@@ -107,7 +107,7 @@ object OnlineMetadataFetcher {
                 val meta = OnlineMediaMetadata(
                     title = json.optString("title", cleanTitle),
                     year = json.optString("year").takeIf { it.isNotBlank() },
-                    rating = json.optString("rating").takeIf { it.isNotBlank() },
+                    rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
                     genres = genresList,
                     synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
                     posterUrl = posterUrl,
@@ -144,7 +144,7 @@ object OnlineMetadataFetcher {
                 val meta = OnlineMediaMetadata(
                     title = json.optString("title", cleanTitle),
                     year = json.optString("year").takeIf { it.isNotBlank() },
-                    rating = json.optString("rating").takeIf { it.isNotBlank() },
+                    rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
                     genres = genresList,
                     synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
                     posterUrl = posterUrl,
@@ -225,7 +225,7 @@ object OnlineMetadataFetcher {
                 val metadata = OnlineMediaMetadata(
                     title = json.optString("title", cleanTitle),
                     year = json.optString("year").takeIf { it.isNotBlank() },
-                    rating = json.optString("rating").takeIf { it.isNotBlank() },
+                    rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
                     genres = genresList,
                     synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
                     posterUrl = posterUrl,
@@ -335,7 +335,7 @@ object OnlineMetadataFetcher {
                 val metadata = OnlineMediaMetadata(
                     title = officialTitle,
                     year = detectedYear,
-                    rating = "8.8",
+                    rating = null,
                     genres = detectedGenres.distinct().take(3),
                     synopsis = synopsis,
                     posterUrl = posterUrl,
@@ -348,6 +348,7 @@ object OnlineMetadataFetcher {
                         put("title", metadata.title)
                         put("year", metadata.year)
                         put("rating", metadata.rating)
+                        if (metadata.rating != null) put("ratingSource", "tvmaze")
                         put("synopsis", metadata.synopsis)
                         put("posterUrl", metadata.posterUrl)
                         put("localPoster", metadata.localPosterPath)
@@ -401,7 +402,7 @@ object OnlineMetadataFetcher {
                 val metadata = OnlineMediaMetadata(
                     title = json.optString("title", cleanTitle),
                     year = json.optString("year").takeIf { it.isNotBlank() },
-                    rating = json.optString("rating").takeIf { it.isNotBlank() },
+                    rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
                     genres = genresList,
                     synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
                     posterUrl = posterUrl,
@@ -437,7 +438,7 @@ object OnlineMetadataFetcher {
 
                 val ratingObj = showJson.optJSONObject("rating")
                 val ratingVal = if (ratingObj != null && !ratingObj.isNull("average")) {
-                    String.format(Locale.US, "%.1f", ratingObj.optDouble("average"))
+                    displayRating(ratingObj.optDouble("average"))
                 } else "8.7"
 
                 val premiered = showJson.optString("premiered")
@@ -473,6 +474,7 @@ object OnlineMetadataFetcher {
                         put("title", metadata.title)
                         put("year", metadata.year)
                         put("rating", metadata.rating)
+                        if (metadata.rating != null) put("ratingSource", "tvmaze")
                         put("synopsis", metadata.synopsis)
                         put("posterUrl", metadata.posterUrl)
                         put("localPoster", metadata.localPosterPath)
@@ -568,7 +570,7 @@ object OnlineMetadataFetcher {
                 val metadata = OnlineMediaMetadata(
                     title = officialTitle,
                     year = detectedYear,
-                    rating = "8.8",
+                    rating = null,
                     genres = detectedGenres.distinct().take(3),
                     synopsis = synopsis,
                     posterUrl = posterUrl,
@@ -580,6 +582,7 @@ object OnlineMetadataFetcher {
                         put("title", metadata.title)
                         put("year", metadata.year)
                         put("rating", metadata.rating)
+                        if (metadata.rating != null) put("ratingSource", "tvmaze")
                         put("synopsis", metadata.synopsis)
                         put("posterUrl", metadata.posterUrl)
                         put("localPoster", metadata.localPosterPath)
