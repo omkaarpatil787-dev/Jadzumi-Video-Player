@@ -20,7 +20,9 @@ Branch: feature/library-playback-tools. Changes remain separate from the publish
 - Stage 1 validation: ./gradlew test assembleDebug passed; 33 tests per variant, zero failures/errors/skips. New MediaFacts tests cover missing/invalid ratings, codec accuracy and history-key isolation.
 - Stage 2 complete: Export backup / Restore backup replace the placeholder. Versioned local file stores typed, allowlisted settings and hashed viewing history. Import validates all entries and size before mutation, asks for confirmation, merges data and attempts rollback on storage failure. Online consent, folder permissions, media and caches are excluded. Restart applies restored settings; reselect original folders after reinstall.
 - Stage 2 validation: ./gradlew test assembleDebug passed; 37 tests per variant, zero failures/errors/skips. Backup tests cover round trips, type/range validation, unsupported/corrupt files, limits and consent exclusion.
-- Next: dialogue replay and offline local SRT/VTT search. No device playback/file-picker checks performed.
+- Stage 3 complete: player HUD now offers “What did they say?” (previous ten seconds, bounded at the beginning). Temporary voice boost never changes the saved preference. Precise seek mode is restored afterward; manual seek, pause, playback error and release cancel the temporary effect. If replay started paused, it returns to pause at the original position.
+- Stage 3 validation: ./gradlew test assembleDebug passed; 39 tests per variant, zero failures/errors/skips. Replay-window tests cover duration bounds and the original-position endpoint. Audio effects/lifecycle still need device checks.
+- Next: local SRT/VTT subtitle search, final accuracy review, and preview packaging. No device playback/file-picker checks performed.
 
 ## Validation and continuation
 

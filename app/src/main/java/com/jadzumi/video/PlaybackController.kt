@@ -100,6 +100,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var audioDelayMs by mutableLongStateOf(prefs.getLong("audio_delay", 0L))
     var subtitleDelayMs by mutableLongStateOf(prefs.getLong("sub_delay", 0L))
     var nightModeVoiceBoost by mutableStateOf(prefs.getBoolean("night_mode", false))
+    var dialogueReplayActive by mutableStateOf(false); private set
+    private var dialogueWindow: DialogueReplayWindow? = null
+    private var replaySeekParameters: SeekParameters? = null
+    private var replayReturnToPause = false
+
     private var loudnessEnhancer: android.media.audiofx.LoudnessEnhancer? = null
     var historyVersion by mutableIntStateOf(0); private set
 
@@ -124,11 +129,12 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                         if (duration != currentDur) updateChapters(currentDur)
                         duration = currentDur
                     }
+                    if (dialogueWindow?.reachedEnd(position) == true) stopDialogueReplay(restorePlaybackState = true)
                     if (++pollCount % 10 == 0) save()
 
                     // Intelligent End-Credit Detection & Next-Episode Autoplay Countdown
                     val next = nextEpisode
-                    if (next != null && countdownDismissedForVideo != video?.identity && currentDur > 30_000) {
+                    if (!dialogueReplayActive && next != null && countdownDismissedForVideo != video?.identity && currentDur > 30_000) {
                         val creditLeadMs = when {
                             currentDur >= 70 * 60_000L -> 110_000L // 70m+ movies: 110s credits
                             currentDur >= 35 * 60_000L -> 80_000L  // 45-60m drama: 80s credits
@@ -285,7 +291,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun applyNightMode() {
         try {
             val sessionId = player?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
-            if (nightModeVoiceBoost && sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
+            if ((nightModeVoiceBoost || dialogueReplayActive) && sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
                 if (loudnessEnhancer == null) {
                     loudnessEnhancer = android.media.audiofx.LoudnessEnhancer(sessionId)
                 }
@@ -534,7 +540,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
             p.addListener(object : Player.Listener {
                 override fun onAudioSessionIdChanged(audioSessionId: Int) {
-                    if (nightModeVoiceBoost) applyNightMode()
+                    if (nightModeVoiceBoost || dialogueReplayActive) applyNightMode()
                 }
 
                 override fun onTracksChanged(tracks: Tracks) {
@@ -544,6 +550,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
                 override fun onEvents(player: Player, events: Player.Events) {
                     if (this@PlaybackController.player !== player) return
+                    if (dialogueReplayActive && (!player.playWhenReady || player.playbackState == Player.STATE_ENDED)) {
+                        stopDialogueReplay()
+                    }
                     playing = player.isPlaying
                     buffering = player.playbackState == Player.STATE_BUFFERING
                     playRequested = player.playWhenReady &&
@@ -600,6 +609,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
                 override fun onPlayerError(exception: PlaybackException) {
                     if (player !== p) return
+                    stopDialogueReplay()
                     val curPos = p.currentPosition
                     val dur = p.duration.takeIf { it > 0 } ?: duration
                     val isNearEnd = dur > 0 && (curPos >= dur - 2500L || position >= dur - 2500L || (dur > 10000L && curPos.toFloat() / dur >= 0.98f))
@@ -654,7 +664,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
             p.setMediaItem(mediaItem)
             p.prepare()
-            if (nightModeVoiceBoost) applyNightMode()
+            if (nightModeVoiceBoost || dialogueReplayActive) applyNightMode()
             if (suspendedPosition > 0 && rememberProgress) {
                 p.seekTo(suspendedPosition)
             }
@@ -801,8 +811,39 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         updateNotification()
     }
 
+    fun replayDialogue(): Boolean {
+        val p = player ?: return false
+        if (!seekable) return false
+        val window = dialogueReplayWindow(p.currentPosition, duration) ?: return false
+        stopDialogueReplay()
+        replayReturnToPause = !p.playWhenReady
+        replaySeekParameters = p.seekParameters
+        dialogueWindow = window
+        dialogueReplayActive = true
+        applyNightMode() // Temporary effect only: never changes the saved voice-boost preference.
+        p.setSeekParameters(SeekParameters.EXACT)
+        p.seekTo(window.startMs)
+        position = window.startMs
+        nextEpisodeCountdown = null
+        p.play()
+        return true
+    }
+
+    fun stopDialogueReplay(restorePlaybackState: Boolean = false) {
+        if (!dialogueReplayActive) return
+        val pauseAfter = restorePlaybackState && replayReturnToPause
+        dialogueReplayActive = false
+        dialogueWindow = null
+        replaySeekParameters?.let { player?.setSeekParameters(it) }
+        replaySeekParameters = null
+        replayReturnToPause = false
+        applyNightMode()
+        if (pauseAfter) player?.pause()
+    }
+
     fun seekTo(value: Long) {
         if (seekable) {
+            stopDialogueReplay()
             completed = false
             player?.seekTo(boundedPosition(value, duration))
             position = boundedPosition(value, duration)
@@ -855,6 +896,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun release() {
+        stopDialogueReplay()
         save()
         try {
             loudnessEnhancer?.enabled = false

@@ -535,6 +535,22 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         tint = if (playback.nightModeVoiceBoost) TimelineAccent else Color.White
                                     )
                                 }
+                                FrostedCircleButton(
+                                    label = if (playback.dialogueReplayActive) "Stop dialogue replay" else "What did they say? Replay 10 seconds",
+                                    onClick = {
+                                        if (playback.dialogueReplayActive) {
+                                            playback.stopDialogueReplay(restorePlaybackState = true)
+                                            message = "Dialogue replay stopped"
+                                        } else {
+                                            message = if (playback.replayDialogue()) "Replaying dialogue with temporary voice boost" else "Replay unavailable until this video can seek"
+                                        }
+                                        interaction++
+                                    },
+                                    enabled = playback.seekable,
+                                    size = 44.dp
+                                ) {
+                                    Icon(Icons.Rounded.Replay10, null, Modifier.size(22.dp), tint = if (playback.dialogueReplayActive) TimelineAccent else Color.White)
+                                }
                                 FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
                                     Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
                                 }
