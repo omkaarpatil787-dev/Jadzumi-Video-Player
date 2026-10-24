@@ -69,7 +69,7 @@ Final alpha.2 validation passed: 50 unit tests per variant, zero failures/errors
 debug APK and lint passed with zero errors/fatal issues, 25 warnings and 2 hints.
 APK version/signature, five NextLib native libraries and six license files verified.
 Evidence: docs/verification/features-1.4.0-alpha.2/result.json. Device probe/playback checks
-remain NOT RUN. Source and new helpers are checkpointed in commit 410b724; the completed feature batch is ready to push.
+remain NOT RUN. Source and new helpers are checkpointed in commit 410b724. The completed batch is pushed to the feature branch; signed CI validation is pending.
 
 The earlier alpha.1 watched-history follow-up at b3bb02a also passed signed GitHub CI
 run 40128340965, producing debug and release artifacts. This is historical evidence,
