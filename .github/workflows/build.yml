@@ -12,11 +12,13 @@ jobs:
       contents: write
     env:
       RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
-      ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/jadzumi-release.jks
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
+    - name: Configure temporary signing path
+      run: echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/jadzumi-release.jks" >> "$GITHUB_ENV"
+
     - uses: actions/checkout@v4
     - uses: actions/setup-java@v4
       with:
