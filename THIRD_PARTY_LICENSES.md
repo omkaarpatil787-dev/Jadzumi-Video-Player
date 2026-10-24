@@ -114,13 +114,17 @@ the Maven Central AAR, and upstream tag
 all native redistribution notices and Corresponding Source. Patent/trademark items
 in [LEGAL_REVIEW_REQUIRED.md](LEGAL_REVIEW_REQUIRED.md) remain open.
 
-## Bundled artwork provenance — TODO / UNKNOWN LICENSE
+## Bundled artwork provenance — user-reported tools; license verification TODO
 
 | File | What can be established | Required follow-up |
 | --- | --- | --- |
-| `app/src/main/res/drawable-nodpi/hero.jpg` | Present in initial project upload; no attribution or EXIF provenance | **TODO:** identify creator, original URL, license, and redistribution permission |
-| `app/src/main/res/drawable-nodpi/cosmos.jpg` | Present in initial project upload; no attribution or EXIF provenance | **TODO:** identify creator, original URL, license, and redistribution permission |
-| `app/src/main/res/drawable-nodpi/anime.jpg` | Present in initial project upload; no attribution or EXIF provenance | **TODO:** identify creator, original URL, license, and redistribution permission |
+| `app/src/main/res/drawable-nodpi/hero.jpg` | Creator reports ChatGPT / Google Stitch; specific tool per file and original export not established | **TODO:** retain original export/date, identify tool per file, and verify applicable terms/redistribution permission |
+| `app/src/main/res/drawable-nodpi/cosmos.jpg` | Creator reports ChatGPT / Google Stitch; specific tool per file and original export not established | **TODO:** retain original export/date, identify tool per file, and verify applicable terms/redistribution permission |
+| `app/src/main/res/drawable-nodpi/anime.jpg` | Creator reports ChatGPT / Google Stitch; specific tool per file and original export not established | **TODO:** retain original export/date, identify tool per file, and verify applicable terms/redistribution permission |
 
-Files are retained unchanged. Their presence does not establish permission to distribute
-them or that they are covered by the application's GPL license.
+On 2026-10-24, the project owner reported that these images came from ChatGPT and
+Google Stitch. The report does not identify which tool produced each image, and
+original exports, prompts/source inputs, dates and applicable terms were not supplied.
+The files contain no EXIF provenance and appeared in the initial project upload.
+Files are retained unchanged. Reported origin does not by itself verify redistribution
+rights or establish that the images are covered by the application's GPL license.

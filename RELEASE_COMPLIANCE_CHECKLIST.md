@@ -77,6 +77,6 @@
 
 - [x] GitHub Actions signing secrets configured: corrected CI run 40122767980 succeeded and produced a signed release artifact for the privacy/signing patch.
 - [ ] Plan upgrade continuity: a new key cannot update the previously development-key-signed APK.
-- [ ] Verify artwork provenance for `hero.jpg`, `cosmos.jpg`, and `anime.jpg`.
+- [ ] Verify per-file exports and redistribution terms for `hero.jpg`, `cosmos.jpg`, and `anime.jpg` (owner reports ChatGPT / Google Stitch origins).
 - [ ] Complete native Corresponding Source / notice review and outstanding legal review.
 - [x] Incremented release candidate to 1.3.3 (versionCode 16).

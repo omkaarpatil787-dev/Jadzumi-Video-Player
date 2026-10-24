@@ -86,7 +86,8 @@
   verification, signed-release validation, or legal clearance.
 - NextLib AAR inspection confirmed FFmpeg 9.0.1 and dav1d 1.5.4. Upstream configures
   mbedTLS 3.6.7, but retained mbedTLS code/version in this AAR remains unverified.
-- Unknown origins/licenses for hero.jpg, cosmos.jpg and anime.jpg are documented and
+- The owner reports ChatGPT / Google Stitch origins for hero.jpg, cosmos.jpg and
+  anime.jpg. Exact tool per file and applicable redistribution terms remain unverified;
   the images remain unchanged. Native Corresponding Source and legal review items
   remain open in THIRD_PARTY_LICENSES.md and LEGAL_REVIEW_REQUIRED.md.
 - New production signatures cannot update the previously development-signed APK;
