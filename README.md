@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.3.3-2563eb?style=flat-square" alt="Version 1.3.3"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.4.0-2563eb?style=flat-square" alt="Version 1.4.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -52,13 +52,14 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details>
-<summary><strong>In development · 1.4.0-alpha.4</strong></summary>
+<summary><strong>What’s new · v1.4.0 ✨</strong></summary>
 
-Accuracy corrections, local settings/history backup, dialogue replay, offline subtitle
-search, a measured technical inspector, episode continuity, sleep controls and scene
-bookmarks are implemented on the feature branch. Device validation
-is pending. See [saved progress and test steps](docs/FEATURE-PROGRESS.md) and
-[the current checkpoint](CHECKPOINT.md).
+Configurable spring animations, touch lighting, elastic scroll edges, a measured
+technical inspector, local backup/restore, dialogue replay, subtitle search,
+episode continuity, sleep controls, and scene bookmarks. Optional seamless refresh
+matching and a separate App updates card round out this release.
+
+See [release notes](RELEASE_NOTES.md) and [validation details](docs/FEATURE-PROGRESS.md).
 
 </details>
 
@@ -71,14 +72,13 @@ is pending. See [saved progress and test steps](docs/FEATURE-PROGRESS.md) and
 | External subtitles and timing adjustments | Local artwork and metadata sidecars | Custom app icons |
 | Background audio and picture-in-picture | Poster grid, list view, and batch actions | Brightness, volume, and scaling controls |
 
-## 📦 Latest release · v1.3.3
+## 📦 Latest release · v1.4.0
 
-- Online metadata and poster downloads are now opt-in and off by default.
-- HTTP requests no longer include a personal email address.
-- About includes the source repository and licenses available offline.
-- Release APKs use the private release key, separate from debug builds.
+- ✨ Gentler motion, expressive springs, and optional touch lighting.
+- 🎬 More playback and library tools, with codecs preserved.
+- ⚙️ Optional refresh matching and verified in-app update downloads.
 
-[Download v1.3.3](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.3.3) · [Release history](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases)
+[Download v1.4.0](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.4.0) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.
@@ -92,7 +92,7 @@ to request movie/TV information from Wikipedia and TVMaze, plus artwork from the
 image hosts. This sends search titles to those services. Cached information and
 images remain available offline when lookups are disabled.
 
-The development preview also offers GitHub update checks in **Privacy & About**.
+GitHub update checks are available in **Privacy & About**.
 Manual checks contact GitHub when requested; automatic checks have their own
 **off-by-default** switch. APK downloads and installation require your action.
 

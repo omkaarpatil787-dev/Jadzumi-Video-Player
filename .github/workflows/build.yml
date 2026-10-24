@@ -59,7 +59,7 @@ jobs:
         fi
 
     - name: Run unit tests and build debug APK
-      run: bash gradlew test assembleDebug --no-daemon --stacktrace
+      run: bash gradlew test assembleDebug lintDebug --no-daemon --stacktrace
 
     - name: Build signed release APK
       if: steps.signing.outputs.ready == 'true'
@@ -92,20 +92,11 @@ jobs:
         name: ${{ env.APP_VERSION }}
         files: Jadzumi-Player-${{ env.APP_VERSION }}.apk
         target_commitish: ${{ github.sha }}
-        generate_release_notes: true
-        body: |
-          Privacy and signing update: online metadata and image downloads are opt-in,
-          HTTP requests use an email-free User-Agent, and About includes source code
-          and offline license notices. Playback codecs are preserved.
-
-          **Upgrade notice:** This release uses the new production signing key.
-          It cannot update older installations signed with the development key.
-          Reinstallation may be required and uninstalling can erase app settings
-          and playback history.
-
-          Source code and build instructions are included with this tagged release.
-          See README.md, THIRD_PARTY_LICENSES.md and LEGAL_REVIEW_REQUIRED.md for
-          licensing evidence and remaining review items; no legal clearance is claimed.
+        generate_release_notes: false
+        body_path: RELEASE_NOTES.md
+        prerelease: false
+        make_latest: true
+        fail_on_unmatched_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

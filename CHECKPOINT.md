@@ -142,3 +142,16 @@ and corrected a Kotlin property/method setter name clash in the updater. Final f
 lint with zero errors. An unsafe context cast flagged by lint was replaced with
 Compose LocalActivity. Evidence: docs/verification/features-1.4.0-alpha.4/result.json. No release signing material is present locally.
 Stable/main remains unchanged; same-key installation/device refresh tests NOT RUN.
+
+## Stable v1.4.0 (build 21) publication request
+
+User confirmed the preview works and explicitly requested App updates in its own
+Privacy & About card, followed by a stable release and announcement. The card is now
+separate from source/licenses. Stable version and public docs updated; RELEASE_NOTES.md
+announces motion, playback/library additions and under-the-hood corrections without
+claiming measured frame-rate gains or legal clearance. CI publishes those notes and
+runs lint as well as tests/builds. Final local validation passed: 60 tests per variant, debug assembly/signature and
+lint (zero errors). Evidence: docs/verification/release-1.4.0/result.json.
+Next: fast-forward main and monitor signed build/release. No force push; do not publish if main diverged.
+
+Public release must attach the signed .apk directly, not a CI artifact ZIP.

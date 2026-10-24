@@ -2506,6 +2506,9 @@ private val settingsCategories = listOf(
                 uriHandler.openUri("https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player")
             }) { Text("Source code") }
             TextButton(onClick = { showLicenses = true }) { Text("Licenses") }
+        }
+
+        Panel {
             UpdateSettings()
         }
 

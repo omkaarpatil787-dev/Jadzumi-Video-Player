@@ -2,7 +2,7 @@
 <p align="center">An overview of the app, its architecture, and release progress.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.3.3-2563eb?style=flat-square" alt="Version 1.3.3"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.4.0-2563eb?style=flat-square" alt="Version 1.4.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -18,7 +18,7 @@ fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
-| **v1.3.3 · build 16** | Android 8.0+ · ARM64 | Local library · No analytics · Opt-in online metadata |
+| **v1.4.0 · build 21** | Android 8.0+ · ARM64 | Local library · No analytics · Opt-in online metadata |
 
 ## 📸 Screenshots
 
@@ -85,20 +85,21 @@ batch actions, adaptive layouts, themes, frosted surfaces, and custom icons.
 </details>
 
 <details>
-<summary><strong>In development · 1.4.0-alpha.4</strong></summary>
+<summary><strong>What’s new · v1.4.0 ✨</strong></summary>
 
-Accuracy corrections, local settings/history backup, dialogue replay, offline subtitle
-search, a measured technical inspector, episode continuity, sleep controls and scene
-bookmarks are implemented on the feature branch. Device validation
-is pending. See [saved progress and test steps](docs/FEATURE-PROGRESS.md) and
-[the current checkpoint](CHECKPOINT.md).
+Configurable spring animations, touch lighting, elastic scroll edges, a measured
+technical inspector, local backup/restore, dialogue replay, subtitle search,
+episode continuity, sleep controls, and scene bookmarks. Optional seamless refresh
+matching and a separate App updates card round out this release.
+
+See [release notes](RELEASE_NOTES.md) and [validation details](docs/FEATURE-PROGRESS.md).
 
 </details>
 
 ## 🚀 Release progress
 
-**v1.3.3 is published.** It adds enforced opt-in online requests, an email-free
-User-Agent, private release signing, and source/license entries in About.
+**v1.4.0** brings configurable motion, playback and library tools, optional refresh
+matching, and verified update downloads. See [release notes](RELEASE_NOTES.md).
 
 <details>
 <summary><strong>View project milestones</strong></summary>
