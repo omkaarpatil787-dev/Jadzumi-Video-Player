@@ -1,7 +1,7 @@
 # 🛡️ Jadzumi Player — Mandatory Codec & Open-Source License Audit
 
 > **Document Type:** Pre-Release Legal Compliance, Codec Licensing & Distribution Safety Audit  
-> **Target Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.4.0-alpha.2`
+> **Target Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.4.0-alpha.3`
 > **Distribution Model:** Free forever, 100% non-commercial, zero ads, zero subscriptions, zero paid features  
 > **Audit Status:** Completed Technical & Regulatory Analysis · **Date:** 2026-10-20  
 > **Auditor Disclaimer:** *This technical audit document provides an evidence-based engineering and licensing analysis of the actual source code, dependencies, and native binaries. It does not constitute formal legal counsel. Items requiring formal legal review are explicitly flagged in `LEGAL_REVIEW_REQUIRED.md`.*

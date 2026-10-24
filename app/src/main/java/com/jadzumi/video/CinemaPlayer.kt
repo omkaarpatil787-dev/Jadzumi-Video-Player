@@ -20,6 +20,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -108,6 +110,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
     var controls by remember(video.identity) { mutableStateOf(true) }
     var quickMenuSection by remember(video.identity) { mutableStateOf<String?>(null) }
+    var toolsSection by remember(video.identity) { mutableStateOf<String?>(null) }
     var isFastForwarding by remember(video.identity) { mutableStateOf(false) }
     var speedBeforeHold by remember(video.identity) { mutableFloatStateOf(1f) }
     var scrub by remember(video.identity) { mutableStateOf<Float?>(null) }
@@ -164,6 +167,11 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             message = "External Subtitle Added"
             interaction++
         }
+    }
+
+    EpisodeContinuationPrompt(playback)
+    toolsSection?.let { section ->
+        PlayerToolsDialog(section, playback, onMessage = { message = it; interaction++ }, onDismiss = { toolsSection = null })
     }
 
     var isDismissing by remember { mutableStateOf(false) }
@@ -923,6 +931,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             section = section,
                             onSelectSection = { quickMenuSection = it; interaction++ },
                             onAddExternalSubtitle = { subtitleFileLauncher.launch(arrayOf("*/*")) },
+                            onOpenTools = { section ->
+                                if (section == "bookmarks") playback.pauseForNotes()
+                                toolsSection = section; quickMenuSection = null
+                            },
                             onSearchSubtitles = {
                                 if (!subtitleSearchBusy) subtitleSearchLauncher.launch(arrayOf("*/*"))
                             },
@@ -1117,6 +1129,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     onSelectSection: (String) -> Unit,
     onAddExternalSubtitle: () -> Unit,
     onSearchSubtitles: () -> Unit,
+    onOpenTools: (String) -> Unit,
     onMessage: (String) -> Unit,
     onDismiss: () -> Unit,
     onClosePlayer: () -> Unit = playback::close
@@ -1150,13 +1163,16 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         ) {
             when (section) {
                 "main" -> {
-                    Column(Modifier.padding(vertical = 10.dp)) {
+                    Column(Modifier.heightIn(max = 560.dp).verticalScroll(rememberScrollState()).padding(vertical = 10.dp)) {
                         QuickMenuRow(
                             icon = Icons.Rounded.Speed,
                             label = "Playback speed",
                             value = "${playback.speed}x",
                             onClick = { onSelectSection("speed") }
                         )
+                        QuickMenuRow(Icons.Rounded.Bookmark, "Scene bookmarks", "", { onOpenTools("bookmarks") })
+                        QuickMenuRow(Icons.Rounded.Bedtime, "Sleep controls", if (playback.sleepPlan != null) "Active" else "Off", { onOpenTools("sleep") })
+                        QuickMenuRow(Icons.Rounded.PlaylistPlay, "Episode continuity", "", { onOpenTools("continuity") })
                         val fitName = when (playback.resizeMode) {
                             AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Crop to fill"
                             AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch"
@@ -1670,7 +1686,7 @@ private fun NextEpisodeAutoplayBanner(
                     shape = CircleShape,
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
                 ) {
-                    Text("Watch Credits", fontSize = 12.sp, color = Color.White)
+                    Text("Stay here", fontSize = 12.sp, color = Color.White)
                 }
             }
         }

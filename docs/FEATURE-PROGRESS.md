@@ -1,6 +1,6 @@
 # Library and playback tools · development progress
 
-Preview: **1.4.0-alpha.2 · build 18**. Stable public release: **v1.3.3**.
+Preview: **1.4.0-alpha.3 · build 19**. Stable public release: **v1.3.3**.
 Branch: `feature/library-playback-tools`. This preview is not merged into main.
 
 ## Saved stages
@@ -122,6 +122,45 @@ playback. Recheck the other preview features after this patch.
 
 The agreed first delivery is implemented: accuracy/reliability corrections, local
 backup/restore, dialogue replay, subtitle search, and the inspector correction.
-It remains a preview for device review. Sleep controls, travel checks, scene bookmarks,
-portable device handoff and per-series track continuity remain proposed follow-up
-work unless the user expands the current delivery scope.
+It remains a preview for device review. Episode continuity, sleep controls and scene bookmarks are now included in alpha.3.
+Travel check and private handoff are deferred by the user’s latest instruction.
+
+
+## Alpha.3 — continuity, sleep and scenes
+
+The user expanded the scope, then explicitly deferred travel check and private handoff
+and requested this build be pushed. Their incomplete implementation files are excluded.
+
+New player menu entries:
+- **Episode continuity:** autoplay only starts after the file ends. Adjacent numbered
+  episodes in the same season may auto-continue after a 12-second cancelable countdown.
+  Gaps, other series, season changes or unverified numbering always need confirmation.
+  Per-series audio/subtitle language preferences use actual language tags; unlabeled
+  tracks fall back to automatic selection. Subtitle-off preferences are remembered.
+- **Sleep controls:** 15/30/60/90-minute stops with a final 10-second audio fade, stop at
+  the end of the current video, or stop after two/three video endings. Canceling or
+  closing restores volume; timer deadlines use the monotonic device clock. Sleep
+  controls last for the current app/player session and are not restored after process death.
+- **Scene bookmarks:** playback pauses for notes. Save up to 200 named moments per video,
+  add personal notes, edit/delete, tap to seek precisely, or export a plain-text timestamp
+  list without copying video. Total stored notes are limited to 64 KB per video.
+
+Backup version 2 includes scene bookmarks and per-series language preferences, while
+still accepting version-1 backups and preserving online consent. Device-specific
+folder permissions and credentials remain excluded.
+
+### Additional device checks — NOT RUN
+
+1. Finish adjacent episodes and verify the countdown starts at EOF, not estimated credits.
+   Cancel it, disable/re-enable autoplay, and verify missing/duplicate episodes and season
+   changes show confirmation. Test the same series with different track languages.
+2. Select a labeled audio/subtitle language, move to another episode, and confirm it is
+   retained for that series. Verify another series can have its own choice, subtitle-off
+   persists, and unlabeled tracks do not save translated language names as tags.
+3. Use a one-minute timer through the controller/test setup or the normal 15-minute UI
+   option. Verify fade/pause, cancel during fade, background audio, PiP, close/reopen,
+   stop-at-current-end and stop-after-two across adjacent episodes. Confirm volume returns.
+4. Add/edit/delete scene names and multiline notes, seek to beginning/end bookmarks,
+   export text through the picker, cancel export, and restart to verify saved scenes persist.
+   Back up/restore scene notes along with per-series preferences and online consent.
+5. Repeat technical inspector and existing preview regression checks after these changes.

@@ -104,3 +104,21 @@ Implementation choices:
 
 Next: implement continuity/sleep/bookmark foundations, test and checkpoint locally,
 then wire travel checks and portable handoff. Do not push partial stages.
+
+## Latest scope and push request — alpha.3 (build 19)
+
+User explicitly deferred travel check and private handoff and requested pushing this
+build. Completed additions: episode continuity/per-series language preferences, sleep
+controls and named scene bookmarks. Deferred files are outside the repository under
+/workspace/.cloud-setup/deferred-travel-handoff; none are shipped or staged.
+
+Final frozen-source validation PASSED: 57 tests per variant, zero failures/errors/skips;
+debug APK and lint passed (zero errors, 26 warnings, 2 hints). Version/build/signature,
+five NextLib libraries and six bundled license files verified. Evidence:
+docs/verification/features-1.4.0-alpha.3/result.json. Resumed after the battery pause;
+fixed explicit expression grouping/braces flagged by lint before this successful run.
+Push the completed batch to feature/library-playback-tools after checks, not main.
+Stable v1.3.3 remains unchanged. Device validation of the new controls is still NOT RUN.
+
+Prior alpha.2 signed CI run 40130879855 succeeded and produced both APK artifacts.
+This is historical evidence; alpha.3 requires its own signed CI build.

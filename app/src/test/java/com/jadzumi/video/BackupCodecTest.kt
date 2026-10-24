@@ -8,6 +8,18 @@ class BackupCodecTest {
     private fun rejects(block: () -> Unit) {
         try { block(); fail("Expected invalid backup to be rejected") } catch (_: IllegalArgumentException) {} catch (_: IllegalStateException) {}
     }
+    @Test fun bookmarksAndSeriesPreferencesRoundTripInVersionTwo() {
+        val scenes = SceneBookmarkCodec.encode(listOf(SceneBookmark("scene-1", 12000, "Moment", "Private note")))
+        val data = mapOf("scene_bookmarks" to mapOf("a".repeat(64) to scenes),
+            "playback" to mapOf("series_${"b".repeat(64)}_audio" to "en", "series_${"b".repeat(64)}_subtitle" to "none", "autoplay_next" to false))
+        assertEquals(data, BackupCodec.decode(BackupCodec.encode(data)))
+        assertFalse(BackupCodec.accepts("scene_bookmarks", "a".repeat(64), "invalid notes"))
+    }
+    @Test fun legacyBackupVersionOneStillImports() {
+        val old = "format=JadzumiBackup\nversion=1\nplayback.YmdfYXVkaW8=b:true"
+        assertEquals(mapOf("playback" to mapOf("bg_audio" to true)), BackupCodec.decode(old))
+    }
+
     @Test fun historyAndTypedSettingsRoundTrip() {
         val data = mapOf(
             "playback" to mapOf("a".repeat(64) to 12345L, "a".repeat(64)+".done" to true, "seek_seconds" to 10, "preferred_audio_lang" to "日本語", "night_mode" to false),

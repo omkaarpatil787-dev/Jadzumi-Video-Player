@@ -26,7 +26,7 @@ fun BackupControls(playback: PlaybackController, onStatus: (String) -> Unit) {
             playback.flushProgress()
             try {
                 withContext(Dispatchers.IO) { LocalBackup.export(context, uri) }
-                onStatus("Backup saved. It contains settings and viewing history, not video files or folder permissions.")
+                onStatus("Backup saved. It contains settings, scene notes and viewing history, not video files or folder permissions.")
             } catch (_: Exception) {
                 onStatus("Could not save backup. Check the destination and available storage.")
             } finally { busy = false }
@@ -50,7 +50,7 @@ fun BackupControls(playback: PlaybackController, onStatus: (String) -> Unit) {
         AlertDialog(
             onDismissRequest = { if (!busy) pending = null },
             title = { Text("Restore backup?") },
-            text = { Text("Merge ${data.values.sumOf { it.size }} saved settings/history entries? Matching entries will be replaced. Online lookup consent stays unchanged. Restart the app afterward. After reinstalling, re-add the same media folders; moved or renamed files may not match saved history. Video files and folder permissions are not included.") },
+            text = { Text("Merge ${data.values.sumOf { it.size }} saved settings/history/bookmark entries? Matching entries will be replaced. Online lookup consent stays unchanged. Restart the app afterward. After reinstalling, re-add the same media folders; moved or renamed files may not match saved history. Video files and folder permissions are not included.") },
             dismissButton = { TextButton(enabled = !busy, onClick = { pending = null }) { Text("Cancel") } },
             confirmButton = {
                 TextButton(enabled = !busy, onClick = {

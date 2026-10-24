@@ -52,10 +52,11 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details>
-<summary><strong>In development · 1.4.0-alpha.2</strong></summary>
+<summary><strong>In development · 1.4.0-alpha.3</strong></summary>
 
-Accuracy corrections, local settings/history backup, dialogue replay, and offline
-SRT/VTT subtitle search are implemented on the feature branch. Device validation
+Accuracy corrections, local settings/history backup, dialogue replay, offline subtitle
+search, a measured technical inspector, episode continuity, sleep controls and scene
+bookmarks are implemented on the feature branch. Device validation
 is pending. See [saved progress and test steps](docs/FEATURE-PROGRESS.md) and
 [the current checkpoint](CHECKPOINT.md).
 
