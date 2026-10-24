@@ -52,3 +52,31 @@ Passed: 45 tests per variant, zero failures/errors/skips; lint zero errors, 24 w
 The preceding full preview at 05af368 passed signed GitHub CI run 40127402354 and
 produced debug/release artifacts. The watched-history follow-up requires its own CI
 result; do not describe the prior run as validation of this later commit.
+
+## Technical inspector follow-up — 1.4.0-alpha.2 (build 18)
+
+User reports the other preview features work well and requests inspector completion.
+The former placeholders were removed without an accompanying media probe, leaving
+empty fields. New local header inspection and playback analytics now populate real
+information; fields the file/OS does not expose stay explicitly unreported.
+
+New files: MediaInspection.kt (models/formatting), LocalMediaProbe.kt (off-thread
+header reads with resource cleanup/cache), TechnicalInspector.kt (UI/loading/refresh),
+and MediaInspectionTest.kt. Runtime decoder data is guarded by player/file identity.
+
+First implementation pass: test/build/lint passed with 50 tests per variant.
+Final alpha.2 validation passed: 50 unit tests per variant, zero failures/errors/skips;
+debug APK and lint passed with zero errors/fatal issues, 25 warnings and 2 hints.
+APK version/signature, five NextLib native libraries and six license files verified.
+Evidence: docs/verification/features-1.4.0-alpha.2/result.json. Device probe/playback checks
+remain NOT RUN. Source and new helpers are locally checkpointed; no separate push yet.
+
+The earlier alpha.1 watched-history follow-up at b3bb02a also passed signed GitHub CI
+run 40128340965, producing debug and release artifacts. This is historical evidence,
+not signed-build verification of the inspector follow-up.
+
+## Push batching / scope
+
+User requests continued progress and one push when all agreed features are complete.
+Do not push individual inspector edits. Optional scope question is pending: current
+agreed set versus all remaining earlier ideas. Keep saving local checkpoint commits.

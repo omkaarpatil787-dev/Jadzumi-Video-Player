@@ -324,7 +324,8 @@ fun TvShowDetailsPage(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             TechnicalInspectorCard(
-                                sampleVideo = currentSeasonEpisodes.firstOrNull()
+                                sampleVideo = currentSeasonEpisodes.firstOrNull { it.uri == playback.video?.uri } ?: currentSeasonEpisodes.firstOrNull(),
+                                playback = playback
                             )
                             OfflineVerificationCard()
                         }
@@ -354,7 +355,7 @@ fun TvShowDetailsPage(
                         }
 
                         Spacer(Modifier.height(8.dp))
-                        TechnicalInspectorCard(sampleVideo = currentSeasonEpisodes.firstOrNull())
+                        TechnicalInspectorCard(sampleVideo = currentSeasonEpisodes.firstOrNull { it.uri == playback.video?.uri } ?: currentSeasonEpisodes.firstOrNull(), playback = playback)
                         OfflineVerificationCard()
                     }
                 }
@@ -901,55 +902,6 @@ private fun EpisodeCard(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = subtleCardBorder()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(Icons.Rounded.Memory, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                Text("Technical Inspector", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-
-            TechRow("Container / MIME", sampleVideo?.mime?.takeIf { it.isNotBlank() } ?: "Unavailable")
-            TechRow("Resolution", if (sampleVideo != null && sampleVideo.width > 0) "${sampleVideo.width} × ${sampleVideo.height} pixels" else "Unavailable")
-            TechRow("Color Space", "Unavailable")
-            TechRow("Frame Rate", "Unavailable")
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("HW Acceleration", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Surface(
-                    shape = CircleShape,
-                    color = Color(0xFFE6F4EA)
-                ) {
-                    Text("Not inspected", modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF137333))
-                }
-            }
-
-            TechRow("Audio Decoder", "Unavailable")
-            TechRow("Subtitle Engine", "AndroidX Media3")
         }
     }
 }

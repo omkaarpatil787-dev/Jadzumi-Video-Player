@@ -1,6 +1,6 @@
 # Library and playback tools · development progress
 
-Preview: **1.4.0-alpha.1 · build 17**. Stable public release: **v1.3.3**.
+Preview: **1.4.0-alpha.2 · build 18**. Stable public release: **v1.3.3**.
 Branch: `feature/library-playback-tools`. This preview is not merged into main.
 
 ## Saved stages
@@ -91,3 +91,28 @@ Read CHECKPOINT.md, inspect the branch and working tree, then run the recorded b
 command. Keep codecs and signing material intact. Resolve device feedback before a
 stable release; merge to main triggers automatic publication, so do not merge simply
 to save progress.
+
+
+## Technical inspector follow-up · alpha.2
+
+The earlier accuracy cleanup removed static values but did not yet read file headers.
+This follow-up completes the inspector rather than restoring guessed values.
+
+- Local file headers supply codec, dimensions, reported frame rate, color metadata,
+  audio channels/sample rates/languages and embedded subtitle track formats when exposed.
+- Reads run off the UI thread, are serialized and cached for up to 32 files, and have
+  a refresh control. Unsupported fields and revoked access produce explanatory text.
+- Playback analytics report actual audio/video decoder names and format information.
+  Hardware/software classification uses Android's codec flags on Android 10+, or known
+  FFmpeg software decoding. Older Android versions may not report hardware status.
+- Runtime decoder details only apply to the same inspected URI. TV episode inspection
+  follows the loaded episode within the selected season, otherwise the first episode.
+- The movie audio/subtitle card now shows probed tracks instead of placeholder chips.
+- No codec dependency, renderer-selection policy, or playback feature was removed.
+
+Device checks (NOT RUN): inspect a known H.264 MP4 and HEVC MKV before playback; compare
+resolution/fps/audio metadata against a trusted file report. Start/pause playback and
+check decoder names/hardware status. Switch files rapidly and confirm no stale decoder
+information. Try files with multiple audio/subtitle tracks, an unsupported container,
+revoked access, and the refresh button. Confirm background inspection does not interrupt
+playback. Recheck the other preview features after this patch.

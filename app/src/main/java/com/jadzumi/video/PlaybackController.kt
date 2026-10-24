@@ -20,6 +20,8 @@ import androidx.media3.datasource.ContentDataSource
 import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.DecoderReuseEvaluation
+import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 import androidx.media3.exoplayer.SeekParameters
@@ -32,6 +34,8 @@ import androidx.media3.session.SessionResult
 import androidx.media3.ui.AspectRatioFrameLayout
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
@@ -68,6 +72,13 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var subtitleTracks by mutableStateOf<List<SubtitleTrackInfo>>(emptyList()); private set
     var isHdr by mutableStateOf(false); private set
     var videoCodecBadge by mutableStateOf<String?>(null); private set
+
+    var runtimeVideoDecoder by mutableStateOf<DecoderInspection?>(null); private set
+    var runtimeAudioDecoder by mutableStateOf<DecoderInspection?>(null); private set
+    var runtimeVideoFormat by mutableStateOf<VideoInspection?>(null); private set
+    var runtimeAudioTracks by mutableStateOf<List<AudioInspection>>(emptyList()); private set
+    var runtimeSubtitleTracks by mutableStateOf<List<SubtitleInspection>>(emptyList()); private set
+    var runtimeAudioFormat by mutableStateOf<AudioInspection?>(null); private set
 
     // Chapters & External Subtitles
     var chapters by mutableStateOf<List<ChapterMarker>>(emptyList()); private set
@@ -500,6 +511,41 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         prepare(autoplay = true)
     }
 
+    private fun inspectedVideo(format: Format): VideoInspection = VideoInspection(
+        mime = format.sampleMimeType,
+        width = format.width.takeIf { it > 0 }, height = format.height.takeIf { it > 0 },
+        frameRate = format.frameRate.toDouble().takeIf { it.isFinite() && it > 0 },
+        colorStandard = format.colorInfo?.colorSpace?.takeIf { it > 0 },
+        colorTransfer = format.colorInfo?.colorTransfer?.takeIf { it > 0 },
+        colorRange = format.colorInfo?.colorRange?.takeIf { it > 0 },
+        bitDepth = format.colorInfo?.lumaBitdepth?.takeIf { it in 8..16 }
+    )
+
+    private fun recordDecoder(source: ExoPlayer, name: String, videoDecoder: Boolean) {
+        if (player !== source) return
+        val initial = DecoderInspection(name,
+            if (name.startsWith("ffmpeg", ignoreCase = true)) DecoderHardware.SOFTWARE else DecoderHardware.NOT_REPORTED)
+        if (videoDecoder) runtimeVideoDecoder = initial else runtimeAudioDecoder = initial
+        if (initial.hardware == DecoderHardware.SOFTWARE || Build.VERSION.SDK_INT < 29) return
+        viewModelScope.launch {
+            val kind = withContext(Dispatchers.Default) {
+                if (Build.VERSION.SDK_INT < 29) return@withContext DecoderHardware.NOT_REPORTED
+                runCatching {
+                    val codec = android.media.MediaCodecList(android.media.MediaCodecList.ALL_CODECS).codecInfos
+                        .firstOrNull { !it.isEncoder && it.name.equals(name, ignoreCase = true) }
+                    when {
+                        codec?.isSoftwareOnly == true -> DecoderHardware.SOFTWARE
+                        codec?.isHardwareAccelerated == true -> DecoderHardware.HARDWARE
+                        else -> DecoderHardware.NOT_REPORTED
+                    }
+                }.getOrDefault(DecoderHardware.NOT_REPORTED)
+            }
+            if (player !== source) return@launch
+            if (videoDecoder && runtimeVideoDecoder?.name == name) runtimeVideoDecoder = DecoderInspection(name, kind)
+            if (!videoDecoder && runtimeAudioDecoder?.name == name) runtimeAudioDecoder = DecoderInspection(name, kind)
+        }
+    }
+
     private fun prepare(autoplay: Boolean) {
         val v = video ?: return
         if (player != null) return
@@ -524,6 +570,36 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .setLoadControl(instantLoadControl)
                 .build()
             player = p
+
+            p.addAnalyticsListener(object : AnalyticsListener {
+                override fun onVideoDecoderInitialized(eventTime: AnalyticsListener.EventTime, decoderName: String, initializedTimestampMs: Long, initializationDurationMs: Long) {
+                    recordDecoder(p, decoderName, true)
+                }
+                override fun onAudioDecoderInitialized(eventTime: AnalyticsListener.EventTime, decoderName: String, initializedTimestampMs: Long, initializationDurationMs: Long) {
+                    recordDecoder(p, decoderName, false)
+                }
+                override fun onVideoInputFormatChanged(eventTime: AnalyticsListener.EventTime, format: Format, decoderReuseEvaluation: DecoderReuseEvaluation?) {
+                    if (player === p) {
+                        runtimeVideoFormat = inspectedVideo(format)
+                    }
+                }
+                override fun onAudioInputFormatChanged(eventTime: AnalyticsListener.EventTime, format: Format, decoderReuseEvaluation: DecoderReuseEvaluation?) {
+                    if (player === p) {
+                        runtimeAudioFormat = AudioInspection(format.sampleMimeType,
+                            format.channelCount.takeIf { it > 0 }, format.sampleRate.takeIf { it > 0 }, format.language)
+                    }
+                }
+                override fun onVideoDecoderReleased(eventTime: AnalyticsListener.EventTime, decoderName: String) {
+                    if (player === p && runtimeVideoDecoder?.name == decoderName) {
+                        runtimeVideoDecoder = null
+                    }
+                }
+                override fun onAudioDecoderReleased(eventTime: AnalyticsListener.EventTime, decoderName: String) {
+                    if (player === p && runtimeAudioDecoder?.name == decoderName) {
+                        runtimeAudioDecoder = null
+                    }
+                }
+            })
 
             p.setSeekParameters(SeekParameters.CLOSEST_SYNC)
             p.setWakeMode(C.WAKE_MODE_LOCAL)
@@ -574,6 +650,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
                     val format = player.videoFormat
                     if (format != null) {
+                        runtimeVideoFormat = inspectedVideo(format)
                         val nameHdr = video?.name?.let {
                             it.contains("hdr", ignoreCase = true) ||
                             it.contains("10bit", ignoreCase = true) ||
@@ -726,6 +803,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     private fun updateTracks(tracks: Tracks) {
         val audioList = mutableListOf<AudioTrackInfo>()
         val subList = mutableListOf<SubtitleTrackInfo>()
+        val inspectedAudio = mutableListOf<AudioInspection>()
+        val inspectedSubtitles = mutableListOf<SubtitleInspection>()
 
         for (g in 0 until tracks.groups.size) {
             val group = tracks.groups[g]
@@ -737,6 +816,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 when (type) {
                     C.TRACK_TYPE_AUDIO -> {
                         val mime = f.sampleMimeType ?: f.containerMimeType
+                        inspectedAudio.add(AudioInspection(mime, f.channelCount.takeIf { it > 0 }, f.sampleRate.takeIf { it > 0 }, f.language))
                         val name = f.label ?: if (langDisplay != "Unknown") langDisplay else "Audio Track ${audioList.size + 1}"
                         audioList += AudioTrackInfo(
                             id = "$g:$t",
@@ -750,6 +830,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                         )
                     }
                     C.TRACK_TYPE_TEXT -> {
+                        (f.sampleMimeType ?: f.containerMimeType)?.let { inspectedSubtitles.add(SubtitleInspection(it, f.language)) }
                         val name = f.label ?: if (langDisplay != "Unknown") langDisplay else "Subtitle ${subList.size + 1}"
                         subList += SubtitleTrackInfo(
                             id = "$g:$t",
@@ -766,6 +847,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         }
         audioTracks = audioList
         subtitleTracks = subList
+        runtimeAudioTracks = inspectedAudio
+        runtimeSubtitleTracks = inspectedSubtitles
     }
 
     fun selectAudioTrack(track: AudioTrackInfo) {
@@ -914,6 +997,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         } catch (_: Exception) {}
         val oldPlayer = player
         player = null; mediaItemAssigned = false
+        runtimeVideoDecoder = null; runtimeAudioDecoder = null
+        runtimeVideoFormat = null; runtimeAudioFormat = null
+        runtimeAudioTracks = emptyList(); runtimeSubtitleTracks = emptyList()
         session?.release(); session = null
         oldPlayer?.release()
         playing = false; playRequested = false; buffering = false; seekable = false

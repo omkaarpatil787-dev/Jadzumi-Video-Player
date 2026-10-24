@@ -85,7 +85,7 @@ batch actions, adaptive layouts, themes, frosted surfaces, and custom icons.
 </details>
 
 <details>
-<summary><strong>In development · 1.4.0-alpha.1</strong></summary>
+<summary><strong>In development · 1.4.0-alpha.2</strong></summary>
 
 Accuracy corrections, local settings/history backup, dialogue replay, and offline
 SRT/VTT subtitle search are implemented on the feature branch. Device validation

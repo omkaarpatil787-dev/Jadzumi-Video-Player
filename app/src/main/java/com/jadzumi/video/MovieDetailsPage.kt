@@ -411,7 +411,7 @@ fun MovieDetailsPage(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             MovieFileOverviewCard(video, state, context)
-                            MovieAudioSubtitleCard(video)
+                            InspectedTracksCard(video, playback)
                         }
 
                         // Right Column: Technical Inspector & Offline Badge (Weight 1.0)
@@ -419,15 +419,15 @@ fun MovieDetailsPage(
                             modifier = Modifier.weight(1.0f),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            TechnicalInspectorCard(sampleVideo = video)
+                            TechnicalInspectorCard(sampleVideo = video, playback = playback)
                             OfflineVerificationCard()
                         }
                     }
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         MovieFileOverviewCard(video, state, context)
-                        MovieAudioSubtitleCard(video)
-                        TechnicalInspectorCard(sampleVideo = video)
+                        InspectedTracksCard(video, playback)
+                        TechnicalInspectorCard(sampleVideo = video, playback = playback)
                         OfflineVerificationCard()
                     }
                 }
@@ -496,116 +496,6 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
             TechRow("Duration", if (video.duration > 0) timecode(video.duration / 1000) else "Unavailable")
             TechRow("Resolution", if (video.width > 0 && video.height > 0) "${video.width} × ${video.height} pixels" else "Unavailable")
             TechRow("Format / Mime", video.mime.ifEmpty { "Unavailable" })
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun MovieAudioSubtitleCard(video: LocalVideo) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = subtleCardBorder()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(Icons.Rounded.Subtitles, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                Text("Audio & Subtitle Tracks", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-
-            // Audio Section with chips
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(Icons.Rounded.Audiotrack, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                    Text("Audio Streams", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                }
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Text(
-                            "Track details available during playback",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Text(
-                            "Media3 / FFmpeg fallback available",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            // Subtitle Section with chips
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(Icons.Rounded.ClosedCaption, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                    Text("Subtitle Engine", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                }
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.secondaryContainer
-                    ) {
-                        Text(
-                            "AndroidX Media3",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Text(
-                            "SubRip (.srt) • SubStation Alpha (.ass) • PGS",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
         }
     }
 }
