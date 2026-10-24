@@ -6,6 +6,24 @@ import org.junit.Test
 class LocalSeriesTest {
 
     @Test
+    fun missingMetadataIsNotInventedFromTheFilename() {
+        val movie = LocalVideo("uri_movie", "folder", "UnknownFilm.mkv", "video/mp4", 1000, 0, 1000, 0, 0)
+        val meta = extractMovieMetadata(movie)
+        assertNull(meta.rating)
+        assertNull(meta.year)
+        assertNull(meta.mpaa)
+        assertNull(meta.synopsis)
+        assertTrue(meta.genres.isEmpty())
+        val episode = LocalVideo("uri_episode", "folder", "UnknownShow S01E01.mkv", "video/mp4", 1000, 0, 1000, 0, 0)
+        val series = clusterVideosIntoSeries(listOf(episode)).single()
+        assertNull(series.rating)
+        assertNull(series.year)
+        assertNull(series.mpaa)
+        assertNull(series.studio)
+        assertNull(series.synopsis)
+    }
+
+    @Test
     fun parsesStandardSeasonEpisode() {
         val info = EpisodePatterns.parse("Chrono Shift - S02E08 - Fractured Horizons.mkv")
         assertNotNull(info)

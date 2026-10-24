@@ -84,6 +84,16 @@ batch actions, adaptive layouts, themes, frosted surfaces, and custom icons.
 
 </details>
 
+<details>
+<summary><strong>In development · 1.4.0-alpha.1</strong></summary>
+
+Accuracy corrections, local settings/history backup, dialogue replay, and offline
+SRT/VTT subtitle search are implemented on the feature branch. Device validation
+is pending. See [saved progress and test steps](docs/FEATURE-PROGRESS.md) and
+[the current checkpoint](CHECKPOINT.md).
+
+</details>
+
 ## 🚀 Release progress
 
 **v1.3.3 is published.** It adds enforced opt-in online requests, an email-free

@@ -1,0 +1,89 @@
+# Library and playback tools · development progress
+
+Preview: **1.4.0-alpha.1 · build 17**. Stable public release: **v1.3.3**.
+Branch: `feature/library-playback-tools`. This preview is not merged into main.
+
+## Saved stages
+
+| Stage | Saved commit | Validation at that checkpoint |
+| --- | --- | --- |
+| Plan and baseline | `71a1407` | Original M3 checkpoint archived; implementation plan recorded |
+| Accuracy and history isolation | `d31c273` | 33 unit tests per variant; debug APK build passed |
+| Local backup/restore | `3c8a7c9` | 37 unit tests per variant; debug APK build passed |
+| Dialogue replay | `3fe21bd` | 39 unit tests per variant; debug APK build passed |
+| Local subtitle search | `cda20e3` | 43 unit tests per variant; debug APK build passed |
+
+The final review also removes library-level invented scores, years, classifications,
+studios and synopses; missing facts stay unavailable. Search-result seeks use exact
+positioning. Final verification is recorded in CHECKPOINT.md.
+
+## Where to find the additions
+
+- **Settings → Privacy & About → App Data & Cache:** Export backup / Restore backup.
+- **Player top bar → Replay 10:** “What did they say?” replays up to ten seconds with
+  temporary voice boost, returning to the original position. It restores normal audio
+  behavior without changing the saved voice-boost preference.
+- **Player → Cinema settings → Subtitles → Search a local SRT / VTT file:** select a
+  UTF-8 file, enter a phrase, and tap a result to jump to the line's timestamp.
+
+Backups are versioned local files (up to 1 MB) containing allowlisted app settings and
+hashed viewing-history records. They do not contain media, cached artwork, folder
+permissions, signing material, or online-lookup consent. Imports merge matching records
+only after full validation and user confirmation. Settings take effect after restarting.
+After reinstalling, re-add the same media folders; moved files or a different document
+provider may not match saved history. Keep backup files private.
+
+Subtitle search supports text SRT/VTT only (up to 2 MB / 50,000 cues; first 100 search
+results). It does not index embedded, bitmap, or ASS subtitle tracks. Existing playback
+support for these formats is preserved. Search timestamps use the selected file's
+original timeline, not an inferred transcript or cloud service.
+
+## Device checks — NOT RUN
+
+Use the signed **Release artifact from the feature-branch CI run** for a device already
+running the production-signed app. The locally built debug APK uses the development key
+and cannot update a production-signed installation. Do not uninstall an existing app
+unless you have intentionally accepted the loss of its local data.
+
+### Backup and restore
+
+1. Save progress on two videos; change theme, subtitle appearance and a playback setting.
+2. Export a backup through the system file picker, cancel a second export, then confirm
+   the saved file exists. No success message should appear for cancellation.
+3. Modify the settings/progress, open Restore backup and cancel the confirmation.
+   Nothing should be changed.
+4. Restore the saved file, restart Jadzumi, and confirm saved settings/progress return.
+   Verify online lookup consent remains exactly as it was before restore.
+5. Try an invalid, unsupported-version, oversized, unreadable or permission-revoked file.
+   Confirm no existing settings/history are modified.
+6. Clear watch history and verify online consent, voice boost, delay and appearance
+   settings remain intact. Folder access must still work.
+
+### Dialogue replay
+
+1. During normal playback, tap Replay 10. Confirm the previous ten seconds replay and
+   temporary boost ends at the original position. Try within the first ten seconds too.
+2. Start while paused; confirm playback returns to pause at the original position.
+3. Repeat with saved voice boost on and off, and at different playback speeds.
+4. Pause, seek, close, switch videos, background/reopen, and trigger a playback error
+   during replay. Confirm boost and seek precision do not remain stuck.
+5. Verify short clips, unseekable files, Bluetooth changes, audio-session changes and
+   device audio-effect availability. Audio enhancement varies with device support.
+
+### Subtitle search and playback regression
+
+1. Pick UTF-8 SRT and VTT files (including VTT through a document provider). Search
+   mixed-case phrases; tap results and check precise timestamp jumps.
+2. Try no matches, malformed/oversized input, ASS input and cancellation. Confirm clear
+   feedback, no unwanted seek and no change to the selected playback subtitle track.
+3. Add external VTT/ASS tracks through the normal picker and confirm MIME/format works.
+4. Recheck embedded/external subtitles, subtitle timing, audio delay, resume positions,
+   seeking, background playback, audio focus, picture-in-picture and next-episode flow.
+   Existing timing controls require real playback validation; no new timing pipeline is claimed.
+
+## Continue later
+
+Read CHECKPOINT.md, inspect the branch and working tree, then run the recorded build
+command. Keep codecs and signing material intact. Resolve device feedback before a
+stable release; merge to main triggers automatic publication, so do not merge simply
+to save progress.

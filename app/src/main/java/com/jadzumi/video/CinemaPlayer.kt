@@ -147,7 +147,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     subtitleSearchCues?.let { cues ->
         SubtitleSearchDialog(cues, onSeek = { target ->
             if (playback.seekable) {
-                playback.seekTo(target)
+                playback.seekToSubtitle(target)
                 subtitleSearchCues = null
                 message = "Jumped to subtitle line"
             } else message = "This video cannot seek yet"
@@ -1110,6 +1110,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 }
 
 /** Panel 5: Right-Side Floating Translucent Quick Menu */
+@androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 @Composable private fun RightSideQuickMenu(
     playback: PlaybackController,
     section: String,

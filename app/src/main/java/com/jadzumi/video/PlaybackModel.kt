@@ -62,6 +62,7 @@ fun formatSubtitleFormat(mimeType: String?): String = when (mimeType) {
     else -> "SubRip (.srt / .vtt)"
 }
 
+@androidx.annotation.OptIn(markerClass = [androidx.media3.common.util.UnstableApi::class])
 fun isHdrFormat(colorTransfer: Int): Boolean =
     colorTransfer == C.COLOR_TRANSFER_ST2084 || colorTransfer == C.COLOR_TRANSFER_HLG
 

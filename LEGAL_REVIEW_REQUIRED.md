@@ -1,7 +1,7 @@
 # ⚖️ Jadzumi Player — Matters Flagged for Qualified Legal Review
 
 > **Document Type:** Unresolved Intellectual Property & Regulatory Disclosure  
-> **Application:** Jadzumi Player (Android) · Version: `1.3.3` · Package: `com.jadzumi.video`
+> **Application:** Jadzumi Player (Android) · Version: `1.4.0-alpha.1` · Package: `com.jadzumi.video`
 > **Purpose:** Identifies specific patent, trademark, and licensing questions that cannot be conclusively resolved by technical inspection alone and warrant qualified IP legal counsel.  
 > **Date:** 2026-10-20
 

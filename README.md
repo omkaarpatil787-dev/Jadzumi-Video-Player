@@ -51,6 +51,16 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 <sub>Tablet screenshots from v1.3.1. Some labels and version details differ from the current release.</sub>
 
 
+<details>
+<summary><strong>In development · 1.4.0-alpha.1</strong></summary>
+
+Accuracy corrections, local settings/history backup, dialogue replay, and offline
+SRT/VTT subtitle search are implemented on the feature branch. Device validation
+is pending. See [saved progress and test steps](docs/FEATURE-PROGRESS.md) and
+[the current checkpoint](CHECKPOINT.md).
+
+</details>
+
 ## ✨ Highlights
 
 | Playback | Your library | Make it yours |

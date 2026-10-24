@@ -852,6 +852,16 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun seekToSubtitle(value: Long) {
+        val p = player ?: return
+        if (!seekable) return
+        stopDialogueReplay()
+        val previous = p.seekParameters
+        p.setSeekParameters(SeekParameters.EXACT)
+        seekTo(value)
+        p.setSeekParameters(previous)
+    }
+
     fun skip(delta: Long) = seekTo(seekPosition(player?.currentPosition ?: position, delta, duration))
     fun changeSpeed(value: Float) {
         if (value.isFinite()) {

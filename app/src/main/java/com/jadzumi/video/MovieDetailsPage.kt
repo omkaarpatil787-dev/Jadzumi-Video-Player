@@ -143,7 +143,7 @@ fun MovieDetailsPage(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                if (onlineMeta != null) (if (isTablet) "Verified Album Artwork & Metadata" else "Online Art")
+                                if (onlineMeta != null) (if (isTablet) "Online artwork & metadata" else "Online Art")
                                 else if (metadata.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
                                 else if (isTablet) "Hardware Offline Analysis" else "Offline",
                                 fontSize = 11.sp,

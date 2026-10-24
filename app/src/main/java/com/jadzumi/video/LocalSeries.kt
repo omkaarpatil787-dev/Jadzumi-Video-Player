@@ -348,17 +348,12 @@ fun clusterVideosIntoSeries(
             seasons = sortedSeasons,
             posterUri = effectivePoster,
             backdropUri = effectiveBackdrop,
-            synopsis = nfoMetadata?.plot ?: cachedOnline?.synopsis ?: detectMovieSynopsis(firstInfo.seriesTitle, detectMovieGenres(firstInfo.seriesTitle, pool.firstOrNull()?.name ?: "")),
-            year = nfoMetadata?.year ?: cachedOnline?.year ?: "2024",
-            rating = nfoMetadata?.rating ?: cachedOnline?.rating ?: "8.8",
-            mpaa = nfoMetadata?.mpaa ?: "TV-14",
-            genres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() } ?: cachedOnline?.genres?.takeIf { it.isNotEmpty() } ?: detectMovieGenres(firstInfo.seriesTitle, pool.firstOrNull()?.name ?: ""),
-            studio = nfoMetadata?.studio ?: when {
-                firstInfo.seriesTitle.containsAny("marvel", "disney", "mandalorian", "star wars") -> "Lucasfilm / Marvel Studios"
-                firstInfo.seriesTitle.containsAny("hbo", "game of thrones", "dragon", "last of us", "succession") -> "HBO Originals"
-                firstInfo.seriesTitle.containsAny("netflix", "stranger things", "witcher", "wednesday") -> "Netflix Originals"
-                else -> "Television Production"
-            }
+            synopsis = nfoMetadata?.plot ?: cachedOnline?.synopsis,
+            year = nfoMetadata?.year ?: cachedOnline?.year,
+            rating = displayRating(nfoMetadata?.rating?.toDoubleOrNull()) ?: cachedOnline?.rating,
+            mpaa = nfoMetadata?.mpaa,
+            genres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() } ?: cachedOnline?.genres?.takeIf { it.isNotEmpty() } ?: emptyList(),
+            studio = nfoMetadata?.studio
         )
     }.sortedBy { it.title }
 }
@@ -597,17 +592,16 @@ fun extractMovieMetadata(
 
     val detectedGenres = nfoMetadata?.genres?.takeIf { it.isNotEmpty() }
         ?: cachedOnline?.genres?.takeIf { it.isNotEmpty() }
-        ?: detectMovieGenres(cleanedTitle, video.name)
+        ?: emptyList()
 
     val detectedSynopsis = nfoMetadata?.plot
         ?: cachedOnline?.synopsis
-        ?: detectMovieSynopsis(cleanedTitle, detectedGenres)
 
     return MovieMetadata(
         title = nfoMetadata?.title ?: cachedOnline?.title ?: cleanedTitle,
-        year = nfoMetadata?.year ?: cachedOnline?.year ?: parsedYear ?: "2024",
-        rating = nfoMetadata?.rating ?: cachedOnline?.rating ?: "8.6",
-        mpaa = nfoMetadata?.mpaa ?: "PG-13",
+        year = nfoMetadata?.year ?: cachedOnline?.year ?: parsedYear,
+        rating = displayRating(nfoMetadata?.rating?.toDoubleOrNull()) ?: cachedOnline?.rating,
+        mpaa = nfoMetadata?.mpaa,
         synopsis = detectedSynopsis,
         genres = detectedGenres,
         posterUri = effectivePoster,

@@ -150,7 +150,7 @@ fun TvShowDetailsPage(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                if (onlineShow != null) (if (isTablet) "Verified Album Artwork & Metadata" else "Online Art")
+                                if (onlineShow != null) (if (isTablet) "Online artwork & metadata" else "Online Art")
                                 else if (series.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
                                 else if (isTablet) "Hardware Offline Analysis" else "Offline",
                                 fontSize = 11.sp,
@@ -386,7 +386,7 @@ private fun ShowHeroCard(
     } else syn ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
 
     val displayTitle = onlineShow?.title ?: series.title
-    val displayYear = onlineShow?.year ?: series.year ?: "2024"
+    val displayYear = onlineShow?.year ?: series.year ?: "Year unavailable"
     val displayGenres = (onlineShow?.genres?.takeIf { it.isNotEmpty() } ?: series.genres).filter { it != "Cinema" && it != "Feature Film" }
 
     val heroPad = if (isTablet) 22.dp else 16.dp

@@ -25,7 +25,11 @@ Branch: feature/library-playback-tools. Changes remain separate from the publish
 - Stage 4 complete: player subtitle settings can search a local UTF-8 SRT/VTT file (2 MB / 50,000 cue limit); case-insensitive results are capped at 100, and tapping a result seeks to its timestamp. Embedded/ASS/bitmap subtitle search is not supported. File display names now select the correct MIME when adding VTT/ASS via content providers.
 - Stage 4 validation: ./gradlew test assembleDebug passed; 43 tests per variant, zero failures/errors/skips. Parser tests cover SRT/VTT timing, BOM/CRLF, tags, malformed/unsupported cues, search bounds and ordering.
 - Preview version is 1.4.0-alpha.1 (build 17); public v1.3.3 is unchanged.
-- Final review still pending: remove remaining library-level invented ratings/years and make subtitle search seeks exact. No device playback/file-picker checks performed.
+- Final review complete: library-level fabricated scores, years, classifications, studios and synopses removed; unknown values remain unavailable. A regression test checks missing metadata stays missing. Subtitle-result jumps now use exact seeking.
+- Corrected existing Media3 opt-in declarations and the folder animation's ignored target state; no lint rules were disabled.
+- Final validation: ./gradlew test assembleDebug lintDebug passed; 44 tests per debug/release variant, zero failures/errors/skips; lint has zero errors/fatal issues (24 warnings and 2 hints). Debug APK signature, version 1.4.0-alpha.1/build 17, five NextLib native libraries and six bundled license files verified.
+- Evidence: docs/verification/features-1.4.0-alpha.1/result.json. Progress and next device checks: docs/FEATURE-PROGRESS.md.
+- Ready for device evaluation, not a stable release. Device playback/file-picker/audio-effect checks remain NOT RUN. Next: collect results from the documented device checklist and fix feedback on this branch. Do not merge main just to save progress.
 
 ## Validation and continuation
 

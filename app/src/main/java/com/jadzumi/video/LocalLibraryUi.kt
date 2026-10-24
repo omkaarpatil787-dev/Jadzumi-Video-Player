@@ -1509,16 +1509,17 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     .togetherWith(fadeOut(tween(140)))
                             },
                             label = "folderVideosTwoPane"
-                        ) { _ ->
+                        ) { folderUri ->
+                            val folderVideos = state.videos.filter { it.folder == folderUri }
                             LazyColumn(
                                 Modifier.fillMaxSize(),
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                                 contentPadding = PaddingValues(bottom = 24.dp)
                             ) {
                                 item {
-                                    Text("${videos.size} indexed videos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                    Text("${folderVideos.size} indexed videos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                                 }
-                                items(videos, key = { "${active?.uri ?: ""}_${it.uri}" }) { video ->
+                                items(folderVideos, key = { "${folderUri ?: ""}_${it.uri}" }) { video ->
                                     LocalVideoCard(video, onDelete = { videoToDelete = video }) { select(video.uri) }
                                 }
                             }
@@ -2272,12 +2273,7 @@ private fun LocalPosterGridCard(
 
                     val badge = if (playback.video?.identity == video.identity && playback.videoCodecBadge != null) {
                         playback.videoCodecBadge
-                    } else when {
-                        video.name.contains("hevc", ignoreCase = true) || video.name.contains("x265", ignoreCase = true) -> "HEVC Main10"
-                        video.width >= 3840 -> "4K UHD"
-                        video.width >= 1920 -> "1080p FHD"
-                        else -> null
-                    }
+                    } else measuredVideoBadge(null, video.width, video.height, false)
 
                     badge?.let {
                         Surface(

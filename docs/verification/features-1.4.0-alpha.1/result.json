@@ -1,0 +1,32 @@
+{
+  "preview": "1.4.0-alpha.1",
+  "versionCode": 17,
+  "command": "./gradlew test assembleDebug lintDebug --no-daemon --console=plain",
+  "status": "passed",
+  "unitTests": {
+    "testDebugUnitTest": {
+      "tests": 44,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "testReleaseUnitTest": {
+      "tests": 44,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "deviceChecks": "NOT RUN",
+  "signedReleaseBuild": "pending GitHub Actions; credentials remain in GitHub secrets",
+  "lint": {
+    "Error": 0,
+    "Fatal": 0,
+    "Warning": 24,
+    "Information": 0,
+    "Hint": 2
+  },
+  "apkSHA256": "ab1dab4fdea697163d5e50ce575f343360d07a5803509e1c2472b7c2f45ba857",
+  "nativeLibrariesRetained": 5,
+  "bundledLicenseFilesVerified": 6
+}
