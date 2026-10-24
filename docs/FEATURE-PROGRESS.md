@@ -182,3 +182,30 @@ folder permissions and credentials remain excluded.
   long lists, TalkBack, reduced motion, PiP and scrubbing still require device checks.
 - These effects apply inside Jadzumi; Android system quick settings and call widgets
   are outside this app's UI.
+
+## Refresh matching and update checker — alpha.4 (build 20)
+
+- Video → Playback & Decoding: Match display refresh rate is off by default.
+  Media3 requests seamless surface frame-rate matching only when enabled; device/OS
+  support determines the actual rate. The activity's highest-refresh-rate preference
+  is released during matched playback and restored when playback stops or closes.
+  No video interpolation, forced display mode, or decoder change is introduced.
+- Privacy & About → App updates: manual Check for updates contacts GitHub on request.
+  Automatic checks have independent, default-off consent, run on app resume at most
+  once per day, and are excluded from backups. No background scheduler is installed.
+- Only a newer stable GitHub release with one production APK is offered. Skip version
+  and Later are supported; manual checks ignore the skipped-version preference.
+- Downloads have progress/cancellation, HTTPS host restrictions, redirects/time/size
+  limits and private cache storage. Package, release version, increasing build code
+  and installed signing certificates are checked before offering installation and
+  checked again before opening Android's installer. Different signing keys are rejected.
+- Android installation approval is always required. First-time users may need to allow
+  Jadzumi to install unknown apps, return, and tap Install. Debug-key builds cannot
+  install production-key updates through this checker. Same-key updates retain data.
+- Device checks NOT RUN: 24/25/30/50/60fps matching and pause/close/PiP restoration on
+  supported/unsupported Android devices; opt-out/offline/rate-limit cases; interrupted
+  download; invalid/wrong-key/older APK rejection; install permission round-trip;
+  installation and settings/history retention using a newer same-key signed APK.
+- Preview builds are distributed as CI artifacts. The in-app checker offers published
+  stable GitHub Releases, not CI previews; the currently published stable version may
+  be older than this preview and should not be offered as a downgrade.

@@ -128,6 +128,14 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     private var suspendedPosition = 0L
     private var mediaItemAssigned = false
     private var pollCount = 0
+    var matchRefreshRate by mutableStateOf(prefs.getBoolean("match_refresh_rate", false)); private set
+
+    fun updateRefreshMatching(enabled: Boolean) {
+        matchRefreshRate = enabled
+        prefs.edit().putBoolean("match_refresh_rate", enabled).apply()
+        player?.setVideoChangeFrameRateStrategy(if (enabled) C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_ONLY_IF_SEAMLESS else C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_OFF)
+    }
+
     var autoplayNext by mutableStateOf(prefs.getBoolean("autoplay_next", true)); private set
     var continuationPrompt by mutableStateOf<LocalVideo?>(null); private set
     var continuationMessage by mutableStateOf(""); private set
@@ -696,6 +704,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .setMediaSourceFactory(source)
                 .setLoadControl(instantLoadControl)
                 .build()
+            p.setVideoChangeFrameRateStrategy(if (matchRefreshRate) C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_ONLY_IF_SEAMLESS else C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_OFF)
             player = p
 
             p.addAnalyticsListener(object : AnalyticsListener {

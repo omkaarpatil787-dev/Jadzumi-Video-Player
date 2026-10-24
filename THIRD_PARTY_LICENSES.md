@@ -1,6 +1,6 @@
 # 📜 Jadzumi Player — Third-Party Software Licenses & Notices
 
-> **Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.4.0-alpha.3`
+> **Application:** Jadzumi Player (Android) · Package: `com.jadzumi.video` · Version: `1.4.0-alpha.4`
 > **Distribution:** Free & Open Source · **Primary Project License:** GNU General Public License v3.0 (GPL-3.0)  
 > **Updated:** 2026-10-20
 

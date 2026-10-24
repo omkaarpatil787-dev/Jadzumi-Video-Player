@@ -672,6 +672,7 @@ private val destinations = listOf(
                 }
             }
 
+            UpdateHost()
             CinemaPlayer(playback, reducedMotion, glassIntensity, effectiveTheme)
 
             if (showSplash) {
@@ -1304,6 +1305,13 @@ private val settingsCategories = listOf(
                                 Panel {
                                     Text("Playback & Decoding", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("Configure video decoding pipeline and screen scaling.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Column(Modifier.weight(1f)) {
+                                            Text("Match display refresh rate", fontWeight = FontWeight.SemiBold)
+                                            Text("Request seamless matching during playback. Device support varies; no frame interpolation. Off by default.", style = MaterialTheme.typography.bodySmall)
+                                        }
+                                        Switch(playback.matchRefreshRate, playback::updateRefreshMatching)
+                                    }
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
@@ -2498,6 +2506,7 @@ private val settingsCategories = listOf(
                 uriHandler.openUri("https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player")
             }) { Text("Source code") }
             TextButton(onClick = { showLicenses = true }) { Text("Licenses") }
+            UpdateSettings()
         }
 
         Panel {

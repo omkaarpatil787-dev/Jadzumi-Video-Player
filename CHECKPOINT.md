@@ -133,3 +133,11 @@ Inspector now uses consistently aligned value columns and qualifies empty Androi
 track scans rather than claiming absent tracks. Final frozen-source validation PASSED: 57 tests per variant, debug APK/signature
 and lint (zero errors). Evidence: docs/verification/motion-polish/result.json.
 Device frame pacing NOT MEASURED; device gesture/accessibility checks NOT RUN.
+
+## Alpha.4: refresh-rate matching and update checker
+
+User authorized both features, with defaults off and separate update-check consent.
+Implementation is documented in docs/FEATURE-PROGRESS.md. First compiler pass found
+and corrected a Kotlin property/method setter name clash in the updater. Final test,
+build and lint validation pending. No release signing material is present locally.
+Stable/main remains unchanged; same-key installation/device refresh tests NOT RUN.

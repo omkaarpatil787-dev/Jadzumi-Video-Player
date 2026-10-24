@@ -52,7 +52,7 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details>
-<summary><strong>In development · 1.4.0-alpha.3</strong></summary>
+<summary><strong>In development · 1.4.0-alpha.4</strong></summary>
 
 Accuracy corrections, local settings/history backup, dialogue replay, offline subtitle
 search, a measured technical inspector, episode continuity, sleep controls and scene

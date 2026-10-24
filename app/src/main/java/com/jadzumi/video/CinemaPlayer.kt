@@ -286,6 +286,17 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             }
         }
 
+        // Release the UI's maximum-rate preference while Media3 requests a seamless content rate.
+        DisposableEffect(playback.matchRefreshRate, playback.playRequested, activity) {
+            val previous = activity.window.attributes.preferredDisplayModeId
+            if (playback.matchRefreshRate && playback.playRequested) {
+                activity.window.attributes = activity.window.attributes.apply { preferredDisplayModeId = 0 }
+            }
+            onDispose {
+                activity.window.attributes = activity.window.attributes.apply { preferredDisplayModeId = previous }
+            }
+        }
+
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
