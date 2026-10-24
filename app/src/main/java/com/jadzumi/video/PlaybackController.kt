@@ -821,6 +821,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     fun retry() { save(); release(); error = null; prepare(true) }
 
+    fun flushProgress() = save()
+
+    fun refreshHistory() { historyVersion++ }
+
     private fun save() {
         val v = video ?: return
         if (!rememberProgress) return

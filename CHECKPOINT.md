@@ -18,7 +18,9 @@ Branch: feature/library-playback-tools. Changes remain separate from the publish
 - Stage 1 complete: removed fabricated Wikipedia scores and unverified cached ratings; TVMaze scores require a valid finite 0–10 value. Inspectors no longer claim fixed frame rate, color space, decoder or libass use. Codec badges use measured dimensions/MIME/HDR transfer.
 - Clear Watch History now removes only hashed viewing records, preserving privacy and other preferences.
 - Stage 1 validation: ./gradlew test assembleDebug passed; 33 tests per variant, zero failures/errors/skips. New MediaFacts tests cover missing/invalid ratings, codec accuracy and history-key isolation.
-- Next: apply local backup/restore implementation. No device playback checks performed.
+- Stage 2 complete: Export backup / Restore backup replace the placeholder. Versioned local file stores typed, allowlisted settings and hashed viewing history. Import validates all entries and size before mutation, asks for confirmation, merges data and attempts rollback on storage failure. Online consent, folder permissions, media and caches are excluded. Restart applies restored settings; reselect original folders after reinstall.
+- Stage 2 validation: ./gradlew test assembleDebug passed; 37 tests per variant, zero failures/errors/skips. Backup tests cover round trips, type/range validation, unsupported/corrupt files, limits and consent exclusion.
+- Next: dialogue replay and offline local SRT/VTT search. No device playback/file-picker checks performed.
 
 ## Validation and continuation
 
