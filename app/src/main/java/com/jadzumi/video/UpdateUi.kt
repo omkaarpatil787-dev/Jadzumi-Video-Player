@@ -1,5 +1,6 @@
 package com.jadzumi.video
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,7 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LifecycleEventEffect
 
 @Composable private fun updates(): AppUpdates {
-    val activity = LocalContext.current as MainActivity
+    val activity = requireNotNull(LocalActivity.current as? MainActivity)
     return remember(activity) { ViewModelProvider(activity)[AppUpdates::class.java] }
 }
 

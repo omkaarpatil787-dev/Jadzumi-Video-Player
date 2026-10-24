@@ -138,6 +138,7 @@ Device frame pacing NOT MEASURED; device gesture/accessibility checks NOT RUN.
 
 User authorized both features, with defaults off and separate update-check consent.
 Implementation is documented in docs/FEATURE-PROGRESS.md. First compiler pass found
-and corrected a Kotlin property/method setter name clash in the updater. Final test,
-build and lint validation pending. No release signing material is present locally.
+and corrected a Kotlin property/method setter name clash in the updater. Final frozen-source validation passed: 60 tests per variant, debug build, and
+lint with zero errors. An unsafe context cast flagged by lint was replaced with
+Compose LocalActivity. Evidence: docs/verification/features-1.4.0-alpha.4/result.json. No release signing material is present locally.
 Stable/main remains unchanged; same-key installation/device refresh tests NOT RUN.

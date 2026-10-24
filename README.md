@@ -92,6 +92,10 @@ to request movie/TV information from Wikipedia and TVMaze, plus artwork from the
 image hosts. This sends search titles to those services. Cached information and
 images remain available offline when lookups are disabled.
 
+The development preview also offers GitHub update checks in **Privacy & About**.
+Manual checks contact GitHub when requested; automatic checks have their own
+**off-by-default** switch. APK downloads and installation require your action.
+
 ## 🛠️ Development
 
 Requires **Android 8.0+** and an **ARM64** device. The project uses Kotlin 2.2.10,

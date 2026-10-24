@@ -1,0 +1,28 @@
+{
+  "version": "1.4.0-alpha.4",
+  "versionCode": 20,
+  "command": "./gradlew test assembleDebug lintDebug --no-daemon --console=plain",
+  "status": "passed",
+  "tests": {
+    "Debug": {
+      "tests": 60,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Release": {
+      "tests": 60,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "lint": {
+    "Warning": 33,
+    "Hint": 2
+  },
+  "debugApkSHA256": "104bb6e4afb2e3e657f637448744df94a1ffc7a8dd4d4c1b3f14b8085c17ee43",
+  "signedCI": "Pending branch push",
+  "deviceRefreshMatching": "NOT RUN",
+  "deviceUpdateInstallation": "NOT RUN"
+}
