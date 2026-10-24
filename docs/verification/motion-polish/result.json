@@ -1,0 +1,26 @@
+{
+  "command": "./gradlew test assembleDebug lintDebug --no-daemon --console=plain",
+  "status": "passed",
+  "tests": {
+    "Debug": {
+      "tests": 57,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Release": {
+      "tests": 57,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "lint": {
+    "Warning": 28,
+    "Hint": 2
+  },
+  "debugApkSHA256": "154401803b0a6b5aff9cbf51aefba865a0bbf69784aec48ee2fd20ad18323087",
+  "deviceFramePacing": "NOT MEASURED",
+  "deviceGestureAndAccessibilityChecks": "NOT RUN",
+  "signedBuild": "Pending CI"
+}

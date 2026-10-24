@@ -158,6 +158,7 @@ private val destinations = listOf(
         "Sharp" -> 0.dp
         else -> 24.dp
     }
+    val motionStyle = rememberMotionStyle(reducedMotion, livelyAnimations)
     val keyboardController = LocalSoftwareKeyboardController.current
     var showSplash by rememberSaveable { mutableStateOf(true) }
 
@@ -182,7 +183,7 @@ private val destinations = listOf(
         val oldBg = colors.background
         theme = newTheme
         prefs.edit { putString("theme", newTheme) }
-        if (themeBloomEnabled && !reducedMotion) {
+        if (themeBloomEnabled && motionStyle.enabled) {
             bloomOriginColor = oldBg
             scope.launch {
                 bloomProgress.snapTo(0f)
@@ -212,6 +213,7 @@ private val destinations = listOf(
         )
     ) {
         CompositionLocalProvider(
+            LocalMotionStyle provides motionStyle,
             LocalGlassIntensity provides glassIntensity,
             LocalThemeName provides effectiveTheme
         ) {
@@ -463,7 +465,7 @@ private val destinations = listOf(
                                     AnimatedContent(
                                         targetState = selectedId ?: route,
                                         transitionSpec = {
-                                            if (reducedMotion || !livelyAnimations) {
+                                            if (!motionStyle.enabled) {
                                                 fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
                                             } else {
                                                 val mainTabs = setOf("Home", "Library", "Movies", "Videos", "TV Shows", "Folders", "Settings", "Playlists")
@@ -473,7 +475,7 @@ private val destinations = listOf(
                                                 if (!isInitialDetails && isTargetDetails) {
                                                     // Fluid, hardware-accelerated entrance into Details
                                                     (fadeIn(animationSpec = tween(260, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))) +
-                                                            scaleIn(initialScale = 0.96f, animationSpec = tween(260, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))))
+                                                            scaleIn(initialScale = 0.96f, animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessMediumLow)))
                                                         .togetherWith(
                                                             fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
                                                         )
@@ -491,16 +493,16 @@ private val destinations = listOf(
                                                     val targetIndex = tabOrder.indexOf(targetState)
                                                     val isForward = if (initialIndex != -1 && targetIndex != -1) targetIndex > initialIndex else true
 
-                                                    (slideInHorizontally(animationSpec = spring(dampingRatio = 0.90f, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (it * 0.08f).toInt() else (-it * 0.08f).toInt() } +
+                                                    (slideInHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (it * 0.08f).toInt() else (-it * 0.08f).toInt() } +
                                                             fadeIn(animationSpec = tween(260, easing = LinearOutSlowInEasing)))
                                                         .togetherWith(
-                                                            slideOutHorizontally(animationSpec = spring(dampingRatio = 0.90f, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (-it * 0.08f).toInt() else (it * 0.08f).toInt() } +
+                                                            slideOutHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (-it * 0.08f).toInt() else (it * 0.08f).toInt() } +
                                                                     fadeOut(animationSpec = tween(190, easing = FastOutLinearInEasing))
                                                         )
                                                 }
                                             }
                                         },
-                                        modifier = Modifier.weight(1f),
+                                        modifier = Modifier.weight(1f).elasticEdge(),
                                         contentKey = { it },
                                         label = "screen"
                                     ) { current ->
@@ -1044,6 +1046,7 @@ fun GeminiGlowingJadzumiLogo(
                                 .weight(1f)
                                 .fillMaxHeight()
                                 .clip(RoundedCornerShape(16.dp))
+                                .touchMotion()
                                 .clickable(
                                     interactionSource = remember(d.name) { MutableInteractionSource() },
                                     indication = ripple(bounded = true, radius = 24.dp)
@@ -1870,6 +1873,7 @@ private val settingsCategories = listOf(
                                         Switch(checked = livelyAnimations, onCheckedChange = onLivelyAnimations)
                                     }
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    MotionCustomization()
                                     Row(
                                         Modifier
                                             .fillMaxWidth()
@@ -2159,7 +2163,7 @@ private val settingsCategories = listOf(
     val bg = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
     Card(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.touchMotion(),
         shape = RoundedCornerShape(20.dp),
         border = border,
         colors = CardDefaults.cardColors(containerColor = bg)

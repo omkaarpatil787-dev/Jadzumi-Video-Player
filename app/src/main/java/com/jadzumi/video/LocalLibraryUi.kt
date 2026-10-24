@@ -1754,6 +1754,7 @@ fun MovieSummaryCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
+            .touchMotion()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
@@ -1924,6 +1925,7 @@ fun TvSeriesSummaryCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
+            .touchMotion()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
@@ -2047,6 +2049,7 @@ fun TvSeriesSummaryCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
+            .touchMotion()
             .combinedClickable(
                 onClick = select,
                 onLongClick = onLongClick
@@ -2147,6 +2150,7 @@ private fun LocalPosterGridCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
+            .touchMotion()
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick

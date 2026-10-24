@@ -122,3 +122,14 @@ Stable v1.3.3 remains unchanged. Device validation of the new controls is still 
 
 Prior alpha.2 signed CI run 40130879855 succeeded and produced both APK artifacts.
 This is historical evidence; alpha.3 requires its own signed CI build.
+
+## Motion / inspector polish checkpoint
+
+User requested aligned inspector values plus configurable physics-based feedback,
+fluid navigation and touch lighting. Implemented in MotionEffects.kt and library,
+settings, dock and player-menu/timeline integration. Existing click/long-click and
+scroll handlers remain responsible for gestures; effects never consume them.
+Inspector now uses consistently aligned value columns and qualifies empty Android
+track scans rather than claiming absent tracks. Final frozen-source validation PASSED: 57 tests per variant, debug APK/signature
+and lint (zero errors). Evidence: docs/verification/motion-polish/result.json.
+Device frame pacing NOT MEASURED; device gesture/accessibility checks NOT RUN.

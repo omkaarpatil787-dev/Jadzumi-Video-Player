@@ -908,23 +908,17 @@ private fun EpisodeCard(
 
 @Composable
 internal fun TechRow(label: String, value: String) {
-    if (value.length > 25) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
-            Text(value, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, lineHeight = 16.sp)
-        }
-    } else {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(label, modifier = Modifier.widthIn(min = 90.dp, max = 130.dp), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.End, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(label, modifier = Modifier.weight(0.38f), fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, modifier = Modifier.weight(0.62f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface)
     }
 }
 

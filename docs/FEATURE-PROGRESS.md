@@ -164,3 +164,21 @@ folder permissions and credentials remain excluded.
    export text through the picker, cancel export, and restart to verify saved scenes persist.
    Back up/restore scene notes along with per-series preferences and online consent.
 5. Repeat technical inspector and existing preview regression checks after these changes.
+
+## Motion and inspector polish
+
+- Inspector values consistently share a right-aligned column, wrapping naturally on
+  narrow screens. Empty Android track scans no longer imply that an MKV has no tracks;
+  playback may expose additional information. Color information remains measured.
+- Display & Appearance → Motion & touch offers gentle/expressive springs and optional
+  touch lighting. Reduced Motion, the existing lively-animation switch, and Android's
+  disabled animation setting override the added effects.
+- Library card presses, dock items and player menu rows have bounded spring compression
+  and touch-position lighting. Navigation uses configurable springs. Unconsumed scroll
+  edges stretch slightly and return without consuming child scroll distance.
+- The playback timeline lights around the scrub position only while scrubbing.
+- Effects use graphics layers/draw-phase updates, without continuous glow loops or blur.
+  No measured frame-rate improvement is claimed: tablet/phone frame pacing, rapid taps,
+  long lists, TalkBack, reduced motion, PiP and scrubbing still require device checks.
+- These effects apply inside Jadzumi; Android system quick settings and call widgets
+  are outside this app's UI.

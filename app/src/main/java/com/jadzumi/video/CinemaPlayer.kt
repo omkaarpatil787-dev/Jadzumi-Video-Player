@@ -1005,6 +1005,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     onScrub: (Float) -> Unit,
     onScrubFinished: () -> Unit
 ) {
+    val motion = LocalMotionStyle.current
     val haptic = LocalHapticFeedback.current
     val trackHeight by animateDpAsState(if (isScrubbing) 5.dp else 3.dp, label = "trackHeight")
     val thumbRadius by animateDpAsState(if (isScrubbing) 8.5.dp else 6.5.dp, label = "thumbRadius")
@@ -1065,6 +1066,17 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             val top = yCenter - h / 2f
             val corner = CornerRadius(h / 2f, h / 2f)
 
+            if (enabled && isScrubbing && motion.enabled && motion.light) {
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(TimelineAccent.copy(alpha = 0.35f), Color.Transparent),
+                        center = Offset(size.width * fraction.coerceIn(0f, 1f), yCenter),
+                        radius = 24.dp.toPx()
+                    ),
+                    radius = 24.dp.toPx(),
+                    center = Offset(size.width * fraction.coerceIn(0f, 1f), yCenter)
+                )
+            }
             // Remaining Track
             drawRoundRect(
                 color = Color.White.copy(alpha = 0.24f),
@@ -1163,7 +1175,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         ) {
             when (section) {
                 "main" -> {
-                    Column(Modifier.heightIn(max = 560.dp).verticalScroll(rememberScrollState()).padding(vertical = 10.dp)) {
+                    Column(Modifier.heightIn(max = 560.dp).elasticEdge().verticalScroll(rememberScrollState()).padding(vertical = 10.dp)) {
                         QuickMenuRow(
                             icon = Icons.Rounded.Speed,
                             label = "Playback speed",
@@ -1426,6 +1438,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .touchMotion()
             .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1481,6 +1494,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .touchMotion()
             .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

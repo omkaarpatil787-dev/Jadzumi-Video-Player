@@ -10,8 +10,8 @@ object BackupCodec {
     const val MAX_BYTES = 1_048_576
     val namespaces = setOf("playback", "appearance", "subtitle_prefs", "jadzumi_settings", "scene_bookmarks")
     private val booleans = setOf("bg_audio", "brightness_boost", "remember_progress", "save_track_prefs", "swipe_gestures", "night_mode", "extract_thumbnails", "scan_sidecars", "autoplay_next")
-    private val appearanceBooleans = setOf("reducedMotion", "livelyAnimations", "themeBloom", "dockAutoMinimize", "pad5_welcome_done")
-    private val appearanceStrings = setOf("theme", "cornerStyle", "bottomBarStyle")
+    private val appearanceBooleans = setOf("touchLight", "reducedMotion", "livelyAnimations", "themeBloom", "dockAutoMinimize", "pad5_welcome_done")
+    private val appearanceStrings = setOf("motionStyle", "theme", "cornerStyle", "bottomBarStyle")
     fun accepts(namespace: String, key: String, value: Any): Boolean = when (namespace) {
         "playback" -> when {
             isWatchHistoryKey(key) -> if (key.endsWith(".done")) value is Boolean else value is Long && value >= 0

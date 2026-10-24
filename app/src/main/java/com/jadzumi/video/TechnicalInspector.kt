@@ -75,10 +75,10 @@ internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?, playback: Playback
             })
             TechRow("Audio decoder", audioDecoder?.name ?: "Detected during playback")
             TechRow("Audio tracks", if (audio.isNotEmpty()) audio.joinToString("\n", transform = ::inspectionAudio)
-                else if (scan.loading) missing else if (scan.details?.tracksRead == true) "No audio tracks reported" else missing)
+                else if (scan.loading) missing else if (scan.details?.tracksRead == true) "Audio tracks not exposed by Android; try playback" else missing)
             TechRow("Subtitle tracks", subtitles.takeIf { it.isNotEmpty() }
                 ?.joinToString("\n", transform = ::inspectionSubtitle)
-                ?: if (scan.loading) missing else if (scan.details?.tracksRead == true) "No embedded subtitle tracks reported" else missing)
+                ?: if (scan.loading) missing else if (scan.details?.tracksRead == true) "Embedded subtitles not exposed by Android; try playback" else missing)
             TechRow("Subtitle engine", "AndroidX Media3")
             scan.details?.note?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             Text("File details are read locally. Decoder names reflect the inspected video only while it is loaded in the player.",
@@ -104,7 +104,7 @@ internal fun InspectedTracksCard(video: LocalVideo, playback: PlaybackController
             subtitles.forEachIndexed { index, track -> TechRow("Subtitle ${index + 1}", inspectionSubtitle(track)) }
             if (scan.loading) Text("Reading track headers…", style = MaterialTheme.typography.bodySmall)
             else if (audio.isEmpty() && subtitles.isEmpty()) {
-                Text(if (scan.details?.tracksRead == true) "No audio or embedded subtitle tracks reported."
+                Text(if (scan.details?.tracksRead == true) "Android did not expose audio or subtitle tracks. Playback may reveal additional tracks."
                     else "Track details aren't exposed by Android for this file. Try playback for more information.", style = MaterialTheme.typography.bodySmall)
             }
             Text("File headers are scanned locally; the loaded player can report additional tracks.", style = MaterialTheme.typography.bodySmall)
