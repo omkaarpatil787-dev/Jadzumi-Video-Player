@@ -1,14 +1,26 @@
-# Jadzumi Video Player — Project Resume & Architecture Summary
+<h1 align="center">Jadzumi · Project Summary</h1>
+<p align="center">An overview of the app, its architecture, and release progress.</p>
 
-> | Universal Android (Phones, Foldables & Tablets) | Offline-First Cinema Player | Zero Tracking | Jetpack Compose & Media3
+<p align="center">
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.3.3-2563eb?style=flat-square" alt="Version 1.3.3"></a>
+  <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
+  <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
+</p>
 
----
+<p align="center"><a href="README.md">App overview</a> · <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest">Latest release</a> · <a href="docs/DEVELOPMENT.md">Developer guide</a></p>
 
-## Executive Summary
+## 🎬 At a glance
 
-**Jadzumi Video Player** is a modern, privacy-first multimedia player engineered for Android. Built using **Kotlin**, **Jetpack Compose**, and **NextLib Media3 (ExoPlayer + bundled FFmpeg JNI C++ decoders)**, Jadzumi delivers an uncompromised cinema viewing experience across form factors. Highlights include universal phone and tablet ergonomics, OLED-exclusive HDR peak luminance calibration, intelligent end-credit detection, tactile haptic scrubbing, multi-column poster browsing, and audiophile-grade audio DSP.
+**Jadzumi Video Player** is a free, offline-first Android app for local movies and TV
+shows. It brings together a Compose interface, Media3 playback, FFmpeg decoder
+fallbacks, subtitles, and on-device viewing progress.
 
-## App screenshots
+| Release | Platform | Approach |
+| --- | --- | --- |
+| **v1.3.3 · build 16** | Android 8.0+ · ARM64 | Local library · No analytics · Opt-in online metadata |
+
+## 📸 Screenshots
 
 <p align="center">
   <a href="docs/screenshots/home.jpg"><img src="docs/screenshots/home.jpg" alt="Jadzumi tablet home screen with continue watching and navigation" width="1000"></a>
@@ -38,98 +50,88 @@
 
 </details>
 
-<sub>User-provided tablet screenshots from an earlier build (About shows v1.3.1). UI labels, decoder information, and version details may differ from the current release.</sub>
+<sub>Tablet screenshots from v1.3.1. Some labels and version details differ from the current release.</sub>
 
----
 
-## Milestone Evolution Matrix
+## 🧩 Architecture
+
+| Area | Main components | Purpose |
+| --- | --- | --- |
+| App & settings | `JadzumiApp.kt`, `MainActivity.kt` | Navigation, themes, preferences, and About |
+| Library | `LocalLibrary.kt`, `LocalSeries.kt` | Local media scanning and series organization |
+| Playback | `PlaybackController.kt`, `CinemaPlayer.kt` | Media3 player, FFmpeg fallbacks, and playback controls |
+| Details & artwork | `MovieDetailsPage.kt`, `TvShowDetailsPage.kt` | Movie/series screens, artwork, and viewing progress |
+| Online metadata | `OnlineMetadataFetcher.kt` | Opt-in metadata and poster requests with local caching |
+
+**Playback:** double-tap seek, hold-to-2× speed, chapter markers, external subtitles,
+audio adjustments, background playback, and picture-in-picture.
+
+**Library & appearance:** movie/series grouping, continue watching, grid/list views,
+batch actions, adaptive layouts, themes, frosted surfaces, and custom icons.
+
+<details>
+<summary><strong>Technology stack</strong></summary>
+
+| Component | Version / technology |
+| --- | --- |
+| Language | Kotlin 2.2.10 · JVM 17 |
+| Interface | Jetpack Compose · Material 3 |
+| Playback | AndroidX Media3 1.11.1 · NextLib 1.11.1-0.16.0 |
+| Native dependencies | FFmpeg 9.0.1 · dav1d 1.5.4 |
+| Build tools | Gradle 8.11.1 · AGP 8.10.1 · R8 |
+| Android SDK | Minimum 26 · Target 35 · Compile 36 |
+| Media access | Android Storage Access Framework |
+
+</details>
+
+## 🚀 Release progress
+
+**v1.3.3 is published.** It adds enforced opt-in online requests, an email-free
+User-Agent, private release signing, and source/license entries in About.
+
+<details>
+<summary><strong>View project milestones</strong></summary>
 
 | Milestone | Deliverables & Scope | Status |
 | :--- | :--- | :---: |
-| **Milestone 1 — Responsive Core** | Adaptive wide-screen layouts, responsive navigation, glassmorphic UI | `COMPLETED` |
-| **Milestone 2 — Media Indexing** | Scoped Storage / SAF integration, asynchronous library scanner, disk cache | `COMPLETED` |
-| **Milestone 3 — Playback Engine** | Hardware SurfaceView, multi-ratio scaling, variable speeds (0.5x–2.0x) | `COMPLETED` |
-| **Milestone 4 — Privacy & Audio DSP** | Zero telemetry, night mode voice clarifier, Bluetooth delay compensation | `COMPLETED` |
-| **Milestone 5 — TV Continuity** | Season/Episode grouping, autoplay continuity, offline metadata sidecars | `COMPLETED` |
-| **Milestone 6 — Production Hardening** | R8 code shrinking, resource stripping, ProGuard rules, reproducible signing | `COMPLETED` |
-| **Milestone 7 — Hardware & Display** | OLED-exclusive HDR peak luminance, LCD backlight protection, hardware inspector | `COMPLETED` |
-| **Milestone 8 — Mobile Ergonomics** | Floating frosted dock, Gemini-style glowing brand emblem, alive greeting | `COMPLETED` |
-| **Milestone 9 — CineFlow Fluidity** | Natural 340ms cubic bezier navigation transitions, frosted glass depth, blend-fade scrolling | `COMPLETED` |
-| **Milestone 10 — Flagship 1.3 Overhaul** | Hold-to-2x speed, smart end-credit autoplay countdown, chapter tick marks & snapping, external subtitle loader, poster grid toggle, smart filter chips, batch multi-select | `COMPLETED` |
-| **Milestone 11 — Polishing & Fluid Exit (v1.3.1)** | Subtle 0.75dp specular card borders, decluttered header with grid/list toggle, fluid cubic-bezier exit transitions | `COMPLETED` |
-| **Milestone 12 — Mobile Dock & Ambient Polish (v1.3.2)** | Universal mobile dock alignment (equal destination weighting), stutter-free card opening transitions, dynamic System default ambient theme matching for frosted glass surfaces, and portrait-optimized Glassify controls | `COMPLETED` |
-| **Milestone 13 — Privacy, Signing & License Corrections (v1.3.3)** | Default-off online requests, shared email-free User-Agent, external release credentials, offline license viewer, versioned CI APKs | `IMPLEMENTED; SEE CI FOR RELEASE VALIDATION` |
-
----
-
-## Architecture & Technical Highlights (v1.3.3)
-
-### 1. In-Player Gesture Ergonomics & Fluid Transitions
-- **Symmetrical Fluid Opening & Exit Transitions**: CinemaPlayer scales gracefully (0.93 ↔ 1.0) with cubic-bezier easing (`(0.4, 0.0, 1.0, 1.0)`) on exit and (`(0.16, 1.0, 0.3, 1.0)`) on entry across back gesture, top-bar back, close buttons, and quick menu.
-- **Stutter-Free Movie & TV Details Navigation**: Eliminates outer top-bar height jumping on phones when inspecting cards, paired with hardware-accelerated 260ms Material decelerate curves and zero thumbnail grid scale thrash.
-- **Hold-to-2x Fast-Forward**: Press-and-hold anywhere on the screen temporarily accelerates playback to 2.0x with haptic feedback; releasing returns to the previous speed.
-- **Haptic Scrubbing & Chapter Snapping**: Real-time chapter marker extraction and visualization with tactile snapping within a 1.4% seek threshold.
-- **Intelligent End-Credit Detection**: Automatically calculates the credit lead-in boundary based on media runtime, triggering a smooth 12-second countdown with an unobtrusive "Watch Credits" option.
-- **HUD Voice Clarity Access**: Direct one-tap toggle for dialogue enhancement via `LoudnessEnhancer`.
-- **External Subtitle Loader**: Storage Access Framework picker allowing external `.srt`, `.vtt`, or `.ass` file attachment during playback.
-
-### 2. Adaptive Library & Dock Ergonomics
-- **Universal Mobile Dock Architecture**: Floating bottom bar with equal destination distribution (`Modifier.weight(1f)`) ensuring Home, Movies, TV Shows, and Settings remain balanced, properly centered, and visible across all mobile aspect ratios.
-- **Streamlined Header & Grid/List Toggle**: Unified section header with a dedicated grid/list view toggle and clean visual balance without redundant filter chips.
-- **Poster Grid vs. Detailed List**: Responsive view mode adapting column density from 2 columns (phone portrait) to 3-4 columns (tablets/landscape).
-- **Batch Multi-Select Operations**: Long-press selection mode enabling batch status toggling (*Mark Watched*, *Mark Unwatched*, *Clear History*).
-- **Continue Watching Shelf**: Frosted horizontal shelf displaying in-progress thumbnails, remaining time, and progress bars.
-
-### 3. Display Intelligence & Visual Aesthetics
-- **Dynamic System Default Appearance**: Derives `effectiveTheme` in real time from `isSystemInDarkTheme()`, ensuring frosted search capsules, floating bottom docks, and cards render authentic light frosted surfaces on light devices and dark frosted surfaces on dark devices with zero color clashing.
-- **10 Handcrafted Custom App Icons**: Native dynamic launcher icon switching with 10 distinct art profiles (Original, Neon Protocol, VHS Nostalgia, Anime Pop, Boo!, Zombumi, Pixel Quest, Chrome X, Cosmic Portal, and Funky Doodle) integrated into Settings → Appearance.
-- **Portrait-Optimized Glassify Controls**: Adaptive single-line scale indicators (`Matte 20%`, `Balanced 65%`, `Frosted 100%`) for mobile portrait displays without text wrapping.
-- **Subtle 0.75dp Specular Card Rim**: Delicate, refined hairline borders across cards and panels (`0.75.dp` with soft `0.12f` alpha in dark mode and `0.08f` in light mode), replacing heavy/bold outlines while maintaining crisp edge definition.
-- **Ambient Blurred Backdrop Glow**: Samples video artwork into a luminous, theatrical background gradient on movie and show detail pages.
-- **TV Season Progress Gauges**: Real-time season completion percentages and "Up Next" spotlight cards.
-- **OLED / AMOLED Peak Luminance**: Calibrated HDR10, Dolby Vision, and HLG peak luminance engagement restricted to true OLED panels.
-
----
-
-## Core Technology Stack
-
-- **Language:** Kotlin 2.2.10 (JVM 17 Target)
-- **UI Framework:** Jetpack Compose, Material 3 Expressive
-- **Media Engine:** AndroidX Media3 (ExoPlayer 1.11.1) + NextLib Media3 FFmpeg 9.0.1
-- **Storage & Security:** Android Storage Access Framework (SAF), zero network telemetry
-- **Build Tooling:** Gradle 8.11.1, AGP 8.10.1, R8 full-mode shrinking
+| **Milestone 1 — Responsive Core** | Adaptive wide-screen layouts, responsive navigation, glassmorphic UI | Complete |
+| **Milestone 2 — Media Indexing** | Scoped Storage / SAF integration, asynchronous library scanner, disk cache | Complete |
+| **Milestone 3 — Playback Engine** | Hardware SurfaceView, multi-ratio scaling, variable speeds (0.5x–2.0x) | Complete |
+| **Milestone 4 — Privacy & Audio DSP** | Zero telemetry, night mode voice clarifier, Bluetooth delay compensation | Complete |
+| **Milestone 5 — TV Continuity** | Season/Episode grouping, autoplay continuity, offline metadata sidecars | Complete |
+| **Milestone 6 — Production Hardening** | R8 code shrinking, resource stripping, ProGuard rules, reproducible signing | Complete |
+| **Milestone 7 — Hardware & Display** | OLED-exclusive HDR peak luminance, LCD backlight protection, hardware inspector | Complete |
+| **Milestone 8 — Mobile Ergonomics** | Floating frosted dock, Gemini-style glowing brand emblem, alive greeting | Complete |
+| **Milestone 9 — CineFlow Fluidity** | Natural 340ms cubic bezier navigation transitions, frosted glass depth, blend-fade scrolling | Complete |
+| **Milestone 10 — Flagship 1.3 Overhaul** | Hold-to-2x speed, smart end-credit autoplay countdown, chapter tick marks & snapping, external subtitle loader, poster grid toggle, smart filter chips, batch multi-select | Complete |
+| **Milestone 11 — Polishing & Fluid Exit (v1.3.1)** | Subtle 0.75dp specular card borders, decluttered header with grid/list toggle, fluid cubic-bezier exit transitions | Complete |
+| **Milestone 12 — Mobile Dock & Ambient Polish (v1.3.2)** | Universal mobile dock alignment (equal destination weighting), stutter-free card opening transitions, dynamic System default ambient theme matching for frosted glass surfaces, and portrait-optimized Glassify controls | Complete |
+| **Milestone 13 — Privacy, Signing & License Corrections (v1.3.3)** | Default-off online requests, shared email-free User-Agent, external release credentials, offline license viewer, versioned CI APKs | Released; CI verified |
 
 
-## Release handoff — v1.3.3 (versionCode 16)
+</details>
 
-- App is GPL-3.0; full text is in root LICENSE and bundled in About → Licenses.
-- All direct metadata/image HTTP connections check the `playback` preference
-  `online_metadata` (default false). Existing disk/memory caches remain usable offline.
-- About → Source code opens the confirmed public GitHub repository in the browser.
-- Debug signing alone uses `signing/development.keystore`. Release credentials come
-  from environment variables or ignored `keystore.properties`; incomplete credentials
-  yield unsigned output. No production key or password is committed.
-- CI decodes a temporary release keystore from repository secrets, tests/builds APKs,
-  uploads versioned artifacts, publishes signed releases only from main, and cleans up
-  the temporary key. Required secret names and local signing steps are in [the developer guide](docs/DEVELOPMENT.md).
-- The last completed local validation of the privacy/signing patch passed 30 tests
-  per debug/release variant and assembled the debug APK. This is not device playback
-  verification, signed-release validation, or legal clearance.
-- NextLib AAR inspection confirmed FFmpeg 9.0.1 and dav1d 1.5.4. Upstream configures
-  mbedTLS 3.6.7, but retained mbedTLS code/version in this AAR remains unverified.
-- The owner reports ChatGPT / Google Stitch origins for hero.jpg, cosmos.jpg and
-  anime.jpg. Exact tool per file and applicable redistribution terms remain unverified;
-  the images remain unchanged. Native Corresponding Source and legal review items
-  remain open in THIRD_PARTY_LICENSES.md and LEGAL_REVIEW_REQUIRED.md.
-- New production signatures cannot update the previously development-signed APK;
-  existing users need a reinstall/migration, which can erase local app settings/history.
+## ✅ Validation
 
-- GitHub Actions run [40122767980](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/actions/runs/40122767980)
-  passed for commit ca76b2d (the preceding 1.3.2 privacy/signing patch), producing
-  debug and signed release artifacts. This confirms the configured CI signing flow;
-  it does not establish that the new 1.3.3 release candidate has passed CI yet.
+- **Unit tests:** 30 tests per debug/release variant; no failures or skips.
+- **Signed CI build and publication:** [main workflow passed](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/actions/runs/40123865449).
+- **Public APK inspected:** v1.3.3 / build 16, valid signature distinct from the
+  development key, six matching notice/license files, and all five NextLib native libraries retained.
 
-- Release candidate v1.3.3 passed signed CI in
-  [run 40123315296](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/actions/runs/40123315296)
-  at commit cd06625, producing versioned debug and release artifacts. Later changes
-  add release notes and documentation only. Public release status is tracked in GitHub Releases.
+These checks verify the build and package. They do not replace device playback tests
+or establish legal clearance.
+
+## 📌 Release notes
+
+- Metadata requests default to off; cached metadata and posters remain usable offline.
+- Release credentials stay outside Git. Build/signing instructions live in the
+  [developer guide](docs/DEVELOPMENT.md).
+- The new key cannot update older development-signed installations in place.
+  Reinstallation can erase local settings and viewing history.
+- The owner reports ChatGPT / Google Stitch origins for the three bundled JPGs;
+  per-file exports and redistribution terms remain unverified.
+- Upstream configures mbedTLS 3.6.7, but retained TLS code/version in this AAR was
+  not independently established. Native Corresponding Source review remains open.
+
+[GPL-3.0](LICENSE) · [Third-party notices](THIRD_PARTY_LICENSES.md) ·
+[Outstanding legal review](LEGAL_REVIEW_REQUIRED.md)
