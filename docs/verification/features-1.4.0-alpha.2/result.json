@@ -22,8 +22,9 @@
     "Hint": 2
   },
   "deviceMediaProbeChecks": "NOT RUN",
-  "signedCI": "not pushed; batching per user instruction",
+  "signedCI": "Pending completed feature-batch CI; no stable release publication",
   "debugApkSHA256": "190e91ed37a0e14348989ef0749bfe158027313f8ff78419ba72cb7bab2bafc3",
   "nativeLibrariesRetained": 5,
-  "licenseFilesVerified": 6
+  "licenseFilesVerified": 6,
+  "implementationCommit": "410b724"
 }

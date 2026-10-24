@@ -116,3 +116,12 @@ check decoder names/hardware status. Switch files rapidly and confirm no stale d
 information. Try files with multiple audio/subtitle tracks, an unsupported container,
 revoked access, and the refresh button. Confirm background inspection does not interrupt
 playback. Recheck the other preview features after this patch.
+
+
+## Delivery scope
+
+The agreed first delivery is implemented: accuracy/reliability corrections, local
+backup/restore, dialogue replay, subtitle search, and the inspector correction.
+It remains a preview for device review. Sleep controls, travel checks, scene bookmarks,
+portable device handoff and per-series track continuity remain proposed follow-up
+work unless the user expands the current delivery scope.

@@ -69,7 +69,7 @@ Final alpha.2 validation passed: 50 unit tests per variant, zero failures/errors
 debug APK and lint passed with zero errors/fatal issues, 25 warnings and 2 hints.
 APK version/signature, five NextLib native libraries and six license files verified.
 Evidence: docs/verification/features-1.4.0-alpha.2/result.json. Device probe/playback checks
-remain NOT RUN. Source and new helpers are locally checkpointed; no separate push yet.
+remain NOT RUN. Source and new helpers are checkpointed in commit 410b724; the completed feature batch is ready to push.
 
 The earlier alpha.1 watched-history follow-up at b3bb02a also passed signed GitHub CI
 run 40128340965, producing debug and release artifacts. This is historical evidence,
@@ -77,6 +77,10 @@ not signed-build verification of the inspector follow-up.
 
 ## Push batching / scope
 
-User requests continued progress and one push when all agreed features are complete.
-Do not push individual inspector edits. Optional scope question is pending: current
-agreed set versus all remaining earlier ideas. Keep saving local checkpoint commits.
+User requests one push when the agreed feature set is complete. The initial agreed
+sequence (accuracy/reliability, backup/restore, dialogue replay, subtitle search, plus
+the inspector correction) is complete in code and locally validated. Batch these
+completed changes on the feature branch; keep main/stable unchanged for device review.
+An optional scope question asks whether to include the remaining ideas too. Default
+is to finish the agreed set first; incorporate any later reply as further steering.
+Keep saving local checkpoint commits for additional work.
