@@ -27,7 +27,7 @@
 | **Milestone 11 — Polishing & Fluid Exit (v1.3.1)** | Subtle 0.75dp specular card borders, decluttered header with grid/list toggle, fluid cubic-bezier exit transitions | `COMPLETED` |
 | **Milestone 12 — Mobile Dock & Ambient Polish (v1.3.2)** | Universal mobile dock alignment (equal destination weighting), stutter-free card opening transitions, dynamic System default ambient theme matching for frosted glass surfaces, and portrait-optimized Glassify controls | `COMPLETED` |
 
-| **Milestone 13 — Privacy, Signing & License Corrections (v1.3.3)** | Default-off online requests, shared email-free User-Agent, external release credentials, offline license viewer, versioned CI APKs | `IMPLEMENTED; 1.3.3 VALIDATION PENDING` |
+| **Milestone 13 — Privacy, Signing & License Corrections (v1.3.3)** | Default-off online requests, shared email-free User-Agent, external release credentials, offline license viewer, versioned CI APKs | `IMPLEMENTED; SEE CI FOR RELEASE VALIDATION` |
 
 ---
 
