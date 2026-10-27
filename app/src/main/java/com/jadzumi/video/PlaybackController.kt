@@ -291,15 +291,55 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         applyNightMode()
     }
 
+    var volumeBoostFraction by mutableFloatStateOf(0f); private set
+    private var activeAudioSessionId: Int = C.AUDIO_SESSION_ID_UNSET
+
+    fun setVolumeBoost(fraction: Float) {
+        val clamped = fraction.coerceIn(0f, 1f)
+        if (volumeBoostFraction != clamped) {
+            volumeBoostFraction = clamped
+            applyNightMode()
+        }
+    }
+
+    private fun broadcastAudioSession(sessionId: Int, open: Boolean) {
+        if (sessionId == C.AUDIO_SESSION_ID_UNSET || sessionId == 0) return
+        try {
+            val app = getApplication<Application>()
+            val action = if (open) android.media.audiofx.AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION
+                         else android.media.audiofx.AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION
+            val intent = Intent(action).apply {
+                putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
+                putExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME, app.packageName)
+                putExtra(android.media.audiofx.AudioEffect.EXTRA_CONTENT_TYPE, android.media.audiofx.AudioEffect.CONTENT_TYPE_MOVIE)
+            }
+            app.sendBroadcast(intent)
+        } catch (_: Exception) {}
+    }
+
     fun applyNightMode() {
         try {
             val sessionId = player?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
-            if ((nightModeVoiceBoost || dialogueReplayActive) && sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
-                if (loudnessEnhancer == null) {
-                    loudnessEnhancer = android.media.audiofx.LoudnessEnhancer(sessionId)
+            if (sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
+                val baseGain = when {
+                    dialogueReplayActive -> 1000
+                    nightModeVoiceBoost -> 600
+                    else -> 0
                 }
-                loudnessEnhancer?.setTargetGain(600)
-                loudnessEnhancer?.enabled = true
+                val boostGain = (volumeBoostFraction * 1400).toInt()
+                val totalGain = (baseGain + boostGain).coerceAtMost(2000)
+
+                if (totalGain > 0) {
+                    if (loudnessEnhancer == null) {
+                        loudnessEnhancer = android.media.audiofx.LoudnessEnhancer(sessionId)
+                    }
+                    loudnessEnhancer?.setTargetGain(totalGain)
+                    loudnessEnhancer?.enabled = true
+                } else {
+                    loudnessEnhancer?.enabled = false
+                    loudnessEnhancer?.release()
+                    loudnessEnhancer = null
+                }
             } else {
                 loudnessEnhancer?.enabled = false
                 loudnessEnhancer?.release()
@@ -744,6 +784,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .setSpatializationBehavior(C.SPATIALIZATION_BEHAVIOR_NEVER)
                     .build(),
                 true
             )
@@ -751,7 +792,12 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
             p.addListener(object : Player.Listener {
                 override fun onAudioSessionIdChanged(audioSessionId: Int) {
-                    if (nightModeVoiceBoost || dialogueReplayActive) applyNightMode()
+                    if (activeAudioSessionId != C.AUDIO_SESSION_ID_UNSET && activeAudioSessionId != audioSessionId) {
+                        broadcastAudioSession(activeAudioSessionId, false)
+                    }
+                    activeAudioSessionId = audioSessionId
+                    broadcastAudioSession(audioSessionId, true)
+                    applyNightMode()
                 }
 
                 override fun onTracksChanged(tracks: Tracks) {
@@ -1132,6 +1178,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         restoreSleepVolume()
         stopDialogueReplay()
         save()
+        if (activeAudioSessionId != C.AUDIO_SESSION_ID_UNSET) {
+            broadcastAudioSession(activeAudioSessionId, false)
+            activeAudioSessionId = C.AUDIO_SESSION_ID_UNSET
+        }
         try {
             loudnessEnhancer?.enabled = false
             loudnessEnhancer?.release()

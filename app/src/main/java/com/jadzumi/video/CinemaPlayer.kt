@@ -383,7 +383,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         left = inLeftZone
                                         val maxVol = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
                                         level = if (left) activity.window.attributes.screenBrightness.takeIf { it >= 0 } ?: 0.5f
-                                        else audio.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / maxVol
+                                        else {
+                                            val curSysVol = audio.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / maxVol
+                                            curSysVol + playback.volumeBoostFraction
+                                        }
                                     }
                                 },
                                 onDragEnd = { hudSide = null; isGestureValid = false },
@@ -391,10 +394,23 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             ) { change, amount ->
                                 if (isGestureValid && !playback.locked && playback.swipeGesturesEnabled) {
                                     change.consume()
-                                    level = (level - amount / size.height.coerceAtLeast(1)).coerceIn(if (left) 0.05f else 0f, 1f)
-                                    if (left) activity.window.attributes = activity.window.attributes.apply { screenBrightness = level }
-                                    else audio.setStreamVolume(AudioManager.STREAM_MUSIC, (level * audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)).toInt(), 0)
-                                    hudSide = if (left) "Brightness" else "Volume"
+                                    val maxLevel = if (left) 1.0f else 2.0f
+                                    val minLevel = if (left) 0.05f else 0.0f
+                                    val dragStep = amount / (size.height.coerceAtLeast(1) * (if (left) 1.0f else 1.35f))
+                                    level = (level - dragStep).coerceIn(minLevel, maxLevel)
+                                    if (left) {
+                                        activity.window.attributes = activity.window.attributes.apply { screenBrightness = level }
+                                    } else {
+                                        val maxVol = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+                                        if (level <= 1.0f) {
+                                            audio.setStreamVolume(AudioManager.STREAM_MUSIC, (level * maxVol).toInt(), 0)
+                                            playback.setVolumeBoost(0f)
+                                        } else {
+                                            audio.setStreamVolume(AudioManager.STREAM_MUSIC, maxVol, 0)
+                                            playback.setVolumeBoost(level - 1.0f)
+                                        }
+                                    }
+                                    hudSide = if (left) "Brightness" else if (level > 1.0f) "Volume Boost" else "Volume"
                                     hudValue = level
                                     interaction++
                                 }
@@ -451,13 +467,14 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 // Horizontal Swipe Brightness / Volume Capsule HUD
                 hudSide?.let { side ->
                     val isBright = side == "Brightness"
+                    val isBoost = side == "Volume Boost" || hudValue > 1.0f
                     Surface(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .safeDrawingPadding()
                             .padding(top = 74.dp),
                         color = QuickMenuBg,
-                        border = BorderStroke(1.dp, FrostedCircleRim),
+                        border = BorderStroke(1.dp, if (isBoost) Color(0xFF69F0AE).copy(alpha = 0.40f) else FrostedCircleRim),
                         shape = RoundedCornerShape(999.dp),
                         shadowElevation = 16.dp
                     ) {
@@ -467,26 +484,26 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Icon(
-                                if (isBright) Icons.Rounded.Brightness6 else Icons.AutoMirrored.Rounded.VolumeUp,
+                                if (isBright) Icons.Rounded.Brightness6 else if (isBoost) Icons.Rounded.Bolt else Icons.AutoMirrored.Rounded.VolumeUp,
                                 null,
-                                tint = Color.White,
+                                tint = if (isBoost) Color(0xFF69F0AE) else Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                side,
-                                color = Color.White.copy(alpha = 0.90f),
+                                if (isBoost) "Volume Boost" else side,
+                                color = if (isBoost) Color(0xFF69F0AE) else Color.White.copy(alpha = 0.90f),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             LinearProgressIndicator(
-                                progress = { hudValue.coerceIn(0f, 1f) },
+                                progress = { if (hudValue > 1f) (hudValue - 1f).coerceIn(0f, 1f) else hudValue.coerceIn(0f, 1f) },
                                 modifier = Modifier.width(110.dp).height(5.dp).clip(CircleShape),
-                                color = TimelineAccent,
+                                color = if (isBoost) Color(0xFF69F0AE) else TimelineAccent,
                                 trackColor = Color.White.copy(alpha = 0.22f)
                             )
                             Text(
                                 "${(hudValue * 100).roundToInt()}%",
-                                color = Color.White,
+                                color = if (isBoost) Color(0xFF69F0AE) else Color.White,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.widthIn(min = 34.dp)
