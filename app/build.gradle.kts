@@ -34,8 +34,8 @@ android {
         applicationId = "com.jadzumi.video"
         minSdk = 26
         targetSdk = 35
-        versionCode = 21
-        versionName = "1.4.0"
+        versionCode = 22
+        versionName = "1.5.0"
         ndk { abiFilters += "arm64-v8a" }
     }
 
@@ -92,6 +92,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.11.1")
     implementation("androidx.media3:media3-ui:1.11.1")
     implementation("androidx.media3:media3-session:1.11.1")
+    implementation("androidx.media3:media3-effect:1.11.1")
     implementation("io.github.anilbeesetti:nextlib-media3ext:1.11.1-0.16.0")
     implementation(platform("androidx.compose:compose-bom:2025.04.01"))
     implementation("androidx.activity:activity-compose:1.10.1")

@@ -1208,6 +1208,12 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             onClick = { onSelectSection("aspect") }
                         )
                         QuickMenuRow(
+                            icon = Icons.Rounded.Tune,
+                            label = "Video Enhancer",
+                            value = if (playback.isHdr) "HDR Master" else playback.videoEnhancerProfile.displayName.substringBefore(" ("),
+                            onClick = { onSelectSection("enhancer") }
+                        )
+                        QuickMenuRow(
                             icon = Icons.Rounded.GraphicEq,
                             label = "Audio track",
                             value = audioSummary,
@@ -1261,53 +1267,216 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 }
 
 
-                "audio" -> {
-                    QuickSubMenuContainer(title = "Audio settings", onBack = { onSelectSection("main") }) {
-                        Text("Active Track", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-                        if (playback.audioTracks.isEmpty()) {
-                            Text("Default audio stream active", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+                "enhancer" -> {
+                    QuickSubMenuContainer(title = "Video Enhancer & Color Studio", onBack = { onSelectSection("main") }) {
+                        if (playback.isHdr) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF2E2200)),
+                                border = BorderStroke(1.dp, Color(0xFFFFB300).copy(alpha = 0.45f)),
+                                shape = RoundedCornerShape(14.dp),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Column(Modifier.padding(14.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Rounded.Lock, null, tint = Color(0xFFFFB300), modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("HDR Master Passthrough Active", color = Color(0xFFFFB300), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    }
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(
+                                        "Color enhancements are safely locked during 10-bit HDR / Dolby Vision playback to preserve native BT.2020 wide color gamut and ST 2084 / HLG dynamic range without clipping.",
+                                        color = Color.White.copy(alpha = 0.82f),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
                         } else {
-                            playback.audioTracks.forEach { track ->
+                            Text("Color Profiles", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                            ColorEnhancementProfile.entries.forEach { profile ->
                                 QuickOptionItem(
-                                    label = "${track.label} (${track.codec} · ${track.channels})",
-                                    selected = track.isSelected,
-                                    onClick = { playback.selectAudioTrack(track); onMessage("Audio: ${track.label}"); onSelectSection("main") }
+                                    label = profile.displayName,
+                                    selected = playback.videoEnhancerProfile == profile,
+                                    onClick = {
+                                        playback.updateColorProfile(profile)
+                                        onMessage("Profile: ${profile.displayName.substringBefore(" (")}")
+                                    }
                                 )
+                                Text(
+                                    profile.description,
+                                    color = Color.White.copy(alpha = 0.55f),
+                                    fontSize = 11.sp,
+                                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 6.dp)
+                                )
+                            }
+
+                            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.12f))
+
+                            val params = playback.videoEnhancerParams
+                            Text("Fine-Tuning Controls", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+
+                            EnhancerSliderRow(
+                                title = "Contrast",
+                                valueText = String.format(java.util.Locale.US, "%.2fx", params.contrast),
+                                subtext = "Pivots around middle-gray (0.5); neutral = 1.00x",
+                                value = params.contrast,
+                                valueRange = 0.6f..1.6f,
+                                onValueChange = {
+                                    playback.updateColorParams(params.copy(contrast = it))
+                                }
+                            )
+
+                            EnhancerSliderRow(
+                                title = "Shadow Lift / Gamma",
+                                valueText = "${(params.shadowLift * 100).roundToInt()}%",
+                                subtext = "Lifts dark shadows without blowing out highlights; neutral = 0%",
+                                value = params.shadowLift,
+                                valueRange = -0.25f..0.25f,
+                                onValueChange = {
+                                    playback.updateColorParams(params.copy(shadowLift = it))
+                                }
+                            )
+
+                            EnhancerSliderRow(
+                                title = "Saturation",
+                                valueText = "${(params.saturation * 100).roundToInt()}%",
+                                subtext = "0% = pure monochrome, 100% = neutral, 200% = vivid",
+                                value = params.saturation,
+                                valueRange = 0.0f..2.0f,
+                                onValueChange = {
+                                    playback.updateColorParams(params.copy(saturation = it))
+                                }
+                            )
+
+                            EnhancerSliderRow(
+                                title = "Vibrance",
+                                valueText = "${(params.vibrance * 100).roundToInt()}%",
+                                subtext = "Selectively boosts muted tones while protecting skin tones",
+                                value = params.vibrance,
+                                valueRange = -0.25f..0.25f,
+                                onValueChange = {
+                                    playback.updateColorParams(params.copy(vibrance = it))
+                                }
+                            )
+
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                                    Text("AMOLED Deep Black (Experimental)", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    Text(ColorStudioParams.AMOLED_WARNING, color = Color(0xFFFFB300).copy(alpha = 0.85f), fontSize = 10.sp)
+                                }
+                                Switch(
+                                    checked = params.amoledDeepBlack,
+                                    onCheckedChange = {
+                                        playback.updateColorParams(params.copy(amoledDeepBlack = it))
+                                        onMessage(if (it) "AMOLED Deep Black ON" else "AMOLED Deep Black OFF")
+                                    }
+                                )
+                            }
+
+                            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.12f))
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                OutlinedButton(
+                                    onClick = {
+                                        playback.resetColorStudio()
+                                        onMessage("Video enhancer reset to Neutral")
+                                    },
+                                    border = BorderStroke(1.dp, TimelineAccent.copy(alpha = 0.45f)),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(Icons.Rounded.Refresh, null, tint = TimelineAccent, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Reset to Neutral", color = TimelineAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                "audio" -> {
+                    QuickSubMenuContainer(title = "Audio Studio & Stream Format", onBack = { onSelectSection("main") }) {
+                        val streamInfo = remember(
+                            playback.runtimeAudioFormat,
+                            playback.runtimeAudioDecoder,
+                            playback.audioTracks,
+                            playback.audioChannelMode,
+                            playback.nightModeVoiceBoost,
+                            playback.audioDelayMs
+                        ) { playback.inspectActiveAudioStream() }
+
+                        Text("Active Stream Telemetry", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.06f)),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)
+                        ) {
+                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                                AudioTelemetryRow("Container", streamInfo.container)
+                                AudioTelemetryRow("Source Codec", streamInfo.sourceCodec)
+                                AudioTelemetryRow("Channels & Layout", streamInfo.sourceChannels)
+                                AudioTelemetryRow("Sample Rate", streamInfo.sourceSampleRate)
+                                AudioTelemetryRow("Source Bit Depth", streamInfo.sourceBitDepth)
+                                AudioTelemetryRow("Active Decoder", streamInfo.activeDecoder)
+                                AudioTelemetryRow("Decoder Engine", streamInfo.decoderEngine)
+                                AudioTelemetryRow("Player Audio Output", "${streamInfo.playerOutputChannels} · ${streamInfo.playerOutputSampleRate} · ${streamInfo.playerOutputEncoding}")
+
+                                Spacer(Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text("Processing:", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
+                                    streamInfo.activeProcessing.forEach { proc ->
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = TimelineAccent.copy(alpha = 0.16f),
+                                            border = BorderStroke(0.5.dp, TimelineAccent.copy(alpha = 0.35f))
+                                        ) {
+                                            Text(proc, color = TimelineAccent, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                        }
+                                    }
+                                }
                             }
                         }
 
                         HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
 
-                        // Night Mode / Voice Clarity Boost
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                                Text("Night Mode / Voice Boost", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                Text("Dynamic compression amplifies quiet dialogue and dampens loud effects", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
-                            }
-                            Switch(
-                                checked = playback.nightModeVoiceBoost,
-                                onCheckedChange = {
-                                    playback.updateNightMode(it)
-                                    onMessage(if (it) "Night Mode (Voice Boost) ON" else "Night Mode OFF")
+                        Text("Channel Processing Mode", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        AudioChannelMode.entries.forEach { mode ->
+                            QuickOptionItem(
+                                label = mode.title,
+                                selected = playback.audioChannelMode == mode,
+                                onClick = {
+                                    playback.updateAudioChannelMode(mode)
+                                    onMessage("Channel Mode: ${mode.title}")
                                 }
+                            )
+                            Text(
+                                mode.description,
+                                color = Color.White.copy(alpha = 0.55f),
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 6.dp)
                             )
                         }
 
                         HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
 
-                        // Bluetooth Audio Delay (Lip-Sync)
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                                Text("Bluetooth Audio Delay", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                Text("Lip-sync compensation: ${playback.audioDelayMs}ms", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("Bluetooth Audio Delay (Lip-Sync)", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Negative (−) advances audio; Positive (+) delays audio to sync with Bluetooth latency", color = Color.White.copy(alpha = 0.60f), fontSize = 10.sp)
+                                Text("Current offset: ${playback.audioDelayMs}ms", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                 FrostedCircleButton("-50ms", { playback.updateAudioDelay(-50); onMessage("Audio Delay: ${playback.audioDelayMs}ms") }, size = 32.dp) {
@@ -1321,6 +1490,41 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 FrostedCircleButton("+50ms", { playback.updateAudioDelay(50); onMessage("Audio Delay: ${playback.audioDelayMs}ms") }, size = 32.dp) {
                                     Text("+", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
+                            }
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text("Night Mode / Dynamic Compression", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Dynamic compression amplifies quiet dialogue and dampens loud effects", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
+                            }
+                            Switch(
+                                checked = playback.nightModeVoiceBoost,
+                                onCheckedChange = {
+                                    playback.updateNightMode(it)
+                                    onMessage(if (it) "Night Mode (Voice Boost) ON" else "Night Mode OFF")
+                                }
+                            )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        Text("Available Audio Tracks", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        if (playback.audioTracks.isEmpty()) {
+                            Text("Default audio stream active", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+                        } else {
+                            playback.audioTracks.forEach { track ->
+                                QuickOptionItem(
+                                    label = "${track.label} (${track.codec} · ${track.channels})",
+                                    selected = track.isSelected,
+                                    onClick = { playback.selectAudioTrack(track); onMessage("Audio: ${track.label}"); onSelectSection("main") }
+                                )
                             }
                         }
                     }
@@ -1715,6 +1919,51 @@ private fun NextEpisodeAutoplayBanner(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AudioTelemetryRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
+        Text(value, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun EnhancerSliderRow(
+    title: String,
+    valueText: String,
+    subtext: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    onValueChange: (Float) -> Unit
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            Text(valueText, color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        }
+        Text(subtext, color = Color.White.copy(alpha = 0.55f), fontSize = 10.sp)
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = valueRange,
+            colors = SliderDefaults.colors(
+                thumbColor = TimelineAccent,
+                activeTrackColor = TimelineAccent,
+                inactiveTrackColor = Color.White.copy(alpha = 0.20f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 // END OF FILE

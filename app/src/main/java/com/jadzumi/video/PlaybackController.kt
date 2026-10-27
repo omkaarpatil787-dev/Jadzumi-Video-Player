@@ -117,6 +117,26 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     private var replaySeekParameters: SeekParameters? = null
     private var replayReturnToPause = false
 
+    // GPU Video Enhancer & Color Studio
+    var videoEnhancerProfile by mutableStateOf(
+        ColorEnhancementProfile.fromName(prefs.getString("video_enhancer_profile", ColorEnhancementProfile.NATURAL.name))
+    ); private set
+
+    var videoEnhancerParams by mutableStateOf(
+        ColorStudioParams(
+            contrast = prefs.getFloat("video_enhancer_contrast", 1.0f),
+            shadowLift = prefs.getFloat("video_enhancer_shadow", 0.0f),
+            saturation = prefs.getFloat("video_enhancer_saturation", 1.0f),
+            vibrance = prefs.getFloat("video_enhancer_vibrance", 0.0f),
+            amoledDeepBlack = prefs.getBoolean("video_enhancer_amoled", false)
+        )
+    ); private set
+
+    // Expanded Audio Studio: Channel Modes
+    var audioChannelMode by mutableStateOf(
+        AudioChannelMode.fromName(prefs.getString("audio_channel_mode", AudioChannelMode.DEFAULT.name))
+    ); private set
+
     private var loudnessEnhancer: android.media.audiofx.LoudnessEnhancer? = null
     var historyVersion by mutableIntStateOf(0); private set
 
@@ -294,11 +314,18 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun applyNightMode() {
         try {
             val sessionId = player?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
-            if ((nightModeVoiceBoost || dialogueReplayActive) && sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
+            val needEnhancer = nightModeVoiceBoost || dialogueReplayActive || audioChannelMode == AudioChannelMode.DIALOGUE_FOCUS
+            if (needEnhancer && sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
                 if (loudnessEnhancer == null) {
                     loudnessEnhancer = android.media.audiofx.LoudnessEnhancer(sessionId)
                 }
-                loudnessEnhancer?.setTargetGain(600)
+                val gain = when {
+                    nightModeVoiceBoost -> 600
+                    dialogueReplayActive -> 500
+                    audioChannelMode == AudioChannelMode.DIALOGUE_FOCUS -> 350
+                    else -> 0
+                }
+                loudnessEnhancer?.setTargetGain(gain)
                 loudnessEnhancer?.enabled = true
             } else {
                 loudnessEnhancer?.enabled = false
@@ -306,6 +333,157 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 loudnessEnhancer = null
             }
         } catch (_: Exception) {}
+    }
+
+    // --- GPU Video Enhancer & Color Studio Methods ---
+
+    fun updateColorProfile(profile: ColorEnhancementProfile) {
+        videoEnhancerProfile = profile
+        if (profile != ColorEnhancementProfile.CUSTOM) {
+            videoEnhancerParams = profile.params
+        }
+        prefs.edit()
+            .putString("video_enhancer_profile", profile.name)
+            .putFloat("video_enhancer_contrast", videoEnhancerParams.contrast)
+            .putFloat("video_enhancer_shadow", videoEnhancerParams.shadowLift)
+            .putFloat("video_enhancer_saturation", videoEnhancerParams.saturation)
+            .putFloat("video_enhancer_vibrance", videoEnhancerParams.vibrance)
+            .putBoolean("video_enhancer_amoled", videoEnhancerParams.amoledDeepBlack)
+            .apply()
+        applyVideoEffects()
+    }
+
+    fun updateColorParams(params: ColorStudioParams) {
+        videoEnhancerProfile = ColorEnhancementProfile.CUSTOM
+        videoEnhancerParams = params
+        prefs.edit()
+            .putString("video_enhancer_profile", ColorEnhancementProfile.CUSTOM.name)
+            .putFloat("video_enhancer_contrast", params.contrast)
+            .putFloat("video_enhancer_shadow", params.shadowLift)
+            .putFloat("video_enhancer_saturation", params.saturation)
+            .putFloat("video_enhancer_vibrance", params.vibrance)
+            .putBoolean("video_enhancer_amoled", params.amoledDeepBlack)
+            .apply()
+        applyVideoEffects()
+    }
+
+    fun resetColorStudio() {
+        videoEnhancerProfile = ColorEnhancementProfile.NATURAL
+        videoEnhancerParams = ColorStudioParams.NEUTRAL
+        prefs.edit()
+            .putString("video_enhancer_profile", ColorEnhancementProfile.NATURAL.name)
+            .putFloat("video_enhancer_contrast", 1.0f)
+            .putFloat("video_enhancer_shadow", 0.0f)
+            .putFloat("video_enhancer_saturation", 1.0f)
+            .putFloat("video_enhancer_vibrance", 0.0f)
+            .putBoolean("video_enhancer_amoled", false)
+            .apply()
+        applyVideoEffects()
+    }
+
+    fun applyVideoEffects() {
+        val p = player ?: return
+        try {
+            // Rule: When HDR is active, or Natural profile is chosen, or parameters are neutral,
+            // strictly pass emptyList() to preserve 100% zero-copy, untouched SurfaceView playback.
+            if (isHdr || videoEnhancerProfile == ColorEnhancementProfile.NATURAL || videoEnhancerParams.isNeutral()) {
+                p.setVideoEffects(emptyList())
+            } else {
+                p.setVideoEffects(listOf(VideoEnhancerEffect(videoEnhancerParams)))
+            }
+        } catch (_: Exception) {
+            // Graceful fallback to default playback without throwing or disrupting audio
+            p.setVideoEffects(emptyList())
+        }
+    }
+
+    // --- Audio Studio Methods ---
+
+    fun updateAudioChannelMode(mode: AudioChannelMode) {
+        audioChannelMode = mode
+        prefs.edit().putString("audio_channel_mode", mode.name).apply()
+        applyAudioChannelMode()
+    }
+
+    fun applyAudioChannelMode() {
+        val p = player ?: return
+        try {
+            when (audioChannelMode) {
+                AudioChannelMode.STEREO_DOWNMIX -> {
+                    p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+                        .setMaxAudioChannelCount(2)
+                        .build()
+                }
+                AudioChannelMode.DEFAULT -> {
+                    p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+                        .setMaxAudioChannelCount(Int.MAX_VALUE)
+                        .build()
+                }
+                AudioChannelMode.DIALOGUE_FOCUS -> {
+                    p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+                        .setMaxAudioChannelCount(2)
+                        .build()
+                    applyNightMode()
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    fun inspectActiveAudioStream(): ActiveAudioStreamInfo {
+        val v = video
+        val container = AudioStudioHelper.detectContainer(v?.uri, v?.name)
+        val audioFmt = runtimeAudioFormat
+        val activeTrack = audioTracks.firstOrNull { it.isSelected }
+
+        val codecName = when {
+            activeTrack != null && activeTrack.codec.isNotBlank() -> activeTrack.codec
+            audioFmt?.mime != null -> formatAudioCodec(audioFmt.mime)
+            else -> "Not reported"
+        }
+
+        val channelLayout = AudioStudioHelper.formatChannelLayout(audioFmt?.channels)
+        val sampleRate = AudioStudioHelper.formatSampleRate(audioFmt?.sampleRate)
+        val bitDepth = AudioStudioHelper.formatBitDepth(null, audioFmt?.mime)
+
+        val (decName, decEngine) = AudioStudioHelper.formatDecoderEngine(
+            runtimeAudioDecoder?.name,
+            runtimeAudioDecoder?.hardware
+        )
+
+        val outputChannels = when (audioChannelMode) {
+            AudioChannelMode.STEREO_DOWNMIX, AudioChannelMode.DIALOGUE_FOCUS -> "Stereo (2 channels downmixed)"
+            AudioChannelMode.DEFAULT -> if ((audioFmt?.channels ?: 2) > 2) "Multichannel (${audioFmt?.channels} ch direct)" else "Stereo (2 channels)"
+        }
+
+        val outputSampleRate = sampleRate
+        val outputEncoding = "PCM 16-bit"
+
+        val processingList = mutableListOf<String>()
+        when (audioChannelMode) {
+            AudioChannelMode.STEREO_DOWNMIX -> processingList.add("Stereo Downmix")
+            AudioChannelMode.DIALOGUE_FOCUS -> processingList.add("Dialogue Focus")
+            AudioChannelMode.DEFAULT -> processingList.add("Default / Direct")
+        }
+        if (nightModeVoiceBoost) {
+            processingList.add("Night Mode (Dynamic Compression)")
+        }
+        if (audioDelayMs != 0L) {
+            processingList.add("Lip-Sync (${audioDelayMs}ms)")
+        }
+
+        return ActiveAudioStreamInfo(
+            container = container,
+            sourceCodec = codecName,
+            sourceChannels = channelLayout,
+            sourceSampleRate = sampleRate,
+            sourceBitDepth = bitDepth,
+            activeDecoder = decName,
+            decoderEngine = decEngine,
+            playerOutputChannels = outputChannels,
+            playerOutputSampleRate = outputSampleRate,
+            playerOutputEncoding = outputEncoding,
+            activeProcessing = processingList
+        )
     }
 
     fun updateAudioDelay(deltaMs: Long) {
@@ -706,6 +884,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .build()
             p.setVideoChangeFrameRateStrategy(if (matchRefreshRate) C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_ONLY_IF_SEAMLESS else C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_OFF)
             player = p
+            applyAudioChannelMode()
+            applyVideoEffects()
 
             p.addAnalyticsListener(object : AnalyticsListener {
                 override fun onVideoDecoderInitialized(eventTime: AnalyticsListener.EventTime, decoderName: String, initializedTimestampMs: Long, initializationDurationMs: Long) {
@@ -794,7 +974,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                             it.contains("dv", ignoreCase = true) ||
                             it.contains("hlg", ignoreCase = true)
                         } ?: false
-                        isHdr = isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR) || nameHdr
+                        val newHdr = isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR) || nameHdr
+                        if (isHdr != newHdr) {
+                            isHdr = newHdr
+                            applyVideoEffects()
+                        }
                         videoCodecBadge = measuredVideoBadge(
                             format.sampleMimeType, format.width, format.height,
                             isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR)
