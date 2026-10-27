@@ -1,19 +1,25 @@
-# Jadzumi v1.4.1 — Android 16/17 Audio Fix & 200% Volume Boost 🔊
+# Jadzumi v1.4.2 — Speaker Routing Fix & Audio Output Selector 🔊
 
-A targeted audio quality, loudness, and DSP compatibility release resolving Android 16/17 spatializer volume attenuation and adding hardware-accelerated Volume Boost.
+A critical audio pipeline and hardware routing update resolving an Android 16/17 and ViPER4FX audio bug where sound output misrouted into the phone call earpiece instead of the loud stereo speakers.
 
-### 🔊 Android 16 & 17 Spatializer Attenuation Fix
-- Explicitly sets `SPATIALIZATION_BEHAVIOR_NEVER` on audio attributes to stop Android 16/17 from forcing automatic spatializer downmixing and -14 dB dynamic range attenuation on 5.1 / Atmos multichannel movie tracks.
-- Restores full-strength volume, bass, and punch for ViPER4FX, Dolby Atmos, and system equalizers.
+### 📢 Explicit Loudspeaker Hardware Routing
+- Directly binds ExoPlayer's output HAL via `setPreferredAudioDevice(TYPE_BUILTIN_SPEAKER)` when listening on internal phone audio, completely preventing Android 17 / ViPER4FX / VoIP policies from misrouting media playback into the tiny telephone call earpiece.
+- Automatically handles seamless handoff to Bluetooth / USB / Wired headphones when connected via dynamic `AudioDeviceCallback`.
 
-### 🎛️ ViPER4FX & System Equalizer Session Hook
-- Broadcasts `AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION` on playback start/session change and `AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION` on release.
-- Enables ViPER4FX, Wavelet, and system DSPs to properly detect Jadzumi and apply full equalizer, clarity, and master gain settings.
+### 🔄 Audio Communication & Telecom State Reset
+- Ensures `AudioManager.mode` resets cleanly to `MODE_NORMAL` on playback start, resume, and track change, eliminating stuck communication states left behind by voice assistants, VoIP calls, or audio mod drivers.
+- Automatically clears communication device locks via `clearCommunicationDevice()` on Android 12+ (API 31+).
+- Explicitly locks `volumeControlStream = AudioManager.STREAM_MUSIC` in `MainActivity`.
 
-### ⚡ Volume Boost up to 200%
-- Swipe up on the right side of the screen beyond 100% to seamlessly engage **Volume Boost (105% → 200%)** powered by Android's hardware `LoudnessEnhancer`.
-- Glowing mint-green HUD capsule shows real-time boost percentage, amplifying quiet cinema dialogue without audio distortion.
+### 🎛️ Audio Content Type Alignment (`CONTENT_TYPE_MUSIC`)
+- Updates ExoPlayer `AudioAttributes` to `AUDIO_CONTENT_TYPE_MUSIC` (matching the system DSP session broadcast), preventing carrier/OEM movie voice routing rules from diverting media audio to the call speaker.
+
+### 🔀 New "Audio Output Route" Menu
+- Added an **Audio Output Route** selector in the player's Audio Settings sheet:
+  - **Auto (Headphones / Loudspeaker)**: Default intelligent routing with hardware loudspeaker protection.
+  - **Phone Loudspeaker (Force Stereo)**: Forcefully locks output strictly to the loud main stereo speakers.
+  - **Phone Earpiece (Private Audio)**: In-call receiver mode for discrete, private listening without headphones.
 
 ### 📦 Installation
-Download **Jadzumi-Player-v1.4.1.apk** below. Android 8.0+ / ARM64.
+Download **Jadzumi-Player-v1.4.2.apk** below. Android 8.0+ / ARM64.
 Same-production-key updates preserve settings and watch history.

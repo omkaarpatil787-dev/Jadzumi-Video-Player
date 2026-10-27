@@ -13,6 +13,7 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.Icon
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
@@ -48,6 +49,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        volumeControlStream = AudioManager.STREAM_MUSIC
         playback = ViewModelProvider(this)[PlaybackController::class.java]
         enableEdgeToEdge()
         ContextCompat.registerReceiver(this, receiver, IntentFilter(pipAction), ContextCompat.RECEIVER_NOT_EXPORTED)
@@ -163,6 +165,22 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         if (::playback.isInitialized) playback.restoreVisible()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val am = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        if (am != null) {
+            if (am.mode != AudioManager.MODE_NORMAL) {
+                am.mode = AudioManager.MODE_NORMAL
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                runCatching { am.clearCommunicationDevice() }
+            }
+        }
+        if (::playback.isInitialized) {
+            playback.applyAudioRouting()
+        }
     }
 
     override fun onStop() {

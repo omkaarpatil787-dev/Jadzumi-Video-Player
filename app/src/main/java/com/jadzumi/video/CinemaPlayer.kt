@@ -1295,6 +1295,24 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                         HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
 
+                        Text("Audio Output Route", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        AudioOutputRoute.values().forEach { route ->
+                            QuickOptionItem(
+                                label = when (route) {
+                                    AudioOutputRoute.AUTO -> "Auto (Headphones / Loudspeaker)"
+                                    AudioOutputRoute.SPEAKER -> "Phone Loudspeaker (Force Stereo)"
+                                    AudioOutputRoute.EARPIECE -> "Phone Earpiece (Private Audio)"
+                                },
+                                selected = playback.audioOutputRoute == route,
+                                onClick = {
+                                    playback.setAudioOutputRoute(route)
+                                    onMessage("Output: ${route.title}")
+                                }
+                            )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+
                         // Night Mode / Voice Clarity Boost
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),

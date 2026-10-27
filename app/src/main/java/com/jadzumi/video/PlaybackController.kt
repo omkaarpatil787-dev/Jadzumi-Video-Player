@@ -6,6 +6,9 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioDeviceCallback
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import androidx.compose.runtime.*
@@ -49,6 +52,12 @@ data class ChapterMarker(
     val fraction: Float
 )
 
+enum class AudioOutputRoute(val title: String) {
+    AUTO("Auto (Speaker / Headset)"),
+    SPEAKER("Phone Loudspeaker"),
+    EARPIECE("Phone Earpiece")
+}
+
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 class PlaybackController(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("playback", 0)
@@ -68,6 +77,19 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var aspect by mutableFloatStateOf(16f / 9f); private set
     var locked by mutableStateOf(false)
     var seekable by mutableStateOf(false); private set
+
+    var audioOutputRoute by mutableStateOf(
+        runCatching {
+            AudioOutputRoute.valueOf(prefs.getString("audio_output_route", AudioOutputRoute.AUTO.name) ?: AudioOutputRoute.AUTO.name)
+        }.getOrDefault(AudioOutputRoute.AUTO)
+    ); private set
+    private var audioDeviceCallback: AudioDeviceCallback? = null
+
+    fun setAudioOutputRoute(route: AudioOutputRoute) {
+        audioOutputRoute = route
+        prefs.edit().putString("audio_output_route", route.name).apply()
+        applyAudioRouting()
+    }
 
     var audioTracks by mutableStateOf<List<AudioTrackInfo>>(emptyList()); private set
     var subtitleTracks by mutableStateOf<List<SubtitleTrackInfo>>(emptyList()); private set
@@ -366,6 +388,84 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun resetSubtitleDelay() {
         subtitleDelayMs = 0L
         prefs.edit { putLong("sub_delay", 0L) }
+    }
+
+    private fun setupAudioDeviceRouting(p: ExoPlayer) {
+        val app = getApplication<Application>()
+        val am = app.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+        if (audioDeviceCallback == null) {
+            val callback = object : AudioDeviceCallback() {
+                override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>?) {
+                    applyAudioRouting()
+                }
+                override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>?) {
+                    applyAudioRouting()
+                }
+            }
+            audioDeviceCallback = callback
+            am.registerAudioDeviceCallback(callback, null)
+        }
+        applyAudioRouting()
+    }
+
+    fun applyAudioRouting() {
+        val p = player ?: return
+        val app = getApplication<Application>()
+        val audioManager = app.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+
+        // 1. Force reset any stuck communication or call modes that misroute media to earpiece
+        if (audioManager.mode != AudioManager.MODE_NORMAL) {
+            audioManager.mode = AudioManager.MODE_NORMAL
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            runCatching { audioManager.clearCommunicationDevice() }
+        }
+
+        // 2. Query available outputs
+        val outputs = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+        val speakerDevice = outputs.firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+        val earpieceDevice = outputs.firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_EARPIECE }
+        val hasExternalOutput = outputs.any { device ->
+            when (device.type) {
+                AudioDeviceInfo.TYPE_WIRED_HEADSET,
+                AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+                AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+                AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
+                AudioDeviceInfo.TYPE_USB_DEVICE,
+                AudioDeviceInfo.TYPE_USB_HEADSET,
+                AudioDeviceInfo.TYPE_BLE_HEADSET,
+                AudioDeviceInfo.TYPE_BLE_SPEAKER,
+                AudioDeviceInfo.TYPE_HEARING_AID -> true
+                else -> false
+            }
+        }
+
+        when (audioOutputRoute) {
+            AudioOutputRoute.AUTO -> {
+                if (hasExternalOutput) {
+                    p.setPreferredAudioDevice(null)
+                } else if (speakerDevice != null) {
+                    // Lock directly to physical loudspeaker so Android/ViPER never leaks to earpiece
+                    p.setPreferredAudioDevice(speakerDevice)
+                } else {
+                    p.setPreferredAudioDevice(null)
+                }
+            }
+            AudioOutputRoute.SPEAKER -> {
+                if (speakerDevice != null) {
+                    p.setPreferredAudioDevice(speakerDevice)
+                } else {
+                    p.setPreferredAudioDevice(null)
+                }
+            }
+            AudioOutputRoute.EARPIECE -> {
+                if (earpieceDevice != null) {
+                    p.setPreferredAudioDevice(earpieceDevice)
+                } else {
+                    p.setPreferredAudioDevice(null)
+                }
+            }
+        }
     }
 
     fun clearWatchHistory() {
@@ -783,12 +883,13 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             p.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
-                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                     .setSpatializationBehavior(C.SPATIALIZATION_BEHAVIOR_NEVER)
                     .build(),
                 true
             )
             p.setHandleAudioBecomingNoisy(true)
+            setupAudioDeviceRouting(p)
 
             p.addListener(object : Player.Listener {
                 override fun onAudioSessionIdChanged(audioSessionId: Int) {
@@ -798,6 +899,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     activeAudioSessionId = audioSessionId
                     broadcastAudioSession(audioSessionId, true)
                     applyNightMode()
+                    applyAudioRouting()
                 }
 
                 override fun onTracksChanged(tracks: Tracks) {
@@ -1186,6 +1288,13 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             loudnessEnhancer?.enabled = false
             loudnessEnhancer?.release()
             loudnessEnhancer = null
+        } catch (_: Exception) {}
+        try {
+            if (audioDeviceCallback != null) {
+                val audioManager = getApplication<Application>().getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+                audioManager?.unregisterAudioDeviceCallback(audioDeviceCallback)
+                audioDeviceCallback = null
+            }
         } catch (_: Exception) {}
         val oldPlayer = player
         player = null; mediaItemAssigned = false
