@@ -99,8 +99,8 @@ class VideoEnhancerTest {
         assertEquals("Not reported", AudioStudioHelper.formatSampleRate(null))
         assertEquals("Not reported", AudioStudioHelper.formatSampleRate(0))
 
-        assertEquals("24-bit Lossless", AudioStudioHelper.formatBitDepth(null, "audio/flac"))
-        assertEquals("16-bit PCM", AudioStudioHelper.formatBitDepth(null, "audio/raw"))
+        assertEquals("24-bit", AudioStudioHelper.formatBitDepth(24, "audio/flac"))
+        assertEquals("16-bit", AudioStudioHelper.formatBitDepth(16, "audio/raw"))
         assertEquals("Not reported", AudioStudioHelper.formatBitDepth(null, "audio/mp4a-latm"))
         assertEquals("Not reported", AudioStudioHelper.formatBitDepth(null, "audio/ac3"))
     }

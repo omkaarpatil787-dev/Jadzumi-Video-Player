@@ -102,12 +102,7 @@ object AudioStudioHelper {
         if (bitDepth != null && bitDepth > 0) {
             return "$bitDepth-bit"
         }
-        val m = mime?.lowercase(Locale.ROOT) ?: ""
-        return when {
-            m.contains("flac") -> "24-bit Lossless"
-            m.contains("pcm") -> "16-bit PCM"
-            else -> "Not reported"
-        }
+        return "Not reported"
     }
 
     /**
