@@ -58,6 +58,15 @@ enum class AudioOutputRoute(val title: String) {
     EARPIECE("Phone Earpiece")
 }
 
+enum class VideoColorProfile(val title: String, val subtitle: String) {
+    AUTO("Auto (Smart Adaptive)", "Automatically optimizes contrast, HDR tonemap & shadows"),
+    CINEMA("Cinema (Neutral)", "100% studio-accurate reference master"),
+    ANIME("Anime & Animation (Vivid)", "Enhanced vibrance & punchy contrast"),
+    SHADOW_LIFT("Shadow Clarity (Night Owl)", "Lifts crushed darks in dark cinematography"),
+    AMOLED_BLACK("AMOLED Pitch-Black", "Deep infinite contrast with true-black pixel shutoff"),
+    CUSTOM("Custom", "Manual slider adjustments")
+}
+
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 class PlaybackController(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("playback", 0)
@@ -154,6 +163,18 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     // Video Equalizer & Color Grading State
+    var videoColorProfile by mutableStateOf(
+        runCatching {
+            VideoColorProfile.valueOf(prefs.getString("video_color_profile", VideoColorProfile.AUTO.name) ?: VideoColorProfile.AUTO.name)
+        }.getOrDefault(VideoColorProfile.AUTO)
+    ); private set
+
+    fun updateVideoColorProfile(profile: VideoColorProfile) {
+        videoColorProfile = profile
+        prefs.edit().putString("video_color_profile", profile.name).apply()
+        colorFilterVersion++
+    }
+
     var videoContrast by mutableFloatStateOf(prefs.getFloat("video_contrast", 1.0f)); private set
     var videoBrightness by mutableFloatStateOf(prefs.getFloat("video_brightness", 0.0f)); private set
     var videoSaturation by mutableFloatStateOf(prefs.getFloat("video_saturation", 1.0f)); private set
@@ -161,11 +182,13 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var colorFilterVersion by mutableIntStateOf(0); private set
 
     fun updateVideoEqualizer(contrast: Float, brightness: Float, saturation: Float, amoled: Boolean) {
+        videoColorProfile = VideoColorProfile.CUSTOM
         videoContrast = contrast.coerceIn(0.5f, 1.8f)
         videoBrightness = brightness.coerceIn(-0.35f, 0.35f)
         videoSaturation = saturation.coerceIn(0.0f, 2.0f)
         videoAmoledMode = amoled
-        prefs.edit().putFloat("video_contrast", videoContrast)
+        prefs.edit().putString("video_color_profile", VideoColorProfile.CUSTOM.name)
+            .putFloat("video_contrast", videoContrast)
             .putFloat("video_brightness", videoBrightness)
             .putFloat("video_saturation", videoSaturation)
             .putBoolean("video_amoled", videoAmoledMode)
@@ -174,7 +197,63 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     fun resetVideoEqualizer() {
-        updateVideoEqualizer(1.0f, 0.0f, 1.0f, false)
+        updateVideoColorProfile(VideoColorProfile.AUTO)
+        videoContrast = 1.0f
+        videoBrightness = 0.0f
+        videoSaturation = 1.0f
+        videoAmoledMode = false
+        prefs.edit().putString("video_color_profile", VideoColorProfile.AUTO.name)
+            .putFloat("video_contrast", 1.0f)
+            .putFloat("video_brightness", 0.0f)
+            .putFloat("video_saturation", 1.0f)
+            .putBoolean("video_amoled", false)
+            .apply()
+        colorFilterVersion++
+    }
+
+    fun effectiveColorGrading(): ColorGradingParams {
+        return when (videoColorProfile) {
+            VideoColorProfile.CINEMA -> ColorGradingParams(1.0f, 0.0f, 1.0f, false)
+            VideoColorProfile.ANIME -> ColorGradingParams(1.08f, 0.0f, 1.22f, false)
+            VideoColorProfile.SHADOW_LIFT -> ColorGradingParams(1.05f, 0.08f, 1.02f, false)
+            VideoColorProfile.AMOLED_BLACK -> ColorGradingParams(1.10f, -0.04f, 1.05f, true)
+            VideoColorProfile.CUSTOM -> ColorGradingParams(videoContrast, videoBrightness, videoSaturation, videoAmoledMode)
+            VideoColorProfile.AUTO -> {
+                val v = video
+                val isOled = DeviceHardwareInspector.isOledOrAmoledDisplay(getApplication())
+                val name = v?.name?.lowercase() ?: ""
+                val isAnime = name.contains("subsplease") || name.contains("erai-raws") ||
+                              name.contains("horriblesubs") || name.contains("anime") ||
+                              subtitleTracks.any { it.format.contains("ass", ignoreCase = true) || it.format.contains("ssa", ignoreCase = true) }
+                val isDarkFilm = name.contains("batman") || name.contains("horror") || name.contains("night") || name.contains("dark")
+
+                when {
+                    isHdr && !isOled -> ColorGradingParams(1.14f, 0.04f, 1.18f, false)
+                    isAnime -> ColorGradingParams(1.08f, 0.0f, 1.22f, false)
+                    isDarkFilm -> ColorGradingParams(1.05f, 0.08f, 1.02f, false)
+                    isOled -> ColorGradingParams(1.04f, 0.0f, 1.02f, true)
+                    else -> ColorGradingParams(1.04f, 0.02f, 1.02f, false)
+                }
+            }
+        }
+    }
+
+    fun autoOptimizationSummary(): String {
+        val v = video
+        val isOled = DeviceHardwareInspector.isOledOrAmoledDisplay(getApplication())
+        val name = v?.name?.lowercase() ?: ""
+        val isAnime = name.contains("subsplease") || name.contains("erai-raws") ||
+                      name.contains("horriblesubs") || name.contains("anime") ||
+                      subtitleTracks.any { it.format.contains("ass", ignoreCase = true) || it.format.contains("ssa", ignoreCase = true) }
+        val isDarkFilm = name.contains("batman") || name.contains("horror") || name.contains("night") || name.contains("dark")
+
+        return when {
+            isHdr && !isOled -> "HDR Tonemap Recovery"
+            isAnime -> "Anime Vivid Colors"
+            isDarkFilm -> "Shadow Night Boost"
+            isOled -> "AMOLED True-Black"
+            else -> "Cinema Dynamic Pop"
+        }
     }
 
     var dialogueReplayActive by mutableStateOf(false); private set

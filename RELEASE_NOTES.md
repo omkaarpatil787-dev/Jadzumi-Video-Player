@@ -1,22 +1,26 @@
-# Jadzumi v1.5.0 — Video Equalizer (Hardware Shaders) & 5.1 Surround Downmix Normalizer 🎨🔊
+# Jadzumi v1.5.1 — Auto Adaptive Color Engine & Display Profiles 🌟🎨
 
-A major visual and acoustic upgrade bringing GPU-accelerated Video Equalizer controls (Contrast, Shadow Lift, Saturation, AMOLED Pitch-Black) and an automatic 5.1/7.1 Surround Downmix Normalizer.
+An intelligent display optimization release introducing the Auto Adaptive Video Engine and One-Tap Display Profiles, eliminating manual slider tweaking while preserving the rock-solid audio foundation.
 
-### 🎨 GPU Hardware Video Equalizer & Color Grading
-- **Real-Time RenderThread Shaders**: Powered by hardware `ColorMatrix` & `RenderEffect` running directly on the GPU at up to 120Hz with zero video playback stutter or decoding stalls. Works on both SDR and HDR content.
-- **Contrast Control (0.6x to 1.6x)**: Dial in cinematic depth and pop for flat or washed-out video encodings.
-- **Shadow Lift / Gamma Boost (-25% to +25%)**: Elevates crushed shadow details in notoriously dark movie scenes (*The Batman*, nighttime sequences, horror films) without blowing out bright highlights.
-- **Saturation / Vibrance (0% to 200%)**: Makes anime, animation, and cinema colors rich, punchy, and vivid; or slide down to 0% for pure Black & White film noir.
-- **AMOLED Pitch-Black Filter**: Clamps near-black pixel noise directly into pure pitch black (`#000000`), turning off OLED display pixels to eliminate grayish artifacting and save battery.
-- **1-Tap Reset**: Quick button to restore neutral calibration instantly.
-- **Subtitle Preservation**: Color filters apply exclusively to the video surface; subtitle rendering and HUD overlays stay crisp, pure white, and pristine.
+### 🌟 Auto Adaptive Color Engine (Default)
+- **Zero-Effort Automatic Optimization**: Analyzes incoming video stream metadata (HDR vs SDR, color gamut, tags, subtitle format) and display hardware (OLED vs LCD) to compute the mathematically optimal color grading curve on the fly.
+- **HDR Tonemap Recovery**: Automatically engages when playing 10-bit HDR or Dolby Vision video on SDR displays, eliminating the washed-out "gray fog" look by dynamically restoring cinema contrast (+14%) and natural saturation (+18%).
+- **Anime & Animation Mode**: Automatically detects anime and animated films (via ASS subtitles or file naming), boosting vibrance (+22%) and edge contrast for punchy, vibrant cell shading.
+- **Dark Film & Night Owl Lift**: Automatically lifts crushed dark shadows in dark cinematography (*The Batman*, horror movies, night sequences) by +8% so hidden details become clearly visible.
+- **Display-Aware AMOLED Mode**: On OLED/AMOLED displays, automatically clamps near-black pixel noise into pure pitch-black (`#000000`) for infinite contrast and zero battery waste.
 
-### 🔊 Automatic 5.1 & 7.1 Surround Downmix Normalizer (+7.5dB Dialogue Lift)
-- **The Problem**: Standard multi-channel downmixing (5.1/7.1 to stereo) applies an automatic $-8\text{ dB}$ to $-12\text{ dB}$ attenuation penalty to prevent digital clipping, making Center-channel dialogue sound quiet, muffled, and pushed back compared to 2.0 stereo tracks.
-- **The Fix**: Automatically senses multi-channel tracks ($> 2$ channels) and applies an acoustic $+7.5\text{ dB}$ clean downmix compensation curve via the hardware `LoudnessEnhancer` DSP.
-- 5.1 cinema mixes now sound **just as loud, full, and punchy as 2.0 stereo tracks** at the exact same volume position.
-- Real-time **ACTIVE +7.5dB** badge in Audio Settings shows when downmix compensation is actively engaged.
+### 🎭 1-Tap Display Profiles & Fine-Tuning
+- **Auto (Smart Adaptive)**: Automatically applies the optimal calibration.
+- **Cinema (Neutral)**: 100% untouched studio reference master for purists.
+- **Anime & Animation (Vivid)**: High vibrance and deep contrast.
+- **Shadow Clarity (Night Owl)**: Lifts dark shadows without washing out highlights.
+- **AMOLED Pitch-Black**: Extreme contrast with true-black OLED pixel shutoff.
+- **Custom**: Opens fine-tuning sliders if you ever want to dial in exact manual values.
+
+### 🔊 Audio & Hardware Foundation Preserved
+- 100% maintains the earpiece-prevention hardware loudspeaker lock (`setPreferredAudioDevice(TYPE_BUILTIN_SPEAKER)`), `MODE_NORMAL` telecom resets, and ViPER4FX session hooks.
+- Maintains the automatic 5.1/7.1 Surround Downmix Normalizer (+7.5dB dialogue lift).
 
 ### 📦 Installation
-Download **Jadzumi-Player-v1.5.0.apk** below. Android 8.0+ / ARM64.
+Download **Jadzumi-Player-v1.5.1.apk** below. Android 8.0+ / ARM64.
 Same-production-key updates preserve settings and watch history.

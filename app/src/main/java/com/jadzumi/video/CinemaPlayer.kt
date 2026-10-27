@@ -318,10 +318,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 val target = view.videoSurfaceView ?: view
                 VideoColorFilterHelper.applyToView(
                     target,
-                    playback.videoContrast,
-                    playback.videoBrightness,
-                    playback.videoSaturation,
-                    playback.videoAmoledMode
+                    playback.effectiveColorGrading()
                 )
             },
             onReset = null,
@@ -1233,12 +1230,12 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             value = fitName,
                             onClick = { onSelectSection("aspect") }
                         )
-                        val isEqCustom = playback.videoContrast != 1.0f || playback.videoBrightness != 0.0f || playback.videoSaturation != 1.0f || playback.videoAmoledMode
+                        val profileLabel = if (playback.videoColorProfile == VideoColorProfile.AUTO) "Auto (${playback.autoOptimizationSummary()})" else playback.videoColorProfile.title
                         QuickMenuRow(
-                            icon = Icons.Rounded.Tune,
-                            label = "Video Equalizer",
-                            value = if (isEqCustom) "Active" else "Default",
-                            onClick = { onSelectSection("video_eq") }
+                            icon = Icons.Rounded.AutoAwesome,
+                            label = "Color & Display",
+                            value = profileLabel,
+                            onClick = { onSelectSection("video_profile") }
                         )
                         QuickMenuRow(
                             icon = Icons.Rounded.GraphicEq,
@@ -1294,103 +1291,107 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 }
 
 
-                "video_eq" -> {
-                    QuickSubMenuContainer(title = "Video Equalizer & Color", onBack = { onSelectSection("main") }) {
-                        // Contrast Slider
-                        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Contrast", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                val contrastPct = ((playback.videoContrast - 1.0f) * 100).toInt()
-                                val sign = if (contrastPct > 0) "+" else ""
-                                Text(if (contrastPct == 0) "Normal (100%)" else "$sign$contrastPct%", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }
-                            Slider(
-                                value = playback.videoContrast,
-                                onValueChange = {
-                                    playback.updateVideoEqualizer(it, playback.videoBrightness, playback.videoSaturation, playback.videoAmoledMode)
-                                },
-                                valueRange = 0.6f..1.6f,
-                                colors = SliderDefaults.colors(thumbColor = TimelineAccent, activeTrackColor = TimelineAccent)
-                            )
-                        }
-
-                        HorizontalDivider(Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.12f))
-
-                        // Shadow / Brightness Lift Slider
-                        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Shadow Lift (Brightness)", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                val brightPct = (playback.videoBrightness * 100 / 0.3f).toInt()
-                                val sign = if (brightPct > 0) "+" else ""
-                                Text(if (brightPct == 0) "0%" else "$sign$brightPct%", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }
-                            Text("Lifts crushed dark details in night scenes without blowing highlights", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
-                            Slider(
-                                value = playback.videoBrightness,
-                                onValueChange = {
-                                    playback.updateVideoEqualizer(playback.videoContrast, it, playback.videoSaturation, playback.videoAmoledMode)
-                                },
-                                valueRange = -0.25f..0.25f,
-                                colors = SliderDefaults.colors(thumbColor = TimelineAccent, activeTrackColor = TimelineAccent)
-                            )
-                        }
-
-                        HorizontalDivider(Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.12f))
-
-                        // Saturation / Vibrance Slider
-                        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Saturation / Vibrance", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                val satPct = (playback.videoSaturation * 100).toInt()
-                                Text(if (satPct == 100) "Normal (100%)" else "$satPct%", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }
-                            Text("Boosts vivid color intensity for anime, cartoons, and cinema", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
-                            Slider(
-                                value = playback.videoSaturation,
-                                onValueChange = {
-                                    playback.updateVideoEqualizer(playback.videoContrast, playback.videoBrightness, it, playback.videoAmoledMode)
-                                },
-                                valueRange = 0.0f..2.0f,
-                                colors = SliderDefaults.colors(thumbColor = TimelineAccent, activeTrackColor = TimelineAccent)
-                            )
-                        }
-
-                        HorizontalDivider(Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.12f))
-
-                        // AMOLED True-Black Filter
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                                Text("AMOLED Pitch-Black Mode", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                Text("Clips near-black noise into true pitch black (#000000) to turn off OLED pixels", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
-                            }
-                            Switch(
-                                checked = playback.videoAmoledMode,
-                                onCheckedChange = {
-                                    playback.updateVideoEqualizer(playback.videoContrast, playback.videoBrightness, playback.videoSaturation, it)
-                                    onMessage(if (it) "AMOLED Pitch-Black ON" else "AMOLED Pitch-Black OFF")
+                "video_profile" -> {
+                    QuickSubMenuContainer(title = "Color & Display Profile", onBack = { onSelectSection("main") }) {
+                        Text("Display Profiles", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        VideoColorProfile.values().forEach { profile ->
+                            QuickOptionItem(
+                                label = if (profile == VideoColorProfile.AUTO) "Auto (${playback.autoOptimizationSummary()})" else profile.title,
+                                selected = playback.videoColorProfile == profile,
+                                onClick = {
+                                    playback.updateVideoColorProfile(profile)
+                                    onMessage("Display: ${profile.title}")
                                 }
                             )
                         }
 
-                        HorizontalDivider(Modifier.padding(vertical = 6.dp), color = Color.White.copy(alpha = 0.12f))
+                        // If Custom is selected, show fine-tuning sliders below
+                        if (playback.videoColorProfile == VideoColorProfile.CUSTOM) {
+                            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.12f))
+                            Text("Fine-Tune Controls", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
 
-                        // Reset Button
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            OutlinedButton(
-                                onClick = {
-                                    playback.resetVideoEqualizer()
-                                    onMessage("Video Equalizer reset to defaults")
-                                },
-                                border = BorderStroke(1.dp, TimelineAccent.copy(alpha = 0.5f))
+                            // Contrast Slider
+                            Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Contrast", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    val contrastPct = ((playback.videoContrast - 1.0f) * 100).toInt()
+                                    val sign = if (contrastPct > 0) "+" else ""
+                                    Text(if (contrastPct == 0) "Normal (100%)" else "$sign$contrastPct%", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                                Slider(
+                                    value = playback.videoContrast,
+                                    onValueChange = {
+                                        playback.updateVideoEqualizer(it, playback.videoBrightness, playback.videoSaturation, playback.videoAmoledMode)
+                                    },
+                                    valueRange = 0.6f..1.6f,
+                                    colors = SliderDefaults.colors(thumbColor = TimelineAccent, activeTrackColor = TimelineAccent)
+                                )
+                            }
+
+                            // Shadow / Brightness Lift Slider
+                            Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Shadow Lift (Brightness)", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    val brightPct = (playback.videoBrightness * 100 / 0.3f).toInt()
+                                    val sign = if (brightPct > 0) "+" else ""
+                                    Text(if (brightPct == 0) "0%" else "$sign$brightPct%", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                                Slider(
+                                    value = playback.videoBrightness,
+                                    onValueChange = {
+                                        playback.updateVideoEqualizer(playback.videoContrast, it, playback.videoSaturation, playback.videoAmoledMode)
+                                    },
+                                    valueRange = -0.25f..0.25f,
+                                    colors = SliderDefaults.colors(thumbColor = TimelineAccent, activeTrackColor = TimelineAccent)
+                                )
+                            }
+
+                            // Saturation Slider
+                            Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Saturation / Vibrance", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    val satPct = (playback.videoSaturation * 100).toInt()
+                                    Text(if (satPct == 100) "Normal (100%)" else "$satPct%", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                                Slider(
+                                    value = playback.videoSaturation,
+                                    onValueChange = {
+                                        playback.updateVideoEqualizer(playback.videoContrast, playback.videoBrightness, it, playback.videoAmoledMode)
+                                    },
+                                    valueRange = 0.0f..2.0f,
+                                    colors = SliderDefaults.colors(thumbColor = TimelineAccent, activeTrackColor = TimelineAccent)
+                                )
+                            }
+
+                            // AMOLED Mode Switch
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Reset to Defaults", color = TimelineAccent, fontSize = 12.sp)
+                                Text("AMOLED Pitch-Black", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Switch(
+                                    checked = playback.videoAmoledMode,
+                                    onCheckedChange = {
+                                        playback.updateVideoEqualizer(playback.videoContrast, playback.videoBrightness, playback.videoSaturation, it)
+                                    }
+                                )
+                            }
+
+                            // Reset Button
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                OutlinedButton(
+                                    onClick = {
+                                        playback.resetVideoEqualizer()
+                                        onMessage("Display reset to Auto")
+                                    },
+                                    border = BorderStroke(1.dp, TimelineAccent.copy(alpha = 0.5f))
+                                ) {
+                                    Text("Reset to Auto", color = TimelineAccent, fontSize = 12.sp)
+                                }
                             }
                         }
                     }

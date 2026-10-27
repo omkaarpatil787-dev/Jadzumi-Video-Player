@@ -7,6 +7,13 @@ import android.graphics.RenderEffect
 import android.os.Build
 import android.view.View
 
+data class ColorGradingParams(
+    val contrast: Float = 1.0f,
+    val brightness: Float = 0.0f,
+    val saturation: Float = 1.0f,
+    val amoled: Boolean = false
+)
+
 /**
  * GPU-accelerated video color grading and equalizer helper.
  * Applies real-time Contrast, Shadow/Brightness lift, Vibrance/Saturation, and AMOLED true-black filters
@@ -14,7 +21,8 @@ import android.view.View
  */
 object VideoColorFilterHelper {
 
-    fun buildColorMatrix(contrast: Float, brightness: Float, saturation: Float, amoled: Boolean): ColorMatrix? {
+    fun buildColorMatrix(params: ColorGradingParams): ColorMatrix? {
+        val (contrast, brightness, saturation, amoled) = params
         val isDefault = contrast == 1.0f && brightness == 0.0f && saturation == 1.0f && !amoled
         if (isDefault) return null
 
@@ -38,9 +46,9 @@ object VideoColorFilterHelper {
         return matrix
     }
 
-    fun applyToView(targetView: View?, contrast: Float, brightness: Float, saturation: Float, amoled: Boolean) {
+    fun applyToView(targetView: View?, params: ColorGradingParams) {
         val view = targetView ?: return
-        val matrix = buildColorMatrix(contrast, brightness, saturation, amoled)
+        val matrix = buildColorMatrix(params)
         if (matrix == null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 view.setRenderEffect(null)
