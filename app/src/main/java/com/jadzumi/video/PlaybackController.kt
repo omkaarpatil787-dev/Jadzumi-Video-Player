@@ -85,7 +85,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     ); private set
     private var audioDeviceCallback: AudioDeviceCallback? = null
 
-    fun setAudioOutputRoute(route: AudioOutputRoute) {
+    fun updateAudioOutputRoute(route: AudioOutputRoute) {
         audioOutputRoute = route
         prefs.edit().putString("audio_output_route", route.name).apply()
         applyAudioRouting()

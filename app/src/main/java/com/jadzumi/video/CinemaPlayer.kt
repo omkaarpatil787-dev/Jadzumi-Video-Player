@@ -1305,7 +1305,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 },
                                 selected = playback.audioOutputRoute == route,
                                 onClick = {
-                                    playback.setAudioOutputRoute(route)
+                                    playback.updateAudioOutputRoute(route)
                                     onMessage("Output: ${route.title}")
                                 }
                             )
