@@ -134,6 +134,49 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var audioDelayMs by mutableLongStateOf(prefs.getLong("audio_delay", 0L))
     var subtitleDelayMs by mutableLongStateOf(prefs.getLong("sub_delay", 0L))
     var nightModeVoiceBoost by mutableStateOf(prefs.getBoolean("night_mode", false))
+    var surroundDownmixBoost by mutableStateOf(prefs.getBoolean("surround_downmix_boost", true)); private set
+
+    fun updateSurroundDownmixBoost(enabled: Boolean) {
+        surroundDownmixBoost = enabled
+        prefs.edit().putBoolean("surround_downmix_boost", enabled).apply()
+        applyNightMode()
+    }
+
+    fun isMultichannelAudio(): Boolean {
+        val formatChannels = runtimeAudioFormat?.channels ?: 0
+        if (formatChannels > 2) return true
+        val activeTrack = audioTracks.firstOrNull { it.isSelected }
+        if (activeTrack != null) {
+            val ch = activeTrack.channels.lowercase()
+            if (ch.contains("5.1") || ch.contains("7.1") || ch.contains("6 ch") || ch.contains("8 ch")) return true
+        }
+        return false
+    }
+
+    // Video Equalizer & Color Grading State
+    var videoContrast by mutableFloatStateOf(prefs.getFloat("video_contrast", 1.0f)); private set
+    var videoBrightness by mutableFloatStateOf(prefs.getFloat("video_brightness", 0.0f)); private set
+    var videoSaturation by mutableFloatStateOf(prefs.getFloat("video_saturation", 1.0f)); private set
+    var videoAmoledMode by mutableStateOf(prefs.getBoolean("video_amoled", false)); private set
+    var colorFilterVersion by mutableIntStateOf(0); private set
+
+    fun updateVideoEqualizer(contrast: Float, brightness: Float, saturation: Float, amoled: Boolean) {
+        videoContrast = contrast.coerceIn(0.5f, 1.8f)
+        videoBrightness = brightness.coerceIn(-0.35f, 0.35f)
+        videoSaturation = saturation.coerceIn(0.0f, 2.0f)
+        videoAmoledMode = amoled
+        prefs.edit().putFloat("video_contrast", videoContrast)
+            .putFloat("video_brightness", videoBrightness)
+            .putFloat("video_saturation", videoSaturation)
+            .putBoolean("video_amoled", videoAmoledMode)
+            .apply()
+        colorFilterVersion++
+    }
+
+    fun resetVideoEqualizer() {
+        updateVideoEqualizer(1.0f, 0.0f, 1.0f, false)
+    }
+
     var dialogueReplayActive by mutableStateOf(false); private set
     private var dialogueWindow: DialogueReplayWindow? = null
     private var replaySeekParameters: SeekParameters? = null
@@ -333,7 +376,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             val intent = Intent(action).apply {
                 putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
                 putExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME, app.packageName)
-                putExtra(android.media.audiofx.AudioEffect.EXTRA_CONTENT_TYPE, android.media.audiofx.AudioEffect.CONTENT_TYPE_MOVIE)
+                putExtra(android.media.audiofx.AudioEffect.EXTRA_CONTENT_TYPE, android.media.audiofx.AudioEffect.CONTENT_TYPE_MUSIC)
             }
             app.sendBroadcast(intent)
         } catch (_: Exception) {}
@@ -343,13 +386,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         try {
             val sessionId = player?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
             if (sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
+                // Recover the -8 dB downmixing penalty when multi-channel 5.1/7.1 tracks are downmixed to stereo
+                val surroundGain = if (surroundDownmixBoost && isMultichannelAudio()) 750 else 0
                 val baseGain = when {
-                    dialogueReplayActive -> 1000
-                    nightModeVoiceBoost -> 600
-                    else -> 0
+                    dialogueReplayActive -> 1000 + surroundGain
+                    nightModeVoiceBoost -> 650 + surroundGain
+                    else -> surroundGain
                 }
                 val boostGain = (volumeBoostFraction * 1400).toInt()
-                val totalGain = (baseGain + boostGain).coerceAtMost(2000)
+                val totalGain = (baseGain + boostGain).coerceAtMost(2200)
 
                 if (totalGain > 0) {
                     if (loudnessEnhancer == null) {
@@ -863,6 +908,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     if (player === p) {
                         runtimeAudioFormat = AudioInspection(format.sampleMimeType,
                             format.channelCount.takeIf { it > 0 }, format.sampleRate.takeIf { it > 0 }, format.language)
+                        applyNightMode()
                     }
                 }
                 override fun onVideoDecoderReleased(eventTime: AnalyticsListener.EventTime, decoderName: String) {
@@ -1131,6 +1177,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         subtitleTracks = subList
         runtimeAudioTracks = inspectedAudio
         runtimeSubtitleTracks = inspectedSubtitles
+        applyNightMode()
     }
 
     fun selectAudioTrack(track: AudioTrackInfo) {
@@ -1141,6 +1188,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
             .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, track.trackIndex))
             .build()
+        applyNightMode()
         if (saveTrackPrefs) {
             val language = preferredLanguageTag(group.getTrackFormat(track.trackIndex).language) ?: "auto"
             prefs.edit { putString("preferred_audio_lang", language); seriesKey("audio")?.let { putString(it, language) } }

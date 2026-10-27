@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Rect
 import android.media.AudioManager
+import android.view.LayoutInflater
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -299,7 +300,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
         AndroidView(
             factory = { ctx ->
-                PlayerView(ctx).apply {
+                (LayoutInflater.from(ctx).inflate(R.layout.player_view_texture, null) as PlayerView).apply {
                     useController = false
                     setKeepContentOnPlayerReset(true)
                 }
@@ -314,6 +315,14 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 view.resizeMode = playback.resizeMode
                 view.keepScreenOn = playback.playRequested
                 SubtitlePreferences.applyToPlayerView(view.context, view)
+                val target = view.videoSurfaceView ?: view
+                VideoColorFilterHelper.applyToView(
+                    target,
+                    playback.videoContrast,
+                    playback.videoBrightness,
+                    playback.videoSaturation,
+                    playback.videoAmoledMode
+                )
             },
             onReset = null,
             onRelease = { it.player = null }
@@ -1224,6 +1233,13 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             value = fitName,
                             onClick = { onSelectSection("aspect") }
                         )
+                        val isEqCustom = playback.videoContrast != 1.0f || playback.videoBrightness != 0.0f || playback.videoSaturation != 1.0f || playback.videoAmoledMode
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Tune,
+                            label = "Video Equalizer",
+                            value = if (isEqCustom) "Active" else "Default",
+                            onClick = { onSelectSection("video_eq") }
+                        )
                         QuickMenuRow(
                             icon = Icons.Rounded.GraphicEq,
                             label = "Audio track",
@@ -1278,6 +1294,108 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 }
 
 
+                "video_eq" -> {
+                    QuickSubMenuContainer(title = "Video Equalizer & Color", onBack = { onSelectSection("main") }) {
+                        // Contrast Slider
+                        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Contrast", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                val contrastPct = ((playback.videoContrast - 1.0f) * 100).toInt()
+                                val sign = if (contrastPct > 0) "+" else ""
+                                Text(if (contrastPct == 0) "Normal (100%)" else "$sign$contrastPct%", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                            Slider(
+                                value = playback.videoContrast,
+                                onValueChange = {
+                                    playback.updateVideoEqualizer(it, playback.videoBrightness, playback.videoSaturation, playback.videoAmoledMode)
+                                },
+                                valueRange = 0.6f..1.6f,
+                                colors = SliderDefaults.colors(thumbColor = TimelineAccent, activeTrackColor = TimelineAccent)
+                            )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        // Shadow / Brightness Lift Slider
+                        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Shadow Lift (Brightness)", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                val brightPct = (playback.videoBrightness * 100 / 0.3f).toInt()
+                                val sign = if (brightPct > 0) "+" else ""
+                                Text(if (brightPct == 0) "0%" else "$sign$brightPct%", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                            Text("Lifts crushed dark details in night scenes without blowing highlights", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
+                            Slider(
+                                value = playback.videoBrightness,
+                                onValueChange = {
+                                    playback.updateVideoEqualizer(playback.videoContrast, it, playback.videoSaturation, playback.videoAmoledMode)
+                                },
+                                valueRange = -0.25f..0.25f,
+                                colors = SliderDefaults.colors(thumbColor = TimelineAccent, activeTrackColor = TimelineAccent)
+                            )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        // Saturation / Vibrance Slider
+                        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Saturation / Vibrance", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                val satPct = (playback.videoSaturation * 100).toInt()
+                                Text(if (satPct == 100) "Normal (100%)" else "$satPct%", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                            Text("Boosts vivid color intensity for anime, cartoons, and cinema", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
+                            Slider(
+                                value = playback.videoSaturation,
+                                onValueChange = {
+                                    playback.updateVideoEqualizer(playback.videoContrast, playback.videoBrightness, it, playback.videoAmoledMode)
+                                },
+                                valueRange = 0.0f..2.0f,
+                                colors = SliderDefaults.colors(thumbColor = TimelineAccent, activeTrackColor = TimelineAccent)
+                            )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        // AMOLED True-Black Filter
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text("AMOLED Pitch-Black Mode", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Clips near-black noise into true pitch black (#000000) to turn off OLED pixels", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
+                            }
+                            Switch(
+                                checked = playback.videoAmoledMode,
+                                onCheckedChange = {
+                                    playback.updateVideoEqualizer(playback.videoContrast, playback.videoBrightness, playback.videoSaturation, it)
+                                    onMessage(if (it) "AMOLED Pitch-Black ON" else "AMOLED Pitch-Black OFF")
+                                }
+                            )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 6.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        // Reset Button
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    playback.resetVideoEqualizer()
+                                    onMessage("Video Equalizer reset to defaults")
+                                },
+                                border = BorderStroke(1.dp, TimelineAccent.copy(alpha = 0.5f))
+                            ) {
+                                Text("Reset to Defaults", color = TimelineAccent, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+
                 "audio" -> {
                     QuickSubMenuContainer(title = "Audio settings", onBack = { onSelectSection("main") }) {
                         Text("Active Track", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
@@ -1328,6 +1446,38 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 onCheckedChange = {
                                     playback.updateNightMode(it)
                                     onMessage(if (it) "Night Mode (Voice Boost) ON" else "Night Mode OFF")
+                                }
+                            )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+
+                        // Surround 5.1 Dialogue Lift (Downmix Normalizer)
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text("Surround 5.1 Dialogue Lift", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    if (playback.isMultichannelAudio() && playback.surroundDownmixBoost) {
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = TimelineAccent.copy(alpha = 0.22f),
+                                            border = BorderStroke(1.dp, TimelineAccent.copy(alpha = 0.5f))
+                                        ) {
+                                            Text("ACTIVE +7.5dB", color = TimelineAccent, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp))
+                                        }
+                                    }
+                                }
+                                Text("Compensates the -8dB multi-channel downmix penalty so 5.1 dialogue sounds as full as 2.0 stereo", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
+                            }
+                            Switch(
+                                checked = playback.surroundDownmixBoost,
+                                onCheckedChange = {
+                                    playback.updateSurroundDownmixBoost(it)
+                                    onMessage(if (it) "Surround 5.1 Boost ON" else "Surround 5.1 Boost OFF")
                                 }
                             )
                         }
