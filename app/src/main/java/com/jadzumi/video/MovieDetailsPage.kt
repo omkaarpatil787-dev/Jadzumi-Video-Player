@@ -159,18 +159,18 @@ fun MovieDetailsPage(
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().background(cinemaSurfaceBrush())
                     ) {
                         val heroPad = if (isTablet) 22.dp else 16.dp
                         val posterWidth = if (isTablet) 140.dp else 102.dp
 
                         val fullSynopsis = effectiveMetadata.synopsis
-                            ?: "Offline Feature Film stored in your local library. High-efficiency playback with hardware-accelerated MediaCodec decoding."
+                            ?: "No synopsis is stored for this local video."
 
                         Column(
                             modifier = Modifier.padding(heroPad),

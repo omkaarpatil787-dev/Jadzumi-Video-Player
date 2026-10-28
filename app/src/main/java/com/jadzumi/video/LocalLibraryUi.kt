@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -160,13 +161,13 @@ fun WelcomeOnboardingCard(
 @Composable private fun LocalPanel(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = subtleCardBorder(),
         shadowElevation = 2.dp
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(20.dp),
+            modifier = Modifier.fillMaxWidth().background(cinemaSurfaceBrush()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             content = content
         )
@@ -179,11 +180,13 @@ private data class HeroItem(
     val subtitle: String,
     val badge: String? = null,
     val localVideo: LocalVideo? = null,
+    val progress: Float? = null,
     val previewArtwork: String = "hero",
     val onPlay: () -> Unit,
     val onInfo: () -> Unit
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun HeroMoviePager(
     items: List<HeroItem>,
@@ -193,25 +196,22 @@ private fun HeroMoviePager(
     if (items.isEmpty()) return
     val pagerState = rememberPagerState(pageCount = { items.size })
 
-    val fullHeight = if (isPhone) 220.dp else 260.dp
+    val textScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
+    val fullHeight = (if (isPhone) 300.dp else 310.dp) + ((textScale - 1f) * 110f).dp
+    val motion = LocalMotionStyle.current
     val minHeight = if (isPhone) 74.dp else 84.dp
 
     val animatedHeight by animateDpAsState(
         targetValue = if (isMinimized) minHeight else fullHeight,
-        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        animationSpec = if (motion.enabled) spring(dampingRatio = motion.damping, stiffness = Spring.StiffnessMediumLow) else snap(),
         label = "heroHeight"
-    )
-    val animatedCorners by animateDpAsState(
-        targetValue = if (isMinimized) 20.dp else 26.dp,
-        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
-        label = "heroCorners"
     )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(animatedHeight),
-        shape = RoundedCornerShape(animatedCorners),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = Color.Black)
     ) {
         AnimatedContent(
@@ -326,17 +326,11 @@ private fun HeroMoviePager(
                             }
                             Box(
                                 Modifier.fillMaxSize().background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.Black.copy(alpha = 0.2f),
-                                            Color.Black.copy(alpha = 0.55f),
-                                            Color.Black.copy(alpha = 0.94f)
-                                        )
-                                    )
+                                    Brush.horizontalGradient(listOf(Color(0xFF071323).copy(alpha = 0.88f), Color(0xFF071323).copy(alpha = 0.30f)))
                                 )
                             )
                             Column(
-                                Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
+                                Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f)))).padding(horizontal = if (isPhone) 22.dp else 30.dp, vertical = 28.dp),
                                 verticalArrangement = Arrangement.Bottom
                             ) {
                                 if (item.badge != null) {
@@ -357,9 +351,9 @@ private fun HeroMoviePager(
                                 Text(
                                     item.title,
                                     color = Color.White,
-                                    fontSize = 28.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
+                                    fontSize = if (isPhone) 29.sp else 36.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(Modifier.height(4.dp))
@@ -370,43 +364,37 @@ private fun HeroMoviePager(
                                     fontWeight = FontWeight.Medium
                                 )
                                 Spacer(Modifier.height(14.dp))
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Button(
                                         onClick = item.onPlay,
                                         shape = CircleShape,
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE3EFFF), contentColor = Color(0xFF133B66)),
                                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
                                     ) {
-                                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                        Icon(Icons.Rounded.PlayArrow, null, tint = Color(0xFF133B66), modifier = Modifier.size(20.dp))
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        Text("Play", color = Color(0xFF133B66), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                     }
-                                    Surface(
-                                        onClick = item.onPlay,
-                                        shape = CircleShape,
-                                        color = Color.White.copy(alpha = 0.18f),
-                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                                        modifier = Modifier.size(42.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Rounded.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                        }
-                                    }
-                                    Surface(
+                                    OutlinedButton(
                                         onClick = item.onInfo,
                                         shape = CircleShape,
-                                        color = Color.White.copy(alpha = 0.18f),
-                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                                        modifier = Modifier.size(42.dp)
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.30f)),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp)
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Rounded.Info, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                        }
+                                        Icon(Icons.Rounded.Info, null, Modifier.size(20.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text("Details")
                                     }
                                 }
+                            }
+                            item.progress?.takeIf { it > 0f }?.let { fraction ->
+                                LinearProgressIndicator(progress = { fraction.coerceIn(0f, 1f) },
+                                    modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().height(3.dp),
+                                    color = Color(0xFFB7D8FF), trackColor = Color.White.copy(alpha = 0.12f))
                             }
                         }
                     }
@@ -948,6 +936,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                             subtitle = "Resume from ${timecode(pos / 1000)} · ${timecode((dur - pos).coerceAtLeast(0) / 1000)} left",
                             badge = "⏱ RESUME WATCHING",
                             localVideo = movie,
+                            progress = if (movie.duration > 0) (pos.toFloat() / movie.duration).coerceIn(0f, 1f) else null,
                             onPlay = {
                                 playback.open(movie)
                                 playback.fullscreen = true
@@ -965,12 +954,12 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                 if (suggestions.none { it.id == video.uri } && suggestions.size < 6) {
                     val epInfo = EpisodePatterns.parse(video.name)
                     val durStr = if (video.duration > 0) timecode(video.duration / 1000) else "Feature Film"
-                    val resStr = if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else "1080p FHD"
+                    val resStr = if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else null
                     suggestions.add(
                         HeroItem(
                             id = video.uri,
                             title = epInfo?.seriesTitle ?: video.title,
-                            subtitle = "$durStr · $resStr · Dolby Audio",
+                            subtitle = listOfNotNull(durStr, resStr, "Local video").joinToString(" · "),
                             badge = if (epInfo != null) "✨ TV SERIES SPOTLIGHT" else "★ RECOMMENDED CINEMA",
                             localVideo = video,
                             onPlay = {
@@ -1916,21 +1905,21 @@ fun MovieSummaryCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(MaterialTheme.shapes.large)
             .touchMotion()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = subtleCardBorder()
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().background(cinemaSurfaceBrush())
         ) {
             // Poster / Backdrop Thumbnail Container (16:10 aspect ratio)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 10f)
+                    .aspectRatio(4f / 5f)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 SidecarImage(
@@ -1940,12 +1929,7 @@ fun MovieSummaryCard(
                 )
 
                 // Top Quality / Codec Badge - Uniform Capsule Pill
-                val badge = when {
-                    video.width >= 3840 -> "4K UHD"
-                    video.width >= 1920 -> "1080p"
-                    video.name.contains("hevc", true) || video.name.contains("x265", true) -> "HEVC"
-                    else -> "HD"
-                }
+                val badge = if (video.width > 0 && video.height > 0) "${video.width} × ${video.height}" else "Local video"
                 Surface(
                     shape = CircleShape,
                     color = Color.Black.copy(alpha = 0.70f),
@@ -2000,9 +1984,9 @@ fun MovieSummaryCard(
                 Text(
                     text = metadata.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
@@ -2087,21 +2071,21 @@ fun TvSeriesSummaryCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(MaterialTheme.shapes.large)
             .touchMotion()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = subtleCardBorder()
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().background(cinemaSurfaceBrush())
         ) {
             // Poster / Backdrop Thumbnail
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 10f)
+                    .aspectRatio(4f / 5f)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 val firstEp = series.seasons.values.firstOrNull()?.firstOrNull()
@@ -2166,9 +2150,9 @@ fun TvSeriesSummaryCard(
                 Text(
                     text = series.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 

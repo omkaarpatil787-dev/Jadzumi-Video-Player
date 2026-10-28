@@ -155,3 +155,31 @@ lint (zero errors). Evidence: docs/verification/release-1.4.0/result.json.
 Next: fast-forward main and monitor signed build/release. No force push; do not publish if main diverged.
 
 Public release must attach the signed .apk directly, not a CI artifact ZIP.
+
+## Cinema Portal local preview — NO PUSH
+
+Current user request applies to Jadzumi, not the expense app. Adapt attached HTML as a
+native visual reference, keep the floating dock and all features/settings, provide a test
+APK, and do not push without permission. Working branch: preview/cinema-portal-ui.
+Initial v1.4 draft was preserved locally, then branch fast-forwarded to current remote
+v1.6.0 (5718fbc) and UI changes reapplied so Color/Audio Studio, HUD, file blacklist and
+universal views are retained. Dock source and preference keys match the v1.6 baseline.
+
+See docs/CINEMA-PORTAL-PREVIEW.md. Isolated debug property -PportalPreview=true produces
+Jadzumi Preview (com.jadzumi.video.portalpreview), leaving production sandbox untouched.
+Final current-base frozen-source test/build/lint PASSED: 68 unit tests per variant,
+zero failures/errors/skips; debug APK signature/package/label/10 aliases verified.
+Lint has zero errors; exact counts are in docs/verification/cinema-portal-preview/result.json.
+Dock source, all preference keys and existing studio/files implementations match baseline.
+Six license files and five NextLib native libraries retained.
+Testing APK: /workspace/Jadzumi-Cinema-Portal-Preview.apk. No new branch commit or push is authorized
+for publication; keep preview modifications local for review. Device checks NOT RUN.
+
+## User authorized test-branch push only
+
+The user now approves committing/pushing Cinema Portal to test/cinema-portal-ui, with
+nothing pushed into main. This supersedes the earlier no-push instruction only for
+that test branch. The existing local source validation remains applicable (68 tests
+per variant; zero lint errors). CI now builds the isolated preview with the same flag
+and skips production signing/release publication for this branch. Merging to main or
+publishing a stable release still needs separate permission. CI result pending push.

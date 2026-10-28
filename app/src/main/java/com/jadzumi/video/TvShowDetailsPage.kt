@@ -384,7 +384,7 @@ private fun ShowHeroCard(
         syn.contains("feature film stored", ignoreCase = true)
     val displaySynopsis = if (isGenericSynopsis && !onlineShow?.synopsis.isNullOrBlank()) {
         onlineShow!!.synopsis!!
-    } else syn ?: "Offline TV Series in your local library. High-efficiency playback with hardware-accelerated decoding."
+    } else syn ?: "No synopsis is stored for this local series."
 
     val displayTitle = onlineShow?.title ?: series.title
     val displayYear = onlineShow?.year ?: series.year ?: "Year unavailable"
@@ -401,12 +401,12 @@ private fun ShowHeroCard(
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = subtleCardBorder()
     ) {
         Box(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().background(cinemaSurfaceBrush())
         ) {
             Column(
                 modifier = Modifier.padding(heroPad),
@@ -439,7 +439,7 @@ private fun ShowHeroCard(
                         Text(
                             text = displayTitle,
                             style = if (isTablet) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis

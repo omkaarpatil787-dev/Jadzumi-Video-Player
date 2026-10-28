@@ -87,7 +87,7 @@ import kotlin.math.roundToInt
 private val QuickMenuBg = Color(0xFF151B26).copy(alpha = 0.90f)
 private val FrostedCircleBg = Color.White.copy(alpha = 0.16f)
 private val FrostedCircleRim = Color.White.copy(alpha = 0.30f)
-internal val TimelineAccent = Color(0xFF8B9DFF)
+internal val TimelineAccent = Color(0xFFB7D8FF)
 
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -100,6 +100,12 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     val video = playback.video ?: return
     val activity = LocalActivity.current as? MainActivity ?: return
     val coroutineScope = rememberCoroutineScope()
+    val motion = LocalMotionStyle.current
+    val openingFrame = remember(video.identity) { Animatable(0f) }
+    LaunchedEffect(playback.renderedVideoIdentity, motion.enabled, playback.inPip) {
+        if (!motion.enabled || playback.inPip) openingFrame.snapTo(1f)
+        else if (playback.renderedVideoIdentity == video.identity) openingFrame.animateTo(1f, tween(480, easing = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)))
+    }
     val isOled = remember { DeviceHardwareInspector.isOledOrAmoledDisplay(activity) }
     val dynamicFrostedCircleBg = remember(glassIntensity, isOled, theme) {
         GlassTheme.playerFrostedBg(theme, isOled, glassIntensity)
@@ -323,6 +329,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             onReset = null,
             onRelease = { it.player = null }
         )
+        if (playback.renderedVideoIdentity == video.identity && !playback.inPip) {
+            PortalApertureMask({ openingFrame.value }, Color.Black, Modifier.fillMaxSize())
+        }
+
 
             if (!playback.inPip) {
                 val audio = remember { activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
@@ -624,8 +634,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 ) {
                                     Icon(Icons.Rounded.Replay10, null, Modifier.size(22.dp), tint = if (playback.dialogueReplayActive) TimelineAccent else Color.White)
                                 }
-                                FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
-                                    Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
+                                FrostedCircleButton(if (quickMenuSection == null) "Player options" else "Close player options", {
+                                    quickMenuSection = if (quickMenuSection == null) "main" else null; interaction++
+                                }, size = 44.dp) {
+                                    CinemaOptionsMorph(quickMenuSection != null, Modifier.size(22.dp))
                                 }
                             }
                         }
@@ -948,8 +960,11 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 // PANEL 5: RIGHT-SIDE QUICK MENU
                 AnimatedVisibility(
                     visible = quickMenuSection != null,
-                    enter = fadeIn(tween(if (reducedMotion) 0 else 160)) + slideInHorizontally(tween(if (reducedMotion) 0 else 200)) { it / 3 },
-                    exit = fadeOut(tween(if (reducedMotion) 0 else 140)) + slideOutHorizontally(tween(if (reducedMotion) 0 else 160)) { it / 3 }
+                    enter = if (!motion.enabled) EnterTransition.None else fadeIn(tween(160)) +
+                        (if (isPhonePortrait) slideInVertically(spring(dampingRatio = motion.damping, stiffness = Spring.StiffnessMediumLow)) { it / 3 }
+                        else slideInHorizontally(spring(dampingRatio = motion.damping, stiffness = Spring.StiffnessMediumLow)) { it / 3 }),
+                    exit = if (!motion.enabled) ExitTransition.None else fadeOut(tween(140)) +
+                        (if (isPhonePortrait) slideOutVertically(tween(160)) { it / 3 } else slideOutHorizontally(tween(160)) { it / 3 })
                 ) {
                     quickMenuSection?.let { section ->
                         RightSideQuickMenu(
@@ -1201,7 +1216,12 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         ) {
             when (section) {
                 "main" -> {
-                    Column(Modifier.heightIn(max = 560.dp).elasticEdge().verticalScroll(rememberScrollState()).padding(vertical = 10.dp)) {
+                    Column(Modifier.heightIn(max = (maxHeight - 48.dp).coerceIn(160.dp, 560.dp)).elasticEdge().verticalScroll(rememberScrollState()).padding(vertical = 10.dp)) {
+                        Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("Playback options", color = Color.White, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, "Close player options", tint = Color.White) }
+                        }
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.10f))
                         QuickMenuRow(
                             icon = Icons.Rounded.Speed,
                             label = "Playback speed",
@@ -1676,10 +1696,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier.wrapContentWidth()
+            modifier = Modifier.weight(1.5f)
         ) {
             Icon(icon, null, tint = Color.White.copy(alpha = 0.85f), modifier = Modifier.size(20.dp))
-            Text(label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+            Text(label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 2, modifier = Modifier.weight(1f))
         }
         if (value.isNotEmpty()) {
             Spacer(modifier = Modifier.width(16.dp))

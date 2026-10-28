@@ -42,9 +42,13 @@ jobs:
       run: |
         VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)
         test -n "$VERSION"
+        if [[ "$GITHUB_REF" == "refs/heads/test/cinema-portal-ui" ]]; then
+          VERSION="$VERSION-portal-preview"
+        fi
         echo "APP_VERSION=v$VERSION" >> "$GITHUB_ENV"
 
     - name: Prepare release signing
+      if: github.ref != 'refs/heads/test/cinema-portal-ui'
       id: signing
       shell: bash
       run: |
@@ -59,7 +63,13 @@ jobs:
         fi
 
     - name: Run unit tests and build debug APK
-      run: bash gradlew test assembleDebug lintDebug --no-daemon --stacktrace
+      shell: bash
+      run: |
+        if [[ "$GITHUB_REF" == "refs/heads/test/cinema-portal-ui" ]]; then
+          bash gradlew test assembleDebug lintDebug -PportalPreview=true --no-daemon --stacktrace
+        else
+          bash gradlew test assembleDebug lintDebug --no-daemon --stacktrace
+        fi
 
     - name: Build signed release APK
       if: steps.signing.outputs.ready == 'true'

@@ -26,12 +26,15 @@ if (!hasReleaseSigning) {
         "ANDROID_KEY_PASSWORD or the matching keystore.properties entries.")
 }
 
+val portalPreview = providers.gradleProperty("portalPreview").map { it.toBoolean() }.orElse(false)
+
 android {
     namespace = "com.jadzumi.video"
     compileSdk = 36
 
     defaultConfig {
         applicationId = "com.jadzumi.video"
+        manifestPlaceholders["appLabel"] = "Jadzumi Player"
         minSdk = 26
         targetSdk = 35
         versionCode = 23
@@ -71,6 +74,11 @@ android {
             signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else null
         }
         debug {
+            if (portalPreview.get()) {
+                applicationIdSuffix = ".portalpreview"
+                versionNameSuffix = "-portal-preview"
+                manifestPlaceholders["appLabel"] = "Jadzumi Preview"
+            }
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("debug")
         }

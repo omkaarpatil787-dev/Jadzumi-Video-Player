@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -161,6 +162,7 @@ private val destinations = listOf(
     val motionStyle = rememberMotionStyle(reducedMotion, livelyAnimations)
     val keyboardController = LocalSoftwareKeyboardController.current
     var showSplash by rememberSaveable { mutableStateOf(true) }
+    var destinationReady by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     val bloomProgress = remember { Animatable(1f) }
@@ -502,7 +504,7 @@ private val destinations = listOf(
                                                 }
                                             }
                                         },
-                                        modifier = Modifier.weight(1f).elasticEdge(),
+                                        modifier = Modifier.weight(1f).elasticEdge().onGloballyPositioned { destinationReady = it.size.width > 0 && it.size.height > 0 },
                                         contentKey = { it },
                                         label = "screen"
                                     ) { current ->
@@ -678,7 +680,8 @@ private val destinations = listOf(
             if (showSplash) {
                 JadzumiSplashScreen(
                     theme = effectiveTheme,
-                    onFinished = { showSplash = false }
+                    onFinished = { showSplash = false },
+                    ready = destinationReady
                 )
             }
             }
@@ -1877,8 +1880,8 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Replay Aurora Splash Screen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Play the cinematic opening animation in current theme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Replay opening", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Replay the opening in your current theme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Preview ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
@@ -2781,7 +2784,7 @@ private val settingsCategories = listOf(
 @Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shadowElevation = 2.dp
@@ -2789,6 +2792,7 @@ private val settingsCategories = listOf(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(cinemaSurfaceBrush())
                 .padding(20.dp),
             content = content
         )

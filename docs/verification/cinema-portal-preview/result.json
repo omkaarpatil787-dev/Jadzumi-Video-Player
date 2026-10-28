@@ -1,0 +1,39 @@
+{
+  "baseCommit": "5718fbc40d7b78989c8805592b3596761a2ea55f",
+  "version": "1.6.0-portal-preview",
+  "package": "com.jadzumi.video.portalpreview",
+  "label": "Jadzumi Preview",
+  "command": "./gradlew test assembleDebug lintDebug -PportalPreview=true --no-daemon --console=plain",
+  "status": "passed",
+  "unitTests": {
+    "Debug": {
+      "tests": 68,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Release": {
+      "tests": 68,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "lint": {
+    "Warning": 43,
+    "Hint": 2
+  },
+  "debugSignatureVerified": true,
+  "apkSHA256": "a9f3640879ba5b14e4e8b4504756f7498cdb9cb3cf689b55c469d3a87cf63a7f",
+  "apkBytes": 29673496,
+  "dockSourceUnchanged": true,
+  "preferenceKeySetUnchanged": true,
+  "studioAndFilesImplementationUnchanged": true,
+  "launcherAliasesVerified": 10,
+  "licenseFilesVerified": 6,
+  "nextlibNativeLibrariesVerified": 5,
+  "prototypeHtmlPackaged": false,
+  "deviceUiPlaybackHdrAndFramePacing": "NOT RUN",
+  "publication": "User authorized test/cinema-portal-ui branch only; no main merge or release",
+  "testBranchCI": "Pending push"
+}

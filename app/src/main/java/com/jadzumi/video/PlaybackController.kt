@@ -74,6 +74,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var isHdr by mutableStateOf(false); private set
     var videoCodecBadge by mutableStateOf<String?>(null); private set
 
+    var renderedVideoIdentity by mutableStateOf<String?>(null); private set
+
     var runtimeVideoDecoder by mutableStateOf<DecoderInspection?>(null); private set
     var runtimeAudioDecoder by mutableStateOf<DecoderInspection?>(null); private set
     var runtimeVideoFormat by mutableStateOf<VideoInspection?>(null); private set
@@ -916,6 +918,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             applyVideoEffects()
 
             p.addAnalyticsListener(object : AnalyticsListener {
+                override fun onRenderedFirstFrame(eventTime: AnalyticsListener.EventTime, output: Any, renderTimeMs: Long) {
+                    if (player === p) renderedVideoIdentity = video?.identity
+                }
+
                 override fun onVideoDecoderInitialized(eventTime: AnalyticsListener.EventTime, decoderName: String, initializedTimestampMs: Long, initializationDurationMs: Long) {
                     recordDecoder(p, decoderName, true)
                 }
@@ -1351,6 +1357,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         } catch (_: Exception) {}
         val oldPlayer = player
         player = null; mediaItemAssigned = false
+        renderedVideoIdentity = null
         runtimeVideoDecoder = null; runtimeAudioDecoder = null
         runtimeVideoFormat = null; runtimeAudioFormat = null
         runtimeAudioTracks = emptyList(); runtimeSubtitleTracks = emptyList()
