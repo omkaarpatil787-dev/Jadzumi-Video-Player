@@ -1248,7 +1248,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     TvSeriesRowItem(
                                         series = series,
                                         playback = playback,
-                                        onClick = { select("series:${it.id}") }
+                                        onClick = { select("series:${series.id}") }
                                     )
                                 }
                             }
@@ -1326,17 +1326,18 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         video = movie,
                                         isSelectionMode = isSelectionMode,
                                         isSelected = movie.uri in selectedUris,
-                                        playback = playback,
-                                        onClick = {
-                                            if (isSelectionMode) {
-                                                if (movie.uri in selectedUris) selectedUris.remove(movie.uri)
-                                                else selectedUris.add(movie.uri)
-                                            } else select(movie.uri)
-                                        },
                                         onLongClick = {
                                             if (!isSelectionMode) {
                                                 isSelectionMode = true
                                                 selectedUris.add(movie.uri)
+                                            }
+                                        },
+                                        select = {
+                                            if (isSelectionMode) {
+                                                if (movie.uri in selectedUris) selectedUris.remove(movie.uri)
+                                                else selectedUris.add(movie.uri)
+                                            } else {
+                                                select(movie.uri)
                                             }
                                         }
                                     )
