@@ -1,5 +1,6 @@
 package com.jadzumi.video
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
@@ -786,7 +787,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         onScrollActive?.invoke(shouldMinimizeDock)
     }
     var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
-    val libraryPrefs = remember { context.getSharedPreferences("appearance", android.content.Context.MODE_PRIVATE) }
+    val context = LocalContext.current
+    val libraryPrefs = remember(context) { context.getSharedPreferences("appearance", Context.MODE_PRIVATE) }
     var isGridView by rememberSaveable { mutableStateOf(libraryPrefs.getBoolean("library_grid_view", false)) }
     var activeFilter by rememberSaveable { mutableStateOf("All") }
     var activeSort by rememberSaveable { mutableStateOf("Date Added") }
