@@ -3,7 +3,6 @@ package com.jadzumi.video
 import android.content.Context
 import android.text.format.Formatter
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,15 +11,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -238,7 +234,6 @@ fun TvSeriesRowItem(
     val total = series.totalEpisodes
     val isComplete = watched >= total && total > 0
     val firstEpisode = remember(series) { series.seasons.values.firstOrNull()?.firstOrNull() }
-    val thumbnailBitmap = rememberVideoThumbnail(firstEpisode)
 
     Surface(
         onClick = onClick,
@@ -257,18 +252,11 @@ fun TvSeriesRowItem(
                 shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHighest
             ) {
-                if (thumbnailBitmap != null) {
-                    Image(
-                        bitmap = thumbnailBitmap.asImageBitmap(),
-                        contentDescription = series.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.Tv, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
-                    }
-                }
+                SidecarImage(
+                    uri = series.posterUri ?: series.backdropUri,
+                    fallbackVideo = firstEpisode,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -295,7 +283,7 @@ fun TvSeriesRowItem(
             }
 
             Icon(
-                Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                Icons.Rounded.ChevronRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )

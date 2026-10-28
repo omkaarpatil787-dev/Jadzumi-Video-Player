@@ -2032,7 +2032,7 @@ private val settingsCategories = listOf(
                                                 Text("Control which folders are visible or hidden.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                         }
-                                        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Icon(Icons.Rounded.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
 
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
