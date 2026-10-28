@@ -1,9 +1,14 @@
 package com.jadzumi.video
 
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.graphics.Rect
 import android.media.AudioManager
+import android.os.BatteryManager
+import java.text.DateFormat
+import java.util.Date
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -581,6 +586,12 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                             // Top-Right Icons: Clean and uncluttered glassy controls
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                if (playback.showPlayerClock || playback.showBatteryPercentage) {
+                                    PlayerStatusPill(
+                                        showClock = playback.showPlayerClock,
+                                        showBattery = playback.showBatteryPercentage
+                                    )
+                                }
                                 FrostedCircleButton(
                                     label = if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off",
                                     onClick = {
@@ -760,19 +771,21 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
-                                            val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                            Surface(
-                                                shape = RoundedCornerShape(999.dp),
-                                                color = Color.White.copy(alpha = 0.14f),
-                                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
-                                            ) {
-                                                Text(
-                                                    "-${compactTimecode(remSec)} remaining",
-                                                    Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
-                                                    color = Color.White.copy(alpha = 0.92f),
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Medium
-                                                )
+                                            if (playback.showRemainingTime) {
+                                                val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                                Surface(
+                                                    shape = RoundedCornerShape(999.dp),
+                                                    color = Color.White.copy(alpha = 0.14f),
+                                                    border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                                                ) {
+                                                    Text(
+                                                        "-${compactTimecode(remSec)} remaining",
+                                                        Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                                                        color = Color.White.copy(alpha = 0.92f),
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -852,19 +865,21 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                                 fontSize = 13.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
-                                            val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                            Surface(
-                                                shape = RoundedCornerShape(999.dp),
-                                                color = Color.White.copy(alpha = 0.14f),
-                                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
-                                            ) {
-                                                Text(
-                                                    "-${compactTimecode(remSec)} remaining",
-                                                    Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                                    color = Color.White.copy(alpha = 0.92f),
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Medium
-                                                )
+                                            if (playback.showRemainingTime) {
+                                                val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                                Surface(
+                                                    shape = RoundedCornerShape(999.dp),
+                                                    color = Color.White.copy(alpha = 0.14f),
+                                                    border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                                                ) {
+                                                    Text(
+                                                        "-${compactTimecode(remSec)} remaining",
+                                                        Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                        color = Color.White.copy(alpha = 0.92f),
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -1964,6 +1979,80 @@ private fun EnhancerSliderRow(
             ),
             modifier = Modifier.fillMaxWidth()
         )
+    }
+}
+
+@Composable
+private fun PlayerStatusPill(
+    showClock: Boolean,
+    showBattery: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var timeText by remember { mutableStateOf("") }
+    var batteryText by remember { mutableStateOf("") }
+    var isCharging by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showClock, showBattery) {
+        while (true) {
+            if (showClock) {
+                timeText = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date())
+            }
+            if (showBattery) {
+                val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+                val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+                val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+                val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+                isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+                val pct = if (level >= 0 && scale > 0) (level * 100) / scale else -1
+                batteryText = if (pct >= 0) "$pct%" else ""
+            }
+            kotlinx.coroutines.delay(15_000)
+        }
+    }
+
+    Surface(
+        shape = RoundedCornerShape(999.dp),
+        color = Color.Black.copy(alpha = 0.40f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (showClock && timeText.isNotEmpty()) {
+                Text(
+                    text = timeText,
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            if (showClock && showBattery && timeText.isNotEmpty() && batteryText.isNotEmpty()) {
+                Text("·", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+            }
+            if (showBattery && batteryText.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        if (isCharging) Icons.Rounded.BatteryChargingFull else Icons.Rounded.BatteryStd,
+                        contentDescription = "Battery level",
+                        tint = if (isCharging) TimelineAccent else Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Text(
+                        text = batteryText,
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
     }
 }
 // END OF FILE

@@ -2,7 +2,7 @@
 <p align="center">An overview of the app, its architecture, and release progress.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.5.0-2563eb?style=flat-square" alt="Version 1.5.0"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.6.0-2563eb?style=flat-square" alt="Version 1.6.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -18,7 +18,7 @@ FFmpeg decoder fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
-| **v1.5.0 · build 22** | Android 8.0+ · ARM64 | GPU Color Studio · Stream Telemetry · Zero telemetry |
+| **v1.6.0 · build 23** | Android 8.0+ · ARM64 | Universal Views · Playback HUD · Blacklist Control · Zero telemetry |
 
 ## 📸 Screenshots
 
@@ -85,15 +85,13 @@ batch actions, adaptive layouts, themes, frosted surfaces, and custom icons.
 </details>
 
 <details>
-<summary><strong>What’s new · v1.5.0 🎨🔊</strong></summary>
+<summary><strong>What’s new · v1.6.0 🎬📱</strong></summary>
 
-- **GPU Video Enhancer & Color Studio**: Real-time hardware-accelerated color grading (Contrast, Shadow Lift / Gamma, Saturation, Vibrance, AMOLED Deep Black) via Media3 native `RgbMatrix` and OpenGL ES shader effects.
-- **Zero-Copy SurfaceView & Subtitle Isolation**: Preserves `SurfaceView` direct rendering pipeline and keeps subtitles and overlays 100% untouched on separate window layers.
-- **HDR Master Passthrough Protection**: Automatically locks enhancements during 10-bit HDR / Dolby Vision playback to preserve native BT.2020 wide color gamut and ST 2084 / HLG dynamic range.
-- **5 Color Profiles**: Natural (Studio Master zero-overhead bypass), Cinema, Vivid, Anime & Animation, and Custom Calibration with One-Tap Reset.
-- **Expanded Audio Studio**: Active Audio Stream Card with real-time telemetry (Container, Codec, Channels & Layout, Sample Rate, Bit Depth, Decoder & Engine, Player Audio Output, Active Processing).
-- **Channel Processing Modes**: Default / Automatic pass-through, Stereo Downmix for headphones/speakers, and Dialogue Clarity Focus for cinema speech prominence.
-- **Lip-Sync & Night Mode**: −50ms / +50ms Bluetooth delay compensation and dynamic range compression.
+- **Universal Grid & List View Toggle**: Added grid / list view switching across all tabs — All Indexed Videos, Movies, TV Shows, and Connected Folders with persistent layout preference.
+- **Playback HUD Status Overlays**: Configurable multi-choice display during playback for Remaining Time countdown, system Clock, and Battery Percentage with charging state.
+- **Advanced Files & Storage Management**: Folder Blacklist controls to hide directories without losing permissions, plus toggles to show `.nomedia` files and hidden dot files (`.`).
+- **Brand Aesthetics Polish**: Relocated the breathing glowing Gemini-style brand emblem to the About page, refining the mobile floating bottom dock into a sleek, minimal pill.
+- **All Previous Capabilities**: Full GPU Video Enhancer & Color Studio, Expanded Audio Studio with real-time stream telemetry and channel processing modes (Stereo Downmix, Dialogue Clarity Focus).
 
 See [release notes](RELEASE_NOTES.md).
 
@@ -101,7 +99,7 @@ See [release notes](RELEASE_NOTES.md).
 
 ## 🚀 Release progress
 
-**v1.5.0** introduces the GPU Video Enhancer & Color Studio and the Expanded Audio Studio with real-time stream inspection and channel modes. See [release notes](RELEASE_NOTES.md).
+**v1.6.0** introduces Universal Grid/List view switching across all content tabs, customizable Playback HUD status overlays (Clock, Battery %, Remaining Time), advanced Files & Folder Blacklist management, and brand emblem relocation to About. See [release notes](RELEASE_NOTES.md).
 
 <details>
 <summary><strong>View project milestones</strong></summary>
@@ -123,6 +121,7 @@ See [release notes](RELEASE_NOTES.md).
 | **Milestone 13 — Privacy, Signing & License Corrections (v1.3.3)** | Default-off online requests, shared email-free User-Agent, external release credentials, offline license viewer, versioned CI APKs | Released; CI verified |
 | **Milestone 14 — Motion, Continuity & Tools (v1.4.0)** | Configurable spring animations, touch lighting, elastic scroll edges, technical inspector, local backup/restore, dialogue replay, subtitle search, episode continuity, sleep controls, scene bookmarks, optional refresh matching | Released; CI verified |
 | **Milestone 15 — Video Enhancer & Audio Studio (v1.5.0)** | Hardware OpenGL ES color studio (Contrast, Shadow Lift, Saturation, Vibrance, AMOLED Deep Black, 5 profiles), zero-copy SurfaceView bypass, HDR master passthrough safety, subtitle isolation, real-time Audio Stream Telemetry Card, and Channel Processing Modes (Stereo Downmix, Dialogue Clarity Focus) | Released; CI verified |
+| **Milestone 16 — Universal Views & Playback HUD (v1.6.0)** | Universal Grid/List view toggle across all primary tabs (Home, Movies, TV Shows, Folders), Playback HUD status pill with live clock & battery telemetry, Files settings with folder blacklisting, and emblem relocation to About | Complete |
 
 
 </details>

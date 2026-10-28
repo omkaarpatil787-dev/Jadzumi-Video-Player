@@ -922,9 +922,9 @@ fun GeminiGlowingJadzumiLogo(
 
     val dockWidth by animateDpAsState(
         targetValue = when {
-            isMinimized -> if (isTablet) 96.dp else 84.dp
-            isIconsOnly -> if (isTablet) 400.dp else 360.dp
-            else -> if (isTablet) 540.dp else 420.dp
+            isMinimized -> if (isTablet) 56.dp else 48.dp
+            isIconsOnly -> if (isTablet) 360.dp else 320.dp
+            else -> if (isTablet) 500.dp else 390.dp
         },
         animationSpec = dockSpringDp,
         label = "dockWidth"
@@ -1009,27 +1009,6 @@ fun GeminiGlowingJadzumiLogo(
                         .padding(horizontal = if (isTablet) 14.dp else 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Non-clickable Google Gemini-style Alive Glooming Logo
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = if (isTablet) 8.dp else 4.dp, end = if (isTablet) 8.dp else 4.dp)
-                    ) {
-                        GeminiGlowingJadzumiLogo(
-                            darkSurface = theme != "Light",
-                            size = currentLogoSize
-                        )
-
-                        Spacer(Modifier.width(if (isTablet) 10.dp else 6.dp))
-
-                        // Subtle vertical frosted glass divider
-                        Box(
-                            modifier = Modifier
-                                .height(currentDividerHeight)
-                                .width(1.dp)
-                                .background(GlassTheme.frostedBorderColor(theme, glassIntensity).copy(alpha = 0.35f))
-                        )
-                    }
-
                     // Navigation Destinations
                     navDestinations.forEach { d ->
                         val isSelected = route == d.name || (d.name == "Home" && route == "Library")
@@ -1099,20 +1078,13 @@ fun GeminiGlowingJadzumiLogo(
 
             // 2. Minimized Floating Pill Content (Tapping expands dock smoothly)
             if (minPillAlpha > 0.02f) {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .alpha(minPillAlpha)
-                        .clickable(enabled = isMinimized, onClick = onToggleMinimize)
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                        .clickable(enabled = isMinimized, onClick = onToggleMinimize),
+                    contentAlignment = Alignment.Center
                 ) {
-                    GeminiGlowingJadzumiLogo(
-                        darkSurface = theme != "Light",
-                        size = currentLogoSize
-                    )
-                    Spacer(Modifier.width(6.dp))
                     Icon(
                         imageVector = activeDestination.icon,
                         contentDescription = "Expand navigation",
@@ -1166,6 +1138,8 @@ private val settingsCategories = listOf(
     var activeCategory by rememberSaveable { mutableStateOf(initialCategory) }
     var statusNotice by remember { mutableStateOf<String?>(null) }
     var folderToRemove by remember { mutableStateOf<LocalFolder?>(null) }
+    var showDisplayDuringPlaybackDialog by remember { mutableStateOf(false) }
+    var showFolderBlacklistDialog by remember { mutableStateOf(false) }
     val addFolder = rememberFolderPicker(library)
 
     folderToRemove?.let { folder ->
@@ -1343,6 +1317,18 @@ private val settingsCategories = listOf(
                                             Text("Force maximum panel luminance and enable wide color gamut HDR10/HDR10+/HLG", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = playback.brightnessBoost, onCheckedChange = { playback.updateBrightnessBoost(it) })
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(
+                                        Modifier.fillMaxWidth().clickable { showDisplayDuringPlaybackDialog = true }.padding(vertical = 14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Display during playback", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text(playback.displayDuringPlaybackSummary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("Configure ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     val (hdrTitle, hdrDesc) = remember { DeviceHardwareInspector.getHdrCapabilitiesInfo(context) }
@@ -2023,6 +2009,83 @@ private val settingsCategories = listOf(
                                     }
                                 }
                             }
+
+                            item {
+                                Panel {
+                                    Text("Files", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Spacer(Modifier.height(8.dp))
+
+                                    // 1. Blacklist
+                                    Row(
+                                        Modifier.fillMaxWidth().clickable { showFolderBlacklistDialog = true }.padding(vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                            modifier = Modifier.weight(1f).padding(end = 12.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.VisibilityOff, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Column {
+                                                Text("Blacklist", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Control which folders are visible or hidden.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
+                                        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    // 2. Show .nomedia files
+                                    Row(
+                                        Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                            modifier = Modifier.weight(1f).padding(end = 12.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.FolderOff, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Column {
+                                                Text("Show .nomedia files", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Show files in folders containing .nomedia file.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
+                                        Switch(
+                                            checked = library.showNoMediaFiles,
+                                            onCheckedChange = library::updateShowNoMediaFiles
+                                        )
+                                    }
+
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    // 3. Show hidden files
+                                    Row(
+                                        Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                            modifier = Modifier.weight(1f).padding(end = 12.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.Article, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Column {
+                                                Text("Show hidden files", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text("Show files starting with dot(.).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
+                                        Switch(
+                                            checked = library.showHiddenFiles,
+                                            onCheckedChange = library::updateShowHiddenFiles
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         else -> {
@@ -2155,6 +2218,21 @@ private val settingsCategories = listOf(
                 }
             }
         }
+    }
+
+    if (showDisplayDuringPlaybackDialog) {
+        DisplayDuringPlaybackDialog(
+            playback = playback,
+            onDismiss = { showDisplayDuringPlaybackDialog = false }
+        )
+    }
+
+    if (showFolderBlacklistDialog) {
+        FolderBlacklistDialog(
+            library = library,
+            folders = localState.folders,
+            onDismiss = { showFolderBlacklistDialog = false }
+        )
     }
 }
 }
@@ -2514,7 +2592,7 @@ private val settingsCategories = listOf(
 
         Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                JadzumiLogo(size = 60.dp, darkSurface = darkSurface)
+                GeminiGlowingJadzumiLogo(size = 64.dp, darkSurface = darkSurface)
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),

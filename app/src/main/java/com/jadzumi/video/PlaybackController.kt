@@ -102,6 +102,34 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             return null
         }
 
+    // Display During Playback Overlay Controls
+    var showRemainingTime by mutableStateOf(prefs.getBoolean("show_remaining_time", false))
+        private set
+    var showPlayerClock by mutableStateOf(prefs.getBoolean("show_player_clock", true))
+        private set
+    var showBatteryPercentage by mutableStateOf(prefs.getBoolean("show_battery_pct", true))
+        private set
+
+    val displayDuringPlaybackSummary: String
+        get() {
+            val list = mutableListOf<String>()
+            if (showRemainingTime) list.add("Remaining Time")
+            if (showPlayerClock) list.add("Clock")
+            if (showBatteryPercentage) list.add("Battery Percentage")
+            return if (list.isEmpty()) "None" else list.joinToString(", ")
+        }
+
+    fun updateDisplayDuringPlayback(remaining: Boolean, clock: Boolean, battery: Boolean) {
+        showRemainingTime = remaining
+        showPlayerClock = clock
+        showBatteryPercentage = battery
+        prefs.edit {
+            putBoolean("show_remaining_time", remaining)
+            putBoolean("show_player_clock", clock)
+            putBoolean("show_battery_pct", battery)
+        }
+    }
+
     // Milestone 4 Privacy & Playback Settings
     var backgroundAudioEnabled by mutableStateOf(prefs.getBoolean("bg_audio", false))
     var brightnessBoost by mutableStateOf(prefs.getBoolean("brightness_boost", false))

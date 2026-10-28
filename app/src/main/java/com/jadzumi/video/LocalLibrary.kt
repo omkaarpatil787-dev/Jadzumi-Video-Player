@@ -13,9 +13,13 @@ import android.provider.DocumentsContract as Docs
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import java.util.concurrent.atomic.AtomicBoolean
 
-data class LocalFolder(val uri: String, val name: String, val status: String)
+data class LocalFolder(val uri: String, val name: String, val status: String, val isBlacklisted: Boolean = false)
+private data class ScannedChildItem(val id: String, val name: String, val mime: String, val size: Long, val modified: Long, val flags: Int)
 data class LocalVideo(
     val uri: String, val folder: String, val name: String, val mime: String,
     val bytes: Long, val modified: Long, val duration: Long, val width: Int, val height: Int,
@@ -85,6 +89,37 @@ class LocalLibrary internal constructor(private val context: Context) {
     private val stopped = AtomicBoolean(false)
     private var lastAutoRefreshTime = 0L
 
+    private val filePrefs = context.getSharedPreferences("jadzumi_files_prefs", Context.MODE_PRIVATE)
+
+    var showNoMediaFiles by mutableStateOf(filePrefs.getBoolean("show_nomedia_files", false))
+        private set
+    var showHiddenFiles by mutableStateOf(filePrefs.getBoolean("show_hidden_files", false))
+        private set
+    var blacklistedFolders by mutableStateOf(filePrefs.getStringSet("blacklisted_folders", emptySet()) ?: emptySet())
+        private set
+
+    fun updateShowNoMediaFiles(enabled: Boolean) {
+        showNoMediaFiles = enabled
+        filePrefs.edit().putBoolean("show_nomedia_files", enabled).apply()
+        rescan()
+    }
+
+    fun updateShowHiddenFiles(enabled: Boolean) {
+        showHiddenFiles = enabled
+        filePrefs.edit().putBoolean("show_hidden_files", enabled).apply()
+        rescan()
+    }
+
+    fun toggleFolderBlacklist(folderUri: String) = work {
+        val current = blacklistedFolders.toMutableSet()
+        val willBlacklist = !current.contains(folderUri)
+        if (willBlacklist) current.add(folderUri) else current.remove(folderUri)
+        blacklistedFolders = current
+        filePrefs.edit().putStringSet("blacklisted_folders", current).apply()
+        refresh()
+        if (willBlacklist) "Folder hidden from library." else "Folder unhidden and visible."
+    }
+
     init {
         scope.launch {
             try {
@@ -103,15 +138,22 @@ class LocalLibrary internal constructor(private val context: Context) {
         val db = database.readableDatabase
         val folders = mutableListOf<LocalFolder>()
         db.rawQuery("SELECT uri,name,status FROM folders ORDER BY name COLLATE NOCASE", null).use { c ->
-            while (c.moveToNext()) folders += LocalFolder(c.getString(0), c.getString(1), c.getString(2))
+            while (c.moveToNext()) {
+                val u = c.getString(0)
+                folders += LocalFolder(u, c.getString(1), c.getString(2), isBlacklisted = blacklistedFolders.contains(u))
+            }
         }
         val videos = mutableListOf<LocalVideo>()
         db.rawQuery("SELECT uri,folder,name,mime,bytes,modified,duration,width,height,parent_dir FROM videos ORDER BY name COLLATE NOCASE", null).use { c ->
-            while (c.moveToNext()) videos += LocalVideo(
-                c.getString(0), c.getString(1), c.getString(2), c.getString(3),
-                c.getLong(4), c.getLong(5), c.getLong(6), c.getInt(7), c.getInt(8),
-                c.getString(9) ?: ""
-            )
+            while (c.moveToNext()) {
+                val folderUri = c.getString(1)
+                if (folderUri in blacklistedFolders) continue
+                videos += LocalVideo(
+                    c.getString(0), folderUri, c.getString(2), c.getString(3),
+                    c.getLong(4), c.getLong(5), c.getLong(6), c.getInt(7), c.getInt(8),
+                    c.getString(9) ?: ""
+                )
+            }
         }
         val sidecarsMap = mutableMapOf<String, MutableList<LocalSidecar>>()
         try {
@@ -234,6 +276,11 @@ class LocalLibrary internal constructor(private val context: Context) {
     }
 
     private fun scan(folder: LocalFolder, force: Boolean): String? {
+        if (folder.uri in blacklistedFolders) {
+            val db = database.writableDatabase
+            db.update("folders", ContentValues().apply { put("status", "Hidden · blacklisted") }, "uri=?", arrayOf(folder.uri))
+            return null
+        }
         val db = database.writableDatabase
         val tree = folder.uri.toUri()
         var status = "Ready"
@@ -251,6 +298,8 @@ class LocalLibrary internal constructor(private val context: Context) {
                 val parent = queue.removeFirst()
                 if (!visited.add(parent)) continue
                 val children = Docs.buildChildDocumentsUriUsingTree(tree, parent)
+                val rawChildren = mutableListOf<ScannedChildItem>()
+                var hasNoMedia = false
                 context.contentResolver.query(
                     children,
                     arrayOf(
@@ -264,37 +313,63 @@ class LocalLibrary internal constructor(private val context: Context) {
                     null, null, null
                 )?.use { c ->
                     while (c.moveToNext()) {
-                        if (stopped.get()) throw CancellationException()
-                        if (++entries > 50000) throw IllegalStateException("Folder too large")
-                        val id = c.getString(0)
                         val name = c.getString(1) ?: "Untitled"
-                        val mime = c.getString(2) ?: ""
-                        if (mime == Docs.Document.MIME_TYPE_DIR) {
-                            queue.add(id)
-                        } else if (isVideoFile(name, mime)) {
-                            if (c.getInt(5) and Docs.Document.FLAG_VIRTUAL_DOCUMENT != 0) continue
-                            val uri = Docs.buildDocumentUriUsingTree(tree, id)
-                            val size = if (c.isNull(3)) -1 else c.getLong(3)
-                            val modified = if (c.isNull(4)) 0 else c.getLong(4)
-                            val old = previous[uri.toString()]
-
-                            val video = if (!force && old != null && modified > 0 && old.modified == modified && old.bytes == size) {
-                                old.copy(folder = folder.uri, name = name, mime = mime, parentDir = parent)
-                            } else {
-                                metadata(LocalVideo(uri.toString(), folder.uri, name, mime, size, modified, 0, 0, 0, parentDir = parent))
-                            }
-                            found += video
-                            if (found.size % 20 == 0) {
-                                mutable.value = mutable.value.copy(message = "Indexing ${folder.name} · ${found.size} videos")
-                            }
-                        } else if (isSidecarFile(name, mime)) {
-                            val uri = Docs.buildDocumentUriUsingTree(tree, id).toString()
-                            foundSidecars += LocalSidecar(folder.uri, name, mime, uri, parentDir = parent)
+                        if (name.equals(".nomedia", ignoreCase = true)) {
+                            hasNoMedia = true
                         }
+                        rawChildren.add(
+                            ScannedChildItem(
+                                id = c.getString(0),
+                                name = name,
+                                mime = c.getString(2) ?: "",
+                                size = if (c.isNull(3)) -1 else c.getLong(3),
+                                modified = if (c.isNull(4)) 0 else c.getLong(4),
+                                flags = c.getInt(5)
+                            )
+                        )
                     }
                     if (c.extras.containsKey(Docs.EXTRA_ERROR)) throw IllegalStateException("Provider error")
                     if (c.extras.getBoolean(Docs.EXTRA_LOADING, false)) throw IllegalStateException("Provider still loading")
                 } ?: throw IllegalStateException("Folder unavailable")
+
+                if (hasNoMedia && !showNoMediaFiles) {
+                    continue // Skip directory because it contains .nomedia file
+                }
+
+                for (child in rawChildren) {
+                    if (stopped.get()) throw CancellationException()
+                    if (++entries > 50000) throw IllegalStateException("Folder too large")
+                    val id = child.id
+                    val name = child.name
+                    val mime = child.mime
+
+                    if (!showHiddenFiles && name.startsWith(".")) {
+                        continue // Skip hidden file or directory
+                    }
+
+                    if (mime == Docs.Document.MIME_TYPE_DIR) {
+                        queue.add(id)
+                    } else if (isVideoFile(name, mime)) {
+                        if (child.flags and Docs.Document.FLAG_VIRTUAL_DOCUMENT != 0) continue
+                        val uri = Docs.buildDocumentUriUsingTree(tree, id)
+                        val size = child.size
+                        val modified = child.modified
+                        val old = previous[uri.toString()]
+
+                        val video = if (!force && old != null && modified > 0 && old.modified == modified && old.bytes == size) {
+                            old.copy(folder = folder.uri, name = name, mime = mime, parentDir = parent)
+                        } else {
+                            metadata(LocalVideo(uri.toString(), folder.uri, name, mime, size, modified, 0, 0, 0, parentDir = parent))
+                        }
+                        found += video
+                        if (found.size % 20 == 0) {
+                            mutable.value = mutable.value.copy(message = "Indexing ${folder.name} · ${found.size} videos")
+                        }
+                    } else if (isSidecarFile(name, mime)) {
+                        val uri = Docs.buildDocumentUriUsingTree(tree, id).toString()
+                        foundSidecars += LocalSidecar(folder.uri, name, mime, uri, parentDir = parent)
+                    }
+                }
             }
             if (stopped.get()) throw CancellationException()
             db.transaction {

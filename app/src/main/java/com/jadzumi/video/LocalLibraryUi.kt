@@ -786,7 +786,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         onScrollActive?.invoke(shouldMinimizeDock)
     }
     var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
-    var isGridView by rememberSaveable { mutableStateOf(false) }
+    val libraryPrefs = remember { context.getSharedPreferences("appearance", android.content.Context.MODE_PRIVATE) }
+    var isGridView by rememberSaveable { mutableStateOf(libraryPrefs.getBoolean("library_grid_view", false)) }
     var activeFilter by rememberSaveable { mutableStateOf("All") }
     var activeSort by rememberSaveable { mutableStateOf("Date Added") }
     var isSelectionMode by rememberSaveable { mutableStateOf(false) }
@@ -1200,18 +1201,54 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    if (defaultCategory == "All videos") {
-                                        TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        if (defaultCategory == "All videos") {
+                                            TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                        }
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                            border = subtleCardBorder(strokeWidth = 0.75.dp),
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            IconButton(
+                                                onClick = {
+                                                    isGridView = !isGridView
+                                                    libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
+                                                },
+                                                modifier = Modifier.fillMaxSize()
+                                            ) {
+                                                Icon(
+                                                    if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
+                                                    contentDescription = "Toggle Grid or List View",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
 
-                            item {
-                                TvSeriesCardGrid(
-                                    seriesList = filteredSeries,
-                                    playback = playback,
-                                    onSelect = { select("series:${it.id}") }
-                                )
+                            if (isGridView) {
+                                item {
+                                    TvSeriesCardGrid(
+                                        seriesList = filteredSeries,
+                                        playback = playback,
+                                        onSelect = { select("series:${it.id}") }
+                                    )
+                                }
+                            } else {
+                                items(filteredSeries, key = { it.id }) { series ->
+                                    TvSeriesRowItem(
+                                        series = series,
+                                        playback = playback,
+                                        onClick = { select("series:${it.id}") }
+                                    )
+                                }
                             }
                         }
                     } else if (category == "Movies") {
@@ -1240,19 +1277,68 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    if (defaultCategory == "All videos") {
-                                        TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        if (defaultCategory == "All videos") {
+                                            TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                        }
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                            border = subtleCardBorder(strokeWidth = 0.75.dp),
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            IconButton(
+                                                onClick = {
+                                                    isGridView = !isGridView
+                                                    libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
+                                                },
+                                                modifier = Modifier.fillMaxSize()
+                                            ) {
+                                                Icon(
+                                                    if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
+                                                    contentDescription = "Toggle Grid or List View",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
 
-                            item {
-                                MovieCardGrid(
-                                    movies = movieList,
-                                    sidecars = state.sidecars,
-                                    playback = playback,
-                                    onSelect = { select(it.uri) }
-                                )
+                            if (isGridView) {
+                                item {
+                                    MovieCardGrid(
+                                        movies = movieList,
+                                        sidecars = state.sidecars,
+                                        playback = playback,
+                                        onSelect = { select(it.uri) }
+                                    )
+                                }
+                            } else {
+                                items(movieList, key = { it.uri }) { movie ->
+                                    LocalVideoCard(
+                                        video = movie,
+                                        isSelectionMode = isSelectionMode,
+                                        isSelected = movie.uri in selectedUris,
+                                        playback = playback,
+                                        onClick = {
+                                            if (isSelectionMode) {
+                                                if (movie.uri in selectedUris) selectedUris.remove(movie.uri)
+                                                else selectedUris.add(movie.uri)
+                                            } else select(movie.uri)
+                                        },
+                                        onLongClick = {
+                                            if (!isSelectionMode) {
+                                                isSelectionMode = true
+                                                selectedUris.add(movie.uri)
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                     } else {
@@ -1377,7 +1463,13 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                             border = subtleCardBorder(strokeWidth = 0.75.dp),
                                             modifier = Modifier.size(36.dp)
                                         ) {
-                                            IconButton(onClick = { isGridView = !isGridView }, modifier = Modifier.fillMaxSize()) {
+                                            IconButton(
+                                                onClick = {
+                                                    isGridView = !isGridView
+                                                    libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
+                                                },
+                                                modifier = Modifier.fillMaxSize()
+                                            ) {
                                                 Icon(
                                                     if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
                                                     contentDescription = "Toggle Grid or List View",
@@ -1466,6 +1558,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     select: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val folderPrefs = remember { context.getSharedPreferences("appearance", Context.MODE_PRIVATE) }
+    var isFolderGridView by rememberSaveable { mutableStateOf(folderPrefs.getBoolean("folder_grid_view", false)) }
     val add = rememberFolderPicker(library)
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var remove by remember { mutableStateOf<LocalFolder?>(null) }
@@ -1547,18 +1641,84 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                     item { LocalPanel { Text("No folders connected", fontWeight = FontWeight.Bold); Text("Add a folder using Android's file picker.") } }
                 } else {
                     item {
-                        Text("Connected Folders", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Connected Folders", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                border = subtleCardBorder(strokeWidth = 0.75.dp),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        isFolderGridView = !isFolderGridView
+                                        folderPrefs.edit().putBoolean("folder_grid_view", isFolderGridView).apply()
+                                    },
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Icon(
+                                        if (isFolderGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
+                                        contentDescription = "Toggle Grid or List View",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
-                    items(state.folders, key = { it.uri }) { folder ->
-                        FolderSummaryCard(folder, state, active == folder, { selected = folder.uri }, { remove = folder })
+                    if (isFolderGridView) {
+                        items(state.folders.chunked(2), key = { chunk -> chunk.joinToString { it.uri } }) { chunk ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                for (folder in chunk) {
+                                    Box(Modifier.weight(1f)) {
+                                        FolderGridTile(folder, state, active == folder, { selected = folder.uri }, { remove = folder })
+                                    }
+                                }
+                                if (chunk.size == 1) {
+                                    Spacer(Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    } else {
+                        items(state.folders, key = { it.uri }) { folder ->
+                            FolderSummaryCard(folder, state, active == folder, { selected = folder.uri }, { remove = folder })
+                        }
                     }
                 }
                 item {
                     Spacer(Modifier.height(4.dp))
                     Text("${videos.size} indexed videos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
-                items(videos, key = { "${active?.uri ?: ""}_${it.uri}" }) { video ->
-                    LocalVideoCard(video, onDelete = { videoToDelete = video }) { select(video.uri) }
+                if (isFolderGridView) {
+                    items(videos.chunked(2), key = { chunk -> chunk.joinToString { it.uri } }) { chunk ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            for (video in chunk) {
+                                Box(Modifier.weight(1f)) {
+                                    LocalPosterGridCard(
+                                        video = video,
+                                        onClick = { select(video.uri) }
+                                    )
+                                }
+                            }
+                            if (chunk.size == 1) {
+                                Spacer(Modifier.weight(1f))
+                            }
+                        }
+                    }
+                } else {
+                    items(videos, key = { "${active?.uri ?: ""}_${it.uri}" }) { video ->
+                        LocalVideoCard(video, onDelete = { videoToDelete = video }) { select(video.uri) }
+                    }
                 }
             }
         }
@@ -2127,16 +2287,16 @@ fun TvSeriesSummaryCard(
 @Composable
 private fun LocalPosterGridCard(
     video: LocalVideo,
-    isSelectionMode: Boolean,
-    isSelected: Boolean,
-    playback: PlaybackController,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    playback: PlaybackController? = null,
     onClick: () -> Unit,
-    onLongClick: () -> Unit
+    onLongClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val theme = LocalThemeName.current
     val glassIntensity = LocalGlassIntensity.current
-    val savedPos = playback.savedPosition(video)
+    val savedPos = playback?.savedPosition(video) ?: 0L
     val dur = video.duration.takeIf { it > 0 } ?: 1000L
     val isWatched = savedPos >= dur * 0.9f
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
