@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.4.0-2563eb?style=flat-square" alt="Version 1.4.0"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.5.0-2563eb?style=flat-square" alt="Version 1.5.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -52,14 +52,17 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details>
-<summary><strong>What’s new · v1.4.0 ✨</strong></summary>
+<summary><strong>What’s new · v1.5.0 🎨🔊</strong></summary>
 
-Configurable spring animations, touch lighting, elastic scroll edges, a measured
-technical inspector, local backup/restore, dialogue replay, subtitle search,
-episode continuity, sleep controls, and scene bookmarks. Optional seamless refresh
-matching and a separate App updates card round out this release.
+- **GPU Video Enhancer & Color Studio**: Real-time hardware-accelerated color grading (Contrast, Shadow Lift / Gamma, Saturation, Vibrance, AMOLED Deep Black) via Media3 native `RgbMatrix` and OpenGL ES shader effects.
+- **Zero-Copy SurfaceView & Subtitle Isolation**: Preserves `SurfaceView` direct rendering pipeline and keeps subtitles and overlays 100% untouched on separate window layers.
+- **HDR Master Passthrough Protection**: Automatically locks enhancements during 10-bit HDR / Dolby Vision playback to preserve native BT.2020 wide color gamut and ST 2084 / HLG dynamic range.
+- **5 Color Profiles**: Natural (Studio Master zero-overhead bypass), Cinema, Vivid, Anime & Animation, and Custom Calibration with One-Tap Reset.
+- **Expanded Audio Studio**: Active Audio Stream Card with real-time telemetry (Container, Codec, Channels & Layout, Sample Rate, Bit Depth, Decoder & Engine, Player Audio Output, Active Processing).
+- **Channel Processing Modes**: Default / Automatic pass-through, Stereo Downmix for headphones/speakers, and Dialogue Clarity Focus for cinema speech prominence.
+- **Lip-Sync & Night Mode**: −50ms / +50ms Bluetooth delay compensation and dynamic range compression.
 
-See [release notes](RELEASE_NOTES.md) and [validation details](docs/FEATURE-PROGRESS.md).
+See [release notes](RELEASE_NOTES.md) for full details.
 
 </details>
 
@@ -68,17 +71,19 @@ See [release notes](RELEASE_NOTES.md) and [validation details](docs/FEATURE-PROG
 | Playback | Your library | Make it yours |
 | --- | --- | --- |
 | Hardware decoding with FFmpeg fallback | Continue watching and resume positions | Light, dark, and AMOLED themes |
-| Double-tap seek and hold-to-2× speed | Movies, series, seasons, and episodes | Adjustable frosted-glass appearance |
-| External subtitles and timing adjustments | Local artwork and metadata sidecars | Custom app icons |
-| Background audio and picture-in-picture | Poster grid, list view, and batch actions | Brightness, volume, and scaling controls |
+| GPU Video Enhancer & Color Studio | Movies, series, seasons, and episodes | Adjustable frosted-glass appearance |
+| Expanded Audio Studio & Channel Modes | Local artwork and metadata sidecars | Custom app icons |
+| Double-tap seek and hold-to-2× speed | Poster grid, list view, and batch actions | Brightness, volume, and scaling controls |
+| External subtitles and timing adjustments | Scene bookmarks, notes, and search | Night mode & lip-sync delay |
+| Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v1.4.0
+## 📦 Latest release · v1.5.0
 
-- ✨ Gentler motion, expressive springs, and optional touch lighting.
-- 🎬 More playback and library tools, with codecs preserved.
-- ⚙️ Optional refresh matching and verified in-app update downloads.
+- 🎨 **GPU Video Enhancer & Color Studio**: Real-time hardware color grading, 5 profiles, and HDR master protection.
+- 🔊 **Expanded Audio Studio**: Live stream telemetry, Stereo Downmix, and Dialogue Clarity Focus.
+- 🎬 **Preserved Media3 & NextLib Architecture**: 100% zero-copy `SurfaceView` efficiency, offline-first, zero telemetry.
 
-[Download v1.4.0](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.4.0) · [Release notes](RELEASE_NOTES.md)
+[Download v1.5.0](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.5.0) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.

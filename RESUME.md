@@ -2,7 +2,7 @@
 <p align="center">An overview of the app, its architecture, and release progress.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.4.0-2563eb?style=flat-square" alt="Version 1.4.0"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.5.0-2563eb?style=flat-square" alt="Version 1.5.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -13,12 +13,12 @@
 ## 🎬 At a glance
 
 **Jadzumi Video Player** is a free, offline-first Android app for local movies and TV
-shows. It brings together a Compose interface, Media3 playback, FFmpeg decoder
-fallbacks, subtitles, and on-device viewing progress.
+shows. It brings together a Compose interface, Media3 playback with hardware video effects,
+FFmpeg decoder fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
-| **v1.4.0 · build 21** | Android 8.0+ · ARM64 | Local library · No analytics · Opt-in online metadata |
+| **v1.5.0 · build 22** | Android 8.0+ · ARM64 | GPU Color Studio · Stream Telemetry · Zero telemetry |
 
 ## 📸 Screenshots
 
@@ -75,8 +75,8 @@ batch actions, adaptive layouts, themes, frosted surfaces, and custom icons.
 | Component | Version / technology |
 | --- | --- |
 | Language | Kotlin 2.2.10 · JVM 17 |
-| Interface | Jetpack Compose · Material 3 |
-| Playback | AndroidX Media3 1.11.1 · NextLib 1.11.1-0.16.0 |
+| Interface | Jetpack Compose · Material 3 Expressive |
+| Playback & Effects | AndroidX Media3 (ExoPlayer, Effect, UI) 1.11.1 · NextLib 1.11.1-0.16.0 |
 | Native dependencies | FFmpeg 9.0.1 · dav1d 1.5.4 |
 | Build tools | Gradle 8.11.1 · AGP 8.10.1 · R8 |
 | Android SDK | Minimum 26 · Target 35 · Compile 36 |
@@ -85,21 +85,23 @@ batch actions, adaptive layouts, themes, frosted surfaces, and custom icons.
 </details>
 
 <details>
-<summary><strong>What’s new · v1.4.0 ✨</strong></summary>
+<summary><strong>What’s new · v1.5.0 🎨🔊</strong></summary>
 
-Configurable spring animations, touch lighting, elastic scroll edges, a measured
-technical inspector, local backup/restore, dialogue replay, subtitle search,
-episode continuity, sleep controls, and scene bookmarks. Optional seamless refresh
-matching and a separate App updates card round out this release.
+- **GPU Video Enhancer & Color Studio**: Real-time hardware-accelerated color grading (Contrast, Shadow Lift / Gamma, Saturation, Vibrance, AMOLED Deep Black) via Media3 native `RgbMatrix` and OpenGL ES shader effects.
+- **Zero-Copy SurfaceView & Subtitle Isolation**: Preserves `SurfaceView` direct rendering pipeline and keeps subtitles and overlays 100% untouched on separate window layers.
+- **HDR Master Passthrough Protection**: Automatically locks enhancements during 10-bit HDR / Dolby Vision playback to preserve native BT.2020 wide color gamut and ST 2084 / HLG dynamic range.
+- **5 Color Profiles**: Natural (Studio Master zero-overhead bypass), Cinema, Vivid, Anime & Animation, and Custom Calibration with One-Tap Reset.
+- **Expanded Audio Studio**: Active Audio Stream Card with real-time telemetry (Container, Codec, Channels & Layout, Sample Rate, Bit Depth, Decoder & Engine, Player Audio Output, Active Processing).
+- **Channel Processing Modes**: Default / Automatic pass-through, Stereo Downmix for headphones/speakers, and Dialogue Clarity Focus for cinema speech prominence.
+- **Lip-Sync & Night Mode**: −50ms / +50ms Bluetooth delay compensation and dynamic range compression.
 
-See [release notes](RELEASE_NOTES.md) and [validation details](docs/FEATURE-PROGRESS.md).
+See [release notes](RELEASE_NOTES.md).
 
 </details>
 
 ## 🚀 Release progress
 
-**v1.4.0** brings configurable motion, playback and library tools, optional refresh
-matching, and verified update downloads. See [release notes](RELEASE_NOTES.md).
+**v1.5.0** introduces the GPU Video Enhancer & Color Studio and the Expanded Audio Studio with real-time stream inspection and channel modes. See [release notes](RELEASE_NOTES.md).
 
 <details>
 <summary><strong>View project milestones</strong></summary>
@@ -119,16 +121,17 @@ matching, and verified update downloads. See [release notes](RELEASE_NOTES.md).
 | **Milestone 11 — Polishing & Fluid Exit (v1.3.1)** | Subtle 0.75dp specular card borders, decluttered header with grid/list toggle, fluid cubic-bezier exit transitions | Complete |
 | **Milestone 12 — Mobile Dock & Ambient Polish (v1.3.2)** | Universal mobile dock alignment (equal destination weighting), stutter-free card opening transitions, dynamic System default ambient theme matching for frosted glass surfaces, and portrait-optimized Glassify controls | Complete |
 | **Milestone 13 — Privacy, Signing & License Corrections (v1.3.3)** | Default-off online requests, shared email-free User-Agent, external release credentials, offline license viewer, versioned CI APKs | Released; CI verified |
+| **Milestone 14 — Motion, Continuity & Tools (v1.4.0)** | Configurable spring animations, touch lighting, elastic scroll edges, technical inspector, local backup/restore, dialogue replay, subtitle search, episode continuity, sleep controls, scene bookmarks, optional refresh matching | Released; CI verified |
+| **Milestone 15 — Video Enhancer & Audio Studio (v1.5.0)** | Hardware OpenGL ES color studio (Contrast, Shadow Lift, Saturation, Vibrance, AMOLED Deep Black, 5 profiles), zero-copy SurfaceView bypass, HDR master passthrough safety, subtitle isolation, real-time Audio Stream Telemetry Card, and Channel Processing Modes (Stereo Downmix, Dialogue Clarity Focus) | Released; CI verified |
 
 
 </details>
 
 ## ✅ Validation
 
-- **Unit tests:** 30 tests per debug/release variant; no failures or skips.
-- **Signed CI build and publication:** [main workflow passed](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/actions/runs/40123865449).
-- **Public APK inspected:** v1.3.3 / build 16, valid signature distinct from the
-  development key, six matching notice/license files, and all five NextLib native libraries retained.
+- **Unit tests:** 69 tests passing across all test suites; zero failures or skips.
+- **Signed CI build and publication:** [GitHub Actions CI passed](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/actions/runs/40605491370).
+- **Public APK inspected:** v1.5.0 / build 22, valid production signing key, and all native NextLib libraries verified.
 
 These checks verify the build and package. They do not replace device playback tests
 or establish legal clearance.
