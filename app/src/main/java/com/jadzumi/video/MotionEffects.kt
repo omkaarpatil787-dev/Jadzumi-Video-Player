@@ -4,6 +4,8 @@ import android.animation.ValueAnimator
 import android.content.SharedPreferences
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -13,16 +15,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.*
-import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 internal data class MotionStyle(val enabled: Boolean = false, val expressive: Boolean = false, val light: Boolean = true) {
-    val damping get() = if (expressive) 0.65f else 0.9f
+    val damping get() = if (expressive) 0.78f else 0.92f
+    fun <T> springSpec(stiffness: Float = 550f): FiniteAnimationSpec<T> =
+        if (enabled) spring(dampingRatio = damping, stiffness = stiffness) else snap()
+    fun <T> fadeSpec(): FiniteAnimationSpec<T> =
+        if (enabled) tween(220, easing = FastOutSlowInEasing) else snap()
 }
 internal val LocalMotionStyle = staticCompositionLocalOf { MotionStyle() }
 
@@ -51,13 +52,19 @@ internal fun Modifier.touchMotion(): Modifier = composed {
         spring(dampingRatio = style.damping, stiffness = Spring.StiffnessMedium), label = "touch feedback")
     val tint = MaterialTheme.colorScheme.primary
     this.pointerInput(Unit) {
-        awaitPointerEventScope {
-            while (true) {
-                val event = awaitPointerEvent(PointerEventPass.Initial)
-                pressed = event.changes.any { it.pressed }
-                event.changes.firstOrNull { it.pressed }?.let { origin = it.position }
+        try {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                origin = down.position
+                pressed = true
+                do {
+                    val event = awaitPointerEvent(PointerEventPass.Final)
+                    // A drag belongs to scrolling: stop press feedback without following every pixel.
+                    if (event.changes.any { it.isConsumed || (it.position - origin).getDistance() > viewConfiguration.touchSlop }) pressed = false
+                } while (event.changes.any { it.pressed })
+                pressed = false
             }
-        }
+        } finally { pressed = false }
     }.graphicsLayer {
         scaleX = 1f - amount * if (style.expressive) 0.025f else 0.012f
         scaleY = 1f - amount * if (style.expressive) 0.035f else 0.012f
@@ -70,35 +77,8 @@ internal fun Modifier.touchMotion(): Modifier = composed {
     }
 }
 
-/** Only unconsumed edge scrolling stretches the viewport; never takes scroll distance from children. */
-internal fun Modifier.elasticEdge(): Modifier = composed {
-    val style = LocalMotionStyle.current
-    if (!style.enabled) return@composed this
-    val scope = rememberCoroutineScope()
-    var pull by remember { mutableFloatStateOf(0f) }
-    val stretch by animateFloatAsState(pull, spring(style.damping, Spring.StiffnessLow), label = "edge return")
-    val connection = remember {
-        object : NestedScrollConnection {
-            var reset: Job? = null
-            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                if (available.y != 0f && source == NestedScrollSource.UserInput) {
-                    pull = (pull + available.y * 0.12f).coerceIn(-20f, 20f)
-                    reset?.cancel()
-                    reset = scope.launch { delay(100); pull = 0f }
-                }
-                return Offset.Zero
-            }
-            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-                reset?.cancel(); pull = 0f
-                return Velocity.Zero
-            }
-        }
-    }
-    this.nestedScroll(connection).graphicsLayer {
-        translationY = stretch
-        scaleY = 1f + kotlin.math.abs(stretch) / size.height.coerceAtLeast(1f)
-    }
-}
+/** Foundation scroll containers own overscroll. Avoid stacking a second full-viewport transform. */
+internal fun Modifier.elasticEdge(): Modifier = this
 
 @Composable internal fun MotionCustomization() {
     val context = LocalContext.current
@@ -106,7 +86,6 @@ internal fun Modifier.elasticEdge(): Modifier = composed {
     var expressive by remember { mutableStateOf(prefs.getString("motionStyle", "Gentle") == "Expressive") }
     var lighting by remember { mutableStateOf(prefs.getBoolean("touchLight", true)) }
     HorizontalDivider(Modifier.padding(vertical = 14.dp))
-    Text("Motion & touch", style = MaterialTheme.typography.titleMedium)
     Text("Reduced Motion and Android's animation setting take priority.", style = MaterialTheme.typography.bodySmall)
     Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {

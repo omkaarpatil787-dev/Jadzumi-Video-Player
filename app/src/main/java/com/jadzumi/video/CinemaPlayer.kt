@@ -100,10 +100,11 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
     val video = playback.video ?: return
     val activity = LocalActivity.current as? MainActivity ?: return
     val coroutineScope = rememberCoroutineScope()
-    val motion = LocalMotionStyle.current
+    val motion = LocalMotionStyle.current.let { if (reducedMotion) it.copy(enabled = false) else it }
+    val pipActive = playback.inPip || playback.enteringPip
     val openingFrame = remember(video.identity) { Animatable(0f) }
-    LaunchedEffect(playback.renderedVideoIdentity, motion.enabled, playback.inPip) {
-        if (!motion.enabled || playback.inPip) openingFrame.snapTo(1f)
+    LaunchedEffect(playback.renderedVideoIdentity, motion.enabled, pipActive) {
+        if (!motion.enabled || pipActive) openingFrame.snapTo(1f)
         else if (playback.renderedVideoIdentity == video.identity) openingFrame.animateTo(1f, tween(480, easing = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)))
     }
     val isOled = remember { DeviceHardwareInspector.isOledOrAmoledDisplay(activity) }
@@ -185,32 +186,13 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
         PlayerToolsDialog(section, playback, onMessage = { message = it; interaction++ }, onDismiss = { toolsSection = null })
     }
 
-    var isDismissing by remember { mutableStateOf(false) }
-    val playerEnterProgress = remember(video.identity) { Animatable(if (reducedMotion) 1f else 0f) }
-
-    val dismissPlayerWithFluidity: () -> Unit = {
-        if (!isDismissing) {
-            if (reducedMotion || playback.inPip) {
-                playback.close()
-            } else {
-                isDismissing = true
-                coroutineScope.launch {
-                    playerEnterProgress.animateTo(
-                        targetValue = 0f,
-                        animationSpec = tween(280, easing = CubicBezierEasing(0.4f, 0.0f, 1.0f, 1.0f))
-                    )
-                    playback.close()
-                }
-            }
-        }
-    }
+    val dismissPlayerWithFluidity: () -> Unit = { playback.close() }
 
     DisposableEffect(activity) {
         onDispose { activity.videoBounds = null; activity.updatePip() }
     }
 
     BackHandler(!playback.inPip) {
-        if (isDismissing) return@BackHandler
         if (quickMenuSection != null) {
             quickMenuSection = if (quickMenuSection == "main") null else "main"
         } else if (playback.locked) {
@@ -228,8 +210,8 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
     }
     LaunchedEffect(message) { if (message != null) { delay(1400); message = null } }
     LaunchedEffect(hudSide, interaction) { if (hudSide != null) { delay(1200); hudSide = null } }
-    LaunchedEffect(playback.inPip) {
-        if (playback.inPip) { quickMenuSection = null; scrub = null; controls = false }
+    LaunchedEffect(pipActive) {
+        if (pipActive) { quickMenuSection = null; scrub = null; controls = false }
     }
 
     LaunchedEffect(playback.brightnessBoost, playback.isHdr, isOled) {
@@ -242,16 +224,17 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
         activity.updateHdrColorMode(isOled)
     }
 
-    DisposableEffect(playback.inPip) {
-        val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+    // Entering PiP must not show system bars, reset orientation or change brightness mid-resize.
+    LaunchedEffect(playback.inPip) {
         if (!playback.inPip) {
+            val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
-        } else {
-            controller.show(WindowInsetsCompat.Type.systemBars())
         }
+    }
+    DisposableEffect(activity, isOled) {
         onDispose {
-            controller.show(WindowInsetsCompat.Type.systemBars())
+            WindowCompat.getInsetsController(activity.window, activity.window.decorView).show(WindowInsetsCompat.Type.systemBars())
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = previousBrightness }
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
             activity.updateHdrColorMode(isOled)
@@ -262,26 +245,11 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
         activity.updatePip()
     }
 
-    LaunchedEffect(video.identity) {
-        if (!reducedMotion) {
-            playerEnterProgress.snapTo(0f)
-            playerEnterProgress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(340, easing = CubicBezierEasing(0.16f, 1.0f, 0.3f, 1.0f))
-            )
-        }
-    }
-
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .graphicsLayer {
-                val p = playerEnterProgress.value
-                alpha = p
-                scaleX = 0.93f + 0.07f * p
-                scaleY = 0.93f + 0.07f * p
-            }
+
     ) {
         val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
         val haptic = LocalHapticFeedback.current
@@ -317,8 +285,12 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
             },
             modifier = Modifier.fillMaxSize().onGloballyPositioned {
                 val b = it.boundsInWindow()
-                activity.videoBounds = Rect(b.left.roundToInt(), b.top.roundToInt(), b.right.roundToInt(), b.bottom.roundToInt())
-                activity.updatePip()
+                val bounds = Rect(b.left.roundToInt(), b.top.roundToInt(), b.right.roundToInt(), b.bottom.roundToInt())
+                // Preserve the full-screen source hint while Android animates the PiP window.
+                if (!pipActive && activity.videoBounds != bounds) {
+                    activity.videoBounds = bounds
+                    activity.updatePip()
+                }
             },
             update = { view ->
                 if (view.player !== playback.player) view.player = playback.player
@@ -329,12 +301,12 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
             onReset = null,
             onRelease = { it.player = null }
         )
-        if (playback.renderedVideoIdentity == video.identity && !playback.inPip) {
+        if (playback.renderedVideoIdentity == video.identity && !pipActive) {
             PortalApertureMask({ openingFrame.value }, Color.Black, Modifier.fillMaxSize())
         }
 
 
-            if (!playback.inPip) {
+            if (!pipActive) {
                 val audio = remember { activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
                 Box(
                     Modifier.fillMaxSize()
@@ -425,8 +397,8 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
                 val activeSide = rippleSide ?: lastActiveSide
                 AnimatedVisibility(
                     visible = rippleSide != null,
-                    enter = fadeIn(tween(120)) + scaleIn(initialScale = 0.85f),
-                    exit = fadeOut(tween(220)) + scaleOut(targetScale = 1.05f),
+                    enter = if (!motion.enabled) EnterTransition.None else fadeIn(motion.fadeSpec()) + scaleIn(initialScale = 0.92f, animationSpec = motion.springSpec()),
+                    exit = if (!motion.enabled) ExitTransition.None else fadeOut(motion.fadeSpec()),
                     modifier = Modifier.align(if (activeSide == "left") Alignment.CenterStart else Alignment.CenterEnd)
                 ) {
                     val isLeft = activeSide == "left"
@@ -513,8 +485,8 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
                 // 2.0X Fast Forward Floating Frosted Pill
                 AnimatedVisibility(
                     visible = isFastForwarding,
-                    enter = fadeIn(tween(140)) + scaleIn(initialScale = 0.88f),
-                    exit = fadeOut(tween(180)) + scaleOut(targetScale = 0.94f),
+                    enter = if (!motion.enabled) EnterTransition.None else fadeIn(motion.fadeSpec()) + scaleIn(initialScale = 0.92f, animationSpec = motion.springSpec()),
+                    exit = if (!motion.enabled) ExitTransition.None else fadeOut(motion.fadeSpec()),
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .safeDrawingPadding()
@@ -537,8 +509,8 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
                     }
                 }
 
-                val enterAnim = if (reducedMotion) EnterTransition.None else fadeIn(spring(stiffness = Spring.StiffnessMediumLow))
-                val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(tween(180))
+                val enterAnim = if (!motion.enabled) EnterTransition.None else fadeIn(motion.fadeSpec())
+                val exitAnim = if (!motion.enabled) ExitTransition.None else fadeOut(motion.fadeSpec())
 
                 AnimatedVisibility(
                     visible = controls && !playback.locked,
@@ -666,7 +638,7 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
                                 bgColor = dynamicFrostedCircleBg,
                                 rimColor = dynamicFrostedCircleRim
                             ) {
-                                PlayPauseMorph(playback.playRequested, reducedMotion, Modifier.size(36.dp))
+                                PlayPauseMorph(playback.playRequested, !motion.enabled, Modifier.size(36.dp))
                             }
 
                             FrostedCircleButton(
@@ -945,6 +917,21 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
                     }
                 }
 
+                // Persistent viewing information is independent of transport controls and never shown in PiP.
+                AnimatedVisibility(
+                    visible = (!controls || playback.locked) && quickMenuSection == null &&
+                        (playback.showPlayerClock || playback.showBatteryPercentage || playback.showRemainingTime),
+                    enter = enterAnim, exit = exitAnim,
+                    modifier = Modifier.align(Alignment.TopEnd).safeDrawingPadding().padding(12.dp)
+                ) {
+                    PlayerStatusPill(
+                        showClock = playback.showPlayerClock,
+                        showBattery = playback.showBatteryPercentage,
+                        remainingSeconds = if (playback.showRemainingTime && effectiveDuration > 0)
+                            ((effectiveDuration - playback.position).coerceAtLeast(0) / 1000) else null
+                    )
+                }
+
                 // Unlock Button when Screen Locked
                 if (playback.locked && controls) {
                     FrostedCircleButton(
@@ -960,11 +947,11 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
                 // PANEL 5: RIGHT-SIDE QUICK MENU
                 AnimatedVisibility(
                     visible = quickMenuSection != null,
-                    enter = if (!motion.enabled) EnterTransition.None else fadeIn(tween(160)) +
-                        (if (isPhonePortrait) slideInVertically(spring(dampingRatio = motion.damping, stiffness = Spring.StiffnessMediumLow)) { it / 3 }
-                        else slideInHorizontally(spring(dampingRatio = motion.damping, stiffness = Spring.StiffnessMediumLow)) { it / 3 }),
-                    exit = if (!motion.enabled) ExitTransition.None else fadeOut(tween(140)) +
-                        (if (isPhonePortrait) slideOutVertically(tween(160)) { it / 3 } else slideOutHorizontally(tween(160)) { it / 3 })
+                    enter = if (!motion.enabled) EnterTransition.None else fadeIn(motion.fadeSpec()) +
+                        (if (isPhonePortrait) slideInVertically(motion.springSpec()) { it / 3 }
+                        else slideInHorizontally(motion.springSpec()) { it / 3 }),
+                    exit = if (!motion.enabled) ExitTransition.None else fadeOut(motion.fadeSpec()) +
+                        (if (isPhonePortrait) slideOutVertically(motion.springSpec()) { it / 3 } else slideOutHorizontally(motion.springSpec()) { it / 3 })
                 ) {
                     quickMenuSection?.let { section ->
                         RightSideQuickMenu(
@@ -991,8 +978,8 @@ internal val TimelineAccent = Color(0xFFB7D8FF)
                 val countdown = playback.nextEpisodeCountdown
                 AnimatedVisibility(
                     visible = nextEp != null && countdown != null && !playback.locked && !playback.inPip,
-                    enter = fadeIn(tween(if (reducedMotion) 0 else 250)) + slideInVertically(tween(if (reducedMotion) 0 else 300)) { it / 2 },
-                    exit = fadeOut(tween(if (reducedMotion) 0 else 200)) + slideOutVertically(tween(if (reducedMotion) 0 else 250)) { it / 2 },
+                    enter = if (!motion.enabled) EnterTransition.None else fadeIn(motion.fadeSpec()) + slideInVertically(motion.springSpec()) { it / 3 },
+                    exit = if (!motion.enabled) ExitTransition.None else fadeOut(motion.fadeSpec()) + slideOutVertically(motion.springSpec()) { it / 3 },
                     modifier = Modifier.align(Alignment.BottomEnd).safeDrawingPadding().padding(bottom = 100.dp, end = 24.dp)
                 ) {
                     if (nextEp != null && countdown != null) {
@@ -2006,6 +1993,7 @@ private fun EnhancerSliderRow(
 private fun PlayerStatusPill(
     showClock: Boolean,
     showBattery: Boolean,
+    remainingSeconds: Long? = null,
     modifier: Modifier = Modifier
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -2042,6 +2030,9 @@ private fun PlayerStatusPill(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            remainingSeconds?.let {
+                Text("−${compactTimecode(it)} remaining", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            }
             if (showClock && timeText.isNotEmpty()) {
                 Text(
                     text = timeText,

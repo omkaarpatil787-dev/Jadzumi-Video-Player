@@ -57,6 +57,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var video by mutableStateOf<LocalVideo?>(null); private set
     var fullscreen by mutableStateOf(false)
     var inPip by mutableStateOf(false)
+    var enteringPip by mutableStateOf(false)
     var playing by mutableStateOf(false); private set
     var playRequested by mutableStateOf(false); private set
     var buffering by mutableStateOf(false); private set
@@ -1338,6 +1339,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         release()
         cancelNotification()
         video = null; fullscreen = false; locked = false; error = null
+        enteringPip = false
         position = 0; duration = 0; completed = false
         audioTracks = emptyList(); subtitleTracks = emptyList()
         currentQueue = emptyList()

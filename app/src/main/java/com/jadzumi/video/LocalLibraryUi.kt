@@ -1,5 +1,7 @@
 package com.jadzumi.video
 
+import kotlinx.coroutines.ensureActive
+
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -27,6 +29,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -203,7 +206,7 @@ private fun HeroMoviePager(
 
     val animatedHeight by animateDpAsState(
         targetValue = if (isMinimized) minHeight else fullHeight,
-        animationSpec = if (motion.enabled) spring(dampingRatio = motion.damping, stiffness = Spring.StiffnessMediumLow) else snap(),
+        animationSpec = if (motion.enabled) motion.springSpec() else snap(),
         label = "heroHeight"
     )
 
@@ -217,7 +220,7 @@ private fun HeroMoviePager(
         AnimatedContent(
             targetState = isMinimized,
             transitionSpec = {
-                fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
+                fadeIn(animationSpec = motion.fadeSpec()) togetherWith fadeOut(animationSpec = motion.fadeSpec())
             },
             label = "heroContentMode",
             modifier = Modifier.fillMaxSize()
@@ -987,6 +990,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         val screenMaxWidth = maxWidth
         val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
         val isPhone = maxWidth < 600.dp
+        val gridColumns = when { maxWidth - pad * 2 >= 1000.dp -> 4; maxWidth - pad * 2 >= 680.dp -> 3; else -> 2 }
         val bottomPad = if (isPhone) 88.dp else 96.dp
         PullToRefreshBox(
             isRefreshing = state.busy,
@@ -1036,9 +1040,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                 item {
                                     Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
-                                item {
-                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
-                                }
+                                TvSeriesCardGrid(columns = gridColumns, seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
                             }
                             if (searchEpisodes.isNotEmpty()) {
                                 item {
@@ -1052,26 +1054,20 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                 item {
                                     Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
-                                item {
-                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
-                                }
+                                MovieCardGrid(columns = gridColumns, movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
                             }
                         } else if (category == "Movies") {
                             if (searchMovies.isNotEmpty()) {
                                 item {
                                     Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
-                                item {
-                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
-                                }
+                                MovieCardGrid(columns = gridColumns, movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
                             }
                             if (searchSeries.isNotEmpty()) {
                                 item {
                                     Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
-                                item {
-                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
-                                }
+                                TvSeriesCardGrid(columns = gridColumns, seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
                             }
                             if (searchEpisodes.isNotEmpty()) {
                                 item {
@@ -1086,17 +1082,13 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                 item {
                                     Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
-                                item {
-                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
-                                }
+                                TvSeriesCardGrid(columns = gridColumns, seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
                             }
                             if (searchMovies.isNotEmpty()) {
                                 item {
                                     Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
-                                item {
-                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
-                                }
+                                MovieCardGrid(columns = gridColumns, movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
                             }
                             if (searchEpisodes.isNotEmpty()) {
                                 item {
@@ -1225,13 +1217,11 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                             }
 
                             if (isGridView) {
-                                item {
-                                    TvSeriesCardGrid(
+                                TvSeriesCardGrid(columns = gridColumns,
                                         seriesList = filteredSeries,
                                         playback = playback,
                                         onSelect = { select("series:${it.id}") }
                                     )
-                                }
                             } else {
                                 items(filteredSeries, key = { it.id }) { series ->
                                     TvSeriesRowItem(
@@ -1301,14 +1291,12 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                             }
 
                             if (isGridView) {
-                                item {
-                                    MovieCardGrid(
+                                MovieCardGrid(columns = gridColumns,
                                         movies = movieList,
                                         sidecars = state.sidecars,
                                         playback = playback,
                                         onSelect = { select(it.uri) }
                                     )
-                                }
                             } else {
                                 items(movieList, key = { it.uri }) { movie ->
                                     LocalVideoCard(
@@ -1845,41 +1833,31 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     }
 }
 
-@Composable
-fun MovieCardGrid(
+private fun LazyListScope.MovieCardGrid(
+    columns: Int,
     movies: List<LocalVideo>,
     sidecars: Map<String, List<LocalSidecar>>,
     playback: PlaybackController,
     onSelect: (LocalVideo) -> Unit
 ) {
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val columns = when {
-            maxWidth >= 1000.dp -> 4
-            maxWidth >= 680.dp -> 3
-            else -> 2
-        }
-        val rows = movies.chunked(columns)
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            rows.forEach { rowMovies ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    rowMovies.forEach { movie ->
-                        Box(Modifier.weight(1f)) {
-                            MovieSummaryCard(
-                                video = movie,
-                                sidecars = sidecars,
-                                playback = playback,
-                                onClick = { onSelect(movie) }
-                            )
-                        }
-                    }
-                    val missing = columns - rowMovies.size
-                    repeat(missing) {
-                        Spacer(Modifier.weight(1f))
-                    }
+    items(movies.chunked(columns), key = { chunk -> "movie:" + chunk.joinToString { it.uri } }, contentType = { "movie-row" }) { rowMovies ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            rowMovies.forEach { movie ->
+                Box(Modifier.weight(1f)) {
+                    MovieSummaryCard(
+                        video = movie,
+                        sidecars = sidecars,
+                        playback = playback,
+                        onClick = { onSelect(movie) }
+                    )
                 }
+            }
+            val missing = columns - rowMovies.size
+            repeat(missing) {
+                Spacer(Modifier.weight(1f))
             }
         }
     }
@@ -2020,39 +1998,29 @@ fun MovieSummaryCard(
     }
 }
 
-@Composable
-fun TvSeriesCardGrid(
+private fun LazyListScope.TvSeriesCardGrid(
+    columns: Int,
     seriesList: List<TvSeries>,
     playback: PlaybackController,
     onSelect: (TvSeries) -> Unit
 ) {
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val columns = when {
-            maxWidth >= 1000.dp -> 4
-            maxWidth >= 680.dp -> 3
-            else -> 2
-        }
-        val rows = seriesList.chunked(columns)
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            rows.forEach { rowSeries ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    rowSeries.forEach { series ->
-                        Box(Modifier.weight(1f)) {
-                            TvSeriesSummaryCard(
-                                series = series,
-                                playback = playback,
-                                onClick = { onSelect(series) }
-                            )
-                        }
-                    }
-                    val missing = columns - rowSeries.size
-                    repeat(missing) {
-                        Spacer(Modifier.weight(1f))
-                    }
+    items(seriesList.chunked(columns), key = { chunk -> "series:" + chunk.joinToString { it.id } }, contentType = { "series-row" }) { rowSeries ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            rowSeries.forEach { series ->
+                Box(Modifier.weight(1f)) {
+                    TvSeriesSummaryCard(
+                        series = series,
+                        playback = playback,
+                        onClick = { onSelect(series) }
+                    )
                 }
+            }
+            val missing = columns - rowSeries.size
+            repeat(missing) {
+                Spacer(Modifier.weight(1f))
             }
         }
     }
@@ -2613,6 +2581,7 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
         value = null
         value = withContext(Dispatchers.IO) {
             ThumbnailMemory.permits.withPermit {
+                kotlinx.coroutines.currentCoroutineContext().ensureActive()
                 ThumbnailMemory.cache.get(key) ?: run {
                     var bmp: Bitmap? = null
                     // 1. On Android 10+, request cached system thumbnail from ContentResolver

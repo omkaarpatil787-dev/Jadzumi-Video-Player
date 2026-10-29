@@ -1,0 +1,72 @@
+{
+  "baseCommit": "a0227a55aaed473a8ed5564f44177c9529da8496",
+  "branch": "test/cinema-portal-ui",
+  "sourceHashes": {
+    "app/src/main/java/com/jadzumi/video/CinemaPlayer.kt": "a456fa4c21a06afd55d19cecbc1cec173fab5f4461ef8f1134f2453492fc60c7",
+    "app/src/main/java/com/jadzumi/video/CinemaPortal.kt": "e3484e1fbcfbcf8f44cf0e6b3ef7f529a54b07e142bf47a5654d899ecf96e133",
+    "app/src/main/java/com/jadzumi/video/GlassTheme.kt": "321039997d8df07ec1692d265e61c13bad64f382a3d78a3214c8ee9a07fb1469",
+    "app/src/main/java/com/jadzumi/video/JadzumiApp.kt": "22b74b1dcd10f5accd9ce9ac4f0224af3f47e9681dcb709c8314fbbfe6b62870",
+    "app/src/main/java/com/jadzumi/video/JadzumiSplashScreen.kt": "90e69ae54de710a6c0d51d27c6d20556f5b4eee27c564d2eb314a490b2e3c6b9",
+    "app/src/main/java/com/jadzumi/video/LocalLibraryUi.kt": "692cdbbd4504c1b212636a8dbb864dd9d1a5d558c6454c63a976c9e5d78e5d5a",
+    "app/src/main/java/com/jadzumi/video/MainActivity.kt": "ad490344a2730913d8d7d6a2e3ddbadf9136d28e1ed548726d7c2293d897e410",
+    "app/src/main/java/com/jadzumi/video/MotionEffects.kt": "4db9b116e07fb1a977d079bf9360e9f121b6f3d91ad5accdc157cdf0b6d7c63c",
+    "app/src/main/java/com/jadzumi/video/PlaybackController.kt": "12d5a7941e3364fff4098a8a31617729d748405e2d9e88070bced987ae9900e7"
+  },
+  "deviceChecks": "Unverified: no connected test device",
+  "pushPerformed": false,
+  "date": "2026-10-29",
+  "command": "./gradlew test assembleDebug lintDebug -PportalPreview=true --no-daemon --console=plain",
+  "build": "PASSED",
+  "unitTests": {
+    "Debug": {
+      "tests": 68,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Release": {
+      "tests": 68,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "lint": {
+    "Fatal": 0,
+    "Error": 0,
+    "Warning": 44,
+    "Information": 0
+  },
+  "apk": {
+    "file": "/workspace/Jadzumi-Cinema-Portal-Preview-2.apk",
+    "bytes": 29673496,
+    "sha256": "72660bf4e90e782c25aa4bdb08b072139f98f307d6ffebc49683c0c4c5b58524",
+    "package": "com.jadzumi.video.portalpreview",
+    "version": "1.6.0-portal-preview",
+    "signatureVerified": true
+  },
+  "nativeLibrariesUnchanged": 6,
+  "licenseAssetsUnchanged": 6,
+  "filesChanged": [
+    "CHECKPOINT.md",
+    "app/src/main/java/com/jadzumi/video/CinemaPlayer.kt",
+    "app/src/main/java/com/jadzumi/video/CinemaPortal.kt",
+    "app/src/main/java/com/jadzumi/video/GlassTheme.kt",
+    "app/src/main/java/com/jadzumi/video/JadzumiApp.kt",
+    "app/src/main/java/com/jadzumi/video/JadzumiSplashScreen.kt",
+    "app/src/main/java/com/jadzumi/video/LocalLibraryUi.kt",
+    "app/src/main/java/com/jadzumi/video/MainActivity.kt",
+    "app/src/main/java/com/jadzumi/video/MotionEffects.kt",
+    "app/src/main/java/com/jadzumi/video/PlaybackController.kt",
+    "docs/CINEMA-PORTAL-PREVIEW.md"
+  ],
+  "deviceValidation": "[Unverified] visual smoothness, frame pacing, repeated PiP, HDR and gestures require hardware testing.",
+  "mainBaseline": "5718fbc40d7b78989c8805592b3596761a2ea55f",
+  "commitPerformed": false,
+  "publication": {
+    "authorization": "User explicitly requested committing and pushing latest preview fixes to preview branch.",
+    "branch": "test/cinema-portal-ui",
+    "mainMergeAuthorized": false,
+    "ciStatus": "Pending push; local validation above covers the unchanged source."
+  }
+}

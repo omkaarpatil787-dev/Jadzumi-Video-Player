@@ -1,20 +1,17 @@
 package com.jadzumi.video
 
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -189,59 +186,27 @@ fun liquidBorderBrush(theme: String, glassIntensity: Float): Brush = GlassTheme.
 fun liquidBorderStroke(theme: String, glassIntensity: Float, strokeWidth: Dp = 1.1.dp): BorderStroke = GlassTheme.embossedBorderStroke(theme, glassIntensity, strokeWidth)
 fun liquidCardBrush(theme: String, glassIntensity: Float): Brush = GlassTheme.embossedBorderBrush(theme, glassIntensity)
 
-/**
- * Scroll blend fade modifier:
- * Applies a smooth vertical fading edge on top and bottom of scrollable containers.
- * Top edge fades when content is scrolled down; bottom edge fades when more content remains below.
- */
+/** Edge scrims retain the theme blend without allocating a viewport-sized offscreen texture. */
 @Composable
 fun Modifier.animatedScrollBlendFade(
     listState: LazyListState,
     topFadeHeight: Dp = 32.dp,
     bottomFadeHeight: Dp = 56.dp
 ): Modifier {
-    val animatedTopPx by animateDpAsState(
-        targetValue = if (listState.canScrollBackward) topFadeHeight else 0.dp,
-        animationSpec = tween(240, easing = LinearOutSlowInEasing),
-        label = "scrollFadeTop"
-    )
-    val animatedBottomPx by animateDpAsState(
-        targetValue = if (listState.canScrollForward) bottomFadeHeight else 0.dp,
-        animationSpec = tween(240, easing = LinearOutSlowInEasing),
-        label = "scrollFadeBottom"
-    )
-    val hasFade = animatedTopPx > 0.5.dp || animatedBottomPx > 0.5.dp
-    if (!hasFade) return this
-
-    return this
-        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-        .drawWithContent {
+    val motion = LocalMotionStyle.current
+    val top = animateFloatAsState(if (listState.canScrollBackward) 1f else 0f, motion.fadeSpec(), label = "Scroll top blend")
+    val bottom = animateFloatAsState(if (listState.canScrollForward) 1f else 0f, motion.fadeSpec(), label = "Scroll bottom blend")
+    val background = MaterialTheme.colorScheme.background
+    return drawWithCache {
+        val topHeight = topFadeHeight.toPx().coerceIn(1f, size.height.coerceAtLeast(1f))
+        val bottomHeight = bottomFadeHeight.toPx().coerceIn(1f, size.height.coerceAtLeast(1f))
+        val topBrush = Brush.verticalGradient(listOf(background, background.copy(alpha = 0f)), endY = topHeight)
+        val bottomStart = (size.height - bottomHeight).coerceAtLeast(0f)
+        val bottomBrush = Brush.verticalGradient(listOf(background.copy(alpha = 0f), background), startY = bottomStart, endY = size.height.coerceAtLeast(1f))
+        onDrawWithContent {
             drawContent()
-            val height = size.height
-            val topPx = animatedTopPx.toPx()
-            val bottomPx = animatedBottomPx.toPx()
-
-            if (topPx > 1f) {
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        0.0f to Color.Transparent,
-                        1.0f to Color.Black,
-                        startY = 0f,
-                        endY = topPx
-                    ),
-                    blendMode = BlendMode.DstIn
-                )
-            }
-            if (bottomPx > 1f) {
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        0.0f to Color.Black,
-                        1.0f to Color.Transparent,
-                        startY = (height - bottomPx).coerceAtLeast(0f),
-                        endY = height
-                    ),
-                    blendMode = BlendMode.DstIn
-                )
-            }
+            if (top.value > 0f) drawRect(topBrush, size = Size(size.width, topHeight), alpha = top.value)
+            if (bottom.value > 0f) drawRect(bottomBrush, topLeft = Offset(0f, bottomStart), size = Size(size.width, bottomHeight), alpha = bottom.value)
         }
+    }
 }

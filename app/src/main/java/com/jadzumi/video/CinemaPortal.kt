@@ -39,11 +39,12 @@ import androidx.compose.ui.unit.dp
 /** Three matching line segments interpolate into an options/close icon; no new setting is added. */
 @Composable internal fun CinemaOptionsMorph(open: Boolean, modifier: Modifier = Modifier) {
     val motion = LocalMotionStyle.current
-    val p by animateFloatAsState(if (open) 1f else 0f,
-        if (motion.enabled) spring(dampingRatio = motion.damping, stiffness = Spring.StiffnessMedium) else snap(), label = "Options icon")
+    val progress = animateFloatAsState(if (open) 1f else 0f,
+        motion.springSpec(), label = "Options icon")
     val start = remember { arrayOf(floatArrayOf(5f,6f,19f,6f), floatArrayOf(5f,12f,19f,12f), floatArrayOf(5f,18f,19f,18f)) }
     val end = remember { arrayOf(floatArrayOf(6f,6f,18f,18f), floatArrayOf(12f,12f,12f,12f), floatArrayOf(6f,18f,18f,6f)) }
     Canvas(modifier) {
+        val p = progress.value
         for (i in start.indices) {
             fun point(index: Int) = Offset((start[i][index] + (end[i][index] - start[i][index]) * p) * size.width / 24f,
                 (start[i][index + 1] + (end[i][index + 1] - start[i][index + 1]) * p) * size.height / 24f)

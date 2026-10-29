@@ -183,3 +183,25 @@ that test branch. The existing local source validation remains applicable (68 te
 per variant; zero lint errors). CI now builds the isolated preview with the same flag
 and skips production signing/release publication for this branch. Merging to main or
 publishing a stable release still needs separate permission. CI result pending push.
+
+## Cinema Portal preview 2 — local polish, 2026-10-29
+
+User reported fast opening, scroll lag, missing immersive HUD, dock feedback, PiP and
+scattered effects controls. Clarified HUD must stay visible while controls hide. Implemented
+reference opening timing, lazy poster rows, cancellation-aware thumbnail dispatch, cached
+edge scrims, unified motion specifications, continuous dock capsule/no ripple, persistent
+HUD honoring existing toggles, PiP lifecycle/surface fixes and one Motion & effects card.
+Removed only explicit Dark/Night Slate appearance choice; other features retained.
+See docs/CINEMA-PORTAL-PREVIEW.md and polish-result.json for validation/device limits.
+Current changes stay LOCAL on test/cinema-portal-ui. No new commit or push this turn.
+Main must remain unchanged. APK is a separate Jadzumi Preview install for testing.
+
+Preview 2 validation PASSED: 68 tests per variant, zero failures/errors/skips; lint 44 warnings, zero errors/fatal. Debug signature, isolated package and six unchanged native libraries/license assets verified. Device checks remain unverified. APK: /workspace/Jadzumi-Cinema-Portal-Preview-2.apk.
+
+## Preview 2 push authorized — 2026-10-29
+
+User explicitly requested pushing the latest fixes to the preview branch. Verified the
+source hashes still match the passed local build/test/lint report; only publication
+documentation changed afterward. Commit and push test/cinema-portal-ui only; do not
+merge main or publish a stable release. Remote main before push is 5718fbc40d7b78989c8805592b3596761a2ea55f.
+Preview CI remains restricted to the isolated debug APK, without release signing.

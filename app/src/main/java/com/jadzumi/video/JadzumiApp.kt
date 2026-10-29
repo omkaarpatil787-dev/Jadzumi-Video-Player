@@ -5,6 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -72,6 +75,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -137,7 +142,7 @@ private val destinations = listOf(
 @Composable fun JadzumiApp(playback: PlaybackController) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
-    var theme by rememberSaveable { mutableStateOf(prefs.getString("theme", "Dark") ?: "Dark") }
+    var theme by rememberSaveable { mutableStateOf(prefs.getString("theme", "System default").let { if (it == "Dark") "AMOLED" else it ?: "System default" }) }
     var reducedMotion by rememberSaveable { mutableStateOf(prefs.getBoolean("reducedMotion", false)) }
     var livelyAnimations by rememberSaveable { mutableStateOf(prefs.getBoolean("livelyAnimations", true)) }
     var themeBloomEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("themeBloom", true)) }
@@ -242,7 +247,7 @@ private val destinations = listOf(
                                         AnimatedVisibility(
                                             visible = selectedId == null,
                                             enter = fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing)) + expandVertically(animationSpec = tween(220, easing = LinearOutSlowInEasing)),
-                                            exit = fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing)) + shrinkVertically(animationSpec = tween(180, easing = FastOutLinearInEasing))
+                                            exit = fadeOut(animationSpec = motionStyle.fadeSpec()) + shrinkVertically(animationSpec = motionStyle.fadeSpec())
                                         ) {
                                             // Adaptive Phone Top Bar (Greeting + Actions, Full-width frosted search capsule)
                                             Column(Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 6.dp)) {
@@ -476,17 +481,17 @@ private val destinations = listOf(
 
                                                 if (!isInitialDetails && isTargetDetails) {
                                                     // Fluid, hardware-accelerated entrance into Details
-                                                    (fadeIn(animationSpec = tween(260, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))) +
-                                                            scaleIn(initialScale = 0.96f, animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessMediumLow)))
+                                                    (fadeIn(animationSpec = motionStyle.fadeSpec()) +
+                                                            scaleIn(initialScale = 0.96f, animationSpec = motionStyle.springSpec()))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
+                                                            fadeOut(animationSpec = motionStyle.fadeSpec())
                                                         )
                                                 } else if (isInitialDetails && !isTargetDetails) {
                                                     // Clean, responsive return to Library
-                                                    (fadeIn(animationSpec = tween(240, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))))
+                                                    (fadeIn(animationSpec = motionStyle.fadeSpec()))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing)) +
-                                                                    scaleOut(targetScale = 0.96f, animationSpec = tween(180, easing = FastOutLinearInEasing))
+                                                            fadeOut(animationSpec = motionStyle.fadeSpec()) +
+                                                                    scaleOut(targetScale = 0.96f, animationSpec = motionStyle.fadeSpec())
                                                         )
                                                 } else {
                                                     // Navigating between tabs: silky smooth shared-axis animated crossfade (no fast flicker fade)
@@ -495,16 +500,16 @@ private val destinations = listOf(
                                                     val targetIndex = tabOrder.indexOf(targetState)
                                                     val isForward = if (initialIndex != -1 && targetIndex != -1) targetIndex > initialIndex else true
 
-                                                    (slideInHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (it * 0.08f).toInt() else (-it * 0.08f).toInt() } +
-                                                            fadeIn(animationSpec = tween(260, easing = LinearOutSlowInEasing)))
+                                                    (slideInHorizontally(animationSpec = motionStyle.springSpec()) { if (isForward) (it * 0.08f).toInt() else (-it * 0.08f).toInt() } +
+                                                            fadeIn(animationSpec = motionStyle.fadeSpec()))
                                                         .togetherWith(
-                                                            slideOutHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (-it * 0.08f).toInt() else (it * 0.08f).toInt() } +
-                                                                    fadeOut(animationSpec = tween(190, easing = FastOutLinearInEasing))
+                                                            slideOutHorizontally(animationSpec = motionStyle.springSpec()) { if (isForward) (-it * 0.08f).toInt() else (it * 0.08f).toInt() } +
+                                                                    fadeOut(animationSpec = motionStyle.fadeSpec())
                                                         )
                                                 }
                                             }
                                         },
-                                        modifier = Modifier.weight(1f).elasticEdge().onGloballyPositioned { destinationReady = it.size.width > 0 && it.size.height > 0 },
+                                        modifier = Modifier.weight(1f).onGloballyPositioned { destinationReady = it.size.width > 0 && it.size.height > 0 },
                                         contentKey = { it },
                                         label = "screen"
                                     ) { current ->
@@ -907,11 +912,12 @@ fun GeminiGlowingJadzumiLogo(
     val activeDestination = navDestinations.firstOrNull { it.name == route || (it.name == "Home" && route == "Library") }
         ?: navDestinations.first()
 
-    // Organic Apple/M3 Fluid Spring Specification (Damped, natural settling - no harsh snaps)
-    val dockSpringDp = spring<Dp>(
-        dampingRatio = 0.82f,
-        stiffness = Spring.StiffnessLow
-    )
+    val motion = LocalMotionStyle.current
+    val dockSpringDp = motion.springSpec<Dp>()
+    val activeIndex = navDestinations.indexOf(activeDestination).coerceAtLeast(0)
+    val selectedPosition = animateFloatAsState(activeIndex.toFloat(), motion.springSpec(), label = "Dock selection")
+    val selectionTail = animateFloatAsState(activeIndex.toFloat(), motion.springSpec(stiffness = 350f), label = "Dock capsule tail")
+    val indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
 
     val dockHeight by animateDpAsState(
         targetValue = when {
@@ -979,13 +985,13 @@ fun GeminiGlowingJadzumiLogo(
     // Smooth fluid crossfade between full dock and minimized pill
     val fullDockAlpha by animateFloatAsState(
         targetValue = if (isMinimized) 0f else 1f,
-        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
+        animationSpec = motion.fadeSpec(),
         label = "fullDockAlpha"
     )
 
     val minPillAlpha by animateFloatAsState(
         targetValue = if (isMinimized) 1f else 0f,
-        animationSpec = tween(durationMillis = 260, delayMillis = 60, easing = FastOutSlowInEasing),
+        animationSpec = motion.fadeSpec(),
         label = "minPillAlpha"
     )
 
@@ -1009,7 +1015,18 @@ fun GeminiGlowingJadzumiLogo(
                     modifier = Modifier
                         .fillMaxSize()
                         .alpha(fullDockAlpha)
-                        .padding(horizontal = if (isTablet) 14.dp else 8.dp),
+                        .padding(horizontal = if (isTablet) 14.dp else 8.dp)
+                        .drawBehind {
+                            val cell = size.width / navDestinations.size
+                            val inset = 4.dp.toPx()
+                            // Draw-phase position reads slide one continuous capsule without relaying out tabs.
+                            val left = minOf(selectedPosition.value, selectionTail.value).coerceIn(0f, 3f) * cell + inset
+                            val right = (maxOf(selectedPosition.value, selectionTail.value).coerceIn(0f, 3f) + 1f) * cell - inset
+                            drawRoundRect(indicatorColor,
+                                topLeft = Offset(left, inset),
+                                size = Size((right - left).coerceAtLeast(0f), (size.height - inset * 2).coerceAtLeast(0f)),
+                                cornerRadius = CornerRadius(18.dp.toPx()))
+                        },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Navigation Destinations
@@ -1018,9 +1035,10 @@ fun GeminiGlowingJadzumiLogo(
                         val activeColor = MaterialTheme.colorScheme.primary
                         val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
 
-                        val iconScale by animateFloatAsState(
+                        val iconTint by animateColorAsState(if (isSelected) activeColor else inactiveColor, motion.fadeSpec(), label = "Dock tint")
+                        val iconScale = animateFloatAsState(
                             targetValue = if (isSelected) (if (isIconsOnly) 1.16f else 1.12f) else 1.0f,
-                            animationSpec = spring(dampingRatio = 0.78f, stiffness = Spring.StiffnessMediumLow),
+                            animationSpec = motion.springSpec(),
                             label = "dockIconScale_${d.name}"
                         )
 
@@ -1029,10 +1047,11 @@ fun GeminiGlowingJadzumiLogo(
                                 .weight(1f)
                                 .fillMaxHeight()
                                 .clip(RoundedCornerShape(16.dp))
-                                .touchMotion()
+                                .semantics { selected = isSelected }
                                 .clickable(
                                     interactionSource = remember(d.name) { MutableInteractionSource() },
-                                    indication = ripple(bounded = true, radius = 24.dp)
+                                    indication = null,
+                                    role = Role.Tab
                                 ) {
                                     if (!isSelected) {
                                         onNavigate(d.name)
@@ -1045,10 +1064,10 @@ fun GeminiGlowingJadzumiLogo(
                                 Icon(
                                     imageVector = d.icon,
                                     contentDescription = d.name,
-                                    tint = if (isSelected) activeColor else inactiveColor,
+                                    tint = iconTint,
                                     modifier = Modifier
                                         .size(currentIconSize)
-                                        .scale(iconScale)
+                                        .graphicsLayer { scaleX = iconScale.value; scaleY = iconScale.value; translationY = -(iconScale.value - 1f) * 10.dp.toPx() }
                                 )
                             } else {
                                 // Default mode: Resized icons + clean typography labels
@@ -1059,16 +1078,16 @@ fun GeminiGlowingJadzumiLogo(
                                     Icon(
                                         imageVector = d.icon,
                                         contentDescription = d.name,
-                                        tint = if (isSelected) activeColor else inactiveColor,
+                                        tint = iconTint,
                                         modifier = Modifier
                                             .size(currentIconSize)
-                                            .scale(iconScale)
+                                            .graphicsLayer { scaleX = iconScale.value; scaleY = iconScale.value; translationY = -(iconScale.value - 1f) * 10.dp.toPx() }
                                     )
                                     Text(
                                         text = d.name,
                                         fontSize = 10.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) activeColor else inactiveColor,
+                                        color = iconTint,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -1085,7 +1104,7 @@ fun GeminiGlowingJadzumiLogo(
                     modifier = Modifier
                         .fillMaxSize()
                         .alpha(minPillAlpha)
-                        .clickable(enabled = isMinimized, onClick = onToggleMinimize),
+                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, enabled = isMinimized, onClick = onToggleMinimize),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -1631,7 +1650,6 @@ private val settingsCategories = listOf(
                                     val themeItems = listOf(
                                         Triple("System default", "Follow System", Icons.Rounded.BrightnessAuto),
                                         Triple("Light", "Airy Pale-Blue", Icons.Rounded.LightMode),
-                                        Triple("Dark", "Night Slate", Icons.Rounded.DarkMode),
                                         Triple("AMOLED", "Pure Black", Icons.Rounded.Brightness1)
                                     )
                                     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1641,7 +1659,6 @@ private val settingsCategories = listOf(
                                         }
                                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                             ThemeOptionCard(themeItems[2].first, themeItems[2].second, themeItems[2].third, theme == themeItems[2].first, { onTheme(themeItems[2].first) }, Modifier.weight(1f))
-                                            ThemeOptionCard(themeItems[3].first, themeItems[3].second, themeItems[3].third, theme == themeItems[3].first, { onTheme(themeItems[3].first) }, Modifier.weight(1f))
                                         }
                                     }
 
@@ -1777,6 +1794,14 @@ private val settingsCategories = listOf(
 
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
+
+                                }
+                            }
+                            item {
+                                Panel {
+                                    Text("Motion & effects", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("One motion style for navigation, dock, menus and touch feedback.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(Modifier.height(16.dp))
                                     Column(Modifier.fillMaxWidth()) {
                                         Row(
                                             Modifier.fillMaxWidth(),

@@ -1,5 +1,7 @@
 package com.jadzumi.video
 
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -75,7 +77,7 @@ fun JadzumiPlaySymbol(modifier: Modifier = Modifier) {
     }
 }
 
-/** Opens onto the composed destination. No simulated loading percentage or artificial scan delay. */
+/** Finite brand entrance/hold/opening follows the reference; destination readiness is independent. */
 @Composable fun JadzumiSplashScreen(theme: String, onFinished: () -> Unit, ready: Boolean = true) {
     val motion = LocalMotionStyle.current
     val progress = remember { Animatable(0f) }
@@ -86,12 +88,15 @@ fun JadzumiPlaySymbol(modifier: Modifier = Modifier) {
         "AMOLED" -> Color.Black
         else -> Color(0xFF0F1724)
     }
-    LaunchedEffect(ready, motion.enabled) {
-        if (motion.enabled) brand.animateTo(1f, tween(180))
-        if (ready) {
-            if (motion.enabled) progress.animateTo(1f, tween(620, easing = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)))
-            finished()
-        }
+    val destinationReady by rememberUpdatedState(ready)
+    LaunchedEffect(motion.enabled) {
+        if (motion.enabled) {
+            brand.animateTo(1f, tween(650, easing = FastOutSlowInEasing))
+            delay(220)
+        } else brand.snapTo(1f)
+        snapshotFlow { destinationReady }.first { it }
+        if (motion.enabled) progress.animateTo(1f, tween(720, easing = FastOutSlowInEasing))
+        finished()
     }
     BackHandler { finished() }
     BoxWithConstraints(Modifier.fillMaxSize().pointerInput(Unit) {
@@ -110,7 +115,7 @@ fun JadzumiPlaySymbol(modifier: Modifier = Modifier) {
         }
         Box(Modifier.align(Alignment.Center).graphicsLayer {
             alpha = brand.value * (1f - progress.value * 2f).coerceIn(0f, 1f)
-            translationY = -12.dp.toPx() * progress.value
+            translationY = 12.dp.toPx() * (1f - brand.value) - 12.dp.toPx() * progress.value
         }) {
             if (compact) Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 JadzumiPlaySymbol(Modifier.size(symbolSize)); label()

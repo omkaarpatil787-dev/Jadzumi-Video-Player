@@ -2,6 +2,7 @@ package com.jadzumi.video
 
 import android.Manifest
 import android.app.PendingIntent
+import android.app.PictureInPictureUiState
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
 import android.content.BroadcastReceiver
@@ -140,7 +141,10 @@ class MainActivity : ComponentActivity() {
         if (!supportsPip() || playback.video == null) return false
         playback.fullscreen = true
         playback.locked = false
-        return runCatching { enterPictureInPictureMode(pipParams()) }.getOrDefault(false)
+        playback.enteringPip = true
+        val entered = runCatching { enterPictureInPictureMode(pipParams()) }.getOrDefault(false)
+        if (!entered) playback.enteringPip = false
+        return entered
     }
 
     override fun onUserLeaveHint() {
@@ -148,9 +152,15 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT < 31 && playback.fullscreen && playback.playing) enterCinemaPip()
     }
 
+    override fun onPictureInPictureUiStateChanged(pipState: PictureInPictureUiState) {
+        super.onPictureInPictureUiStateChanged(pipState)
+        if (Build.VERSION.SDK_INT >= 35) playback.enteringPip = pipState.isTransitioningToPip
+    }
+
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         playback.inPip = isInPictureInPictureMode
+        playback.enteringPip = false
         if (isInPictureInPictureMode) {
             playback.fullscreen = true
             playback.locked = false
