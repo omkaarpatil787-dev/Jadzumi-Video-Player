@@ -887,6 +887,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         }
     }
 
+    val movieList = remember(videos) { videos.filter { it.episode == null } }
+
     val filteredSeries = remember(seriesList, query) {
         seriesList.filter { matchesQuery(query, it.title, it.studio, it.synopsis) }
     }
@@ -1272,7 +1274,6 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                             }
                         }
                     } else if (category == "Movies") {
-                        val movieList = remember(videos) { videos.filter { it.episode == null } }
                         if (movieList.isEmpty()) {
                             item {
                                 LocalPanel {
