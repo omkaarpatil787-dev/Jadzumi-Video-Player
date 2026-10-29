@@ -153,6 +153,10 @@ private val destinations = listOf(
     var dockAutoMinimize by rememberSaveable { mutableStateOf(prefs.getBoolean("dockAutoMinimize", true)) }
     var isDockMinimized by rememberSaveable { mutableStateOf(false) }
     var glassIntensity by rememberSaveable { mutableStateOf(prefs.getFloat("glassIntensity", 0.75f)) }
+    var haloEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("halo_enabled", true)) }
+    var haloPaletteName by rememberSaveable { mutableStateOf(prefs.getString("halo_palette", "Glacier Blue") ?: "Glacier Blue") }
+    var haloIntensity by rememberSaveable { mutableFloatStateOf(prefs.getFloat("halo_intensity", 0.30f)) }
+    var haloSpread by rememberSaveable { mutableFloatStateOf(prefs.getFloat("halo_spread", 0.70f)) }
     val cornerRadiusDp = when (cornerStyle) {
         "Compact" -> 14.dp
         "Sharp" -> 0.dp
@@ -221,7 +225,16 @@ private val destinations = listOf(
         ) {
             Box(Modifier.fillMaxSize()) {
             Surface(Modifier.fillMaxSize(), color = colors.background) {
-                BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
+                Box(Modifier.fillMaxSize()) {
+                    PortalHaloBackdrop(
+                        theme = effectiveTheme,
+                        palette = HaloPalette.fromName(haloPaletteName),
+                        enabled = haloEnabled,
+                        intensity = haloIntensity,
+                        spread = haloSpread,
+                        reducedMotion = reducedMotion || !motionStyle.enabled
+                    )
+                    BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
                     if (query.isNotEmpty()) {
                         query = ""
                     } else if (selectedId != null) {
@@ -584,6 +597,26 @@ private val destinations = listOf(
                                                     glassIntensity = it
                                                     prefs.edit { putFloat("glassIntensity", it) }
                                                 },
+                                                haloEnabled = haloEnabled,
+                                                onHaloEnabled = {
+                                                    haloEnabled = it
+                                                    prefs.edit { putBoolean("halo_enabled", it) }
+                                                },
+                                                haloPalette = HaloPalette.fromName(haloPaletteName),
+                                                onHaloPalette = {
+                                                    haloPaletteName = it.title
+                                                    prefs.edit { putString("halo_palette", it.title) }
+                                                },
+                                                haloIntensity = haloIntensity,
+                                                onHaloIntensity = {
+                                                    haloIntensity = it
+                                                    prefs.edit { putFloat("halo_intensity", it) }
+                                                },
+                                                haloSpread = haloSpread,
+                                                onHaloSpread = {
+                                                    haloSpread = it
+                                                    prefs.edit { putFloat("halo_spread", it) }
+                                                },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
                                                 library = library,
@@ -619,6 +652,26 @@ private val destinations = listOf(
                                                 onGlassIntensity = {
                                                     glassIntensity = it
                                                     prefs.edit { putFloat("glassIntensity", it) }
+                                                },
+                                                haloEnabled = haloEnabled,
+                                                onHaloEnabled = {
+                                                    haloEnabled = it
+                                                    prefs.edit { putBoolean("halo_enabled", it) }
+                                                },
+                                                haloPalette = HaloPalette.fromName(haloPaletteName),
+                                                onHaloPalette = {
+                                                    haloPaletteName = it.title
+                                                    prefs.edit { putString("halo_palette", it.title) }
+                                                },
+                                                haloIntensity = haloIntensity,
+                                                onHaloIntensity = {
+                                                    haloIntensity = it
+                                                    prefs.edit { putFloat("halo_intensity", it) }
+                                                },
+                                                haloSpread = haloSpread,
+                                                onHaloSpread = {
+                                                    haloSpread = it
+                                                    prefs.edit { putFloat("halo_spread", it) }
                                                 },
                                                 onReplaySplash = { showSplash = true },
                                                 localState = localState,
@@ -662,6 +715,7 @@ private val destinations = listOf(
                             }
                         }
                     }
+                }
 
             bloomOriginColor?.let { oldColor ->
                 val progress = bloomProgress.value
@@ -1040,6 +1094,23 @@ fun GeminiGlowingJadzumiLogo(
                                 },
                             contentAlignment = Alignment.Center
                         ) {
+                            if (isSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(vertical = 4.dp, horizontal = 4.dp)
+                                        .background(
+                                            brush = Brush.radialGradient(
+                                                listOf(
+                                                    activeColor.copy(alpha = 0.18f),
+                                                    activeColor.copy(alpha = 0.04f),
+                                                    Color.Transparent
+                                                )
+                                            ),
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
+                                )
+                            }
                             if (isIconsOnly) {
                                 // Ultra-sleek mode: Resized prominent icons, zero container shapes
                                 Icon(
@@ -1130,6 +1201,14 @@ private val settingsCategories = listOf(
     onDockAutoMinimize: (Boolean) -> Unit = {},
     glassIntensity: Float = 0.75f,
     onGlassIntensity: (Float) -> Unit = {},
+    haloEnabled: Boolean = true,
+    onHaloEnabled: (Boolean) -> Unit = {},
+    haloPalette: HaloPalette = HaloPalette.GlacierBlue,
+    onHaloPalette: (HaloPalette) -> Unit = {},
+    haloIntensity: Float = 0.30f,
+    onHaloIntensity: (Float) -> Unit = {},
+    haloSpread: Float = 0.70f,
+    onHaloSpread: (Float) -> Unit = {},
     onReplaySplash: () -> Unit,
     localState: LocalLibraryState,
     library: LocalLibrary,
@@ -1280,50 +1359,66 @@ private val settingsCategories = listOf(
                         "Video" -> {
                             item {
                                 Panel {
-                                    Text("Playback & Decoding", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("Configure video decoding pipeline and screen scaling.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Column(Modifier.weight(1f)) {
-                                            Text("Match display refresh rate", fontWeight = FontWeight.SemiBold)
-                                            Text("Request seamless matching during playback. Device support varies; no frame interpolation. Off by default.", style = MaterialTheme.typography.bodySmall)
-                                        }
-                                        Switch(playback.matchRefreshRate, playback::updateRefreshMatching)
-                                    }
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Playback & Decoding Pipeline", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Configure video decoding pipeline, hardware acceleration, and display refresh matching.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Video Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(DeviceHardwareInspector.getDecoderDescription(context), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Auto (Recommended) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
+
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Hardware Acceleration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(DeviceHardwareInspector.getHardwareAccelerationDescription(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
                                     }
+
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Video Scaling Mode", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text(DeviceHardwareInspector.getDisplayScalingDescription(context), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Fit (Keep aspect ratio) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
+
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Match Display Refresh Rate", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Request seamless matching during playback. Device support varies; no frame interpolation.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(playback.matchRefreshRate, playback::updateRefreshMatching)
+                                    }
+                                }
+                            }
+
+                            item {
+                                Panel {
+                                    Text("Display & In-Player Overlays", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Manage screen luminance, wide color gamut HDR, and persistent on-screen telemetry.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                             Text("Brightness Boost & HDR", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                             Text("Force maximum panel luminance and enable wide color gamut HDR10/HDR10+/HLG", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = playback.brightnessBoost, onCheckedChange = { playback.updateBrightnessBoost(it) })
                                     }
+
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
                                     Row(
-                                        Modifier.fillMaxWidth().clickable { showDisplayDuringPlaybackDialog = true }.padding(vertical = 14.dp),
+                                        Modifier.fillMaxWidth().clickable { showDisplayDuringPlaybackDialog = true }.padding(vertical = 10.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
@@ -1333,13 +1428,20 @@ private val settingsCategories = listOf(
                                         }
                                         Text("Configure ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                }
+                            }
+
+                            item {
+                                Panel {
+                                    Text("Device Hardware Capabilities", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Detected display panel capabilities and HDR standard support.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
                                     val (hdrTitle, hdrDesc) = remember { DeviceHardwareInspector.getHdrCapabilitiesInfo(context) }
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)),
-                                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
                                     ) {
                                         Row(
                                             Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -1359,7 +1461,7 @@ private val settingsCategories = listOf(
                                         shape = RoundedCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Row(
                                             Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -1623,6 +1725,7 @@ private val settingsCategories = listOf(
                         }
 
                         "Display" -> {
+                            // 1. Base Appearance Mode & Transitions
                             item {
                                 Panel {
                                     Text("Appearance Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
@@ -1646,10 +1749,203 @@ private val settingsCategories = listOf(
                                     }
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Theme Transition Blend (Fade)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Smooth 580ms circular blend reveal when switching themes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
+                                    }
+                                }
+                            }
 
-                                    Text("App Icon", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                    Text("Choose from 10 distinct launcher icons crafted for Jadzumi Player", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            // 2. Portal Halo Backdrop System
+                            item {
+                                HaloSettingsCard(
+                                    theme = effectiveTheme,
+                                    enabled = haloEnabled,
+                                    onEnabledChange = onHaloEnabled,
+                                    palette = haloPalette,
+                                    onPaletteChange = onHaloPalette,
+                                    intensity = haloIntensity,
+                                    onIntensityChange = onHaloIntensity,
+                                    spread = haloSpread,
+                                    onSpreadChange = onHaloSpread
+                                )
+                            }
+
+                            // 3. Frosted Glass Depth & Curves
+                            item {
+                                Panel {
+                                    Text("Frosted Glass Depth & Curves", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Tune frosted glass translucency and corner curvature across cards and player controls.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
+                                    Column(Modifier.fillMaxWidth()) {
+                                        Row(
+                                            Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                                Text("Frosted Glass Blur (Glassify)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                Text(
+                                                    if (twoPane) "Adjust frosted Gaussian blur depth, specular bevel, and diffused tint across cards, docks, and player controls"
+                                                    else "Adjust frosted blur depth and diffused surface tint",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = MaterialTheme.colorScheme.primaryContainer,
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                            ) {
+                                                Text(
+                                                    "${(glassIntensity * 100).toInt()}%",
+                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                                )
+                                            }
+                                        }
+                                        Spacer(Modifier.height(8.dp))
+                                        Slider(
+                                            value = glassIntensity,
+                                            onValueChange = onGlassIntensity,
+                                            valueRange = 0.20f..1.0f,
+                                            steps = 15,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                        Row(
+                                            Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                if (twoPane) "Solid Matte (20%)" else "Matte 20%",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                if (twoPane) "Balanced Frosted Blur (65%)" else "Balanced 65%",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                if (twoPane) "Deep Frosted Blur (100%)" else "Frosted 100%",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text("Curvature geometry applied to cards, sheets, and dialogs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(Modifier.height(10.dp))
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        listOf(
+                                            Triple("Rounded", "24dp curve", Icons.Rounded.Circle),
+                                            Triple("Compact", "14dp curve", Icons.Rounded.CropPortrait),
+                                            Triple("Sharp", "0dp crisp", Icons.Rounded.CropSquare)
+                                        ).forEach { (style, radiusText, icon) ->
+                                            val isSel = cornerStyle == style
+                                            Surface(
+                                                modifier = Modifier.weight(1f).clickable { onCornerStyle(style) },
+                                                shape = RoundedCornerShape(14.dp),
+                                                color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                                border = BorderStroke(if (isSel) 1.5.dp else 0.75.dp, if (isSel) MaterialTheme.colorScheme.primary else subtleCardBorderColor())
+                                            ) {
+                                                Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
+                                                    Spacer(Modifier.height(4.dp))
+                                                    Text(style, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                                    Text(radiusText, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 4. Navigation Dock Style
+                            item {
+                                Panel {
+                                    Text("Navigation Dock Style", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Choose layout format and auto-collapse behavior for floating bottom navigation.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        listOf(
+                                            Triple("Icons and labels", "Default", Icons.Rounded.Splitscreen),
+                                            Triple("Icons only", "Ultra-sleek", Icons.Rounded.ViewSidebar)
+                                        ).forEach { (style, subtitle, icon) ->
+                                            val isSel = bottomBarStyle == style
+                                            Surface(
+                                                modifier = Modifier.weight(1f).clickable { onBottomBarStyle(style) },
+                                                shape = RoundedCornerShape(14.dp),
+                                                color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                                border = BorderStroke(if (isSel) 2.dp else 1.dp, if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
+                                            ) {
+                                                Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
+                                                    Spacer(Modifier.height(4.dp))
+                                                    Text(style, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                                    Text(subtitle, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Auto-Minimize Dock on Scroll", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Smoothly collapse floating navigation into a bouncy mini-pill while scrolling movies or browsing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = dockAutoMinimize, onCheckedChange = onDockAutoMinimize)
+                                    }
+                                }
+                            }
+
+                            // 5. Motion Physics & Touch Dynamics
+                            item {
+                                Panel {
+                                    Text("Motion Physics & Transitions", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Tune organic spring stiffness, navigation slide curves, and tactile squish feedback.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Lively UI Animations & Transitions", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Fluid slide & spring transitions when navigating between folders, tabs, and details", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = livelyAnimations, onCheckedChange = onLivelyAnimations)
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Reduced Motion", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Disable animations for instant screen transitions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Switch(checked = reduced, onCheckedChange = onReduced)
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    MotionCustomization()
+                                }
+                            }
+
+                            // 6. App Icon & Brand Identity
+                            item {
+                                Panel {
+                                    Text("App Launcher Icon & Identity", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Choose from 10 distinct launcher icons crafted for Jadzumi Player.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
 
                                     var currentAppIconId by rememberSaveable { mutableStateOf(AppIconManager.getCurrentIconId(context)) }
                                     val iconScope = rememberCoroutineScope()
@@ -1713,165 +2009,6 @@ private val settingsCategories = listOf(
 
                                     HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                    Text("Curvature geometry applied to cards, sheets, and dialogs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Spacer(Modifier.height(10.dp))
-                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        listOf(
-                                            Triple("Rounded", "24dp curve", Icons.Rounded.Circle),
-                                            Triple("Compact", "14dp curve", Icons.Rounded.CropPortrait),
-                                            Triple("Sharp", "0dp crisp", Icons.Rounded.CropSquare)
-                                        ).forEach { (style, radiusText, icon) ->
-                                            val isSel = cornerStyle == style
-                                            Surface(
-                                                modifier = Modifier.weight(1f).clickable { onCornerStyle(style) },
-                                                shape = RoundedCornerShape(14.dp),
-                                                color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                                border = BorderStroke(if (isSel) 1.5.dp else 0.75.dp, if (isSel) MaterialTheme.colorScheme.primary else subtleCardBorderColor())
-                                            ) {
-                                                Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
-                                                    Spacer(Modifier.height(4.dp))
-                                                    Text(style, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                                                    Text(radiusText, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Text("Bottom Navigation Dock Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                    Text("Choose between classic icons with text labels or ultra-compact icons only", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Spacer(Modifier.height(10.dp))
-                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        listOf(
-                                            Triple("Icons and labels", "Default", Icons.Rounded.Splitscreen),
-                                            Triple("Icons only", "Ultra-sleek", Icons.Rounded.ViewSidebar)
-                                        ).forEach { (style, subtitle, icon) ->
-                                            val isSel = bottomBarStyle == style
-                                            Surface(
-                                                modifier = Modifier.weight(1f).clickable { onBottomBarStyle(style) },
-                                                shape = RoundedCornerShape(14.dp),
-                                                color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                                border = BorderStroke(if (isSel) 2.dp else 1.dp, if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
-                                            ) {
-                                                Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
-                                                    Spacer(Modifier.height(4.dp))
-                                                    Text(style, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                                                    Text(subtitle, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Auto-Minimize Dock on Scroll", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Smoothly collapse floating navigation into a bouncy mini-pill while scrolling movies or browsing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Switch(checked = dockAutoMinimize, onCheckedChange = onDockAutoMinimize)
-                                    }
-
-                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Column(Modifier.fillMaxWidth()) {
-                                        Row(
-                                            Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                                Text("Frosted Glass Blur (Glassify)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                                Text(
-                                                    if (twoPane) "Adjust frosted Gaussian blur depth, specular bevel, and diffused tint across cards, docks, and player controls"
-                                                    else "Adjust frosted blur depth and diffused surface tint",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            Surface(
-                                                shape = RoundedCornerShape(999.dp),
-                                                color = MaterialTheme.colorScheme.primaryContainer,
-                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-                                            ) {
-                                                Text(
-                                                    "${(glassIntensity * 100).toInt()}%",
-                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                                )
-                                            }
-                                        }
-                                        Spacer(Modifier.height(8.dp))
-                                        Slider(
-                                            value = glassIntensity,
-                                            onValueChange = onGlassIntensity,
-                                            valueRange = 0.20f..1.0f,
-                                            steps = 15,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                        Row(
-                                            Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(
-                                                if (twoPane) "Solid Matte (20%)" else "Matte 20%",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                softWrap = false
-                                            )
-                                            Text(
-                                                if (twoPane) "Balanced Frosted Blur (65%)" else "Balanced 65%",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                softWrap = false
-                                            )
-                                            Text(
-                                                if (twoPane) "Deep Frosted Blur (100%)" else "Frosted 100%",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                softWrap = false
-                                            )
-                                        }
-                                    }
-
-                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Theme Transition Blend (Fade)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Smooth fade in / fade out blend when switching themes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
-                                    }
-                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Reduced Motion", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Disable animations for instant screen transitions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Switch(checked = reduced, onCheckedChange = onReduced)
-                                    }
-                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Lively UI Animations & Transitions", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Fluid slide & spring transitions when navigating between folders, tabs, and details", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Switch(checked = livelyAnimations, onCheckedChange = onLivelyAnimations)
-                                    }
-                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                    MotionCustomization()
-                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(
                                         Modifier
                                             .fillMaxWidth()
@@ -2785,9 +2922,9 @@ private val settingsCategories = listOf(
 @Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shape = RoundedCornerShape(20.dp),
+        color = frostedSurfaceColor(0.75f),
+        border = subtleCardBorder(),
         shadowElevation = 2.dp
     ) {
         Column(

@@ -612,14 +612,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                             // Top-Right Icons: Clean and uncluttered glassy controls
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                if (showAnyHud) {
-                                    PlayerStatusPill(
-                                        showClock = playback.showPlayerClock,
-                                        showBattery = playback.showBatteryPercentage,
-                                        showRemainingTime = playback.showRemainingTime,
-                                        remainingSec = remSec
-                                    )
-                                }
                                 val isVoiceClarityActive = playback.nightModeVoiceBoost
                                 val voiceWidth by animateDpAsState(
                                     targetValue = if (isVoiceClarityActive) 156.dp else 44.dp,
@@ -670,6 +662,15 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                             )
                                         }
                                     }
+                                }
+
+                                if (showAnyHud) {
+                                    PlayerStatusPill(
+                                        showClock = playback.showPlayerClock,
+                                        showBattery = playback.showBatteryPercentage,
+                                        showRemainingTime = playback.showRemainingTime,
+                                        remainingSec = remSec
+                                    )
                                 }
                                 FrostedCircleButton(
                                     label = if (playback.dialogueReplayActive) "Stop dialogue replay" else "What did they say? Replay 10 seconds",
@@ -2210,7 +2211,10 @@ private fun PlayerStatusPill(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (showClock && timeText.isNotEmpty()) {
+            val hasClock = showClock && timeText.isNotEmpty()
+            val hasBattery = showBattery && batteryText.isNotEmpty()
+
+            if (hasClock) {
                 Text(
                     text = timeText,
                     color = Color.White,
@@ -2218,10 +2222,10 @@ private fun PlayerStatusPill(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-            if (showClock && timeText.isNotEmpty() && ((showBattery && batteryText.isNotEmpty()) || hasRemaining)) {
+            if (hasClock && (hasBattery || hasRemaining)) {
                 Text("·", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
-            if (showBattery && batteryText.isNotEmpty()) {
+            if (hasBattery) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -2240,7 +2244,7 @@ private fun PlayerStatusPill(
                     )
                 }
             }
-            if (((showClock && timeText.isNotEmpty()) || (showBattery && batteryText.isNotEmpty())) && hasRemaining) {
+            if (hasBattery && hasRemaining) {
                 Text("·", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             if (hasRemaining) {
