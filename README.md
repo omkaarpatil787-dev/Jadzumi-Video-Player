@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.6.0-2563eb?style=flat-square" alt="Version 1.6.0"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.7.0-2563eb?style=flat-square" alt="Version 1.7.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -52,13 +52,14 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details>
-<summary><strong>What’s new · v1.6.0 🎬📱</strong></summary>
+<summary><strong>What’s new · v1.7.0 🌌🎬</strong></summary>
 
-- **Universal Grid & List View Toggle**: Added grid / list view switching across all tabs — All Indexed Videos, Movies, TV Shows, and Connected Folders with persistent layout preference.
-- **Playback HUD Status Overlays**: Configurable multi-choice display during playback for Remaining Time countdown, system Clock, and Battery Percentage with charging state.
-- **Advanced Files & Storage Management**: Folder Blacklist controls to hide directories without losing permissions, plus toggles to show `.nomedia` files and hidden dot files (`.`).
-- **Brand Aesthetics Polish**: Relocated the breathing glowing Gemini-style brand emblem to the About page, refining the mobile floating bottom dock into a sleek, minimal pill.
-- **All Previous Capabilities**: Full GPU Video Enhancer & Color Studio, Expanded Audio Studio with real-time stream telemetry and channel processing modes (Stereo Downmix, Dialogue Clarity Focus).
+- **Portal Halo Atmospheric Backdrops**: Atmospheric radial aura backdrops behind app chrome and library cards with customizable palettes (Glacier Blue, Peach Dusk, Violet Cinema), intensity, and spread.
+- **Snappy Micro-Animated Player Controls**: Snappy 54dp circular seek buttons with bouncy rotational impulse (-24° / +24°), scale punch (1.18x), and gentle floating skip accumulator badges.
+- **Persistent Immersive Telemetry**: Full-screen immersive playback HUD overlays for Clock, Battery Percentage, and Remaining Time.
+- **Pure Borderless Floating Cards**: Clean, uninterrupted rounded corner arcs with genuine Material 3 floating depth (`tonalElevation` & `shadowElevation`), eliminating chalky emboss or bevel artifacts.
+- **Unified Settings with Scroll Blur Fade**: Consistent surface styling matching all tabs, dynamic top/bottom edge blur on scroll, and tablet two-pane layout.
+- **Snappy Cinema Portal Launch**: Accelerated, natural launch sequence (1.4s) seamlessly revealing your video library.
 
 See [release notes](RELEASE_NOTES.md) for full details.
 
@@ -69,19 +70,20 @@ See [release notes](RELEASE_NOTES.md) for full details.
 | Playback | Your library | Make it yours |
 | --- | --- | --- |
 | Hardware decoding with FFmpeg fallback | Continue watching and resume positions | Light, dark, and AMOLED themes |
-| GPU Video Enhancer & Color Studio | Movies, series, seasons, and episodes | Adjustable frosted-glass appearance |
-| Expanded Audio Studio & Channel Modes | Local artwork and metadata sidecars | Custom app icons |
+| GPU Video Enhancer & Color Studio | Movies, series, seasons, and episodes | Portal Halo atmospheric backdrops |
+| Expanded Audio Studio & Channel Modes | Local artwork and metadata sidecars | Pure borderless floating cards |
 | Double-tap seek and hold-to-2× speed | Poster grid, list view, and batch actions | Brightness, volume, and scaling controls |
 | External subtitles and timing adjustments | Scene bookmarks, notes, and search | Night mode & lip-sync delay |
 | Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v1.5.0
+## 📦 Latest release · v1.7.0
 
-- 🎨 **GPU Video Enhancer & Color Studio**: Real-time hardware color grading, 5 profiles, and HDR master protection.
-- 🔊 **Expanded Audio Studio**: Live stream telemetry, Stereo Downmix, and Dialogue Clarity Focus.
-- 🎬 **Preserved Media3 & NextLib Architecture**: 100% zero-copy `SurfaceView` efficiency, offline-first, zero telemetry.
+- 🌌 **Portal Halo UI & Motion System**: Atmospheric backdrops, adaptive AMOLED black preservation, and custom palettes.
+- 🎯 **Snappy Micro-Animated Player Controls**: Fast-action circular seek buttons with rotation/scale feedback and floating skip pills.
+- ⏱️ **Immersive Playback Telemetry**: Single-line Clock, Battery, and Remaining Time HUD overlays in full-screen playback.
+- 🪟 **Pure Borderless Floating Cards**: Elegant Material 3 layer separation with zero corner emboss.
 
-[Download v1.5.0](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.5.0) · [Release notes](RELEASE_NOTES.md)
+[Download v1.7.0](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.7.0) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.

@@ -2,7 +2,7 @@
 <p align="center">An overview of the app, its architecture, and release progress.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.6.0-2563eb?style=flat-square" alt="Version 1.6.0"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.7.0-2563eb?style=flat-square" alt="Version 1.7.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -18,7 +18,7 @@ FFmpeg decoder fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
-| **v1.6.0 · build 23** | Android 8.0+ · ARM64 | Universal Views · Playback HUD · Blacklist Control · Zero telemetry |
+| **v1.7.0 · build 24** | Android 8.0+ · ARM64 | Portal Halo Backdrops · Snappy Controls · Immersive Telemetry · Pure Floating Cards |
 
 ## 📸 Screenshots
 
@@ -85,13 +85,14 @@ batch actions, adaptive layouts, themes, frosted surfaces, and custom icons.
 </details>
 
 <details>
-<summary><strong>What’s new · v1.6.0 🎬📱</strong></summary>
+<summary><strong>What’s new · v1.7.0 🌌🎬</strong></summary>
 
-- **Universal Grid & List View Toggle**: Added grid / list view switching across all tabs — All Indexed Videos, Movies, TV Shows, and Connected Folders with persistent layout preference.
-- **Playback HUD Status Overlays**: Configurable multi-choice display during playback for Remaining Time countdown, system Clock, and Battery Percentage with charging state.
-- **Advanced Files & Storage Management**: Folder Blacklist controls to hide directories without losing permissions, plus toggles to show `.nomedia` files and hidden dot files (`.`).
-- **Brand Aesthetics Polish**: Relocated the breathing glowing Gemini-style brand emblem to the About page, refining the mobile floating bottom dock into a sleek, minimal pill.
-- **All Previous Capabilities**: Full GPU Video Enhancer & Color Studio, Expanded Audio Studio with real-time stream telemetry and channel processing modes (Stereo Downmix, Dialogue Clarity Focus).
+- **Portal Halo Atmospheric Backdrops**: Atmospheric radial aura backdrops behind app chrome and library cards with customizable palettes (Glacier Blue, Peach Dusk, Violet Cinema), intensity, and spread.
+- **Snappy Micro-Animated Player Controls**: Snappy 54dp circular seek buttons with bouncy rotational impulse (-24° / +24°), scale punch (1.18x), and gentle floating skip accumulator badges.
+- **Persistent Immersive Telemetry**: Full-screen immersive playback HUD overlays for Clock, Battery Percentage, and Remaining Time.
+- **Pure Borderless Floating Cards**: Clean, uninterrupted rounded corner arcs with genuine Material 3 floating depth (`tonalElevation` & `shadowElevation`), eliminating chalky emboss or bevel artifacts.
+- **Unified Settings with Scroll Blur Fade**: Consistent surface styling matching all tabs, dynamic top/bottom edge blur on scroll, and tablet two-pane layout.
+- **Snappy Cinema Portal Launch**: Accelerated, natural launch sequence (1.4s) seamlessly revealing your video library.
 
 See [release notes](RELEASE_NOTES.md).
 
@@ -99,7 +100,7 @@ See [release notes](RELEASE_NOTES.md).
 
 ## 🚀 Release progress
 
-**v1.6.0** introduces Universal Grid/List view switching across all content tabs, customizable Playback HUD status overlays (Clock, Battery %, Remaining Time), advanced Files & Folder Blacklist management, and brand emblem relocation to About. See [release notes](RELEASE_NOTES.md).
+**v1.7.0** introduces the Portal Halo UI & motion architecture, micro-animated player controls with zero distortion, persistent immersive telemetry status pill, unified settings with scroll blur fade, pure borderless floating cards, and an accelerated 1.4s Cinema Portal splash screen. See [release notes](RELEASE_NOTES.md).
 
 <details>
 <summary><strong>View project milestones</strong></summary>
