@@ -19,7 +19,18 @@ An incremental usability and media management update bringing **Universal Grid /
 - **Universal Grid & List View Toggle**:
   - Seamlessly switch between compact list rows and rich poster grid cards in Movies, TV Shows, and Connected Folders with persistent preferences.
 
-### 🌊 Fluid Motion & Polished Layout
+### 🌊 Fluid Motion, Morphing Controls & Cinema Portal
+- **Cinema Portal · Unhurried Video Splash Screen**:
+  - Re-architected cinematic launch experience based on the approved Cinema Portal motion study.
+  - Soft arrival with atmospheric ambient halos, floating glass portal frame with dynamic sheen highlight, authentic Jadzumi dual-wing emblem and typography.
+  - Continuous 1800ms rounded portal expansion (`CubicBezierEasing(0.4f, 0f, 0.2f, 1f)`) seamlessly revealing your video library.
+- **Morphing Seek Forward / Backward Pills**:
+  - Central rewind and fast-forward buttons fluidly morph from 54dp circles into 108dp capsule pills with spring physics (`dampingRatio = 0.82f, stiffness = Spring.StiffnessLow`), tracking accumulated skip time (`−10s`, `+10s`, `−20s`...) with fast-forward/rewind chevrons before organically settling back.
+- **Morphing Voice Clarity Toggle**:
+  - Voice Clarity control in the top player bar smoothly morphs into an expanded glowing capsule (`Voice Clarity · On`) with live status feedback instead of a static color toggle.
+- **Universal Dock-Pill Tactile Physics Across the App**:
+  - Unified micro-squish tactile feedback (`0.92x` bounce) and luminous touch point highlights across all player buttons and frosted surfaces.
+  - Smooth spring-morphing container animations for right-side quick menus and player dialogs.
 - **iOS & ColorOS Fluid Dynamics**:
   - Tuned physical spring damping (`0.85f` standard, `0.70f` expressive) and transition easing curves (`CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)`) across all screen, tab, and player transitions for rich, weighted momentum.
 - **De-cluttered Tablet & Phone Settings**:

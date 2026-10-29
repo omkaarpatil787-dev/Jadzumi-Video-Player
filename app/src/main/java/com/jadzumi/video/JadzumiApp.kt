@@ -680,6 +680,7 @@ private val destinations = listOf(
             if (showSplash) {
                 JadzumiSplashScreen(
                     theme = effectiveTheme,
+                    reducedMotion = reducedMotion,
                     onFinished = { showSplash = false }
                 )
             }
@@ -1880,8 +1881,8 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Replay Aurora Splash Screen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Play the cinematic opening animation in current theme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Replay Cinema Portal Splash Screen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Play the cinematic opening portal animation in current theme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Text("Preview ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }

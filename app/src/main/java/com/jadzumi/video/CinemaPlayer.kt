@@ -123,6 +123,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     var hudSide by remember(video.identity) { mutableStateOf<String?>(null) }
     var hudValue by remember(video.identity) { mutableFloatStateOf(0f) }
     var interaction by remember(video.identity) { mutableIntStateOf(0) }
+    var seekBackAccumulator by remember(video.identity) { mutableIntStateOf(0) }
+    var seekFwdAccumulator by remember(video.identity) { mutableIntStateOf(0) }
+    var seekBackJob by remember(video.identity) { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var seekFwdJob by remember(video.identity) { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     val seekDeltaMs = playback.seekIncrementSeconds * 1000L
     val totalSec = (effectiveDuration / 1000).coerceAtLeast(0)
     val elapsedSec = (playback.position / 1000).coerceAtLeast(0)
@@ -616,21 +620,56 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         remainingSec = remSec
                                     )
                                 }
-                                FrostedCircleButton(
-                                    label = if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off",
-                                    onClick = {
-                                        playback.updateNightMode(!playback.nightModeVoiceBoost)
-                                        message = if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off"
-                                        interaction++
-                                    },
-                                    size = 44.dp
+                                val isVoiceClarityActive = playback.nightModeVoiceBoost
+                                val voiceWidth by animateDpAsState(
+                                    targetValue = if (isVoiceClarityActive) 156.dp else 44.dp,
+                                    animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+                                    label = "voiceClarityWidth"
+                                )
+                                Surface(
+                                    modifier = Modifier
+                                        .width(voiceWidth)
+                                        .height(44.dp)
+                                        .clip(RoundedCornerShape(999.dp))
+                                        .touchMotion()
+                                        .clickable(
+                                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                            indication = ripple(bounded = true, radius = 24.dp)
+                                        ) {
+                                            playback.updateNightMode(!playback.nightModeVoiceBoost)
+                                            message = if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off"
+                                            interaction++
+                                        },
+                                    shape = RoundedCornerShape(999.dp),
+                                    color = if (isVoiceClarityActive) TimelineAccent.copy(alpha = 0.22f) else dynamicFrostedCircleBg,
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isVoiceClarityActive) TimelineAccent.copy(alpha = 0.55f) else dynamicFrostedCircleRim
+                                    ),
+                                    shadowElevation = if (isVoiceClarityActive) 10.dp else 4.dp
                                 ) {
-                                    Icon(
-                                        Icons.Rounded.GraphicEq,
-                                        null,
-                                        Modifier.size(22.dp),
-                                        tint = if (playback.nightModeVoiceBoost) TimelineAccent else Color.White
-                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxSize().padding(horizontal = if (isVoiceClarityActive) 12.dp else 0.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.GraphicEq,
+                                            contentDescription = if (isVoiceClarityActive) "Voice Clarity: On" else "Voice Clarity: Off",
+                                            tint = if (isVoiceClarityActive) TimelineAccent else Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        if (isVoiceClarityActive) {
+                                            Spacer(Modifier.width(6.dp))
+                                            Text(
+                                                text = "Voice Clarity · On",
+                                                color = Color.White,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
                                 }
                                 FrostedCircleButton(
                                     label = if (playback.dialogueReplayActive) "Stop dialogue replay" else "What did they say? Replay 10 seconds",
@@ -657,19 +696,28 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         // PANEL 1: CENTRAL FROSTED-GLASS CIRCULAR PLAY/PAUSE & 10s SKIP CONTROLS
                         Row(
                             Modifier.align(Alignment.Center),
-                            horizontalArrangement = Arrangement.spacedBy(34.dp),
+                            horizontalArrangement = Arrangement.spacedBy(28.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            FrostedCircleButton(
-                                label = "Back ${playback.seekIncrementSeconds} seconds",
-                                onClick = { playback.skip(-seekDeltaMs); interaction++ },
+                            MorphingSeekButton(
+                                isForward = false,
+                                accumulator = seekBackAccumulator,
                                 enabled = playback.seekable,
-                                size = 54.dp,
+                                onClick = {
+                                    val stepSec = playback.seekIncrementSeconds
+                                    playback.skip(-seekDeltaMs)
+                                    seekBackAccumulator += stepSec
+                                    seekBackJob?.cancel()
+                                    seekBackJob = coroutineScope.launch {
+                                        kotlinx.coroutines.delay(950)
+                                        seekBackAccumulator = 0
+                                    }
+                                    interaction++
+                                },
+                                baseSize = 54.dp,
                                 bgColor = dynamicFrostedCircleBg,
                                 rimColor = dynamicFrostedCircleRim
-                            ) {
-                                Icon(Icons.Rounded.Replay10, null, Modifier.size(26.dp), tint = Color.White)
-                            }
+                            )
 
                             FrostedCircleButton(
                                 label = if (playback.playRequested) "Pause" else "Play",
@@ -681,16 +729,25 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 PlayPauseMorph(playback.playRequested, reducedMotion, Modifier.size(36.dp))
                             }
 
-                            FrostedCircleButton(
-                                label = "Forward ${playback.seekIncrementSeconds} seconds",
-                                onClick = { playback.skip(seekDeltaMs); interaction++ },
+                            MorphingSeekButton(
+                                isForward = true,
+                                accumulator = seekFwdAccumulator,
                                 enabled = playback.seekable,
-                                size = 54.dp,
+                                onClick = {
+                                    val stepSec = playback.seekIncrementSeconds
+                                    playback.skip(seekDeltaMs)
+                                    seekFwdAccumulator += stepSec
+                                    seekFwdJob?.cancel()
+                                    seekFwdJob = coroutineScope.launch {
+                                        kotlinx.coroutines.delay(950)
+                                        seekFwdAccumulator = 0
+                                    }
+                                    interaction++
+                                },
+                                baseSize = 54.dp,
                                 bgColor = dynamicFrostedCircleBg,
                                 rimColor = dynamicFrostedCircleRim
-                            ) {
-                                Icon(Icons.Rounded.Forward10, null, Modifier.size(26.dp), tint = Color.White)
-                            }
+                            )
                         }
 
                         // PANEL 1 & 3: INLINE TIMELINE ROW + MINIMALIST BOTTOM CONTROLS
@@ -969,11 +1026,15 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     }
                 }
 
-                // PANEL 5: RIGHT-SIDE QUICK MENU
+                // PANEL 5: RIGHT-SIDE QUICK MENU (Fluid Spring Morphing)
                 AnimatedVisibility(
                     visible = quickMenuSection != null,
-                    enter = fadeIn(tween(if (reducedMotion) 0 else 160)) + slideInHorizontally(tween(if (reducedMotion) 0 else 200)) { it / 3 },
-                    exit = fadeOut(tween(if (reducedMotion) 0 else 140)) + slideOutHorizontally(tween(if (reducedMotion) 0 else 160)) { it / 3 }
+                    enter = fadeIn(tween(if (reducedMotion) 0 else 220)) +
+                            slideInHorizontally(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow)) { it / 2 } +
+                            scaleIn(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow), initialScale = 0.90f),
+                    exit = fadeOut(tween(if (reducedMotion) 0 else 140)) +
+                           slideOutHorizontally(tween(if (reducedMotion) 0 else 160)) { it / 3 } +
+                           scaleOut(tween(if (reducedMotion) 0 else 140), targetScale = 0.92f)
                 ) {
                     quickMenuSection?.let { section ->
                         RightSideQuickMenu(
@@ -1780,13 +1841,110 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     Surface(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.size(size).semantics { contentDescription = label },
+        modifier = modifier.size(size).touchMotion().semantics { contentDescription = label },
         shape = CircleShape,
         color = if (enabled) bgColor else bgColor.copy(alpha = 0.06f),
         border = BorderStroke(1.dp, if (enabled) rimColor else rimColor.copy(alpha = 0.10f))
     ) {
         Box(contentAlignment = Alignment.Center) {
             icon()
+        }
+    }
+}
+
+@Composable
+private fun MorphingSeekButton(
+    isForward: Boolean,
+    accumulator: Int,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    baseSize: Dp = 54.dp,
+    bgColor: Color = FrostedCircleBg,
+    rimColor: Color = FrostedCircleRim
+) {
+    val isExpanded = accumulator > 0
+    val targetWidth = if (isExpanded) 108.dp else baseSize
+    val animatedWidth by animateDpAsState(
+        targetValue = targetWidth,
+        animationSpec = spring(
+            dampingRatio = 0.82f,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "seekWidth_${if (isForward) "fwd" else "back"}"
+    )
+
+    Surface(
+        modifier = modifier
+            .width(animatedWidth)
+            .height(baseSize)
+            .clip(RoundedCornerShape(999.dp))
+            .touchMotion()
+            .clickable(
+                enabled = enabled,
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                indication = ripple(bounded = true, radius = 32.dp)
+            ) { onClick() },
+        shape = RoundedCornerShape(999.dp),
+        color = if (isExpanded) TimelineAccent.copy(alpha = 0.24f) else bgColor,
+        border = BorderStroke(
+            1.dp,
+            if (isExpanded) TimelineAccent.copy(alpha = 0.55f) else rimColor
+        ),
+        shadowElevation = if (isExpanded) 12.dp else 4.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(horizontal = if (isExpanded) 12.dp else 0.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (isForward) {
+                if (isExpanded) {
+                    Text(
+                        text = "+${accumulator}s",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Icon(
+                        Icons.Rounded.FastForward,
+                        contentDescription = "Forward ${accumulator}s",
+                        tint = TimelineAccent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                } else {
+                    Icon(
+                        Icons.Rounded.Forward10,
+                        contentDescription = "Forward 10 seconds",
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            } else {
+                if (isExpanded) {
+                    Icon(
+                        Icons.Rounded.FastRewind,
+                        contentDescription = "Back ${accumulator}s",
+                        tint = TimelineAccent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = "-${accumulator}s",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                } else {
+                    Icon(
+                        Icons.Rounded.Replay10,
+                        contentDescription = "Back 10 seconds",
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -1804,7 +1962,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     )
     IconButton(
         onClick = action,
-        modifier = modifier.size(42.dp).semantics { contentDescription = label },
+        modifier = modifier.size(42.dp).touchMotion().semantics { contentDescription = label },
         enabled = enabled,
         colors = colors
     ) {
