@@ -185,8 +185,9 @@ fun HaloSettingsCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = subtleCardBorder(),
-        shadowElevation = 2.dp
+        tonalElevation = 1.5.dp,
+        shadowElevation = 3.5.dp,
+        border = subtleCardBorder()
     ) {
         Column(
             modifier = Modifier

@@ -124,24 +124,24 @@ object GlassTheme {
     }
 
     /**
-     * Subtle hairline border color for cards across Library, Movies, TV Shows, and Settings.
-     * Replaces harsh/thick outlines with a delicate 0.75dp specular rim:
-     * - Dark: soft white specular rim (alpha = 0.12f) that catches ambient light gracefully
-     * - AMOLED: deep dark rim (alpha = 0.10f)
-     * - Light: soft dark hairline (alpha = 0.08f) creating clean separation
+     * Delicate whisper hairline border color for cards across Library, Movies, TV Shows, and Settings.
+     * Eliminates the harsh chalk-like corner emboss while providing a clean specular separation:
+     * - Dark: refined soft hairline (alpha = 0.07f) that blends organically with dark backgrounds
+     * - AMOLED: pure deep edge (alpha = 0.08f)
+     * - Light: soft subtle edge (alpha = 0.05f)
      */
     fun subtleCardBorderColor(theme: String = "Dark"): Color {
         return when (theme) {
-            "Light" -> Color(0xFF000000).copy(alpha = 0.08f)
-            "AMOLED" -> Color(0xFFFFFFFF).copy(alpha = 0.10f)
-            else -> Color(0xFFFFFFFF).copy(alpha = 0.12f)
+            "Light" -> Color(0xFF000000).copy(alpha = 0.05f)
+            "AMOLED" -> Color(0xFFFFFFFF).copy(alpha = 0.08f)
+            else -> Color(0xFFFFFFFF).copy(alpha = 0.07f)
         }
     }
 
     /**
-     * Subtle hairline border stroke for cards.
+     * Subtle hairline border stroke for cards with whisper 0.5dp thickness.
      */
-    fun subtleCardBorder(theme: String = "Dark", strokeWidth: Dp = 0.75.dp): BorderStroke {
+    fun subtleCardBorder(theme: String = "Dark", strokeWidth: Dp = 0.5.dp): BorderStroke {
         return BorderStroke(strokeWidth, subtleCardBorderColor(theme))
     }
 
@@ -156,7 +156,7 @@ object GlassTheme {
  * Top-level convenience accessors
  */
 @Composable
-fun subtleCardBorder(strokeWidth: Dp = 0.75.dp): BorderStroke {
+fun subtleCardBorder(strokeWidth: Dp = 0.5.dp): BorderStroke {
     val theme = LocalThemeName.current
     return GlassTheme.subtleCardBorder(theme, strokeWidth)
 }
@@ -178,7 +178,7 @@ fun borderColor(glassIntensity: Float = LocalGlassIntensity.current): Color =
     GlassTheme.frostedBorderColor(LocalThemeName.current, glassIntensity)
 
 fun subtleCardBorderColor(theme: String = "Dark"): Color = GlassTheme.subtleCardBorderColor(theme)
-fun subtleCardBorder(theme: String = "Dark", strokeWidth: Dp = 0.75.dp): BorderStroke = GlassTheme.subtleCardBorder(theme, strokeWidth)
+fun subtleCardBorder(theme: String = "Dark", strokeWidth: Dp = 0.5.dp): BorderStroke = GlassTheme.subtleCardBorder(theme, strokeWidth)
 fun frostedSurfaceColor(theme: String, glassIntensity: Float): Color = GlassTheme.frostedSurfaceColor(theme, glassIntensity)
 fun frostedBorderColor(theme: String, glassIntensity: Float): Color = GlassTheme.frostedBorderColor(theme, glassIntensity)
 fun embossedBorderStroke(theme: String, glassIntensity: Float, strokeWidth: Dp = 1.1.dp): BorderStroke = GlassTheme.embossedBorderStroke(theme, glassIntensity, strokeWidth)

@@ -403,6 +403,8 @@ private fun ShowHeroCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.5.dp,
+        shadowElevation = 3.5.dp,
         border = subtleCardBorder()
     ) {
         Box(
@@ -744,12 +746,12 @@ private fun EpisodeCard(
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progressFraction = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+        shadowElevation = 2.5.dp,
         border = if (isNext) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder()
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -928,6 +930,8 @@ internal fun OfflineVerificationCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.5.dp,
+        shadowElevation = 3.5.dp,
         border = subtleCardBorder()
     ) {
         Row(
@@ -1074,6 +1078,8 @@ private fun SeasonCompletionBar(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+        shadowElevation = 2.5.dp,
         border = subtleCardBorder()
     ) {
         Column(
@@ -1122,6 +1128,8 @@ private fun UpNextSpotlightCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+        shadowElevation = 2.5.dp,
         border = subtleCardBorder()
     ) {
         Row(

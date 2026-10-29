@@ -108,8 +108,9 @@ fun WelcomeOnboardingCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = subtleCardBorder(),
-        shadowElevation = 3.dp
+        tonalElevation = 1.5.dp,
+        shadowElevation = 3.5.dp,
+        border = subtleCardBorder()
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -162,8 +163,9 @@ fun WelcomeOnboardingCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = subtleCardBorder(),
-        shadowElevation = 2.dp
+        tonalElevation = 1.5.dp,
+        shadowElevation = 3.5.dp,
+        border = subtleCardBorder()
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -452,9 +454,11 @@ private fun ContinueWatchingCard(
 ) {
     Surface(
         onClick = onClick,
-        modifier = Modifier.width(250.dp),
+        modifier = Modifier.width(250.dp).touchMotion(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+        shadowElevation = 3.dp,
         border = subtleCardBorder()
     ) {
         Column {
@@ -625,6 +629,7 @@ fun StorageSummaryCard(
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         border = subtleCardBorder(),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -1824,7 +1829,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     Card(
         onClick = onSelect,
         shape = RoundedCornerShape(22.dp),
-        border = BorderStroke(if (isActive) 1.5.dp else 0.75.dp, borderColor),
+        border = BorderStroke(if (isActive) 1.5.dp else 0.5.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.5.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
         Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1908,13 +1914,14 @@ fun MovieSummaryCard(
     val progress = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
 
     Surface(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .touchMotion()
-            .clickable(onClick = onClick),
+            .touchMotion(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+        shadowElevation = 3.dp,
         border = subtleCardBorder()
     ) {
         Column(
@@ -2079,13 +2086,14 @@ fun TvSeriesSummaryCard(
     val progress = if (total > 0) (watched.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
 
     Surface(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .touchMotion()
-            .clickable(onClick = onClick),
+            .touchMotion(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+        shadowElevation = 3.dp,
         border = subtleCardBorder()
     ) {
         Column(
@@ -2205,13 +2213,14 @@ fun TvSeriesSummaryCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
             .touchMotion()
             .combinedClickable(
                 onClick = select,
                 onLongClick = onLongClick
             ),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+        shadowElevation = 2.5.dp,
         border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder(),
         shape = RoundedCornerShape(22.dp)
     ) {
@@ -2303,10 +2312,11 @@ private fun LocalPosterGridCard(
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+        shadowElevation = 2.5.dp,
         border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder(),
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
             .touchMotion()
             .combinedClickable(
                 onClick = onClick,
