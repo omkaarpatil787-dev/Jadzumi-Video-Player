@@ -184,10 +184,7 @@ fun HaloSettingsCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.5.dp,
-        shadowElevation = 3.5.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -243,10 +240,7 @@ fun HaloSettingsCard(
                                     .clickable { onPaletteChange(p) },
                                 shape = RoundedCornerShape(14.dp),
                                 color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                border = BorderStroke(
-                                    if (isSelected) 1.5.dp else 0.75.dp,
-                                    if (isSelected) MaterialTheme.colorScheme.primary else subtleCardBorderColor()
-                                )
+                                border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
                             ) {
                                 Column(
                                     modifier = Modifier.padding(10.dp),

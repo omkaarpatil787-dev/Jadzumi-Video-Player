@@ -471,10 +471,7 @@ private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, c
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.5.dp,
-        shadowElevation = 3.5.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier

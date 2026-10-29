@@ -47,8 +47,7 @@ internal fun TechnicalInspectorCard(sampleVideo: LocalVideo?, playback: Playback
         ?: playback.runtimeAudioFormat?.let { listOf(it) } else null) ?: scan.details?.audio.orEmpty()
     val subtitles = (if (sameFile) playback.runtimeSubtitleTracks.takeIf { it.isNotEmpty() } else null)
         ?: scan.details?.subtitles.orEmpty()
-    Surface(shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.5.dp, shadowElevation = 3.5.dp, border = subtleCardBorder(), modifier = Modifier.fillMaxWidth()) {
+    Surface(shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.Memory, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
@@ -96,8 +95,7 @@ internal fun InspectedTracksCard(video: LocalVideo, playback: PlaybackController
         ?: playback.runtimeAudioFormat?.let { listOf(it) } else null) ?: scan.details?.audio.orEmpty()
     val subtitles = (if (sameFile) playback.runtimeSubtitleTracks.takeIf { it.isNotEmpty() } else null)
         ?: scan.details?.subtitles.orEmpty()
-    Surface(shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.5.dp, shadowElevation = 3.5.dp, border = subtleCardBorder(), modifier = Modifier.fillMaxWidth()) {
+    Surface(shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Audio & Subtitle Tracks", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             audio.forEachIndexed { index, track -> TechRow("Audio ${index + 1}", inspectionAudio(track)) }

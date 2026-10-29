@@ -107,10 +107,7 @@ fun WelcomeOnboardingCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.5.dp,
-        shadowElevation = 3.5.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -162,10 +159,7 @@ fun WelcomeOnboardingCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.5.dp,
-        shadowElevation = 3.5.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -456,10 +450,7 @@ private fun ContinueWatchingCard(
         onClick = onClick,
         modifier = Modifier.width(250.dp).touchMotion(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        shadowElevation = 3.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column {
             Box(Modifier.fillMaxWidth().height(130.dp)) {
@@ -572,7 +563,7 @@ private fun CategoryQuickCard(
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
         ),
-        border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder()
+        border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
@@ -629,8 +620,6 @@ fun StorageSummaryCard(
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        border = subtleCardBorder(),
         modifier = Modifier.fillMaxWidth()
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(18.dp)) {
@@ -1815,12 +1804,6 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     val context = LocalContext.current
     val folderVideos = remember(state.videos, folder.uri) { state.videos.filter { it.folder == folder.uri } }
     val folderBytes = remember(folderVideos) { folderVideos.sumOf { it.bytes.coerceAtLeast(0) } }
-    val subtleBorder = subtleCardBorderColor()
-    val borderColor by animateColorAsState(
-        if (isActive) MaterialTheme.colorScheme.primary else subtleBorder,
-        animationSpec = tween(220),
-        label = "folderBorder"
-    )
     val containerColor by animateColorAsState(
         if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f) else MaterialTheme.colorScheme.surface,
         animationSpec = tween(220),
@@ -1829,8 +1812,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     Card(
         onClick = onSelect,
         shape = RoundedCornerShape(22.dp),
-        border = BorderStroke(if (isActive) 1.5.dp else 0.5.dp, borderColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.5.dp),
+        border = if (isActive) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
         Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1919,10 +1901,7 @@ fun MovieSummaryCard(
             .fillMaxWidth()
             .touchMotion(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        shadowElevation = 3.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -2091,10 +2070,7 @@ fun TvSeriesSummaryCard(
             .fillMaxWidth()
             .touchMotion(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        shadowElevation = 3.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -2219,9 +2195,7 @@ fun TvSeriesSummaryCard(
                 onLongClick = onLongClick
             ),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        shadowElevation = 2.5.dp,
-        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder(),
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
         shape = RoundedCornerShape(22.dp)
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
@@ -2312,9 +2286,7 @@ private fun LocalPosterGridCard(
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        shadowElevation = 2.5.dp,
-        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder(),
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion()

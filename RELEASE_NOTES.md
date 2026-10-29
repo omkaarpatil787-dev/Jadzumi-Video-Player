@@ -1,3 +1,20 @@
+# Jadzumi v1.7.1 — Pure Flat Modern Cards & Highlight-Free Surfaces 🎨✨
+
+A targeted aesthetic refinement release eliminating unwanted bottom edge highlight/shadow lips and elevation lines across all card surfaces in the app.
+
+### 🎨 Pure Flat Modern Card Architecture
+- **Complete Elimination of Bottom Edge Lines & Highlights**:
+  - Removed artificial elevation shadows (`shadowElevation` and `tonalElevation`) from all cards and panels across the app.
+  - Fixes visible horizontal shadow lips, chalky borders, and bottom highlight lines on cards in Light, Dark, and AMOLED themes.
+  - Delivers a 100% clean, modern flat aesthetic matching Apple Settings and Material 3 Expressive guidelines where card surfaces cleanly separate from the background naturally without artificial skeuomorphic lines.
+- **Unified Clean Selection States**:
+  - Inner preset selection cards (Corner Style Presets, Navigation Dock Style, Theme Options, App Icon Options) now render flat with zero borders when unselected, drawing a clean primary accent border only when selected.
+  - Storage summary cards, Folder cards, Movie/TV overview cards, Technical Inspector cards, and Episode cards now render completely flat with zero corner emboss or bottom elevation lips.
+- **Preserved Geometry & Layout**:
+  - Zero changes to card padding, corner radii, content layouts, typography, or interaction performance.
+
+---
+
 # Jadzumi v1.7.0 — Portal Halo UI & Motion System 🌌🎬
 
 A major aesthetic and motion architecture release introducing the **Portal Halo Visual System**, **Snappy Micro-Animated Playback Controls**, **Seamless Immersive Playback Telemetry**, **Unified Settings with Scroll Blur Fade**, and **Pure Borderless Floating Cards**.

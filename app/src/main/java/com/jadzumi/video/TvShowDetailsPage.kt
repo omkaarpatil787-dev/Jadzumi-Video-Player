@@ -402,10 +402,7 @@ private fun ShowHeroCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.5.dp,
-        shadowElevation = 3.5.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -750,9 +747,7 @@ private fun EpisodeCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        shadowElevation = 2.5.dp,
-        border = if (isNext) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder()
+        border = if (isNext) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
@@ -929,10 +924,7 @@ internal fun OfflineVerificationCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.5.dp,
-        shadowElevation = 3.5.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Row(
             modifier = Modifier
@@ -1077,10 +1069,7 @@ private fun SeasonCompletionBar(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        shadowElevation = 2.5.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -1127,10 +1116,7 @@ private fun UpNextSpotlightCard(
         onClick = onPlay,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        shadowElevation = 2.5.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Row(
             modifier = Modifier.padding(14.dp),

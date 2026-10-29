@@ -1445,7 +1445,6 @@ private val settingsCategories = listOf(
                                     Surface(
                                         shape = RoundedCornerShape(16.dp),
                                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                                        border = subtleCardBorder(),
                                         modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
                                     ) {
                                         Row(
@@ -1465,7 +1464,6 @@ private val settingsCategories = listOf(
                                     Surface(
                                         shape = RoundedCornerShape(16.dp),
                                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                                        border = subtleCardBorder(),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Row(
@@ -1863,7 +1861,7 @@ private val settingsCategories = listOf(
                                                 modifier = Modifier.weight(1f).clickable { onCornerStyle(style) },
                                                 shape = RoundedCornerShape(14.dp),
                                                 color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                                border = BorderStroke(if (isSel) 1.5.dp else 0.75.dp, if (isSel) MaterialTheme.colorScheme.primary else subtleCardBorderColor())
+                                                border = if (isSel) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
                                             ) {
                                                 Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                                     Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
@@ -1893,7 +1891,7 @@ private val settingsCategories = listOf(
                                                 modifier = Modifier.weight(1f).clickable { onBottomBarStyle(style) },
                                                 shape = RoundedCornerShape(14.dp),
                                                 color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                                border = BorderStroke(if (isSel) 2.dp else 1.dp, if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
+                                                border = if (isSel) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
                                             ) {
                                                 Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                                     Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
@@ -2391,13 +2389,14 @@ private val settingsCategories = listOf(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder()
+    val border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
     val bg = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
     Card(
         onClick = onClick,
         modifier = modifier.touchMotion(),
         shape = RoundedCornerShape(20.dp),
         border = border,
+        elevation = CardDefaults.cardElevation(0.dp),
         colors = CardDefaults.cardColors(containerColor = bg)
     ) {
         Column(
@@ -2425,7 +2424,7 @@ private val settingsCategories = listOf(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    val border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else subtleCardBorder()
+    val border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
     val bg = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     Card(
         onClick = {
@@ -2435,6 +2434,7 @@ private val settingsCategories = listOf(
         modifier = modifier,
         shape = RoundedCornerShape(18.dp),
         border = border,
+        elevation = CardDefaults.cardElevation(0.dp),
         colors = CardDefaults.cardColors(containerColor = bg)
     ) {
         Box(Modifier.fillMaxWidth()) {
@@ -2574,8 +2574,7 @@ private val settingsCategories = listOf(
                         Surface(
                             Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                         ) {
                             Row(
                                 Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -2928,10 +2927,7 @@ private val settingsCategories = listOf(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.5.dp,
-        shadowElevation = 3.5.dp,
-        border = subtleCardBorder()
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
