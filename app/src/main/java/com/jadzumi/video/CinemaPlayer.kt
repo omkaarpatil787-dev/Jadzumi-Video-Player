@@ -124,7 +124,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     var hudValue by remember(video.identity) { mutableFloatStateOf(0f) }
     var interaction by remember(video.identity) { mutableIntStateOf(0) }
     val seekDeltaMs = playback.seekIncrementSeconds * 1000L
-    val effectiveDuration = playback.duration.takeIf { it > 0 } ?: video.duration
     val totalSec = (effectiveDuration / 1000).coerceAtLeast(0)
     val elapsedSec = (playback.position / 1000).coerceAtLeast(0)
     val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
