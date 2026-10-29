@@ -1441,7 +1441,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                 }
                             }
 
-                            // All Indexed Videos section header with clean Grid / List toggle
+                        if (category != "All videos") {
+                            // Filtered category section header with clean Grid / List toggle
                             item {
                                 Row(
                                     Modifier.fillMaxWidth(),
@@ -1449,37 +1450,29 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        if (category == "All videos") "All Indexed Videos (${displayVideos.size})" else "$category (${displayVideos.size})",
+                                        "$category (${displayVideos.size})",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                        border = subtleCardBorder(strokeWidth = 0.75.dp),
+                                        modifier = Modifier.size(36.dp)
                                     ) {
-                                        if (category != "All videos") {
-                                            TextButton(onClick = { category = "All videos" }) { Text("Show all") }
-                                        }
-                                        Surface(
-                                            shape = CircleShape,
-                                            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
-                                            border = subtleCardBorder(strokeWidth = 0.75.dp),
-                                            modifier = Modifier.size(36.dp)
+                                        IconButton(
+                                            onClick = {
+                                                isGridView = !isGridView
+                                                libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
+                                            },
+                                            modifier = Modifier.fillMaxSize()
                                         ) {
-                                            IconButton(
-                                                onClick = {
-                                                    isGridView = !isGridView
-                                                    libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
-                                                },
-                                                modifier = Modifier.fillMaxSize()
-                                            ) {
-                                                Icon(
-                                                    if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
-                                                    contentDescription = "Toggle Grid or List View",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(18.dp)
-                                                )
-                                            }
+                                            Icon(
+                                                if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
+                                                contentDescription = "Toggle Grid or List View",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
                                         }
                                     }
                                 }
@@ -1545,6 +1538,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     )
                                 }
                             }
+                        }
                         }
                     }
                 }

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
@@ -15,14 +16,16 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 internal data class MotionStyle(val enabled: Boolean = false, val expressive: Boolean = false, val light: Boolean = true) {
-    val damping get() = if (expressive) 0.65f else 0.9f
+    val damping get() = if (expressive) 0.70f else 0.85f
 }
 internal val LocalMotionStyle = staticCompositionLocalOf { MotionStyle() }
 
@@ -48,7 +51,7 @@ internal fun Modifier.touchMotion(): Modifier = composed {
     var pressed by remember { mutableStateOf(false) }
     var origin by remember { mutableStateOf(Offset.Zero) }
     val amount by animateFloatAsState(if (pressed) 1f else 0f,
-        spring(dampingRatio = style.damping, stiffness = Spring.StiffnessMedium), label = "touch feedback")
+        spring(dampingRatio = style.damping, stiffness = Spring.StiffnessMediumLow), label = "touch feedback")
     val tint = MaterialTheme.colorScheme.primary
     this.pointerInput(Unit) {
         awaitPointerEventScope {
@@ -105,18 +108,79 @@ internal fun Modifier.elasticEdge(): Modifier = composed {
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
     var expressive by remember { mutableStateOf(prefs.getString("motionStyle", "Gentle") == "Expressive") }
     var lighting by remember { mutableStateOf(prefs.getBoolean("touchLight", true)) }
-    HorizontalDivider(Modifier.padding(vertical = 14.dp))
-    Text("Motion & touch", style = MaterialTheme.typography.titleMedium)
-    Text("Reduced Motion and Android's animation setting take priority.", style = MaterialTheme.typography.bodySmall)
-    Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text("Expressive springs")
-            Text("Off: gentle feedback · On: more bounce and stretch", style = MaterialTheme.typography.bodySmall)
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                "Motion & Touch Physics",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                "Fine-tune physical bounce, damping, and touch feedback. Reduced Motion takes priority.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        Switch(expressive, { expressive = it; prefs.edit().putString("motionStyle", if (it) "Expressive" else "Gentle").apply() })
-    }
-    Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Text("Touch lighting", Modifier.weight(1f))
-        Switch(lighting, { lighting = it; prefs.edit().putBoolean("touchLight", it).apply() })
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(Modifier.weight(1f).padding(end = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    "Expressive Springs",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    "Off: gentle fluid feedback · On: dynamic elastic bounce & stretch",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = expressive,
+                onCheckedChange = {
+                    expressive = it
+                    prefs.edit().putString("motionStyle", if (it) "Expressive" else "Gentle").apply()
+                }
+            )
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(Modifier.weight(1f).padding(end = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    "Touch Lighting & Ripple",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    "Subtle ambient luminous highlights on pressed cards and navigation buttons",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = lighting,
+                onCheckedChange = {
+                    lighting = it
+                    prefs.edit().putBoolean("touchLight", it).apply()
+                }
+            )
+        }
     }
 }

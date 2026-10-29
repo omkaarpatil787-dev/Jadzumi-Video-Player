@@ -124,6 +124,11 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     var hudValue by remember(video.identity) { mutableFloatStateOf(0f) }
     var interaction by remember(video.identity) { mutableIntStateOf(0) }
     val seekDeltaMs = playback.seekIncrementSeconds * 1000L
+    val effectiveDuration = playback.duration.takeIf { it > 0 } ?: video.duration
+    val totalSec = (effectiveDuration / 1000).coerceAtLeast(0)
+    val elapsedSec = (playback.position / 1000).coerceAtLeast(0)
+    val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+    val showAnyHud = playback.showPlayerClock || playback.showBatteryPercentage || playback.showRemainingTime
 
     var subtitleSearchCues by remember(video.identity) { mutableStateOf<List<SubtitleSearchCue>?>(null) }
     var subtitleSearchBusy by remember(video.identity) { mutableStateOf(false) }
@@ -191,7 +196,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 coroutineScope.launch {
                     playerEnterProgress.animateTo(
                         targetValue = 0f,
-                        animationSpec = tween(280, easing = CubicBezierEasing(0.4f, 0.0f, 1.0f, 1.0f))
+                        animationSpec = tween(360, easing = CubicBezierEasing(0.32f, 0.0f, 0.67f, 0.0f))
                     )
                     playback.close()
                 }
@@ -261,7 +266,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             playerEnterProgress.snapTo(0f)
             playerEnterProgress.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(340, easing = CubicBezierEasing(0.16f, 1.0f, 0.3f, 1.0f))
+                animationSpec = tween(420, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))
             )
         }
     }
@@ -527,8 +532,26 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     }
                 }
 
-                val enterAnim = if (reducedMotion) EnterTransition.None else fadeIn(spring(stiffness = Spring.StiffnessMediumLow))
-                val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(tween(180))
+                // Immersive Playback HUD Overlay: Clock, Battery %, Remaining Time
+                AnimatedVisibility(
+                    visible = !controls && !playback.locked && showAnyHud && !playback.inPip,
+                    enter = fadeIn(tween(360, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))),
+                    exit = fadeOut(tween(240)),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .safeDrawingPadding()
+                        .padding(top = 18.dp, end = 24.dp)
+                ) {
+                    PlayerStatusPill(
+                        showClock = playback.showPlayerClock,
+                        showBattery = playback.showBatteryPercentage,
+                        showRemainingTime = playback.showRemainingTime,
+                        remainingSec = remSec
+                    )
+                }
+
+                val enterAnim = if (reducedMotion) EnterTransition.None else fadeIn(tween(360, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)))
+                val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(tween(260))
 
                 AnimatedVisibility(
                     visible = controls && !playback.locked,
@@ -586,10 +609,12 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                             // Top-Right Icons: Clean and uncluttered glassy controls
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                if (playback.showPlayerClock || playback.showBatteryPercentage) {
+                                if (showAnyHud) {
                                     PlayerStatusPill(
                                         showClock = playback.showPlayerClock,
-                                        showBattery = playback.showBatteryPercentage
+                                        showBattery = playback.showBatteryPercentage,
+                                        showRemainingTime = playback.showRemainingTime,
+                                        remainingSec = remSec
                                     )
                                 }
                                 FrostedCircleButton(
@@ -1986,6 +2011,8 @@ private fun EnhancerSliderRow(
 private fun PlayerStatusPill(
     showClock: Boolean,
     showBattery: Boolean,
+    showRemainingTime: Boolean = false,
+    remainingSec: Long? = null,
     modifier: Modifier = Modifier
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -2007,18 +2034,22 @@ private fun PlayerStatusPill(
                 val pct = if (level >= 0 && scale > 0) (level * 100) / scale else -1
                 batteryText = if (pct >= 0) "$pct%" else ""
             }
-            kotlinx.coroutines.delay(15_000)
+            kotlinx.coroutines.delay(10_000)
         }
     }
 
+    val hasRemaining = showRemainingTime && remainingSec != null && remainingSec > 0
+    val remainingText = if (hasRemaining) "−${compactTimecode(remainingSec!!)}" else ""
+
     Surface(
         shape = RoundedCornerShape(999.dp),
-        color = Color.Black.copy(alpha = 0.40f),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
+        color = Color(0x990A0E17),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f)),
+        shadowElevation = 8.dp,
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -2030,8 +2061,8 @@ private fun PlayerStatusPill(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-            if (showClock && showBattery && timeText.isNotEmpty() && batteryText.isNotEmpty()) {
-                Text("·", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+            if (showClock && timeText.isNotEmpty() && ((showBattery && batteryText.isNotEmpty()) || hasRemaining)) {
+                Text("·", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             if (showBattery && batteryText.isNotEmpty()) {
                 Row(
@@ -2046,6 +2077,28 @@ private fun PlayerStatusPill(
                     )
                     Text(
                         text = batteryText,
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            if (((showClock && timeText.isNotEmpty()) || (showBattery && batteryText.isNotEmpty())) && hasRemaining) {
+                Text("·", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+            if (hasRemaining) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        Icons.Rounded.Schedule,
+                        contentDescription = "Remaining time",
+                        tint = TimelineAccent,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(
+                        text = remainingText,
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold

@@ -2,23 +2,28 @@
 
 An incremental usability and media management update bringing **Universal Grid / List View switching across all tabs**, **Playback HUD status overlays (Clock, Battery %, Remaining Time)**, **Advanced File & Blacklist Controls**, and refined **Brand Aesthetics**.
 
-### 📱 Universal Grid & List View Toggle
-- **Available Across Every Library Tab**:
-  - **Home / All Indexed Videos**: Seamlessly switch between compact list rows and rich video cards.
-  - **Movies**: Switch between full poster artwork grid and detailed movie metadata list view.
-  - **TV Shows**: Switch between multi-season poster cards and structured series rows with season/episode counts.
-  - **Connected Folders / Storage**: Choose between high-density 2-column folder grid tiles and detailed folder summary rows.
-- **Persistent Preferences**: Remembers your preferred view layout across app restarts.
-
 ### ⏱️ Playback HUD Display & Status Pill
 - **Display During Playback Multi-Option Dialog**:
   - Located in Video Settings: customizable checkboxes to toggle overlays.
-  - **Remaining Time**: Toggle remaining time countdown next to duration in player controls.
+  - **Remaining Time**: Shows live countdown (`−42:15`) in the top status pill and scrubber timeline.
   - **System Clock**: Shows current time in the top-right corner during playback.
   - **Battery Percentage**: Real-time battery indicator with charging state detection.
-- **Top-Right HUD Status Pill**:
-  - Elegant frosted pill rendering live system time and battery status.
+- **Top-Right HUD Status Pill (Persistent in Immersive Playback)**:
+  - Elegant frosted pill rendering live system time, battery percentage, and remaining duration directly in **immersive mode** while watching movies, as well as when controls are visible.
   - Ultra-efficient updates using Android's sticky `ACTION_BATTERY_CHANGED` intent with zero CPU overhead or battery drain.
+
+### 📱 Streamlined Home & Universal Views
+- **Clean Cinematic Home Dashboard**:
+  - Home now focuses cleanly on your Hero spotlight banner and in-progress Continue Watching queue, removing the cluttered raw video list from the home screen.
+  - Full video collections remain accessible in Movies, TV Shows, and Connected Folders tabs.
+- **Universal Grid & List View Toggle**:
+  - Seamlessly switch between compact list rows and rich poster grid cards in Movies, TV Shows, and Connected Folders with persistent preferences.
+
+### 🌊 Fluid Motion & Polished Layout
+- **iOS & ColorOS Fluid Dynamics**:
+  - Tuned physical spring damping (`0.85f` standard, `0.70f` expressive) and transition easing curves (`CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)`) across all screen, tab, and player transitions for rich, weighted momentum.
+- **De-cluttered Tablet & Phone Settings**:
+  - Re-architected Motion & Touch settings with clean typography, generous row spacing, and individual dividers, eliminating stacked or touching switches on tablets and phones.
 
 ### 📁 Advanced Files & Storage Settings
 - **Folder Blacklist Management**:

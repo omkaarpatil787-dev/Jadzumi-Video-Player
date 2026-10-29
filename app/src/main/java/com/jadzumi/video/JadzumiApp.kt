@@ -165,6 +165,7 @@ private val destinations = listOf(
     val scope = rememberCoroutineScope()
     val bloomProgress = remember { Animatable(1f) }
     var bloomOriginColor by remember { mutableStateOf<Color?>(null) }
+    var bloomJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     val sysDark = isSystemInDarkTheme()
     val effectiveTheme = when (theme) {
@@ -184,10 +185,11 @@ private val destinations = listOf(
         theme = newTheme
         prefs.edit { putString("theme", newTheme) }
         if (themeBloomEnabled && motionStyle.enabled) {
+            bloomJob?.cancel()
             bloomOriginColor = oldBg
-            scope.launch {
+            bloomJob = scope.launch {
                 bloomProgress.snapTo(0f)
-                bloomProgress.animateTo(1f, tween(320))
+                bloomProgress.animateTo(1f, tween(420, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)))
                 bloomOriginColor = null
             }
         }
@@ -473,31 +475,31 @@ private val destinations = listOf(
                                                 val isInitialDetails = initialState !in mainTabs
 
                                                 if (!isInitialDetails && isTargetDetails) {
-                                                    // Fluid, hardware-accelerated entrance into Details
-                                                    (fadeIn(animationSpec = tween(260, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))) +
-                                                            scaleIn(initialScale = 0.96f, animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessMediumLow)))
+                                                    // Fluid, hardware-accelerated entrance into Details (iOS / ColorOS style)
+                                                    (fadeIn(animationSpec = tween(360, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))) +
+                                                            scaleIn(initialScale = 0.95f, animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessLow)))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
+                                                            fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing))
                                                         )
                                                 } else if (isInitialDetails && !isTargetDetails) {
                                                     // Clean, responsive return to Library
-                                                    (fadeIn(animationSpec = tween(240, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))))
+                                                    (fadeIn(animationSpec = tween(340, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing)) +
-                                                                    scaleOut(targetScale = 0.96f, animationSpec = tween(180, easing = FastOutLinearInEasing))
+                                                            fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing)) +
+                                                                    scaleOut(targetScale = 0.95f, animationSpec = tween(220, easing = FastOutLinearInEasing))
                                                         )
                                                 } else {
-                                                    // Navigating between tabs: silky smooth shared-axis animated crossfade (no fast flicker fade)
+                                                    // Navigating between tabs: silky smooth shared-axis animated crossfade (like iOS / ColorOS)
                                                     val tabOrder = listOf("Home", "Library", "Movies", "TV Shows", "Videos", "Folders", "Settings", "Playlists")
                                                     val initialIndex = tabOrder.indexOf(initialState)
                                                     val targetIndex = tabOrder.indexOf(targetState)
                                                     val isForward = if (initialIndex != -1 && targetIndex != -1) targetIndex > initialIndex else true
 
-                                                    (slideInHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (it * 0.08f).toInt() else (-it * 0.08f).toInt() } +
-                                                            fadeIn(animationSpec = tween(260, easing = LinearOutSlowInEasing)))
+                                                    (slideInHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessLow)) { if (isForward) (it * 0.06f).toInt() else (-it * 0.06f).toInt() } +
+                                                            fadeIn(animationSpec = tween(360, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))))
                                                         .togetherWith(
-                                                            slideOutHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessMediumLow)) { if (isForward) (-it * 0.08f).toInt() else (it * 0.08f).toInt() } +
-                                                                    fadeOut(animationSpec = tween(190, easing = FastOutLinearInEasing))
+                                                            slideOutHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessLow)) { if (isForward) (-it * 0.06f).toInt() else (it * 0.06f).toInt() } +
+                                                                    fadeOut(animationSpec = tween(240, easing = FastOutLinearInEasing))
                                                         )
                                                 }
                                             }
@@ -976,13 +978,13 @@ fun GeminiGlowingJadzumiLogo(
     // Smooth fluid crossfade between full dock and minimized pill
     val fullDockAlpha by animateFloatAsState(
         targetValue = if (isMinimized) 0f else 1f,
-        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)),
         label = "fullDockAlpha"
     )
 
     val minPillAlpha by animateFloatAsState(
         targetValue = if (isMinimized) 1f else 0f,
-        animationSpec = tween(durationMillis = 260, delayMillis = 60, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 360, delayMillis = 40, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)),
         label = "minPillAlpha"
     )
 
@@ -1868,6 +1870,7 @@ private val settingsCategories = listOf(
                                     }
                                     HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     MotionCustomization()
+                                    HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                     Row(
                                         Modifier
                                             .fillMaxWidth()
