@@ -85,14 +85,12 @@ batch actions, adaptive layouts, themes, frosted surfaces, and custom icons.
 </details>
 
 <details>
-<summary><strong>What’s new · v1.7.0 🌌🎬</strong></summary>
+<summary><strong>What’s new · v1.7.3 🎨✨</strong></summary>
 
-- **Portal Halo Atmospheric Backdrops**: Atmospheric radial aura backdrops behind app chrome and library cards with customizable palettes (Glacier Blue, Peach Dusk, Violet Cinema), intensity, and spread.
-- **Snappy Micro-Animated Player Controls**: Snappy 54dp circular seek buttons with bouncy rotational impulse (-24° / +24°), scale punch (1.18x), and gentle floating skip accumulator badges.
-- **Persistent Immersive Telemetry**: Full-screen immersive playback HUD overlays for Clock, Battery Percentage, and Remaining Time.
-- **Pure Borderless Floating Cards**: Clean, uninterrupted rounded corner arcs with genuine Material 3 floating depth (`tonalElevation` & `shadowElevation`), eliminating chalky emboss or bevel artifacts.
-- **Unified Settings with Scroll Blur Fade**: Consistent surface styling matching all tabs, dynamic top/bottom edge blur on scroll, and tablet two-pane layout.
-- **Snappy Cinema Portal Launch**: Accelerated, natural launch sequence (1.4s) seamlessly revealing your video library.
+- **Subtitle Typography Suite & 3D Edge Effects**: Cinema Serif, Heavy Sans, Rounded Sans, Roboto Condensed, font weights (Regular, Bold, Italic, Bold Italic), 3D raised/depressed edge bevels, soft atmospheric glows, and adjustable bottom margin calibration with a live preview card.
+- **Theme-Reactive Playback UI**: Video player overlay controls, HUD pills, seek buttons, and volume/brightness bars dynamically adapt to active themes: Light mode frosted milk-glass (`#F0F4FC`) with navy typography (`#183654`), Dark mode slate-navy (`#0F172A`), and AMOLED mode pure ink-black (`#000000`).
+- **Decluttered Minimalist Player HUD**: Streamlined single-row bottom timeline docking progress scrubber, elapsed/remaining timecode, rotation, lock, and PiP into a clean, unified dock. Secondary tools moved to the Quick Menu drawer.
+- **Pure Flat Modern Cards**: Completely eliminated hardware Skia shadow lips and corner emboss borders across all cards and settings panels (`shadowElevation = 0.dp`, `border = null`).
 
 See [release notes](RELEASE_NOTES.md).
 

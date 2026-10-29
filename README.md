@@ -52,14 +52,12 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details>
-<summary><strong>What’s new · v1.7.0 🌌🎬</strong></summary>
+<summary><strong>What’s new · v1.7.3 🎨✨</strong></summary>
 
-- **Portal Halo Atmospheric Backdrops**: Atmospheric radial aura backdrops behind app chrome and library cards with customizable palettes (Glacier Blue, Peach Dusk, Violet Cinema), intensity, and spread.
-- **Snappy Micro-Animated Player Controls**: Snappy 54dp circular seek buttons with bouncy rotational impulse (-24° / +24°), scale punch (1.18x), and gentle floating skip accumulator badges.
-- **Persistent Immersive Telemetry**: Full-screen immersive playback HUD overlays for Clock, Battery Percentage, and Remaining Time.
-- **Pure Borderless Floating Cards**: Clean, uninterrupted rounded corner arcs with genuine Material 3 floating depth (`tonalElevation` & `shadowElevation`), eliminating chalky emboss or bevel artifacts.
-- **Unified Settings with Scroll Blur Fade**: Consistent surface styling matching all tabs, dynamic top/bottom edge blur on scroll, and tablet two-pane layout.
-- **Snappy Cinema Portal Launch**: Accelerated, natural launch sequence (1.4s) seamlessly revealing your video library.
+- **Subtitle Typography Suite & 3D Edge Effects**: Added Cinema Serif, Heavy Sans, Rounded Sans, and Roboto Condensed fonts, weight/style selections (Regular, Bold, Italic, Bold Italic), 3D raised/depressed edge bevels, soft atmospheric glows, and adjustable bottom margin calibration with a live preview card.
+- **Theme-Reactive Playback UI**: Video player overlay controls, HUD pills, seek buttons, and volume/brightness bars dynamically adapt to active themes: Light mode frosted milk-glass (`#F0F4FC`) with navy typography (`#183654`), Dark mode slate-navy (`#0F172A`), and AMOLED mode pure ink-black (`#000000`).
+- **Decluttered Minimalist Player HUD**: Streamlined single-row bottom timeline docking progress scrubber, elapsed/remaining timecode, rotation, lock, and PiP into a clean, unified dock. Secondary tools moved to the Quick Menu drawer.
+- **Pure Flat Modern Cards**: Completely eliminated hardware Skia shadow lips and corner emboss borders across all cards and settings panels (`shadowElevation = 0.dp`, `border = null`).
 
 See [release notes](RELEASE_NOTES.md) for full details.
 
@@ -71,19 +69,19 @@ See [release notes](RELEASE_NOTES.md) for full details.
 | --- | --- | --- |
 | Hardware decoding with FFmpeg fallback | Continue watching and resume positions | Light, dark, and AMOLED themes |
 | GPU Video Enhancer & Color Studio | Movies, series, seasons, and episodes | Portal Halo atmospheric backdrops |
-| Expanded Audio Studio & Channel Modes | Local artwork and metadata sidecars | Pure borderless floating cards |
-| Double-tap seek and hold-to-2× speed | Poster grid, list view, and batch actions | Brightness, volume, and scaling controls |
-| External subtitles and timing adjustments | Scene bookmarks, notes, and search | Night mode & lip-sync delay |
+| Expanded Audio Studio & Channel Modes | Local artwork and metadata sidecars | Pure flat modern cards (zero highlights) |
+| Double-tap seek and hold-to-2× speed | Poster grid, list view, and batch actions | Subtitle typography suite & 3D glows |
+| External subtitles and timing adjustments | Scene bookmarks, notes, and search | Theme-reactive playback controls |
 | Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v1.7.0
+## 📦 Latest release · v1.7.3
 
-- 🌌 **Portal Halo UI & Motion System**: Atmospheric backdrops, adaptive AMOLED black preservation, and custom palettes.
-- 🎯 **Snappy Micro-Animated Player Controls**: Fast-action circular seek buttons with rotation/scale feedback and floating skip pills.
-- ⏱️ **Immersive Playback Telemetry**: Single-line Clock, Battery, and Remaining Time HUD overlays in full-screen playback.
-- 🪟 **Pure Borderless Floating Cards**: Elegant Material 3 layer separation with zero corner emboss.
+- 🔤 **Subtitle Typography Suite**: 4 new cinema fonts, full weights/styles, 3D raised/depressed edges, soft glows, and live preview.
+- 🌓 **Theme-Reactive Playback HUD**: Light frosted milk-glass, Dark slate-navy, and AMOLED ink-black overlay HUDs.
+- 🎬 **Decluttered Minimalist HUD**: Single-row bottom timeline dock with quick menu drawer integration.
+- 🪟 **Pure Flat Modern Cards**: Zero elevation shadow lips and zero corner emboss across all cards.
 
-[Download v1.7.0](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.7.0) · [Release notes](RELEASE_NOTES.md)
+[Download v1.7.3](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.7.3) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.
