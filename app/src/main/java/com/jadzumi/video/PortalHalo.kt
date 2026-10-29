@@ -183,8 +183,8 @@ fun HaloSettingsCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = frostedSurfaceColor(0.75f),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
         border = subtleCardBorder(),
         shadowElevation = 2.dp
     ) {

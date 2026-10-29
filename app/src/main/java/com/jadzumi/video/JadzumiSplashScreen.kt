@@ -141,17 +141,17 @@ fun JadzumiSplashScreen(
         else -> Color(0x26358EF5)
     }
 
-    // Master Timeline in Milliseconds (0 to 3600 ms)
+    // Master Timeline in Milliseconds (0 to 1400 ms - Snappy, fluid, natural)
     val timelineMs = remember { Animatable(0f) }
 
     LaunchedEffect(reducedMotion) {
         if (reducedMotion) {
-            timelineMs.animateTo(3600f, tween(400, easing = LinearEasing))
+            timelineMs.animateTo(1400f, tween(250, easing = LinearEasing))
             onFinished()
         } else {
             timelineMs.animateTo(
-                targetValue = 3600f,
-                animationSpec = tween(durationMillis = 3600, easing = LinearEasing)
+                targetValue = 1400f,
+                animationSpec = tween(durationMillis = 1400, easing = LinearEasing)
             )
             onFinished()
         }
@@ -176,30 +176,30 @@ fun JadzumiSplashScreen(
         val t = timelineMs.value
 
         // Helper easing calculations matching CSS / cubic-bezier specs:
-        // entry: 0 to 1100ms
-        val entry = (t / 1100f).coerceIn(0f, 1f)
+        // entry: 0 to 420ms
+        val entry = (t / 420f).coerceIn(0f, 1f)
         val entryEase = remember(entry) {
             val p = entry
             3f * (1f - p) * (1f - p) * p * 0.4f + 3f * (1f - p) * p * p * 0.2f + p * p * p
         }
 
-        // brandEntry: 180 to 1380ms
-        val brandP = ((t - 180f) / 1200f).coerceIn(0f, 1f)
+        // brandEntry: 90 to 550ms
+        val brandP = ((t - 90f) / 460f).coerceIn(0f, 1f)
         val brandEase = remember(brandP) {
             val p = brandP
             3f * (1f - p) * (1f - p) * p * 0.42f + 3f * (1f - p) * p * p * 0.58f + p * p * p
         }
 
-        // portal unfold exit: 1900 to 3500ms (1600ms unfolding)
-        val exitP = ((t - 1900f) / 1600f).coerceIn(0f, 1f)
+        // portal unfold exit: 750 to 1400ms (650ms smooth unfolding)
+        val exitP = ((t - 750f) / 650f).coerceIn(0f, 1f)
         val exitEase = remember(exitP) {
             val p = exitP
             // CubicBezier(0.4, 0.0, 0.2, 1.0)
             3f * (1f - p) * (1f - p) * p * 0.4f + 3f * (1f - p) * p * p * 0.2f + p * p * p
         }
 
-        // brand dissolve: 1900 to 2800ms
-        val dissolveP = ((t - 1900f) / 900f).coerceIn(0f, 1f)
+        // brand dissolve: 750 to 1150ms
+        val dissolveP = ((t - 750f) / 400f).coerceIn(0f, 1f)
         val dissolveEase = remember(dissolveP) {
             val p = dissolveP
             3f * (1f - p) * (1f - p) * p * 0.42f + 3f * (1f - p) * p * p * 0.58f + p * p * p
@@ -215,14 +215,14 @@ fun JadzumiSplashScreen(
         val portalRadius = 42.dp * (1f - exitEase)
         val portalScale = 0.96f + 0.04f * entryEase
         val portalY = 10.dp * (1f - entryEase)
-        val portalAlpha = if (reducedMotion) 1f - (t / 400f).coerceIn(0f, 1f) else (entryEase * (1f - exitEase * 0.95f)).coerceIn(0f, 1f)
+        val portalAlpha = if (reducedMotion) 1f - (t / 250f).coerceIn(0f, 1f) else (entryEase * (1f - exitEase * 0.95f)).coerceIn(0f, 1f)
 
         // Brand alpha & offset
-        val brandAlpha = if (reducedMotion) 1f - (t / 400f).coerceIn(0f, 1f) else (brandEase * (1f - dissolveEase)).coerceIn(0f, 1f)
+        val brandAlpha = if (reducedMotion) 1f - (t / 250f).coerceIn(0f, 1f) else (brandEase * (1f - dissolveEase)).coerceIn(0f, 1f)
         val brandY = 8.dp * (1f - brandEase) - 8.dp * dissolveEase
 
         // Sheen progress (-42% to +33%)
-        val sheenProgress = ((t - 250f) / 2900f).coerceIn(0f, 1f)
+        val sheenProgress = ((t - 100f) / 1000f).coerceIn(0f, 1f)
 
         // 1. Atmospheric Ambient Halos
         if (!isAmoled && haloColor != Color.Transparent) {

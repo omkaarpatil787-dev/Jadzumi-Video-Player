@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -1217,6 +1218,7 @@ private val settingsCategories = listOf(
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("playback", 0) }
+    val settingsListState = rememberLazyListState()
     var activeCategory by rememberSaveable { mutableStateOf(initialCategory) }
     var statusNotice by remember { mutableStateOf<String?>(null) }
     var folderToRemove by remember { mutableStateOf<LocalFolder?>(null) }
@@ -1350,7 +1352,10 @@ private val settingsCategories = listOf(
                     )
 
                     LazyColumn(
-                        Modifier.fillMaxSize(),
+                        state = settingsListState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .animatedScrollBlendFade(settingsListState),
                         contentPadding = PaddingValues(bottom = 96.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -1438,9 +1443,9 @@ private val settingsCategories = listOf(
 
                                     val (hdrTitle, hdrDesc) = remember { DeviceHardwareInspector.getHdrCapabilitiesInfo(context) }
                                     Surface(
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)),
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        border = subtleCardBorder(),
                                         modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
                                     ) {
                                         Row(
@@ -1458,9 +1463,9 @@ private val settingsCategories = listOf(
 
                                     val (panelTitle, panelDesc) = remember { DeviceHardwareInspector.getDisplayPanelInfo(context) }
                                     Surface(
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        border = subtleCardBorder(),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Row(
@@ -1470,7 +1475,7 @@ private val settingsCategories = listOf(
                                         ) {
                                             Icon(Icons.Rounded.Tv, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(24.dp))
                                             Column {
-                                                Text(panelTitle, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                                Text(panelTitle, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
                                                 Text(panelDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                         }
@@ -2922,8 +2927,8 @@ private val settingsCategories = listOf(
 @Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = frostedSurfaceColor(0.75f),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
         border = subtleCardBorder(),
         shadowElevation = 2.dp
     ) {
