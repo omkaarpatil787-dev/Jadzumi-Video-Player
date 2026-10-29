@@ -1,3 +1,39 @@
+# Jadzumi v1.7.2 — Cinema Cards & Media Layout Refinement 🎬✨
+
+A comprehensive UI polish update decluttering Movie and TV series cards, introducing instant "Up Next" playback chips, dual aspect ratio view modes (2:3 Portrait Posters & 16:9 Cinematic Backdrops), and buttery 120Hz shimmer loading.
+
+### 🎬 Decluttered Movie & TV Show Cards
+- **Unified Single Glass Capsule Pill**:
+  - Combined resolution/codec (`4K`, `1080p`, `HD`, `HEVC`) and community rating (`★ 8.2`) into a single, compact frosted glass capsule on the top-right corner (`4K · ★ 8.2`).
+  - Cleared the entire top-left artwork canvas for unobstructed poster views.
+- **Streamlined Cinema Typography**:
+  - Replaced noisy file size labels on browse cards with clean cinema metadata (`2024 · 2h 15m · Action`).
+  - Added a gentle bottom gradient scrim behind card titles for high contrast and readability across bright poster art.
+- **One-Tap Quick Play Button**:
+  - Embedded a subtle circular floating play/resume button directly on the bottom-right of movie and TV show cards for immediate playback without having to navigate into details first.
+
+### 📺 TV Series "Up Next" One-Tap Quick Launch
+- **Interactive "Up Next" Chip**:
+  - Automatically identifies the next unwatched (or in-progress) episode across seasons and displays an interactive pill (`Up Next: S01E03`).
+  - Tapping the "Up Next" chip launches playback immediately with full season queue continuity.
+  - Tapping the card body opens the full series details page.
+- **Watched Progress & Status**:
+  - Displays a clean episode completion badge (`8 of 10 watched` or `Completed · 12 eps` with green checkmark).
+
+### 📐 Aspect Ratio Grid Toggle (2:3 Posters vs 16:9 Backdrops)
+- Added an instant layout aspect ratio toggle in Movies and TV Shows headers:
+  - **Portrait Poster View (2:3)**: Classic cinema posters (2 columns on phone, 3–6 on tablets) showcasing key art.
+  - **Cinematic Backdrop View (16:9)**: Widescreen landscape stills with backdrop imagery.
+  - Remembers your preferred aspect view in settings.
+
+### ⚡ 120Hz Scrolling Polish & Shimmer Loading
+- **Fluid Shimmer Skeleton Placeholders**:
+  - Integrated animated shimmer gradient placeholders during asynchronous thumbnail and poster decoding, eliminating jarring pop-ins.
+- **Recomposition Optimization**:
+  - Memoized video and series list filtering with `remember` for sustained 120 FPS scrolling across tablets and phones.
+
+---
+
 # Jadzumi v1.7.1 — Pure Flat Modern Cards & Highlight-Free Surfaces 🎨✨
 
 A targeted aesthetic refinement release eliminating unwanted bottom edge highlight/shadow lips and elevation lines across all card surfaces in the app.

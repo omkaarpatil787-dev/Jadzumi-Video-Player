@@ -1054,7 +1054,7 @@ internal fun SidecarImage(
     } else if (fallbackVideo != null) {
         LocalThumbnail(fallbackVideo, modifier)
     } else {
-        CinematicFallbackPoster(title = "Cinema Series", name = "", modifier = modifier)
+        ShimmerPlaceholder(modifier)
     }
 }
 

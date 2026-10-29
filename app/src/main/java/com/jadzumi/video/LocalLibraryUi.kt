@@ -784,6 +784,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     val context = LocalContext.current
     val libraryPrefs = remember(context) { context.getSharedPreferences("appearance", Context.MODE_PRIVATE) }
     var isGridView by rememberSaveable { mutableStateOf(libraryPrefs.getBoolean("library_grid_view", false)) }
+    var isPosterAspect by rememberSaveable { mutableStateOf(libraryPrefs.getBoolean("library_poster_aspect", true)) }
     var activeFilter by rememberSaveable { mutableStateOf("All") }
     var activeSort by rememberSaveable { mutableStateOf("Date Added") }
     var isSelectionMode by rememberSaveable { mutableStateOf(false) }
@@ -1042,7 +1043,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
                                 item {
-                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
+                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, isPosterAspect = isPosterAspect, onSelect = { select("series:${it.id}") })
                                 }
                             }
                             if (searchEpisodes.isNotEmpty()) {
@@ -1058,7 +1059,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
                                 item {
-                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
+                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, isPosterAspect = isPosterAspect, onSelect = { select(it.uri) })
                                 }
                             }
                         } else if (category == "Movies") {
@@ -1067,7 +1068,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
                                 item {
-                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
+                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, isPosterAspect = isPosterAspect, onSelect = { select(it.uri) })
                                 }
                             }
                             if (searchSeries.isNotEmpty()) {
@@ -1075,7 +1076,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
                                 item {
-                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
+                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, isPosterAspect = isPosterAspect, onSelect = { select("series:${it.id}") })
                                 }
                             }
                             if (searchEpisodes.isNotEmpty()) {
@@ -1092,7 +1093,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
                                 item {
-                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, onSelect = { select("series:${it.id}") })
+                                    TvSeriesCardGrid(seriesList = searchSeries, playback = playback, isPosterAspect = isPosterAspect, onSelect = { select("series:${it.id}") })
                                 }
                             }
                             if (searchMovies.isNotEmpty()) {
@@ -1100,7 +1101,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
                                 item {
-                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, onSelect = { select(it.uri) })
+                                    MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, isPosterAspect = isPosterAspect, onSelect = { select(it.uri) })
                                 }
                             }
                             if (searchEpisodes.isNotEmpty()) {
@@ -1204,6 +1205,28 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         if (defaultCategory == "All videos") {
                                             TextButton(onClick = { category = "All videos" }) { Text("Show all") }
                                         }
+                                        if (isGridView) {
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                                modifier = Modifier.size(36.dp)
+                                            ) {
+                                                IconButton(
+                                                    onClick = {
+                                                        isPosterAspect = !isPosterAspect
+                                                        libraryPrefs.edit().putBoolean("library_poster_aspect", isPosterAspect).apply()
+                                                    },
+                                                    modifier = Modifier.fillMaxSize()
+                                                ) {
+                                                    Icon(
+                                                        if (isPosterAspect) Icons.Rounded.CropPortrait else Icons.Rounded.CropLandscape,
+                                                        contentDescription = if (isPosterAspect) "Switch to 16:9 Backdrop View" else "Switch to 2:3 Poster View",
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
                                         Surface(
                                             shape = CircleShape,
                                             color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
@@ -1234,6 +1257,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     TvSeriesCardGrid(
                                         seriesList = filteredSeries,
                                         playback = playback,
+                                        isPosterAspect = isPosterAspect,
                                         onSelect = { select("series:${it.id}") }
                                     )
                                 }
@@ -1248,7 +1272,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                             }
                         }
                     } else if (category == "Movies") {
-                        val movieList = videos.filter { it.episode == null }
+                        val movieList = remember(videos) { videos.filter { it.episode == null } }
                         if (movieList.isEmpty()) {
                             item {
                                 LocalPanel {
@@ -1279,6 +1303,28 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                     ) {
                                         if (defaultCategory == "All videos") {
                                             TextButton(onClick = { category = "All videos" }) { Text("Show all") }
+                                        }
+                                        if (isGridView) {
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                                modifier = Modifier.size(36.dp)
+                                            ) {
+                                                IconButton(
+                                                    onClick = {
+                                                        isPosterAspect = !isPosterAspect
+                                                        libraryPrefs.edit().putBoolean("library_poster_aspect", isPosterAspect).apply()
+                                                    },
+                                                    modifier = Modifier.fillMaxSize()
+                                                ) {
+                                                    Icon(
+                                                        if (isPosterAspect) Icons.Rounded.CropPortrait else Icons.Rounded.CropLandscape,
+                                                        contentDescription = if (isPosterAspect) "Switch to 16:9 Backdrop View" else "Switch to 2:3 Poster View",
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                            }
                                         }
                                         Surface(
                                             shape = CircleShape,
@@ -1311,6 +1357,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         movies = movieList,
                                         sidecars = state.sidecars,
                                         playback = playback,
+                                        isPosterAspect = isPosterAspect,
                                         onSelect = { select(it.uri) }
                                     )
                                 }
@@ -1843,13 +1890,23 @@ fun MovieCardGrid(
     movies: List<LocalVideo>,
     sidecars: Map<String, List<LocalSidecar>>,
     playback: PlaybackController,
+    isPosterAspect: Boolean = true,
     onSelect: (LocalVideo) -> Unit
 ) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val columns = when {
-            maxWidth >= 1000.dp -> 4
-            maxWidth >= 680.dp -> 3
-            else -> 2
+        val columns = if (isPosterAspect) {
+            when {
+                maxWidth >= 1200.dp -> 6
+                maxWidth >= 840.dp -> 4
+                maxWidth >= 540.dp -> 3
+                else -> 2
+            }
+        } else {
+            when {
+                maxWidth >= 1000.dp -> 4
+                maxWidth >= 680.dp -> 3
+                else -> 2
+            }
         }
         val rows = movies.chunked(columns)
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -1864,6 +1921,7 @@ fun MovieCardGrid(
                                 video = movie,
                                 sidecars = sidecars,
                                 playback = playback,
+                                isPosterAspect = isPosterAspect,
                                 onClick = { onSelect(movie) }
                             )
                         }
@@ -1883,6 +1941,7 @@ fun MovieSummaryCard(
     video: LocalVideo,
     sidecars: Map<String, List<LocalSidecar>>,
     playback: PlaybackController,
+    isPosterAspect: Boolean = true,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -1900,63 +1959,96 @@ fun MovieSummaryCard(
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Poster / Backdrop Thumbnail Container (16:10 aspect ratio)
+            val imageUri = if (isPosterAspect) {
+                metadata.posterUri ?: metadata.backdropUri
+            } else {
+                metadata.backdropUri ?: metadata.posterUri
+            }
+            val targetAspect = if (isPosterAspect) (2f / 3f) else (16f / 9f)
+
+            // Poster / Backdrop Thumbnail Container
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 10f)
+                    .aspectRatio(targetAspect)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 SidecarImage(
-                    uri = metadata.posterUri ?: metadata.backdropUri,
+                    uri = imageUri,
                     fallbackVideo = video,
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Top Quality / Codec Badge - Uniform Capsule Pill
-                val badge = when {
-                    video.width >= 3840 -> "4K UHD"
+                // Soft bottom gradient scrim
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.42f)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
+                            )
+                        )
+                )
+
+                // Consolidated Top-Right Badge: Rating + Resolution/Codec
+                val qualityText = when {
+                    video.width >= 3840 -> "4K"
                     video.width >= 1920 -> "1080p"
                     video.name.contains("hevc", true) || video.name.contains("x265", true) -> "HEVC"
                     else -> "HD"
                 }
                 Surface(
                     shape = CircleShape,
-                    color = Color.Black.copy(alpha = 0.70f),
-                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
+                    color = Color.Black.copy(alpha = 0.68f),
+                    border = BorderStroke(0.75.dp, Color.White.copy(alpha = 0.20f)),
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
-                    Text(
-                        badge,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        if (metadata.rating != null) {
+                            Icon(Icons.Rounded.Star, null, Modifier.size(10.dp), tint = Color(0xFFF9AB00))
+                            Text(metadata.rating, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("·", fontSize = 9.5.sp, color = Color.White.copy(alpha = 0.6f))
+                        }
+                        Text(
+                            qualityText,
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
 
-                // Top Left Rating Badge - Uniform Capsule Pill
-                metadata.rating?.let { rating ->
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.70f),
-                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
-                        modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp)
-                        ) {
-                            Icon(Icons.Rounded.Star, null, Modifier.size(11.dp), tint = Color(0xFFF9AB00))
-                            Text(rating, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                // Quick Play/Resume button floating on bottom-right of poster
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .size(32.dp)
+                        .clickable {
+                            playback.open(video)
                         }
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.PlayArrow,
+                            contentDescription = "Play movie",
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
 
@@ -1966,7 +2058,7 @@ fun MovieSummaryCard(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
                             .fillMaxWidth(progress)
-                            .height(3.5.dp)
+                            .height(3.dp)
                             .background(if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
                     )
                 }
@@ -1974,8 +2066,8 @@ fun MovieSummaryCard(
 
             // Info Section
             Column(
-                modifier = Modifier.padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 Text(
                     text = metadata.title,
@@ -1986,17 +2078,23 @@ fun MovieSummaryCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                val durStr = if (video.duration > 0) timecode(video.duration / 1000) else "Feature Film"
-                val sizeStr = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else ""
+                val runtimeStr = if (video.duration > 0) {
+                    val totalSec = video.duration / 1000
+                    val hours = totalSec / 3600
+                    val minutes = (totalSec % 3600) / 60
+                    if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+                } else "Feature Film"
+                val genre = metadata.genres.firstOrNull()
+                val metaLine = listOfNotNull(metadata.year, runtimeStr, genre).joinToString(" · ")
                 Text(
-                    text = listOfNotNull(metadata.year, durStr, sizeStr.takeIf { it.isNotEmpty() }).joinToString(" · "),
+                    text = metaLine,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(1.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -2006,7 +2104,7 @@ fun MovieSummaryCard(
                         Icon(Icons.Rounded.CheckCircle, null, Modifier.size(13.dp), tint = Color(0xFF1E8E3E))
                         Text("Watched", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E8E3E))
                     } else if (inProgress) {
-                        Text("Resume ${timecode(savedPos / 1000)}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                        Text("Resume at ${timecode(savedPos / 1000)}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                     } else {
                         Text(metadata.genres.firstOrNull() ?: "Movie", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
                     }
@@ -2020,13 +2118,23 @@ fun MovieSummaryCard(
 fun TvSeriesCardGrid(
     seriesList: List<TvSeries>,
     playback: PlaybackController,
+    isPosterAspect: Boolean = true,
     onSelect: (TvSeries) -> Unit
 ) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val columns = when {
-            maxWidth >= 1000.dp -> 4
-            maxWidth >= 680.dp -> 3
-            else -> 2
+        val columns = if (isPosterAspect) {
+            when {
+                maxWidth >= 1200.dp -> 6
+                maxWidth >= 840.dp -> 4
+                maxWidth >= 540.dp -> 3
+                else -> 2
+            }
+        } else {
+            when {
+                maxWidth >= 1000.dp -> 4
+                maxWidth >= 680.dp -> 3
+                else -> 2
+            }
         }
         val rows = seriesList.chunked(columns)
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -2040,6 +2148,7 @@ fun TvSeriesCardGrid(
                             TvSeriesSummaryCard(
                                 series = series,
                                 playback = playback,
+                                isPosterAspect = isPosterAspect,
                                 onClick = { onSelect(series) }
                             )
                         }
@@ -2058,70 +2167,109 @@ fun TvSeriesCardGrid(
 fun TvSeriesSummaryCard(
     series: TvSeries,
     playback: PlaybackController,
+    isPosterAspect: Boolean = true,
     onClick: () -> Unit
 ) {
     val watched = remember(series, playback.historyVersion) { series.watchedCount(playback) }
     val total = series.totalEpisodes
+    val isCompleted = total > 0 && watched >= total
     val progress = if (total > 0) (watched.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
+    val nextEp = remember(series, playback.historyVersion) { series.nextUnwatchedEpisode(playback) }
 
     Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
+            val imageUri = if (isPosterAspect) {
+                series.posterUri ?: series.backdropUri
+            } else {
+                series.backdropUri ?: series.posterUri
+            }
+            val targetAspect = if (isPosterAspect) (2f / 3f) else (16f / 9f)
+
             // Poster / Backdrop Thumbnail
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 10f)
+                    .aspectRatio(targetAspect)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 val firstEp = series.seasons.values.firstOrNull()?.firstOrNull()
                 SidecarImage(
-                    uri = series.posterUri ?: series.backdropUri,
+                    uri = imageUri,
                     fallbackVideo = firstEp,
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Top Left Rating Badge - Uniform Capsule Pill
-                series.rating?.let { rating ->
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.70f),
-                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
-                        modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
+                // Soft bottom gradient scrim
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.42f)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
+                            )
+                        )
+                )
+
+                // Top-Right Consolidated Badge: Rating + Seasons
+                val seasonsText = "${series.seasonCount} Season${if (series.seasonCount > 1) "s" else ""}"
+                Surface(
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.68f),
+                    border = BorderStroke(0.75.dp, Color.White.copy(alpha = 0.20f)),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp)
-                        ) {
-                            Icon(Icons.Rounded.Star, null, Modifier.size(11.dp), tint = Color(0xFFF9AB00))
-                            Text(rating, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        if (series.rating != null) {
+                            Icon(Icons.Rounded.Star, null, Modifier.size(10.dp), tint = Color(0xFFF9AB00))
+                            Text(series.rating, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("·", fontSize = 9.5.sp, color = Color.White.copy(alpha = 0.6f))
                         }
+                        Text(
+                            seasonsText,
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     }
                 }
 
-                // Seasons badge - Uniform Capsule Pill
-                Surface(
-                    shape = CircleShape,
-                    color = Color.Black.copy(alpha = 0.70f),
-                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
-                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
-                ) {
-                    Text(
-                        "${series.seasonCount} Season${if (series.seasonCount > 1) "s" else ""}",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                // If next episode is available, show a floating mini play button on the bottom right
+                if (nextEp != null) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp)
+                            .size(32.dp)
+                            .clickable {
+                                playback.open(nextEp)
+                            }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Rounded.PlayArrow,
+                                contentDescription = "Play next episode",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                 }
 
                 // Progress Line at bottom of thumbnail
@@ -2130,16 +2278,16 @@ fun TvSeriesSummaryCard(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
                             .fillMaxWidth(progress)
-                            .height(3.5.dp)
-                            .background(if (progress >= 1f) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
+                            .height(3.dp)
+                            .background(if (isCompleted) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
                     )
                 }
             }
 
             // Info Section
             Column(
-                modifier = Modifier.padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 Text(
                     text = series.title,
@@ -2150,25 +2298,70 @@ fun TvSeriesSummaryCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
+                val episodesWatchedText = if (isCompleted) {
+                    "Completed · ${series.totalEpisodes} eps"
+                } else if (watched > 0) {
+                    "$watched of $total watched"
+                } else {
+                    "${series.totalEpisodes} Episodes · ${series.year ?: "Series"}"
+                }
+
                 Text(
-                    text = "${series.totalEpisodes} Episodes · ${series.year ?: "2024"}",
+                    text = episodesWatchedText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isCompleted) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (isCompleted) FontWeight.SemiBold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(Modifier.height(2.dp))
+                // Interactive "Up Next" episode chip
+                if (nextEp != null && !isCompleted) {
+                    val epHint = nextEp.episode
+                    val upNextLabel = if (epHint != null) {
+                        "Up Next: S%02dE%02d".format(epHint.season, epHint.episode)
+                    } else {
+                        "Up Next: ${nextEp.title}"
+                    }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    if (progress >= 1f) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
+                        modifier = Modifier
+                            .padding(top = 2.dp)
+                            .clickable {
+                                playback.open(nextEp)
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Rounded.PlayArrow,
+                                null,
+                                modifier = Modifier.size(13.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                upNextLabel,
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                } else if (isCompleted) {
+                    Row(
+                        modifier = Modifier.padding(top = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Icon(Icons.Rounded.CheckCircle, null, Modifier.size(13.dp), tint = Color(0xFF1E8E3E))
                         Text("All Watched", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E8E3E))
-                    } else if (watched > 0) {
-                        Text("$watched/$total Watched", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-                    } else {
-                        Text("Unwatched", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
                     }
                 }
             }
@@ -2650,7 +2843,7 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
         if (frame != null) {
             Image(frame.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         } else {
-            CinematicFallbackPoster(title = video.title, name = video.name)
+            ShimmerPlaceholder(Modifier.fillMaxSize())
         }
     }
 }
