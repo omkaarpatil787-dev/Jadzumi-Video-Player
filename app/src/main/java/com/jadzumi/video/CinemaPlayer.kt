@@ -1346,10 +1346,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         QuickMenuRow(
                             icon = Icons.Rounded.RecordVoiceOver,
                             label = "Voice Clarity (Vocal Boost)",
-                            value = if (playback.voiceClarityEnabled) "Enhanced" else "Off",
+                            value = if (playback.nightModeVoiceBoost) "Enhanced" else "Off",
                             onClick = {
-                                playback.voiceClarityEnabled = !playback.voiceClarityEnabled
-                                onMessage(if (playback.voiceClarityEnabled) "Voice Clarity boosted" else "Voice Clarity neutral")
+                                playback.nightModeVoiceBoost = !playback.nightModeVoiceBoost
+                                onMessage(if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off")
                             }
                         )
                         QuickMenuRow(Icons.Rounded.Bookmark, "Scene bookmarks", "", { onOpenTools("bookmarks") })
