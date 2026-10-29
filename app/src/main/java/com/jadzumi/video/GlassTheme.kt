@@ -112,14 +112,23 @@ object GlassTheme {
 
     /**
      * Frosted background for video overlay controls (CinemaPlayer time pills, docks, buttons).
+     * Reacts directly to Light, Dark, and AMOLED themes.
      */
     fun playerFrostedBg(theme: String, isOled: Boolean, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
-        val alpha = (0.86f - 0.10f * intensity).coerceIn(0.74f, 0.88f)
-        return if (isOled || theme == "AMOLED") {
-            Color(0xFF050811).copy(alpha = alpha)
-        } else {
-            Color(0xFF0F172A).copy(alpha = alpha)
+        return when (theme) {
+            "Light" -> {
+                val alpha = (0.92f - 0.08f * intensity).coerceIn(0.82f, 0.94f)
+                Color(0xFFF0F4FC).copy(alpha = alpha)
+            }
+            "AMOLED" -> {
+                val alpha = (0.95f - 0.05f * intensity).coerceIn(0.88f, 0.97f)
+                Color(0xFF000000).copy(alpha = alpha)
+            }
+            else -> {
+                val alpha = (0.86f - 0.10f * intensity).coerceIn(0.74f, 0.88f)
+                if (isOled) Color(0xFF050811).copy(alpha = alpha) else Color(0xFF0F172A).copy(alpha = alpha)
+            }
         }
     }
 
@@ -128,8 +137,20 @@ object GlassTheme {
      */
     fun playerFrostedRim(theme: String, isOled: Boolean, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
-        val alpha = (0.16f + 0.10f * intensity).coerceIn(0.14f, 0.26f)
-        return Color.White.copy(alpha = alpha)
+        return when (theme) {
+            "Light" -> {
+                val alpha = (0.14f + 0.08f * intensity).coerceIn(0.12f, 0.24f)
+                Color(0xFF183654).copy(alpha = alpha)
+            }
+            "AMOLED" -> {
+                val alpha = (0.22f + 0.10f * intensity).coerceIn(0.20f, 0.35f)
+                Color.White.copy(alpha = alpha)
+            }
+            else -> {
+                val alpha = (0.16f + 0.10f * intensity).coerceIn(0.14f, 0.26f)
+                Color.White.copy(alpha = alpha)
+            }
+        }
     }
 
     /**

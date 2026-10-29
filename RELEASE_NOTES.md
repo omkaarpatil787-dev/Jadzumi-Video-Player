@@ -1,3 +1,32 @@
+# Jadzumi v1.7.3 — Subtitle Typography Suite, Theme-Reactive HUD & Decluttered Minimal Controls 🎨✨
+
+A major aesthetic refinement and accessibility update introducing an expanded **Subtitle Typography & Edge Effects Suite**, dynamic **Theme-Reactive Playback UI**, and a **Decluttered Minimalist Player HUD**.
+
+### 🔤 Subtitle Typography & 3D Edge Effects
+- **Cinema Font Families**: Added *Cinema Serif*, *Heavy Sans*, *Rounded Sans*, and *Roboto Condensed* alongside classic system and monospace fonts.
+- **Font Styles & Weights**: Choose between *Regular*, *Bold*, *Italic*, and *Bold Italic* for custom caption weight.
+- **3D & Glow Edge Effects**:
+  - *Raised 3D Bevel* and *Depressed 3D Inset* for crisp readability against textured movies.
+  - *Soft Atmospheric Glow* for luminous subtitles without hard rectangular black boxes.
+  - Classic *Drop Shadow* and *Outline Stroke*.
+- **Palette & Contrast**: Expanded color tokens with *Amber Gold*, *Lavender*, and *Soft Orange*.
+- **Vertical Margin Calibration**: Fine-tune caption bottom margin from standard (0.06) to high (0.16) for cinemascope letterbox positioning.
+- **Live Interactive Preview Card**: Instant feedback in Subtitle Settings showing real-time styling, edge effects, and background box rendering.
+
+### 🌓 Theme-Reactive Playback HUD
+- **Adaptive Appearance Reaction**:
+  - **Light Mode**: Frosted white milk-glass HUD pills (`#F0F4FC`) with dark navy typography (`#183654`) and deep-blue controls.
+  - **Dark Mode**: Translucent slate-navy HUD (`#0F172A`) with crisp white text.
+  - **AMOLED Mode**: Pure ink-black translucent surfaces (`#000000`) preserving OLED power and contrast.
+- **Telemetry & Battery Pills**: Player status pill, speed pill, volume/brightness bars, and seek buttons all inherit theme-reactive color palettes seamlessly.
+
+### 🎬 Decluttered Minimalist Player HUD
+- **Single-Row Bottom Timeline**: Merged timecode, progress scrubber, remaining time pill, and essential action icons into a unified dock.
+- **Quick Menu Integration**: Moved secondary buttons (*Voice Clarity*, *Dialogue Replay*, *HUD Mode Toggle*) into the Quick Menu drawer to keep video viewing uncluttered.
+- **HUD Mode Toggle**: Quickly switch between *Minimalist HUD* and *Expressive HUD* on the fly.
+
+---
+
 # Jadzumi v1.7.2 — Cinema Cards & Media Layout Refinement 🎬✨
 
 A comprehensive UI polish update decluttering Movie and TV series cards, introducing instant "Up Next" playback chips, dual aspect ratio view modes (2:3 Portrait Posters & 16:9 Cinematic Backdrops), and buttery 120Hz shimmer loading.

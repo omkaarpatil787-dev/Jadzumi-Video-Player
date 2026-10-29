@@ -101,6 +101,15 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     val activity = LocalActivity.current as? MainActivity ?: return
     val coroutineScope = rememberCoroutineScope()
     val isOled = remember { DeviceHardwareInspector.isOledOrAmoledDisplay(activity) }
+    val isLight = theme == "Light"
+    val isAmoled = theme == "AMOLED" || (isOled && theme != "Light")
+    val playerContentColor = if (isLight) Color(0xFF183654) else Color.White
+    val playerSubtextColor = if (isLight) Color(0xFF526B85) else Color.White.copy(alpha = 0.75f)
+    val playerAccentColor = if (isLight) Color(0xFF0061A4) else TimelineAccent
+
+    val playerPrefs = remember(activity) { activity.getSharedPreferences("player_ui_prefs", Context.MODE_PRIVATE) }
+    var isMinimalHud by remember(video.identity) { mutableStateOf(playerPrefs.getBoolean("player_hud_minimal", true)) }
+
     val dynamicFrostedCircleBg = remember(glassIntensity, isOled, theme) {
         GlassTheme.playerFrostedBg(theme, isOled, glassIntensity)
     }
@@ -549,7 +558,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         showClock = playback.showPlayerClock,
                         showBattery = playback.showBatteryPercentage,
                         showRemainingTime = playback.showRemainingTime,
-                        remainingSec = remSec
+                        remainingSec = remSec,
+                        bgColor = dynamicFrostedCircleBg,
+                        rimColor = dynamicFrostedCircleRim,
+                        contentColor = playerContentColor
                     )
                 }
 
@@ -562,10 +574,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     exit = exitAnim
                 ) {
                     val subtleScrim = Brush.verticalGradient(
-                        0.0f to Color.Black.copy(alpha = 0.68f),
+                        0.0f to (if (isLight) Color.Black.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.68f)),
                         0.22f to Color.Transparent,
                         0.76f to Color.Transparent,
-                        1.0f to Color.Black.copy(alpha = 0.78f)
+                        1.0f to (if (isLight) Color.Black.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.78f))
                     )
                     Box(
                         Modifier
@@ -585,13 +597,19 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                FrostedCircleButton("Back to library", dismissPlayerWithFluidity, size = 44.dp) {
-                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, Modifier.size(20.dp), tint = Color.White)
+                                FrostedCircleButton(
+                                    label = "Back to library",
+                                    onClick = dismissPlayerWithFluidity,
+                                    size = 44.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, Modifier.size(20.dp), tint = playerContentColor)
                                 }
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text(
                                         heading.primaryTitle,
-                                        color = Color.White,
+                                        color = playerContentColor,
                                         fontSize = 19.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
@@ -600,7 +618,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     heading.secondaryMeta?.let { meta ->
                                         Text(
                                             meta,
-                                            color = Color.White.copy(alpha = 0.75f),
+                                            color = playerSubtextColor,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Normal,
                                             maxLines = 1,
@@ -612,33 +630,35 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                             // Top-Right Icons: Clean and uncluttered glassy controls
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                val isVoiceClarityActive = playback.nightModeVoiceBoost
-                                val voiceScale by animateFloatAsState(
-                                    targetValue = if (isVoiceClarityActive) 1.08f else 1.0f,
-                                    animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow),
-                                    label = "voiceScale"
-                                )
-                                FrostedCircleButton(
-                                    label = if (isVoiceClarityActive) "Voice Clarity: On" else "Voice Clarity: Off",
-                                    onClick = {
-                                        playback.updateNightMode(!playback.nightModeVoiceBoost)
-                                        message = if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off"
-                                        interaction++
-                                    },
-                                    size = 44.dp,
-                                    bgColor = if (isVoiceClarityActive) TimelineAccent.copy(alpha = 0.22f) else dynamicFrostedCircleBg,
-                                    rimColor = if (isVoiceClarityActive) TimelineAccent.copy(alpha = 0.65f) else dynamicFrostedCircleRim,
-                                    modifier = Modifier.graphicsLayer {
-                                        scaleX = voiceScale
-                                        scaleY = voiceScale
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.GraphicEq,
-                                        contentDescription = if (isVoiceClarityActive) "Voice Clarity: On" else "Voice Clarity: Off",
-                                        tint = if (isVoiceClarityActive) TimelineAccent else Color.White,
-                                        modifier = Modifier.size(20.dp)
+                                if (!isMinimalHud) {
+                                    val isVoiceClarityActive = playback.nightModeVoiceBoost
+                                    val voiceScale by animateFloatAsState(
+                                        targetValue = if (isVoiceClarityActive) 1.08f else 1.0f,
+                                        animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow),
+                                        label = "voiceScale"
                                     )
+                                    FrostedCircleButton(
+                                        label = if (isVoiceClarityActive) "Voice Clarity: On" else "Voice Clarity: Off",
+                                        onClick = {
+                                            playback.updateNightMode(!playback.nightModeVoiceBoost)
+                                            message = if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off"
+                                            interaction++
+                                        },
+                                        size = 44.dp,
+                                        bgColor = if (isVoiceClarityActive) playerAccentColor.copy(alpha = 0.22f) else dynamicFrostedCircleBg,
+                                        rimColor = if (isVoiceClarityActive) playerAccentColor.copy(alpha = 0.65f) else dynamicFrostedCircleRim,
+                                        modifier = Modifier.graphicsLayer {
+                                            scaleX = voiceScale
+                                            scaleY = voiceScale
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.GraphicEq,
+                                            contentDescription = if (isVoiceClarityActive) "Voice Clarity: On" else "Voice Clarity: Off",
+                                            tint = if (isVoiceClarityActive) playerAccentColor else playerContentColor,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
                                 }
 
                                 if (showAnyHud) {
@@ -646,27 +666,42 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         showClock = playback.showPlayerClock,
                                         showBattery = playback.showBatteryPercentage,
                                         showRemainingTime = playback.showRemainingTime,
-                                        remainingSec = remSec
+                                        remainingSec = remSec,
+                                        bgColor = dynamicFrostedCircleBg,
+                                        rimColor = dynamicFrostedCircleRim,
+                                        contentColor = playerContentColor
                                     )
                                 }
-                                FrostedCircleButton(
-                                    label = if (playback.dialogueReplayActive) "Stop dialogue replay" else "What did they say? Replay 10 seconds",
-                                    onClick = {
-                                        if (playback.dialogueReplayActive) {
-                                            playback.stopDialogueReplay(restorePlaybackState = true)
-                                            message = "Dialogue replay stopped"
-                                        } else {
-                                            message = if (playback.replayDialogue()) "Replaying dialogue with temporary voice boost" else "Replay unavailable until this video can seek"
-                                        }
-                                        interaction++
-                                    },
-                                    enabled = playback.seekable,
-                                    size = 44.dp
-                                ) {
-                                    Icon(Icons.Rounded.Replay10, null, Modifier.size(22.dp), tint = if (playback.dialogueReplayActive) TimelineAccent else Color.White)
+
+                                if (!isMinimalHud) {
+                                    FrostedCircleButton(
+                                        label = if (playback.dialogueReplayActive) "Stop dialogue replay" else "What did they say? Replay 10 seconds",
+                                        onClick = {
+                                            if (playback.dialogueReplayActive) {
+                                                playback.stopDialogueReplay(restorePlaybackState = true)
+                                                message = "Dialogue replay stopped"
+                                            } else {
+                                                message = if (playback.replayDialogue()) "Replaying dialogue with temporary voice boost" else "Replay unavailable until this video can seek"
+                                            }
+                                            interaction++
+                                        },
+                                        enabled = playback.seekable,
+                                        size = 44.dp,
+                                        bgColor = dynamicFrostedCircleBg,
+                                        rimColor = dynamicFrostedCircleRim
+                                    ) {
+                                        Icon(Icons.Rounded.Replay10, null, Modifier.size(22.dp), tint = if (playback.dialogueReplayActive) playerAccentColor else playerContentColor)
+                                    }
                                 }
-                                FrostedCircleButton("Cinema settings", { quickMenuSection = "main"; interaction++ }, size = 44.dp) {
-                                    Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = Color.White)
+
+                                FrostedCircleButton(
+                                    label = "Cinema settings",
+                                    onClick = { quickMenuSection = "main"; interaction++ },
+                                    size = 44.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = playerContentColor)
                                 }
                             }
                         }
@@ -694,7 +729,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 },
                                 size = 54.dp,
                                 bgColor = dynamicFrostedCircleBg,
-                                rimColor = dynamicFrostedCircleRim
+                                rimColor = dynamicFrostedCircleRim,
+                                contentColor = playerContentColor
                             )
 
                             FrostedCircleButton(
@@ -715,7 +751,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     Icon(
                                         imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                                         contentDescription = if (isPlaying) "Pause" else "Play",
-                                        tint = Color.White,
+                                        tint = playerContentColor,
                                         modifier = Modifier.size(38.dp)
                                     )
                                 }
@@ -738,7 +774,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 },
                                 size = 54.dp,
                                 bgColor = dynamicFrostedCircleBg,
-                                rimColor = dynamicFrostedCircleRim
+                                rimColor = dynamicFrostedCircleRim,
+                                contentColor = playerContentColor
                             )
                         }
 
@@ -812,14 +849,107 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             )
 
-                            // Bottom Controls: Adaptive 2-Row on Phone Portrait vs 1-Row on Tablet/Landscape
-                            if (isPhonePortrait) {
+                            // Bottom Controls: Clean Single Row in Minimalist HUD (or on landscape/tablet)
+                            if (isMinimalHud || !isPhonePortrait) {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    // Glassy Time Capsule Pill
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Text(
+                                                compactTimecode(elapsedSec),
+                                                color = playerAccentColor,
+                                                fontSize = 12.5.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text("/", color = playerSubtextColor.copy(alpha = 0.5f), fontSize = 11.5.sp)
+                                            Text(
+                                                compactTimecode(totalSec),
+                                                color = playerContentColor,
+                                                fontSize = 12.5.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            if (playback.showRemainingTime) {
+                                                val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                                Surface(
+                                                    shape = RoundedCornerShape(999.dp),
+                                                    color = if (isLight) Color(0xFF183654).copy(alpha = 0.08f) else Color.White.copy(alpha = 0.14f),
+                                                    border = BorderStroke(0.5.dp, dynamicFrostedCircleRim)
+                                                ) {
+                                                    Text(
+                                                        "-${compactTimecode(remSec)}",
+                                                        Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                        color = playerContentColor.copy(alpha = 0.90f),
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.SemiBold
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Glassy Actions Dock
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                        ) {
+                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
+                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
+                                            }
+                                            CinemaIcon("Rotate orientation", {
+                                                val current = activity.requestedOrientation
+                                                val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                                                } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_USER
+                                                } else {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                                }
+                                                activity.requestedOrientation = next
+                                                message = when (next) {
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
+                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
+                                                    else -> "Orientation: Auto (Sensor)"
+                                                }
+                                                interaction++
+                                            }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
+                                                Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
+                                            }
+                                            if (activity.supportsPip()) {
+                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
+                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
+                                                }
+                                            }
+                                            CinemaIcon("Close player", dismissPlayerWithFluidity, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
+                                                Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
                                 Column(
                                     Modifier.fillMaxWidth(),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    // Row 1: Glassy Time Capsule Pill (Centered & adaptively padded)
+                                    // Row 1: Glassy Time Capsule Pill
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
                                         color = dynamicFrostedCircleBg,
@@ -833,14 +963,14 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         ) {
                                             Text(
                                                 compactTimecode(elapsedSec),
-                                                color = TimelineAccent,
+                                                color = playerAccentColor,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.SemiBold
                                             )
-                                            Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 11.sp)
+                                            Text("/", color = playerSubtextColor.copy(alpha = 0.5f), fontSize = 11.sp)
                                             Text(
                                                 compactTimecode(totalSec),
-                                                color = Color.White.copy(alpha = 0.85f),
+                                                color = playerContentColor,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
@@ -848,13 +978,13 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                                 val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
                                                 Surface(
                                                     shape = RoundedCornerShape(999.dp),
-                                                    color = Color.White.copy(alpha = 0.14f),
-                                                    border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                                                    color = if (isLight) Color(0xFF183654).copy(alpha = 0.08f) else Color.White.copy(alpha = 0.14f),
+                                                    border = BorderStroke(0.5.dp, dynamicFrostedCircleRim)
                                                 ) {
                                                     Text(
                                                         "-${compactTimecode(remSec)} remaining",
                                                         Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
-                                                        color = Color.White.copy(alpha = 0.92f),
+                                                        color = playerContentColor.copy(alpha = 0.92f),
                                                         fontSize = 10.sp,
                                                         fontWeight = FontWeight.Medium
                                                     )
@@ -863,7 +993,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         }
                                     }
 
-                                    // Row 2: Glassy Actions Dock (Centered & aligned with time pill)
+                                    // Row 2: Glassy Actions Dock
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
                                         color = dynamicFrostedCircleBg,
@@ -891,111 +1021,18 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                                     else -> "Orientation: Auto (Sensor)"
                                                 }
                                                 interaction++
-                                            }, modifier = Modifier.size(36.dp)) {
+                                            }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
                                                 Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
                                             }
-                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
+                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
                                                 Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
                                             }
                                             if (activity.supportsPip()) {
-                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
+                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
                                                     Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
                                                 }
                                             }
-                                            CinemaIcon("Close player", dismissPlayerWithFluidity, modifier = Modifier.size(36.dp)) {
-                                                Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    // Bottom-Left: Glassy Time Capsule Pill
-                                    Surface(
-                                        shape = RoundedCornerShape(999.dp),
-                                        color = dynamicFrostedCircleBg,
-                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
-                                    ) {
-                                        Row(
-                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Text(
-                                                compactTimecode(elapsedSec),
-                                                color = TimelineAccent,
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                            Text("/", color = Color.White.copy(alpha = 0.40f), fontSize = 12.sp)
-                                            Text(
-                                                compactTimecode(totalSec),
-                                                color = Color.White.copy(alpha = 0.85f),
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                            if (playback.showRemainingTime) {
-                                                val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                                Surface(
-                                                    shape = RoundedCornerShape(999.dp),
-                                                    color = Color.White.copy(alpha = 0.14f),
-                                                    border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
-                                                ) {
-                                                    Text(
-                                                        "-${compactTimecode(remSec)} remaining",
-                                                        Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                                        color = Color.White.copy(alpha = 0.92f),
-                                                        fontSize = 11.sp,
-                                                        fontWeight = FontWeight.Medium
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // Bottom-Right: Glassy Actions Dock
-                                    Surface(
-                                        shape = RoundedCornerShape(999.dp),
-                                        color = dynamicFrostedCircleBg,
-                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
-                                    ) {
-                                        Row(
-                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            CinemaIcon("Rotate orientation", {
-                                                val current = activity.requestedOrientation
-                                                val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                                                } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_USER
-                                                } else {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                                }
-                                                activity.requestedOrientation = next
-                                                message = when (next) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
-                                                    else -> "Orientation: Auto (Sensor)"
-                                                }
-                                                interaction++
-                                            }, modifier = Modifier.size(36.dp)) {
-                                                Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
-                                            }
-                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp)) {
-                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
-                                            }
-                                            if (activity.supportsPip()) {
-                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp)) {
-                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
-                                                }
-                                            }
-                                            CinemaIcon("Close player", dismissPlayerWithFluidity, modifier = Modifier.size(36.dp)) {
+                                            CinemaIcon("Close player", dismissPlayerWithFluidity, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
                                                 Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
                                             }
                                         }
@@ -1032,6 +1069,15 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         RightSideQuickMenu(
                             playback = playback,
                             section = section,
+                            theme = theme,
+                            isMinimalHud = isMinimalHud,
+                            onToggleMinimalHud = {
+                                val next = !isMinimalHud
+                                isMinimalHud = next
+                                playerPrefs.edit().putBoolean("player_hud_minimal", next).apply()
+                                message = if (next) "Minimalist HUD enabled" else "Expressive HUD enabled"
+                                interaction++
+                            },
                             onSelectSection = { quickMenuSection = it; interaction++ },
                             onAddExternalSubtitle = { subtitleFileLauncher.launch(arrayOf("*/*")) },
                             onOpenTools = { section ->
@@ -1241,6 +1287,9 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 @Composable private fun RightSideQuickMenu(
     playback: PlaybackController,
     section: String,
+    theme: String = "Dark",
+    isMinimalHud: Boolean = true,
+    onToggleMinimalHud: () -> Unit = {},
     onSelectSection: (String) -> Unit,
     onAddExternalSubtitle: () -> Unit,
     onSearchSubtitles: () -> Unit,
@@ -1253,6 +1302,9 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     val audioSummary = activeAudio?.let { "${it.label} (${it.codec} ${it.channels})" } ?: "Default"
     val activeSub = playback.subtitleTracks.firstOrNull { it.isSelected }
     val subSummary = activeSub?.let { "${it.label} (${it.format})" } ?: "Off"
+    val isLight = theme == "Light"
+    val menuBg = if (isLight) Color(0xF4FFFFFF) else Color(0xF00D1520)
+    val menuRim = if (isLight) Color(0x33000000) else Color.White.copy(alpha = 0.14f)
 
     BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)).clickable(onClick = onDismiss)) {
         val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
@@ -1271,8 +1323,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     .widthIn(min = 300.dp, max = 350.dp)
                     .clickable(enabled = false) {}
             },
-            color = QuickMenuBg,
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
+            color = menuBg,
+            border = BorderStroke(1.dp, menuRim),
             shape = if (isPhonePortrait) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(22.dp),
             shadowElevation = 24.dp
         ) {
@@ -1284,6 +1336,21 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             label = "Playback speed",
                             value = "${playback.speed}x",
                             onClick = { onSelectSection("speed") }
+                        )
+                        QuickMenuRow(
+                            icon = if (isMinimalHud) Icons.Rounded.ViewSidebar else Icons.Rounded.Splitscreen,
+                            label = "Minimalist HUD",
+                            value = if (isMinimalHud) "On" else "Off",
+                            onClick = onToggleMinimalHud
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.RecordVoiceOver,
+                            label = "Voice Clarity (Vocal Boost)",
+                            value = if (playback.voiceClarityEnabled) "Enhanced" else "Off",
+                            onClick = {
+                                playback.voiceClarityEnabled = !playback.voiceClarityEnabled
+                                onMessage(if (playback.voiceClarityEnabled) "Voice Clarity boosted" else "Voice Clarity neutral")
+                            }
                         )
                         QuickMenuRow(Icons.Rounded.Bookmark, "Scene bookmarks", "", { onOpenTools("bookmarks") })
                         QuickMenuRow(Icons.Rounded.Bedtime, "Sleep controls", if (playback.sleepPlan != null) "Active" else "Off", { onOpenTools("sleep") })
@@ -1853,7 +1920,8 @@ private fun AnimatedSeekCircleButton(
     modifier: Modifier = Modifier,
     size: Dp = 54.dp,
     bgColor: Color = FrostedCircleBg,
-    rimColor: Color = FrostedCircleRim
+    rimColor: Color = FrostedCircleRim,
+    contentColor: Color = Color.White
 ) {
     var bounceTrigger by remember { mutableIntStateOf(0) }
     val rotationAngle by animateFloatAsState(
@@ -1899,7 +1967,7 @@ private fun AnimatedSeekCircleButton(
                 Icon(
                     imageVector = if (isForward) Icons.Rounded.Forward10 else Icons.Rounded.Replay10,
                     contentDescription = if (isForward) "Forward 10 seconds" else "Rewind 10 seconds",
-                    tint = Color.White,
+                    tint = contentColor,
                     modifier = Modifier
                         .size(26.dp)
                         .graphicsLayer {
@@ -1940,11 +2008,12 @@ private fun AnimatedSeekCircleButton(
     action: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    contentColor: Color = Color.White.copy(alpha = 0.90f),
     icon: @Composable () -> Unit
 ) {
     val colors = IconButtonDefaults.iconButtonColors(
-        contentColor = Color.White.copy(alpha = 0.90f),
-        disabledContentColor = Color.White.copy(alpha = 0.30f)
+        contentColor = contentColor,
+        disabledContentColor = contentColor.copy(alpha = 0.35f)
     )
     IconButton(
         onClick = action,
@@ -2156,6 +2225,9 @@ private fun PlayerStatusPill(
     showBattery: Boolean,
     showRemainingTime: Boolean = false,
     remainingSec: Long? = null,
+    bgColor: Color = Color(0x990A0E17),
+    rimColor: Color = Color.White.copy(alpha = 0.22f),
+    contentColor: Color = Color.White,
     modifier: Modifier = Modifier
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -2186,8 +2258,8 @@ private fun PlayerStatusPill(
 
     Surface(
         shape = RoundedCornerShape(999.dp),
-        color = Color(0x990A0E17),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f)),
+        color = bgColor,
+        border = BorderStroke(1.dp, rimColor),
         shadowElevation = 8.dp,
         modifier = modifier
     ) {
@@ -2202,13 +2274,13 @@ private fun PlayerStatusPill(
             if (hasClock) {
                 Text(
                     text = timeText,
-                    color = Color.White,
+                    color = contentColor,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
             if (hasClock && (hasBattery || hasRemaining)) {
-                Text("·", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("·", color = contentColor.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             if (hasBattery) {
                 Row(
@@ -2218,19 +2290,19 @@ private fun PlayerStatusPill(
                     Icon(
                         if (isCharging) Icons.Rounded.BatteryChargingFull else Icons.Rounded.BatteryStd,
                         contentDescription = "Battery level",
-                        tint = if (isCharging) TimelineAccent else Color.White.copy(alpha = 0.9f),
+                        tint = if (isCharging) TimelineAccent else contentColor.copy(alpha = 0.9f),
                         modifier = Modifier.size(15.dp)
                     )
                     Text(
                         text = batteryText,
-                        color = Color.White,
+                        color = contentColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
             }
             if (hasBattery && hasRemaining) {
-                Text("·", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("·", color = contentColor.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             if (hasRemaining) {
                 Row(
@@ -2245,7 +2317,7 @@ private fun PlayerStatusPill(
                     )
                     Text(
                         text = remainingText,
-                        color = Color.White,
+                        color = contentColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
                     )

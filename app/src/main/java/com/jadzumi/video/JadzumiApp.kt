@@ -1565,18 +1565,20 @@ private val settingsCategories = listOf(
                             item {
                                 val context = LocalContext.current
                                 var subFont by remember { mutableStateOf(SubtitlePreferences.getFont(context)) }
+                                var subFontStyle by remember { mutableStateOf(SubtitlePreferences.getFontStyle(context)) }
                                 var subSize by remember { mutableFloatStateOf(SubtitlePreferences.getSize(context)) }
                                 var subColor by remember { mutableStateOf(SubtitlePreferences.getColor(context)) }
                                 var subBg by remember { mutableStateOf(SubtitlePreferences.getBackground(context)) }
                                 var subEdge by remember { mutableStateOf(SubtitlePreferences.getEdge(context)) }
+                                var subMargin by remember { mutableFloatStateOf(SubtitlePreferences.getBottomMargin(context)) }
 
                                 Panel {
                                     Text("Subtitle Appearance", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("Customization and live rendering for SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+                                    Text("Typography, 3D edges, colors, and live rendering for SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
 
                                     // Live Subtitle Preview Card
                                     Card(
-                                        modifier = Modifier.fillMaxWidth().height(140.dp),
+                                        modifier = Modifier.fillMaxWidth().height(145.dp),
                                         shape = RoundedCornerShape(16.dp),
                                         colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1017))
                                     ) {
@@ -1589,17 +1591,25 @@ private val settingsCategories = listOf(
                                             val previewTextColor = Color(SubtitlePreferences.getColorInt(subColor))
                                             val previewBgColor = Color(SubtitlePreferences.getBackgroundInt(subBg))
                                             val previewFontFamily = when (subFont) {
+                                                "Cinema Serif" -> androidx.compose.ui.text.font.FontFamily.Serif
+                                                "Heavy Sans" -> androidx.compose.ui.text.font.FontFamily.SansSerif
                                                 "Roboto Condensed" -> androidx.compose.ui.text.font.FontFamily.SansSerif
                                                 "Roboto Monospace" -> androidx.compose.ui.text.font.FontFamily.Monospace
                                                 "System Default" -> androidx.compose.ui.text.font.FontFamily.Default
                                                 else -> androidx.compose.ui.text.font.FontFamily.SansSerif
                                             }
+                                            val previewFontWeight = when {
+                                                subFont == "Heavy Sans" || subFontStyle.contains("Bold") -> FontWeight.ExtraBold
+                                                else -> FontWeight.SemiBold
+                                            }
+                                            val previewFontStyle = if (subFontStyle.contains("Italic")) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal
                                             val previewFontSize = (15.sp * subSize)
 
                                             Surface(
-                                                modifier = Modifier.padding(bottom = 18.dp, start = 16.dp, end = 16.dp),
+                                                modifier = Modifier.padding(bottom = (12.dp + (subMargin * 50).dp), start = 16.dp, end = 16.dp),
                                                 color = previewBgColor,
-                                                shape = RoundedCornerShape(4.dp)
+                                                shape = RoundedCornerShape(if (subBg == "Rounded Pill Box") 8.dp else 4.dp),
+                                                border = if (subEdge == "Soft Glow") BorderStroke(1.dp, Color(0xFF8B9DFF).copy(alpha = 0.5f)) else null
                                             ) {
                                                 Text(
                                                     "We must reach beyond our own horizon.",
@@ -1607,7 +1617,8 @@ private val settingsCategories = listOf(
                                                     color = previewTextColor,
                                                     fontSize = previewFontSize,
                                                     fontFamily = previewFontFamily,
-                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontWeight = previewFontWeight,
+                                                    fontStyle = previewFontStyle,
                                                     textAlign = TextAlign.Center
                                                 )
                                             }
@@ -1627,6 +1638,23 @@ private val settingsCategories = listOf(
                                                     SubtitlePreferences.setFont(context, font)
                                                 },
                                                 label = { Text(font, maxLines = 1, softWrap = false) }
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(12.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Text("Font Style & Weight", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        SubtitlePreferences.fontStyleOptions.forEach { style ->
+                                            FilterChip(
+                                                selected = subFontStyle == style,
+                                                onClick = {
+                                                    subFontStyle = style
+                                                    SubtitlePreferences.setFontStyle(context, style)
+                                                },
+                                                label = { Text(style, maxLines = 1, softWrap = false) }
                                             )
                                         }
                                     }
@@ -1672,7 +1700,24 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Background Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Edge, 3D & Glow Effect", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        SubtitlePreferences.edgeOptions.forEach { edgeName ->
+                                            FilterChip(
+                                                selected = subEdge == edgeName,
+                                                onClick = {
+                                                    subEdge = edgeName
+                                                    SubtitlePreferences.setEdge(context, edgeName)
+                                                },
+                                                label = { Text(edgeName, maxLines = 1, softWrap = false) }
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(12.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                    Text("Background Box Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         SubtitlePreferences.backgroundOptions.forEach { bgName ->
                                             FilterChip(
@@ -1689,16 +1734,16 @@ private val settingsCategories = listOf(
                                     Spacer(Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Text("Edge & Shadow Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                                    Text("Vertical Margin & Position", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
                                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        SubtitlePreferences.edgeOptions.forEach { edgeName ->
+                                        SubtitlePreferences.bottomMarginOptions.forEach { (margin, label) ->
                                             FilterChip(
-                                                selected = subEdge == edgeName,
+                                                selected = (subMargin - margin) in -0.01f..0.01f,
                                                 onClick = {
-                                                    subEdge = edgeName
-                                                    SubtitlePreferences.setEdge(context, edgeName)
+                                                    subMargin = margin
+                                                    SubtitlePreferences.setBottomMargin(context, margin)
                                                 },
-                                                label = { Text(edgeName, maxLines = 1, softWrap = false) }
+                                                label = { Text(label, maxLines = 1, softWrap = false) }
                                             )
                                         }
                                     }
