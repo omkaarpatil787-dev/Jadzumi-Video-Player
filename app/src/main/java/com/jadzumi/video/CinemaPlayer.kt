@@ -1433,7 +1433,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 selected = playback.aspectMode == mode,
                                 onClick = {
                                     playback.setAspectRatioMode(mode)
-                                    activity.updatePip()
                                     onMessage("Aspect: ${mode.displayName.substringBefore(" (")}")
                                     onSelectSection("main")
                                 }
@@ -1778,7 +1777,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 val nextIndex = (playback.aspectMode.ordinal + 1) % modes.size
                                 val nextMode = modes[nextIndex]
                                 playback.setAspectRatioMode(nextMode)
-                                activity.updatePip()
                                 onMessage("Aspect: ${nextMode.displayName.substringBefore(" (")}")
                             }
                         )

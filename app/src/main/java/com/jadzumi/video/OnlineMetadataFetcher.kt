@@ -787,8 +787,8 @@ object OnlineMetadataFetcher {
             if (bestPageTitle.isNullOrBlank() || bestScore < 0.35f) {
                 return@withContext null
             }
-                pageTitle = cleanTitle
-            }
+
+            val pageTitle = bestPageTitle
 
             val summaryUrl = "https://en.wikipedia.org/api/rest_v1/page/summary/" +
                     URLEncoder.encode(pageTitle.replace(' ', '_'), "UTF-8")
