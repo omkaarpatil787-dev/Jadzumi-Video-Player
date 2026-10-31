@@ -1,3 +1,22 @@
+# Jadzumi v1.7.6 — Direct Cinemeta (IMDb & Streaming Catalog) Integration for 100% Accurate Artwork 🎬🔥🖼️
+
+A major artwork and metadata accuracy release integrating direct access to the **Cinemeta entertainment catalog** (powered by IMDb and Metahub streaming indexes), delivering 100% accurate, high-definition official posters and backdrops for OTT releases, international movies, and regional cinema without API key limits.
+
+### 🌐 Direct OTT & Entertainment Catalog Integration (Cinemeta)
+- **Comprehensive Streaming & Theatrical Index**: Directly connects to the comprehensive IMDb/Metahub catalog indexing releases across Amazon Prime Video, Netflix, Apple TV+, Disney+ Hotstar, HBO, Zee5, and global cinema.
+- **Accurate Resolution for Previously Troubled Titles**:
+  - *Apocalypse Z: New World* (2026): Exact Amazon Prime movie poster, background, and horror overview.
+  - *Sapiosexual* (2023): Official thriller/drama movie poster, IMDb rating (2.8), and synopsis (eliminates encyclopedia concept mismatches).
+  - *Kitab Sijjin and Illiyyin* (2024): Exact Indonesian horror film poster and background ("The Book of Sijjin & Illiyyin") rather than falling back to offline.
+  - *Blue*: Exact theatrical movie artwork and backdrop rather than encyclopedia colour articles.
+- **Multi-Tier Robust Architecture**:
+  - **Tier 1 (Cinemeta)**: Exact title and prefix matching against global streaming & theatrical database.
+  - **Tier 2 (Wikipedia with Film Validation)**: Fallback to Wikipedia with strict non-film topic filtering (`isFilmOrTvWork`).
+  - **Tier 3 (TVMaze)**: TV series single-search and multi-search fallback.
+- **Permanent Poison-Cache Immune**: Always queries from original file specs and purges corrupt legacy entries automatically.
+
+---
+
 # Jadzumi v1.7.5 — Film Concept Validation, Permanent Cache Sanitization & YouTube-Grade Seamless PiP 🎬✨🧈
 
 A targeted stability and smoothness update delivering concept-filtered movie artwork matching, permanent break from poisoned metadata cache loops, responsive Aspect Ratio re-layout triggers, and YouTube-grade smooth Picture-in-Picture transitions without UI overlay freeze.

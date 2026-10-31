@@ -398,6 +398,129 @@ object OnlineMetadataFetcher {
     }
 
     /**
+     * Fetches metadata & official high-resolution artwork directly from Cinemeta (IMDb & OTT catalog).
+     * Covers global cinema, Hollywood, Bollywood, and all major streaming platforms (Prime, Netflix, Hotstar).
+     */
+    suspend fun fetchCinemetaMetadata(
+        context: Context,
+        cleanTitle: String,
+        effectiveYear: String?,
+        isSeries: Boolean = false
+    ): OnlineMediaMetadata? = withContext(Dispatchers.IO) {
+        if (!isOnlineMetadataEnabled(context) || !isNetworkConnected(context)) return@withContext null
+        try {
+            val type = if (isSeries) "series" else "movie"
+            val searchQueries = mutableListOf(cleanTitle.trim())
+            if (cleanTitle.contains(' ')) {
+                val words = cleanTitle.split(' ').filter { it.isNotBlank() }
+                if (words.size > 2) {
+                    searchQueries.add(words.take(2).joinToString(" "))
+                }
+            }
+
+            for (q in searchQueries) {
+                val searchUrl = "https://v3-cinemeta.strem.io/catalog/$type/top/search=" +
+                        URLEncoder.encode(q, "UTF-8") + ".json"
+                val conn = openOnlineConnection(context, searchUrl) ?: continue
+                conn.connectTimeout = 5000
+                conn.readTimeout = 7000
+                if (conn.responseCode != 200) continue
+
+                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                val root = JSONObject(body)
+                val metas = root.optJSONArray("metas") ?: continue
+                if (metas.length() == 0) continue
+
+                var bestId: String? = null
+                var bestScore = 0f
+                var bestName: String? = null
+                var bestYear: String? = null
+                var bestPoster: String? = null
+
+                for (i in 0 until metas.length().coerceAtMost(6)) {
+                    val item = metas.getJSONObject(i)
+                    val id = item.optString("id")
+                    val name = item.optString("name")
+                    val yearStr = item.optString("year").takeIf { it.isNotBlank() }
+                    val score = scoreCandidate(q, name, null, effectiveYear ?: yearStr)
+                    if (score > bestScore && score >= 0.25f) {
+                        bestScore = score
+                        bestId = id
+                        bestName = name
+                        bestYear = yearStr
+                        bestPoster = item.optString("poster").takeIf { it.isNotBlank() }
+                    }
+                }
+
+                if (bestId != null) {
+                    // Query full details from Cinemeta meta endpoint
+                    val detailUrl = "https://v3-cinemeta.strem.io/meta/$type/$bestId.json"
+                    val detConn = openOnlineConnection(context, detailUrl)
+                    if (detConn != null) {
+                        detConn.connectTimeout = 5000
+                        detConn.readTimeout = 7000
+                        if (detConn.responseCode == 200) {
+                            val detBody = detConn.inputStream.bufferedReader().use { it.readText() }
+                            val detMeta = JSONObject(detBody).optJSONObject("meta")
+                            if (detMeta != null) {
+                                val officialTitle = detMeta.optString("name", bestName ?: cleanTitle)
+                                val year = detMeta.optString("year").takeIf { it.isNotBlank() } ?: bestYear ?: effectiveYear
+                                val posterUrl = detMeta.optString("poster").takeIf { it.isNotBlank() } ?: bestPoster
+                                val backdropUrl = detMeta.optString("background").takeIf { it.isNotBlank() }
+                                val synopsis = detMeta.optString("description").takeIf { it.isNotBlank() }
+                                val ratingStr = detMeta.optString("imdbRating").takeIf { it.isNotBlank() }
+                                val ratingVal = ratingStr?.toDoubleOrNull()?.let { displayRating(it) }
+
+                                val genresList = mutableListOf<String>()
+                                val genresArr = detMeta.optJSONArray("genres")
+                                if (genresArr != null) {
+                                    for (j in 0 until genresArr.length()) {
+                                        genresList.add(genresArr.getString(j))
+                                    }
+                                }
+
+                                val cacheKey = (if (isSeries) "tv_" else "mov_") + sanitizeKey(cleanTitle + (effectiveYear?.let { "_$it" } ?: ""))
+                                val localPoster = if (!posterUrl.isNullOrBlank()) {
+                                    downloadAndCachePoster(context, posterUrl, cacheKey)
+                                } else null
+
+                                return@withContext OnlineMediaMetadata(
+                                    title = officialTitle,
+                                    year = year,
+                                    rating = ratingVal,
+                                    genres = genresList.take(3),
+                                    synopsis = synopsis,
+                                    posterUrl = posterUrl,
+                                    backdropUrl = backdropUrl,
+                                    localPosterPath = localPoster
+                                )
+                            }
+                        }
+                    }
+
+                    if (!bestPoster.isNullOrBlank()) {
+                        val cacheKey = (if (isSeries) "tv_" else "mov_") + sanitizeKey(cleanTitle + (effectiveYear?.let { "_$it" } ?: ""))
+                        val localPoster = downloadAndCachePoster(context, bestPoster, cacheKey)
+                        return@withContext OnlineMediaMetadata(
+                            title = bestName ?: cleanTitle,
+                            year = bestYear ?: effectiveYear,
+                            rating = null,
+                            genres = listOf("Cinema", "Drama"),
+                            synopsis = null,
+                            posterUrl = bestPoster,
+                            backdropUrl = null,
+                            localPosterPath = localPoster
+                        )
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Cinemeta lookup failed for $cleanTitle: ${e.message}")
+        }
+        null
+    }
+
+    /**
      * Fetches movie metadata and official high-resolution poster online with offline disk caching.
      */
     suspend fun fetchMovieMetadata(
@@ -452,7 +575,7 @@ object OnlineMetadataFetcher {
                     val metadata = OnlineMediaMetadata(
                         title = cachedTitle,
                         year = json.optString("year").takeIf { it.isNotBlank() },
-                        rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
+                        rating = if (json.optString("ratingSource") == "tvmaze" || json.optString("ratingSource") == "imdb") displayRating(json.optString("rating").toDoubleOrNull()) else null,
                         genres = genresList,
                         synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
                         posterUrl = posterUrl,
@@ -467,6 +590,31 @@ object OnlineMetadataFetcher {
 
         // 3. Network Fetch
         if (!isOnlineMetadataEnabled(context) || !isNetworkConnected(context)) return@withContext null
+
+        // Tier 1: Query Cinemeta (IMDb & OTT Platform Catalog with official artwork)
+        val cinemeta = fetchCinemetaMetadata(context, cleanTitle, effectiveYear, isSeries = false)
+        if (cinemeta != null) {
+            try {
+                val cacheJson = JSONObject().apply {
+                    put("title", cinemeta.title)
+                    put("year", cinemeta.year)
+                    put("rating", cinemeta.rating)
+                    put("ratingSource", "imdb")
+                    put("synopsis", cinemeta.synopsis)
+                    put("posterUrl", cinemeta.posterUrl)
+                    put("backdropUrl", cinemeta.backdropUrl)
+                    put("localPoster", cinemeta.localPosterPath)
+                    val arr = JSONArray()
+                    cinemeta.genres.forEach { arr.put(it) }
+                    put("genres", arr)
+                }
+                cacheFile.writeText(cacheJson.toString())
+            } catch (_: Exception) { }
+            memoryCache[cacheKey] = cinemeta
+            return@withContext cinemeta
+        }
+
+        // Tier 2: Wikipedia Fallback with Strict Film Validation
 
         try {
             val candidateTitles = LinkedHashSet<String>()
@@ -709,6 +857,29 @@ object OnlineMetadataFetcher {
         }
 
         if (!isOnlineMetadataEnabled(context) || !isNetworkConnected(context)) return@withContext null
+
+        // Tier 1: Query Cinemeta (IMDb & OTT Series Catalog with official artwork)
+        val cinemetaTv = fetchCinemetaMetadata(context, cleanTitle, null, isSeries = true)
+        if (cinemetaTv != null) {
+            try {
+                val cacheJson = JSONObject().apply {
+                    put("title", cinemetaTv.title)
+                    put("year", cinemetaTv.year)
+                    put("rating", cinemetaTv.rating)
+                    put("ratingSource", "imdb")
+                    put("synopsis", cinemetaTv.synopsis)
+                    put("posterUrl", cinemetaTv.posterUrl)
+                    put("backdropUrl", cinemetaTv.backdropUrl)
+                    put("localPoster", cinemetaTv.localPosterPath)
+                    val arr = JSONArray()
+                    cinemetaTv.genres.forEach { arr.put(it) }
+                    put("genres", arr)
+                }
+                cacheFile.writeText(cacheJson.toString())
+            } catch (_: Exception) { }
+            memoryCache[cacheKey] = cinemetaTv
+            return@withContext cinemetaTv
+        }
 
         val queryName = cleanTitle.replace(Regex("\\b(19\\d{2}|20\\d{2})\\b"), "").trim().ifEmpty { cleanTitle }
 
