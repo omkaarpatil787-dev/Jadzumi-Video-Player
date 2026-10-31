@@ -49,6 +49,7 @@ data class ChapterMarker(
     val fraction: Float
 )
 
+@androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 enum class AspectRatioMode(val id: String, val displayName: String, val resizeMode: Int, val forcedRatio: Float? = null) {
     FIT("fit", "Fit to screen (Letterbox)", AspectRatioFrameLayout.RESIZE_MODE_FIT, null),
     ZOOM("zoom", "Crop to fill (Zoom)", AspectRatioFrameLayout.RESIZE_MODE_ZOOM, null),
