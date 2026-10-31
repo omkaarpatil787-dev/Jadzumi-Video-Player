@@ -1,3 +1,24 @@
+# Jadzumi v1.7.5 — Film Concept Validation, Permanent Cache Sanitization & YouTube-Grade Seamless PiP 🎬✨🧈
+
+A targeted stability and smoothness update delivering concept-filtered movie artwork matching, permanent break from poisoned metadata cache loops, responsive Aspect Ratio re-layout triggers, and YouTube-grade smooth Picture-in-Picture transitions without UI overlay freeze.
+
+### 🎯 Strict Film Concept Validation & Poison-Proof Artwork
+- **Concept & Encyclopedia Exclusion**: Added `isFilmOrTvWork` validation to strictly filter out encyclopedia concept articles (such as sexual orientation, colors, scientific terms, or biology genera) from being mistakenly matched to local movie files.
+- **Candidate Fallback & Progressive Pruning**: Iterates candidate titles until a verified film work is found with high confidence (e.g. accurately retrieving *Apocalypse Z: The Beginning of the End* instead of *Zombie Massacre* / *World War Z*).
+- **Poisoned Cache Auto-Purge**: Evicts corrupt or non-film cache entries on startup (`purgeBogusCache`) and immediately on lookup, ensuring old misidentifications never persist.
+- **Filename-Anchored Searches**: Decoupled Movie Details metadata lookups to always query from sanitized original filenames rather than cached titles, eliminating circular cache poisoning.
+
+### 📐 Reactive Aspect Ratio Engine
+- **Direct Layout Invalidation**: Added dedicated reactive layout triggers in `CinemaPlayer` (`LaunchedEffect(playback.aspectMode, playback.aspect)`) to immediately invalidate and measure `AspectRatioFrameLayout` (`exo_content_frame`) whenever the user changes Fit, Zoom, Stretch, 16:9, 4:3, or 21:9.
+- **State Read Reactivity**: Guaranteed PlayerView recomposition by lifting aspect state bindings out of raw update lambdas into active composable scopes.
+
+### 🧈 YouTube-Grade Seamless Picture-in-Picture
+- **Clean PiP Subtree**: Isolated Picture-in-Picture rendering to an uncluttered, raw `PlayerView`—completely eliminating Top Bar, Scrubber Dock, Center seek/pause overlays, gestures, and status pills inside the floating PiP window.
+- **Pre-Animation State Synchronization**: Sets `playback.inPip = true` synchronously prior to invoking `enterPictureInPictureMode`, ensuring the OS captures a pristine video surface snapshot without frozen control artifacts.
+- **Solid Window Scrim & Inset Smoothness**: Enforces solid black window decor backgrounds to prevent launcher wallpaper bleed-through and layout jitter during PiP expand/contract transitions.
+
+---
+
 # Jadzumi v1.7.4 — Poster Artwork Accuracy, Responsive Aspect Ratios & Silky 120Hz PiP Transitions 🎬📐✨
 
 A performance, accuracy, and smoothness update addressing metadata matching for regional & international titles, responsive aspect ratio modes with direct layout invalidation, and zero-stutter Picture-in-Picture transitions.

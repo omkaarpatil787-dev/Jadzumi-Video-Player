@@ -46,9 +46,15 @@ fun MovieDetailsPage(
         extractMovieMetadata(video, state.sidecars, context)
     }
 
+    val (cleanFileTitle, cleanFileYear) = remember(video.name) {
+        OnlineMetadataFetcher.extractCleanTitleAndYear(video.name)
+    }
+    val searchTitle = cleanFileTitle.ifBlank { video.title }
+    val searchYear = cleanFileYear ?: metadata.year
+
     var onlineMeta by remember(video.identity) { mutableStateOf<OnlineMediaMetadata?>(null) }
-    LaunchedEffect(video.identity, metadata.title, metadata.year) {
-        val fetched = OnlineMetadataFetcher.fetchMovieMetadata(context, metadata.title, metadata.year)
+    LaunchedEffect(video.identity, searchTitle, searchYear) {
+        val fetched = OnlineMetadataFetcher.fetchMovieMetadata(context, searchTitle, searchYear)
         if (fetched != null) {
             onlineMeta = fetched
         }

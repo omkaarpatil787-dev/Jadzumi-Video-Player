@@ -51,6 +51,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.decorView.setBackgroundColor(android.graphics.Color.BLACK)
+        OnlineMetadataFetcher.purgeBogusCache(this)
         playback = ViewModelProvider(this)[PlaybackController::class.java]
         enableEdgeToEdge()
         ContextCompat.registerReceiver(this, receiver, IntentFilter(pipAction), ContextCompat.RECEIVER_NOT_EXPORTED)
@@ -146,12 +148,17 @@ class MainActivity : ComponentActivity() {
         if (!supportsPip() || playback.video == null) return false
         playback.fullscreen = true
         playback.locked = false
-        return runCatching { enterPictureInPictureMode(pipParams()) }.getOrDefault(false)
+        playback.inPip = true
+        val entered = runCatching { enterPictureInPictureMode(pipParams()) }.getOrDefault(false)
+        if (!entered) {
+            playback.inPip = false
+        }
+        return entered
     }
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (Build.VERSION.SDK_INT < 31 && playback.fullscreen && playback.playing) enterCinemaPip()
+        if (playback.video != null && playback.fullscreen && playback.playing) enterCinemaPip()
     }
 
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {

@@ -289,6 +289,30 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         }
     }
 
+    if (playback.inPip) {
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    useController = false
+                    setKeepContentOnPlayerReset(true)
+                }
+            },
+            modifier = Modifier.fillMaxSize(),
+            update = { view ->
+                if (view.player !== playback.player) view.player = playback.player
+                val contentFrame = view.findViewById<AspectRatioFrameLayout>(androidx.media3.ui.R.id.exo_content_frame)
+                val targetRatio = playback.aspectMode.forcedRatio ?: playback.aspect
+                if (contentFrame != null) {
+                    if (targetRatio > 0f) contentFrame.setAspectRatio(targetRatio)
+                    contentFrame.setResizeMode(playback.aspectMode.resizeMode)
+                }
+                view.resizeMode = playback.aspectMode.resizeMode
+                view.keepScreenOn = playback.playRequested
+            }
+        )
+        return
+    }
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -331,12 +355,27 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             }
         }
 
+        var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
+
+        LaunchedEffect(playback.aspectMode, playback.aspect, playerViewRef) {
+            val pv = playerViewRef ?: return@LaunchedEffect
+            val targetRatio = playback.aspectMode.forcedRatio ?: playback.aspect
+            val contentFrame = pv.findViewById<AspectRatioFrameLayout>(androidx.media3.ui.R.id.exo_content_frame)
+            if (contentFrame != null) {
+                if (targetRatio > 0f) contentFrame.setAspectRatio(targetRatio)
+                contentFrame.setResizeMode(playback.aspectMode.resizeMode)
+                contentFrame.requestLayout()
+            }
+            pv.resizeMode = playback.aspectMode.resizeMode
+            pv.requestLayout()
+        }
+
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     useController = false
                     setKeepContentOnPlayerReset(true)
-                }
+                }.also { playerViewRef = it }
             },
             modifier = Modifier.fillMaxSize().onGloballyPositioned {
                 if (!playback.inPip) {
@@ -363,7 +402,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 SubtitlePreferences.applyToPlayerView(view.context, view)
             },
             onReset = null,
-            onRelease = { it.player = null }
+            onRelease = {
+                it.player = null
+                playerViewRef = null
+            }
         )
 
             if (!playback.inPip) {
@@ -594,7 +636,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(tween(260))
 
                 AnimatedVisibility(
-                    visible = controls && !playback.locked,
+                    visible = controls && !playback.locked && !playback.inPip,
                     enter = enterAnim,
                     exit = exitAnim
                 ) {
@@ -1082,7 +1124,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                 // PANEL 5: RIGHT-SIDE QUICK MENU (Fluid Spring Morphing)
                 AnimatedVisibility(
-                    visible = quickMenuSection != null,
+                    visible = quickMenuSection != null && !playback.inPip,
                     enter = fadeIn(tween(if (reducedMotion) 0 else 220)) +
                             slideInHorizontally(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow)) { it / 2 } +
                             scaleIn(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow), initialScale = 0.90f),
