@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.7.3-2563eb?style=flat-square" alt="Version 1.7.3"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.7.4-2563eb?style=flat-square" alt="Version 1.7.4"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -74,14 +74,13 @@ See [release notes](RELEASE_NOTES.md) for full details.
 | External subtitles and timing adjustments | Scene bookmarks, notes, and search | Theme-reactive playback controls |
 | Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v1.7.3
+## 📦 Latest release · v1.7.4
 
-- 🔤 **Subtitle Typography Suite**: 4 new cinema fonts, full weights/styles, 3D raised/depressed edges, soft glows, and live preview.
-- 🌓 **Theme-Reactive Playback HUD**: Light frosted milk-glass, Dark slate-navy, and AMOLED ink-black overlay HUDs.
-- 🎬 **Decluttered Minimalist HUD**: Single-row bottom timeline dock with quick menu drawer integration.
-- 🪟 **Pure Flat Modern Cards**: Zero elevation shadow lips and zero corner emboss across all cards.
+- 🎯 **Poster Artwork & Metadata Accuracy**: Intelligent query sanitization, Indian/Asian audio and rip tag filtering, anchor-word preservation, OpenSearch direct title matching, and poisoned cache eviction.
+- 📐 **Responsive Aspect Ratio Modes**: Fixed scaling reactivity with direct `exo_content_frame` layout triggers supporting Letterbox, Zoom, Stretch, 16:9, 4:3, and 21:9 UltraWide.
+- 🧈 **Silky 120Hz PiP Transitions**: Decoupled insets lifecycle from PiP state and throttled Binder IPC calls, eliminating stutter and orientation thrashing.
 
-[Download v1.7.3](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.7.3) · [Release notes](RELEASE_NOTES.md)
+[Download v1.7.4](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.7.4) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.

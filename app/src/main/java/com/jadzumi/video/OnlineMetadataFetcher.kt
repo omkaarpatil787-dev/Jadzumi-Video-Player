@@ -69,14 +69,132 @@ object OnlineMetadataFetcher {
         return dir
     }
 
-    fun cleanMediaTitle(raw: String): String {
-        return raw.substringBeforeLast('.')
+    private val YEAR_EXTRACTION_REGEX = Regex("\\b((?:19[2-9]\\d|20[0-3]\\d))\\b")
+
+    private val RELEASE_AND_AUDIO_TAGS = Regex(
+        "(?i)\\b(" +
+        // Indian / Asian / Foreign languages & dubs
+        "hindi|tamil|telugu|malayalam|kannada|bengali|marathi|punjabi|gujarati|urdu|" +
+        "english|eng|japanese|jap|korean|kor|chinese|french|german|spanish|italian|" +
+        "dual[ ._-]?audio|multi[ ._-]?audio|clean[ ._-]?audio|org[ ._-]?audio|original[ ._-]?audio|" +
+        "dubbed|dub|subbed|subs?|esubs?|msubs?|softsubs?|hardsubs?|" +
+        // Source rips, qualities, cams
+        "predvd|dvdscr|dvdrip|cam|camrip|hdcam|hdtc|tc|ts|telesync|hdts|" +
+        "bluray|bdrip|brrip|remux|web-?dl|webrip|web|hdtv|pdtv|dsr|tvrip|" +
+        "2160p|1080p|720p|480p|360p|4k|uhd|fhd|hd|sd|" +
+        // Video codecs & color standards
+        "hevc|x264|x265|h\\.?264|h\\.?265|avc|av1|xvid|divx|" +
+        "hdr10\\+?|hdr|dovi|dv|dolby[ ._-]?vision|sdr|10bit|8bit|" +
+        // Audio codecs
+        "aac|ac3|eac3|ddp?5\\.1|ddp?|dd5\\.1|dts-?hd|dts|truehd|atmos|flac|mp3|opus|" +
+        // Editions & packaging
+        "extended|director'?s[ ._-]?cut|directors[ ._-]?cut|unrated|imax|" +
+        "remastered|restored|criterion|edition|proper|repack|complete|" +
+        "amzn|nf|dsnp|hmax|atvp|zee5|hotstar|sonyliv" +
+        ")\\b",
+        RegexOption.IGNORE_CASE
+    )
+
+    fun extractCleanTitleAndYear(raw: String): Pair<String, String?> {
+        val base = raw.substringBeforeLast('.')
+        val yearMatches = YEAR_EXTRACTION_REGEX.findAll(base).toList()
+        var extractedYear: String? = null
+        var titlePart = base
+
+        if (yearMatches.isNotEmpty()) {
+            val bestYearMatch = yearMatches.lastOrNull { it.range.first > 0 } ?: yearMatches.last()
+            extractedYear = bestYearMatch.value
+            if (bestYearMatch.range.first > 0) {
+                titlePart = base.substring(0, bestYearMatch.range.first)
+            }
+        }
+
+        val cleaned = titlePart
+            .replace(RELEASE_AND_AUDIO_TAGS, " ")
             .replace(EpisodePatterns.RELEASE_TAGS, " ")
-            .replace(Regex("(?i)\\b(2160p|1080p|720p|480p|4k|uhd|hdr10\\+?|hdr|dovi|dv|remux|bluray|bdrip|web-?dl|webrip|x264|x265|hevc|avc|aac|dts|ddp?|atmos)\\b"), " ")
             .replace(Regex("[\\[\\](){}]"), " ")
             .replace(Regex("[-._+]+"), " ")
             .replace(Regex("\\s+"), " ")
             .trim()
+
+        return Pair(cleaned.ifEmpty { base.trim() }, extractedYear)
+    }
+
+    fun cleanMediaTitle(raw: String): String {
+        return extractCleanTitleAndYear(raw).first
+    }
+
+    /**
+     * Scores a candidate page title against the search query to strictly prevent mismatches
+     * (e.g. matching 'World War Z' for 'Apocalypse Z', or 'List of American films' for 'Jawan').
+     * Returns a score from 0.0 to 1.5, or negative value if candidate must be discarded.
+     */
+    fun scoreCandidate(
+        query: String,
+        candTitle: String,
+        candDesc: String? = null,
+        hintYear: String? = null
+    ): Float {
+        if (candTitle.contains(Regex("(?i)^(List of|Category:|Index of|Timeline of|Draft:)|(\\(soundtrack\\)|\\(album\\)|\\(disambiguation\\)|\\(character\\))"))) {
+            return -1f
+        }
+
+        val stopWords = setOf("the", "a", "an", "of", "and", "in", "on", "for", "film", "movie", "to", "at")
+        val normQuery = query.replace(Regex("(?i)\\b(film|movie)\\b"), "")
+            .replace(Regex("[^a-zA-Z0-9 ]"), " ")
+            .lowercase(Locale.US)
+            .trim()
+        val normCand = candTitle.replace(Regex("(?i)\\b(film|movie|\\d{4} film|\\d{4} indian film)\\b"), "")
+            .replace(Regex("[^a-zA-Z0-9 ]"), " ")
+            .lowercase(Locale.US)
+            .trim()
+
+        val qTokensList = normQuery.split(Regex("\\s+")).filter { it.isNotEmpty() && it !in stopWords }
+        val cTokensList = normCand.split(Regex("\\s+")).filter { it.isNotEmpty() && it !in stopWords }
+
+        if (qTokensList.isEmpty() || cTokensList.isEmpty()) return 0f
+
+        // Anchor word check: The first significant word of the query (e.g. "Apocalypse", "Stree", "Jawan")
+        // MUST have a matching root/stem in candidate title. This completely prevents "World War Z" from matching "Apocalypse Z".
+        val anchor = qTokensList[0]
+        if (anchor.length >= 3) {
+            val prefixLen = minOf(4, anchor.length)
+            val anchorPrefix = anchor.take(prefixLen)
+            val hasAnchor = cTokensList.any { it == anchor || it.startsWith(anchorPrefix) || anchor.startsWith(it.take(prefixLen)) }
+            if (!hasAnchor) {
+                return 0f
+            }
+        }
+
+        val qTokens = qTokensList.toSet()
+        val cTokens = cTokensList.toSet()
+
+        var intersect = 0
+        for (qt in qTokens) {
+            for (ct in cTokens) {
+                if (qt == ct || ct.startsWith(qt) || qt.startsWith(ct)) {
+                    intersect++
+                    break
+                }
+            }
+        }
+
+        val dice = (2.0f * intersect) / (qTokens.size + cTokens.size)
+        var score = dice
+
+        if (candTitle.contains(Regex("(?i)\\((?:\\d{4} )?(?:indian )?film\\)"))) {
+            score += 0.20f
+        }
+        if (candDesc != null && candDesc.contains(Regex("(?i)\\b(film|movie|directed by|starring|cinema)\\b"))) {
+            score += 0.15f
+        }
+        if (!hintYear.isNullOrBlank()) {
+            if (candTitle.contains(hintYear) || (candDesc != null && candDesc.contains(hintYear))) {
+                score += 0.20f
+            }
+        }
+
+        return score
     }
 
     private fun sanitizeKey(key: String): String {
@@ -84,15 +202,24 @@ object OnlineMetadataFetcher {
     }
 
     fun getCachedMovie(context: Context, rawTitle: String, hintYear: String? = null): OnlineMediaMetadata? {
-        val cleanTitle = cleanMediaTitle(rawTitle)
+        val (cleanTitle, extractedYear) = extractCleanTitleAndYear(rawTitle)
+        val effectiveYear = hintYear ?: extractedYear
         if (cleanTitle.length < 2) return null
-        val cacheKey = "mov_" + sanitizeKey(cleanTitle + (hintYear?.let { "_$it" } ?: ""))
+        val cacheKey = "mov_" + sanitizeKey(cleanTitle + (effectiveYear?.let { "_$it" } ?: ""))
         memoryCache[cacheKey]?.let { return it }
 
         val cacheFile = File(getMetadataCacheDir(context), "$cacheKey.json")
         if (cacheFile.exists()) {
             return try {
                 val json = JSONObject(cacheFile.readText())
+                val cachedTitle = json.optString("title", cleanTitle)
+
+                // Validation: if previously cached title fails anchor similarity, evict poisoned entry
+                if (scoreCandidate(cleanTitle, cachedTitle, null, effectiveYear) <= 0f) {
+                    cacheFile.delete()
+                    return null
+                }
+
                 val posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() }
                 val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() }
                     ?: File(getPosterCacheDir(context), "${cacheKey}.jpg").takeIf { it.exists() && it.length() > 500 }?.absolutePath
@@ -105,7 +232,7 @@ object OnlineMetadataFetcher {
                     }
                 }
                 val meta = OnlineMediaMetadata(
-                    title = json.optString("title", cleanTitle),
+                    title = cachedTitle,
                     year = json.optString("year").takeIf { it.isNotBlank() },
                     rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
                     genres = genresList,
@@ -130,6 +257,14 @@ object OnlineMetadataFetcher {
         if (cacheFile.exists()) {
             return try {
                 val json = JSONObject(cacheFile.readText())
+                val cachedTitle = json.optString("title", cleanTitle)
+
+                // Validation: if previously cached title fails anchor similarity, evict poisoned entry
+                if (scoreCandidate(cleanTitle, cachedTitle, null, null) <= 0f) {
+                    cacheFile.delete()
+                    return null
+                }
+
                 val posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() }
                 val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() }
                     ?: File(getPosterCacheDir(context), "${cacheKey}.jpg").takeIf { it.exists() && it.length() > 500 }?.absolutePath
@@ -142,7 +277,7 @@ object OnlineMetadataFetcher {
                     }
                 }
                 val meta = OnlineMediaMetadata(
-                    title = json.optString("title", cleanTitle),
+                    title = cachedTitle,
                     year = json.optString("year").takeIf { it.isNotBlank() },
                     rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
                     genres = genresList,
@@ -197,9 +332,10 @@ object OnlineMetadataFetcher {
         rawTitle: String,
         hintYear: String? = null
     ): OnlineMediaMetadata? = withContext(Dispatchers.IO) {
-        val cleanTitle = cleanMediaTitle(rawTitle)
+        val (cleanTitle, extractedYear) = extractCleanTitleAndYear(rawTitle)
+        val effectiveYear = hintYear ?: extractedYear
         if (cleanTitle.length < 2) return@withContext null
-        val cacheKey = "mov_" + sanitizeKey(cleanTitle + (hintYear?.let { "_$it" } ?: ""))
+        val cacheKey = "mov_" + sanitizeKey(cleanTitle + (effectiveYear?.let { "_$it" } ?: ""))
 
         // 1. Memory Cache
         memoryCache[cacheKey]?.let { return@withContext it }
@@ -210,30 +346,37 @@ object OnlineMetadataFetcher {
             try {
                 val jsonStr = cacheFile.readText()
                 val json = JSONObject(jsonStr)
-                val posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() }
-                val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() }
-                    ?: posterUrl?.let { downloadAndCachePoster(context, it, cacheKey) }
+                val cachedTitle = json.optString("title", cleanTitle)
 
-                val genresList = mutableListOf<String>()
-                val genresArr = json.optJSONArray("genres")
-                if (genresArr != null) {
-                    for (i in 0 until genresArr.length()) {
-                        genresList.add(genresArr.getString(i))
+                // Evict if poisoned
+                if (scoreCandidate(cleanTitle, cachedTitle, null, effectiveYear) <= 0f) {
+                    cacheFile.delete()
+                } else {
+                    val posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() }
+                    val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() }
+                        ?: posterUrl?.let { downloadAndCachePoster(context, it, cacheKey) }
+
+                    val genresList = mutableListOf<String>()
+                    val genresArr = json.optJSONArray("genres")
+                    if (genresArr != null) {
+                        for (i in 0 until genresArr.length()) {
+                            genresList.add(genresArr.getString(i))
+                        }
                     }
-                }
 
-                val metadata = OnlineMediaMetadata(
-                    title = json.optString("title", cleanTitle),
-                    year = json.optString("year").takeIf { it.isNotBlank() },
-                    rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
-                    genres = genresList,
-                    synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
-                    posterUrl = posterUrl,
-                    backdropUrl = json.optString("backdropUrl").takeIf { it.isNotBlank() },
-                    localPosterPath = localPoster
-                )
-                memoryCache[cacheKey] = metadata
-                return@withContext metadata
+                    val metadata = OnlineMediaMetadata(
+                        title = cachedTitle,
+                        year = json.optString("year").takeIf { it.isNotBlank() },
+                        rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
+                        genres = genresList,
+                        synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
+                        posterUrl = posterUrl,
+                        backdropUrl = json.optString("backdropUrl").takeIf { it.isNotBlank() },
+                        localPosterPath = localPoster
+                    )
+                    memoryCache[cacheKey] = metadata
+                    return@withContext metadata
+                }
             } catch (_: Exception) { }
         }
 
@@ -241,32 +384,109 @@ object OnlineMetadataFetcher {
         if (!isOnlineMetadataEnabled(context) || !isNetworkConnected(context)) return@withContext null
 
         try {
-            // Query Wikipedia Search API
-            val searchQuery = "$cleanTitle ${hintYear ?: ""} film".trim()
-            val searchUrl = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
-                    URLEncoder.encode(searchQuery, "UTF-8") + "&format=json"
+            var bestPageTitle: String? = null
+            var bestScore = 0f
 
-            val conn = openOnlineConnection(context, searchUrl) ?: return@withContext null
-            conn.connectTimeout = 6000
-            conn.readTimeout = 8000
+            // Tier 1: Wikipedia OpenSearch (Prefix and exact title search - prevents random body matches)
+            val openSearchQuery = cleanTitle.trim()
+            val openSearchUrl = "https://en.wikipedia.org/w/api.php?action=opensearch&search=" +
+                    URLEncoder.encode(openSearchQuery, "UTF-8") + "&limit=8&namespace=0&format=json"
 
-            var pageTitle: String? = null
-            if (conn.responseCode == 200) {
-                val body = conn.inputStream.bufferedReader().use { it.readText() }
-                val searchJson = JSONObject(body)
-                val searchHits = searchJson.optJSONObject("query")?.optJSONArray("search")
-                if (searchHits != null && searchHits.length() > 0) {
-                    pageTitle = searchHits.getJSONObject(0).optString("title")
+            val openConn = openOnlineConnection(context, openSearchUrl)
+            if (openConn != null) {
+                openConn.connectTimeout = 6000
+                openConn.readTimeout = 8000
+                if (openConn.responseCode == 200) {
+                    val body = openConn.inputStream.bufferedReader().use { it.readText() }
+                    val arr = JSONArray(body)
+                    if (arr.length() > 1) {
+                        val titles = arr.optJSONArray(1)
+                        if (titles != null) {
+                            for (i in 0 until titles.length()) {
+                                val t = titles.getString(i)
+                                val s = scoreCandidate(cleanTitle, t, null, effectiveYear)
+                                if (s > bestScore && s >= 0.35f) {
+                                    bestScore = s
+                                    bestPageTitle = t
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
-            if (pageTitle.isNullOrBlank()) {
-                pageTitle = cleanTitle
+            // Tier 2: If multi-word title and no good match (e.g. "Apocalypse Z New World"), try with primary words
+            if (bestScore < 0.35f && cleanTitle.contains(' ')) {
+                val words = cleanTitle.split(' ').filter { it.isNotBlank() }
+                if (words.size >= 2) {
+                    val shortened = words.take(2).joinToString(" ")
+                    val shortUrl = "https://en.wikipedia.org/w/api.php?action=opensearch&search=" +
+                            URLEncoder.encode(shortened, "UTF-8") + "&limit=8&namespace=0&format=json"
+                    val shortConn = openOnlineConnection(context, shortUrl)
+                    if (shortConn != null) {
+                        shortConn.connectTimeout = 5000
+                        shortConn.readTimeout = 6000
+                        if (shortConn.responseCode == 200) {
+                            val body = shortConn.inputStream.bufferedReader().use { it.readText() }
+                            val arr = JSONArray(body)
+                            if (arr.length() > 1) {
+                                val titles = arr.optJSONArray(1)
+                                if (titles != null) {
+                                    for (i in 0 until titles.length()) {
+                                        val t = titles.getString(i)
+                                        val s = scoreCandidate(shortened, t, null, effectiveYear)
+                                        if (s > bestScore && s >= 0.35f) {
+                                            bestScore = s
+                                            bestPageTitle = t
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Tier 3: Query Wikipedia Full-Text Search API with candidate scoring & validation
+            if (bestScore < 0.35f) {
+                val searchQuery = "$cleanTitle ${effectiveYear ?: ""} film".trim()
+                val searchUrl = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
+                        URLEncoder.encode(searchQuery, "UTF-8") + "&format=json"
+
+                val conn = openOnlineConnection(context, searchUrl)
+                if (conn != null) {
+                    conn.connectTimeout = 6000
+                    conn.readTimeout = 8000
+
+                    if (conn.responseCode == 200) {
+                        val body = conn.inputStream.bufferedReader().use { it.readText() }
+                        val searchJson = JSONObject(body)
+                        val searchHits = searchJson.optJSONObject("query")?.optJSONArray("search")
+                        if (searchHits != null) {
+                            for (i in 0 until searchHits.length()) {
+                                val hit = searchHits.getJSONObject(i)
+                                val hitTitle = hit.optString("title")
+                                val hitSnippet = hit.optString("snippet")
+                                val s = scoreCandidate(cleanTitle, hitTitle, hitSnippet, effectiveYear)
+                                if (s > bestScore && s >= 0.35f) {
+                                    bestScore = s
+                                    bestPageTitle = hitTitle
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If no candidate met the minimum similarity score, reject to avoid fetching wrong posters
+            if (bestPageTitle.isNullOrBlank() || bestScore < 0.35f) {
+                Log.d(TAG, "No verified Wikipedia match for: $cleanTitle (bestScore: $bestScore)")
+                return@withContext null
             }
 
             // Query Wikipedia REST Summary API
             val summaryUrl = "https://en.wikipedia.org/api/rest_v1/page/summary/" +
-                    URLEncoder.encode(pageTitle.replace(' ', '_'), "UTF-8")
+                    URLEncoder.encode(bestPageTitle.replace(' ', '_'), "UTF-8")
 
             val sumConn = openOnlineConnection(context, summaryUrl) ?: return@withContext null
             sumConn.connectTimeout = 6000
@@ -275,6 +495,9 @@ object OnlineMetadataFetcher {
             if (sumConn.responseCode == 200) {
                 val sumBody = sumConn.inputStream.bufferedReader().use { it.readText() }
                 val sumJson = JSONObject(sumBody)
+
+                val type = sumJson.optString("type")
+                if (type == "disambiguation") return@withContext null
 
                 val officialTitle = sumJson.optString("title", cleanTitle)
                 val synopsis = sumJson.optString("extract").takeIf { it.isNotBlank() }
@@ -286,7 +509,7 @@ object OnlineMetadataFetcher {
 
                 // Release year extraction
                 val yearMatch = Regex("\\b(19\\d{2}|20\\d{2})\\b").find(desc + " " + (synopsis ?: ""))
-                val detectedYear = yearMatch?.groupValues?.get(1) ?: hintYear
+                val detectedYear = yearMatch?.groupValues?.get(1) ?: effectiveYear
 
                 // Accurate genre detection from plot summary
                 val combinedText = (desc + " " + (synopsis ?: "") + " " + officialTitle).lowercase(Locale.US)
@@ -418,17 +641,54 @@ object OnlineMetadataFetcher {
         val queryName = cleanTitle.replace(Regex("\\b(19\\d{2}|20\\d{2})\\b"), "").trim().ifEmpty { cleanTitle }
 
         try {
+            var selectedShowJson: JSONObject? = null
+
+            // 1. Try TVMaze singlesearch
             val tvMazeUrl = "https://api.tvmaze.com/singlesearch/shows?q=" +
                     URLEncoder.encode(queryName, "UTF-8")
+            val conn = openOnlineConnection(context, tvMazeUrl)
+            if (conn != null) {
+                conn.connectTimeout = 6000
+                conn.readTimeout = 8000
+                if (conn.responseCode == 200) {
+                    val body = conn.inputStream.bufferedReader().use { it.readText() }
+                    val single = JSONObject(body)
+                    val sName = single.optString("name")
+                    if (scoreCandidate(cleanTitle, sName, null, null) >= 0.35f) {
+                        selectedShowJson = single
+                    }
+                }
+            }
 
-            val conn = openOnlineConnection(context, tvMazeUrl) ?: return@withContext null
-            conn.connectTimeout = 6000
-            conn.readTimeout = 8000
+            // 2. If singlesearch was rejected or failed, query TVMaze multi-search
+            if (selectedShowJson == null) {
+                val multiUrl = "https://api.tvmaze.com/search/shows?q=" +
+                        URLEncoder.encode(queryName, "UTF-8")
+                val multiConn = openOnlineConnection(context, multiUrl)
+                if (multiConn != null) {
+                    multiConn.connectTimeout = 6000
+                    multiConn.readTimeout = 8000
+                    if (multiConn.responseCode == 200) {
+                        val body = multiConn.inputStream.bufferedReader().use { it.readText() }
+                        val arr = JSONArray(body)
+                        var bestShowScore = 0f
+                        for (i in 0 until arr.length()) {
+                            val item = arr.getJSONObject(i)
+                            val showObj = item.optJSONObject("show") ?: continue
+                            val sName = showObj.optString("name")
+                            val sDesc = showObj.optString("summary")
+                            val sc = scoreCandidate(cleanTitle, sName, sDesc, null)
+                            if (sc > bestShowScore && sc >= 0.35f) {
+                                bestShowScore = sc
+                                selectedShowJson = showObj
+                            }
+                        }
+                    }
+                }
+            }
 
-            if (conn.responseCode == 200) {
-                val body = conn.inputStream.bufferedReader().use { it.readText() }
-                val showJson = JSONObject(body)
-
+            if (selectedShowJson != null) {
+                val showJson = selectedShowJson
                 val showName = showJson.optString("name", cleanTitle)
                 val imageObj = showJson.optJSONObject("image")
                 val posterUrl = imageObj?.optString("original") ?: imageObj?.optString("medium")
@@ -492,27 +752,41 @@ object OnlineMetadataFetcher {
             Log.w(TAG, "TVMaze lookup failed for $cleanTitle: ${e.message}")
         }
 
-        // Fallback: Query Wikipedia TV Series REST API if TVMaze failed or returned nothing
+        // Fallback: Query Wikipedia TV Series with OpenSearch & candidate scoring
         try {
-            val searchQuery = "$cleanTitle TV series".trim()
-            val searchUrl = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
-                    URLEncoder.encode(searchQuery, "UTF-8") + "&format=json"
+            var bestPageTitle: String? = null
+            var bestScore = 0f
 
-            val conn = openOnlineConnection(context, searchUrl) ?: return@withContext null
-            conn.connectTimeout = 6000
-            conn.readTimeout = 8000
+            val openSearchQuery = "$cleanTitle TV series"
+            val openSearchUrl = "https://en.wikipedia.org/w/api.php?action=opensearch&search=" +
+                    URLEncoder.encode(openSearchQuery, "UTF-8") + "&limit=6&namespace=0&format=json"
 
-            var pageTitle: String? = null
-            if (conn.responseCode == 200) {
-                val body = conn.inputStream.bufferedReader().use { it.readText() }
-                val searchJson = JSONObject(body)
-                val searchHits = searchJson.optJSONObject("query")?.optJSONArray("search")
-                if (searchHits != null && searchHits.length() > 0) {
-                    pageTitle = searchHits.getJSONObject(0).optString("title")
+            val openConn = openOnlineConnection(context, openSearchUrl)
+            if (openConn != null) {
+                openConn.connectTimeout = 6000
+                openConn.readTimeout = 8000
+                if (openConn.responseCode == 200) {
+                    val body = openConn.inputStream.bufferedReader().use { it.readText() }
+                    val arr = JSONArray(body)
+                    if (arr.length() > 1) {
+                        val titles = arr.optJSONArray(1)
+                        if (titles != null) {
+                            for (i in 0 until titles.length()) {
+                                val t = titles.getString(i)
+                                val s = scoreCandidate(cleanTitle, t, null, null)
+                                if (s > bestScore && s >= 0.35f) {
+                                    bestScore = s
+                                    bestPageTitle = t
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
-            if (pageTitle.isNullOrBlank()) {
+            if (bestPageTitle.isNullOrBlank() || bestScore < 0.35f) {
+                return@withContext null
+            }
                 pageTitle = cleanTitle
             }
 

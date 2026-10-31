@@ -240,7 +240,15 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     LaunchedEffect(message) { if (message != null) { delay(1400); message = null } }
     LaunchedEffect(hudSide, interaction) { if (hudSide != null) { delay(1200); hudSide = null } }
     LaunchedEffect(playback.inPip) {
-        if (playback.inPip) { quickMenuSection = null; scrub = null; controls = false }
+        if (playback.inPip) {
+            quickMenuSection = null
+            scrub = null
+            controls = false
+        } else {
+            val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+        }
     }
 
     LaunchedEffect(playback.brightnessBoost, playback.isHdr, isOled) {
@@ -253,14 +261,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         activity.updateHdrColorMode(isOled)
     }
 
-    DisposableEffect(playback.inPip) {
+    DisposableEffect(video.identity) {
         val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-        if (!playback.inPip) {
-            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller.hide(WindowInsetsCompat.Type.systemBars())
-        } else {
-            controller.show(WindowInsetsCompat.Type.systemBars())
-        }
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(WindowInsetsCompat.Type.systemBars())
         onDispose {
             controller.show(WindowInsetsCompat.Type.systemBars())
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = previousBrightness }
@@ -269,8 +273,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         }
     }
 
-    LaunchedEffect(playback.playing, playback.playRequested, playback.seekable, playback.aspect, playback.resizeMode) {
-        activity.updatePip()
+    LaunchedEffect(playback.playing, playback.playRequested, playback.seekable, playback.aspect, playback.aspectMode) {
+        if (!playback.inPip) {
+            activity.updatePip()
+        }
     }
 
     LaunchedEffect(video.identity) {
@@ -288,10 +294,16 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             .fillMaxSize()
             .background(Color.Black)
             .graphicsLayer {
-                val p = playerEnterProgress.value
-                alpha = p
-                scaleX = 0.93f + 0.07f * p
-                scaleY = 0.93f + 0.07f * p
+                if (!playback.inPip) {
+                    val p = playerEnterProgress.value
+                    alpha = p
+                    scaleX = 0.93f + 0.07f * p
+                    scaleY = 0.93f + 0.07f * p
+                } else {
+                    alpha = 1f
+                    scaleX = 1f
+                    scaleY = 1f
+                }
             }
     ) {
         val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
@@ -327,14 +339,27 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 }
             },
             modifier = Modifier.fillMaxSize().onGloballyPositioned {
-                val b = it.boundsInWindow()
-                activity.videoBounds = Rect(b.left.roundToInt(), b.top.roundToInt(), b.right.roundToInt(), b.bottom.roundToInt())
-                activity.updatePip()
+                if (!playback.inPip) {
+                    val b = it.boundsInWindow()
+                    val newRect = Rect(b.left.roundToInt(), b.top.roundToInt(), b.right.roundToInt(), b.bottom.roundToInt())
+                    if (activity.videoBounds != newRect) {
+                        activity.videoBounds = newRect
+                        activity.updatePip()
+                    }
+                }
             },
             update = { view ->
                 if (view.player !== playback.player) view.player = playback.player
-                view.resizeMode = playback.resizeMode
+                val contentFrame = view.findViewById<AspectRatioFrameLayout>(androidx.media3.ui.R.id.exo_content_frame)
+                val targetRatio = playback.aspectMode.forcedRatio ?: playback.aspect
+                if (contentFrame != null) {
+                    if (targetRatio > 0f) contentFrame.setAspectRatio(targetRatio)
+                    contentFrame.setResizeMode(playback.aspectMode.resizeMode)
+                    contentFrame.requestLayout()
+                }
+                view.resizeMode = playback.aspectMode.resizeMode
                 view.keepScreenOn = playback.playRequested
+                view.requestLayout()
                 SubtitlePreferences.applyToPlayerView(view.context, view)
             },
             onReset = null,
@@ -1355,15 +1380,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         QuickMenuRow(Icons.Rounded.Bookmark, "Scene bookmarks", "", { onOpenTools("bookmarks") })
                         QuickMenuRow(Icons.Rounded.Bedtime, "Sleep controls", if (playback.sleepPlan != null) "Active" else "Off", { onOpenTools("sleep") })
                         QuickMenuRow(Icons.Rounded.PlaylistPlay, "Episode continuity", "", { onOpenTools("continuity") })
-                        val fitName = when (playback.resizeMode) {
-                            AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Crop to fill"
-                            AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch"
-                            else -> "Fit to screen"
-                        }
                         QuickMenuRow(
                             icon = Icons.Rounded.AspectRatio,
                             label = "Fit / Aspect ratio",
-                            value = fitName,
+                            value = playback.aspectMode.displayName.substringBefore(" ("),
                             onClick = { onSelectSection("aspect") }
                         )
                         QuickMenuRow(
@@ -1407,17 +1427,14 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                 "aspect" -> {
                     QuickSubMenuContainer(title = "Fit / Aspect ratio", onBack = { onSelectSection("main") }) {
-                        listOf(
-                            AspectRatioFrameLayout.RESIZE_MODE_FIT to "Fit to screen (Letterbox)",
-                            AspectRatioFrameLayout.RESIZE_MODE_ZOOM to "Crop to fill (Zoom)",
-                            AspectRatioFrameLayout.RESIZE_MODE_FILL to "Stretch to fill"
-                        ).forEach { (mode, label) ->
+                        AspectRatioMode.values().forEach { mode ->
                             QuickOptionItem(
-                                label = label,
-                                selected = playback.resizeMode == mode,
+                                label = mode.displayName,
+                                selected = playback.aspectMode == mode,
                                 onClick = {
-                                    playback.resizeMode = mode
-                                    onMessage("Aspect: $label")
+                                    playback.setAspectRatioMode(mode)
+                                    activity.updatePip()
+                                    onMessage("Aspect: ${mode.displayName.substringBefore(" (")}")
                                     onSelectSection("main")
                                 }
                             )
@@ -1752,21 +1769,17 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                 "more" -> {
                     QuickSubMenuContainer(title = "More settings", onBack = { onSelectSection("main") }) {
-                        val fitName = when (playback.resizeMode) {
-                            AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Crop to fill"
-                            AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch"
-                            else -> "Fit to screen"
-                        }
                         QuickMenuRow(
                             icon = Icons.Rounded.AspectRatio,
                             label = "Video scaling",
-                            value = fitName,
+                            value = playback.aspectMode.displayName.substringBefore(" ("),
                             onClick = {
-                                playback.resizeMode = when (playback.resizeMode) {
-                                    AspectRatioFrameLayout.RESIZE_MODE_FIT -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                    AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> AspectRatioFrameLayout.RESIZE_MODE_FILL
-                                    else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
-                                }
+                                val modes = AspectRatioMode.values()
+                                val nextIndex = (playback.aspectMode.ordinal + 1) % modes.size
+                                val nextMode = modes[nextIndex]
+                                playback.setAspectRatioMode(nextMode)
+                                activity.updatePip()
+                                onMessage("Aspect: ${nextMode.displayName.substringBefore(" (")}")
                             }
                         )
                         QuickMenuRow(

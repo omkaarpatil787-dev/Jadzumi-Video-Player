@@ -49,6 +49,15 @@ data class ChapterMarker(
     val fraction: Float
 )
 
+enum class AspectRatioMode(val id: String, val displayName: String, val resizeMode: Int, val forcedRatio: Float? = null) {
+    FIT("fit", "Fit to screen (Letterbox)", AspectRatioFrameLayout.RESIZE_MODE_FIT, null),
+    ZOOM("zoom", "Crop to fill (Zoom)", AspectRatioFrameLayout.RESIZE_MODE_ZOOM, null),
+    FILL("fill", "Stretch to fill", AspectRatioFrameLayout.RESIZE_MODE_FILL, null),
+    RATIO_16_9("16_9", "16:9 Widescreen", AspectRatioFrameLayout.RESIZE_MODE_FIT, 16f / 9f),
+    RATIO_4_3("4_3", "4:3 Classic TV", AspectRatioFrameLayout.RESIZE_MODE_FIT, 4f / 3f),
+    RATIO_21_9("21_9", "21:9 CinemaScope", AspectRatioFrameLayout.RESIZE_MODE_FIT, 21f / 9f)
+}
+
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 class PlaybackController(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("playback", 0)
@@ -64,8 +73,14 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var duration by mutableLongStateOf(0); private set
     var error by mutableStateOf<String?>(null); private set
     var speed by mutableFloatStateOf(1f); private set
+    var aspectMode by mutableStateOf(AspectRatioMode.FIT)
     var resizeMode by mutableIntStateOf(AspectRatioFrameLayout.RESIZE_MODE_FIT)
     var aspect by mutableFloatStateOf(16f / 9f); private set
+
+    fun setAspectRatioMode(mode: AspectRatioMode) {
+        aspectMode = mode
+        resizeMode = mode.resizeMode
+    }
     var locked by mutableStateOf(false)
     var seekable by mutableStateOf(false); private set
 
@@ -840,7 +855,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             return
         }
         release()
-        video = v; fullscreen = true; locked = false; error = null; completed = false; aspect = 16f / 9f
+        video = v; fullscreen = true; locked = false; error = null; completed = false; aspect = 16f / 9f; aspectMode = AspectRatioMode.FIT; resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         isHdr = v.name.let {
             it.contains("hdr", ignoreCase = true) ||
             it.contains("10bit", ignoreCase = true) ||

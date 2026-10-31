@@ -1,3 +1,35 @@
+# Jadzumi v1.7.4 — Poster Artwork Accuracy, Responsive Aspect Ratios & Silky 120Hz PiP Transitions 🎬📐✨
+
+A performance, accuracy, and smoothness update addressing metadata matching for regional & international titles, responsive aspect ratio modes with direct layout invalidation, and zero-stutter Picture-in-Picture transitions.
+
+### 🎯 High-Precision Poster Artwork & Metadata Matching
+- **Intelligent Media Query Sanitization**: Strips audio encoding, dubbed language markers (Hindi, Dual Audio, Multi Audio, Clean Audio, Tamil, Telugu, etc.), rip source tags (PreDVD, HDTC, HDCAM, WEBRip, BluRay), and release group suffixes before query execution.
+- **Anchor Word Preservation & Candidate Scoring**: Prevents wrong movie poster fetches (e.g., *Apocalypse Z: The Beginning of the End* is no longer hijacked by *World War Z*). Candidate scoring enforces mandatory anchor keyword matching and Dice token similarity.
+- **Multi-Tier Search Strategy**:
+  - **Tier 1 (OpenSearch Title Matching)**: Direct Wikipedia exact title search, eliminating actor biography hits and unrelated full-text matches.
+  - **Tier 2 (Progressive Multi-Word Fallback)**: Intelligent query pruning with year disambiguation.
+  - **Tier 3 (Candidate Scoring)**: Full-text search with strict threshold verification (>= 0.35 similarity).
+- **Poisoned Cache Auto-Eviction**: Automatically detects and purges previously misidentified metadata entries (such as actor biographies, voice credits, or generic film list pages) so accurate artwork is retrieved seamlessly.
+- **TV Series Refinement**: TVMaze single-search title verification and Wikipedia TV series fallback.
+
+### 📐 Fully Responsive Aspect Ratio & Video Scaling
+- **ExoContentFrame Direct Reactivity**: Fixed aspect ratio modes by directly binding `AspectRatioFrameLayout` (`exo_content_frame`) inside `PlayerView` with programmatic `requestLayout()` triggers.
+- **Expanded Aspect Ratio Modes**:
+  - **Fit to screen (Letterbox)**: Preserves native video dimensions with letterboxing/pillarboxing.
+  - **Crop to fill (Zoom)**: Scales to fill entire display without black bars.
+  - **Stretch to fill**: Fills the viewport without cropping.
+  - **16:9 Standard Widescreen**: Forces 16:9 widescreen presentation.
+  - **4:3 Classic TV**: Forces standard definition academy / classic television ratio.
+  - **21:9 Cinema UltraWide**: Forces anamorphic cinemascope presentation.
+- **Dynamic Quick Menu & PiP Synchronization**: Changing aspect ratio dynamically updates Android OS Picture-in-Picture window aspect ratios in real time.
+
+### 🧈 Butter-Smooth 120Hz PiP Transitions
+- **Decoupled System Bars & Insets Lifecycle**: Keyed immersive fullscreen mode to video playback session rather than PiP state, eliminating insets recreation and orientation thrashing during the OS window transition.
+- **Binder IPC Throttling**: Suppressed 60–120 fps `updatePip()` IPC calls during window scale animations; PiP parameters are only submitted when bounds change at rest.
+- **Zero-Glitch Returning from PiP**: Re-applies immersive transient system bars smoothly without display flicker or status bar stutter.
+
+---
+
 # Jadzumi v1.7.3 — Subtitle Typography Suite, Theme-Reactive HUD & Decluttered Minimal Controls 🎨✨
 
 A major aesthetic refinement and accessibility update introducing an expanded **Subtitle Typography & Edge Effects Suite**, dynamic **Theme-Reactive Playback UI**, and a **Decluttered Minimalist Player HUD**.

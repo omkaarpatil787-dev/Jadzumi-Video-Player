@@ -97,8 +97,9 @@ class MainActivity : ComponentActivity() {
             )
         ).apply { isEnabled = enabled }
 
+        val effectiveAspect = playback.aspectMode.forcedRatio ?: playback.aspect
         val builder = PictureInPictureParams.Builder()
-            .setAspectRatio(Rational((playback.aspect.coerceIn(0.4185f, 2.39f) * 10000).toInt(), 10000))
+            .setAspectRatio(Rational((effectiveAspect.coerceIn(0.4185f, 2.39f) * 10000).toInt(), 10000))
             .setActions(
                 if (playback.video == null) emptyList()
                 else listOf(
@@ -109,7 +110,8 @@ class MainActivity : ComponentActivity() {
             )
 
         videoBounds?.takeIf { !it.isEmpty && playback.video != null }?.let { bounds ->
-            val content = videoContentBounds(bounds.width(), bounds.height(), playback.aspect, playback.resizeMode == AspectRatioFrameLayout.RESIZE_MODE_FIT)
+            val isFit = playback.aspectMode == AspectRatioMode.FIT
+            val content = videoContentBounds(bounds.width(), bounds.height(), effectiveAspect, isFit)
             builder.setSourceRectHint(Rect(bounds.left + content.left, bounds.top + content.top, bounds.left + content.right, bounds.top + content.bottom))
         }
 
@@ -132,7 +134,8 @@ class MainActivity : ComponentActivity() {
     }
 
     fun updatePip() {
-        if (supportsPip()) runCatching { setPictureInPictureParams(pipParams()) }
+        if (!supportsPip() || playback.video == null) return
+        runCatching { setPictureInPictureParams(pipParams()) }
         updateHdrColorMode()
     }
 
@@ -156,6 +159,9 @@ class MainActivity : ComponentActivity() {
             playback.locked = false
         } else {
             playback.fullscreen = true
+            val controller = WindowCompat.getInsetsController(window, window.decorView)
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
         }
         updatePip()
     }
