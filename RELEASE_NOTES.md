@@ -1,3 +1,24 @@
+# Jadzumi v1.8.0.3 — "The Project Integrity & Regulatory Alignment Release": Documentation Parity, Repository Hygiene & Privacy Disclosures 🛡️✨
+
+A project governance and repository refinement release addressing documentation parity, clarifying privacy endpoint disclosures, removing legacy binary artifacts, decluttering historic checkpoint logs, and updating compliance records.
+
+### 📚 1. Documentation Parity & Version Synchronization
+- **Eliminated Documentation Drift**: Updated all root guides (`README.md`, `RESUME.md`, `THIRD_PARTY_LICENSES.md`, `CODEC_LICENSE_AUDIT.md`, `RELEASE_COMPLIANCE_CHECKLIST.md`) to point consistently to active release versions and build identifiers.
+- **Bundled Licenses Consistency**: Ensured the offline in-app license file (`THIRD_PARTY_LICENSES.md` bundled via `generateLicenseAssets`) matches the distributed build metadata.
+- **Toned Down Absolute Claims**: Refined promotional and compliance terminology across documentation, acknowledging realistic scraper edge cases and clarifying that network lookups operate with explicit user consent.
+
+### 🔒 2. Transparent Network Endpoint & Privacy Disclosures
+- **Full Privacy Disclosure for Cinemeta**: Added explicit disclosures for **Cinemeta** (`v3-cinemeta.strem.io`) in `README.md` and `RELEASE_COMPLIANCE_CHECKLIST.md` alongside Wikipedia and TVMaze.
+- **Permission Justification Clarity**: Documented that `android.permission.INTERNET` is exclusively used for user-directed metadata searches (Cinemeta, Wikipedia, TVMaze) and optional GitHub update checks, remaining completely inactive when lookups are disabled.
+
+### 🧹 3. Repository Hygiene & Tree Decluttering
+- **Removed Committed Binaries**: Safely purged 52 MB of legacy debug APKs from `artifacts/` and added `artifacts/` and `*.apk` to `.gitignore`.
+- **Eliminated Inaccurate Checksums**: Dropped outdated `SHA256SUMS.json` to prevent checksum confusion.
+- **Historic Docs Archival**: Moved 20+ legacy session notes and recovery checkpoint logs into `docs/archive/`, leaving `docs/` clean with core developer guides and roadmap documentation.
+- **Corresponding Source & Asset Provenance**: Formally recorded upstream NextLib/FFmpeg build coordinates and AI-synthesized demo image provenance (`hero.jpg`, `cosmos.jpg`, `anime.jpg`) in `LEGAL_REVIEW_REQUIRED.md`.
+
+---
+
 # Jadzumi v1.8.0.2 — "The Universal Expressive Motion & Update Engine Update": 4-Part Semantic Version In-App Updater & Fluid Touch Micro-Interactions 🚀✨🧈
 
 A dedicated fluidity and maintenance release resolving in-app update detection for 4-component semantic releases (`v1.8.0.x`) and expanding Material 3 Expressive spring physics, tactile touch-lighting, and elastic micro-interactions app-wide.

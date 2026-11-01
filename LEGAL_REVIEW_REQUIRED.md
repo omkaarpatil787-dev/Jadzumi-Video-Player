@@ -1,9 +1,9 @@
 # ⚖️ Jadzumi Player — Matters Flagged for Qualified Legal Review
 
 > **Document Type:** Unresolved Intellectual Property & Regulatory Disclosure  
-> **Application:** Jadzumi Player (Android) · Version: `1.4.0` · Package: `com.jadzumi.video`
+> **Application:** Jadzumi Player (Android) · Version: `1.8.0.3` · Package: `com.jadzumi.video`
 > **Purpose:** Identifies specific patent, trademark, and licensing questions that cannot be conclusively resolved by technical inspection alone and warrant qualified IP legal counsel.  
-> **Date:** 2026-10-20
+> **Date:** 2026-11-01
 
 ---
 
@@ -37,17 +37,29 @@ The following items are flagged for review by qualified intellectual property le
 
 ---
 
-### Matter 3: GPL-3.0 Compatibility with Google Play Developer Terms
-- **Technical Context:** Jadzumi Player integrates `io.github.anilbeesetti:nextlib-media3ext`, which is licensed under the GNU General Public License v3.0 (GPL-3.0). Consequently, Jadzumi Player is distributed under GPL-3.0.
+### Matter 3: GPL-3.0 Compatibility & Corresponding Source Verification
+- **Technical Context:** Jadzumi Player integrates `io.github.anilbeesetti:nextlib-media3ext` version `1.11.1-0.16.0`, which is licensed under the GNU General Public License v3.0 (GPL-3.0) and bundles FFmpeg 9.0.1 decoders with dav1d 1.5.4. Consequently, Jadzumi Player is distributed under GPL-3.0.
+- **Native Corresponding Source Record:**
+  - Upstream library source: [github.com/anilbeesetti/nextlib](https://github.com/anilbeesetti/nextlib) tag `v1.11.1-0.16.0`.
+  - Upstream build harness: NextLib build scripts compiling FFmpeg 9.0.1 targeting Android NDK r26c (ARM64).
+  - Jadzumi application source: [github.com/omkaarpatil787-dev/Jadzumi-Video-Player](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player).
 - **Legal Consideration:**
-  - GPL-3.0 requires that recipients have the right to modify and re-distribute the application and access the Corresponding Source Code without additional restrictions.
-  - The Free Software Foundation (FSF) has historically raised questions regarding whether standard app store terms of service (such as Google Play's Developer Distribution Agreement or Apple App Store terms) impose "further restrictions" prohibited by GPL-3.0 Section 10.
-  - Many prominent GPLv3 applications (e.g., VLC, Next Player, Termux) successfully distribute on Google Play by providing explicit public source repository links in their store listings and app interfaces.
-- **Recommended Counsel Inquiry:** *"Does our proposed Google Play Store distribution model fully comply with GPL-3.0 Section 6 and Section 10 requirements?"*
+  - GPL-3.0 requires that recipients have access to the Corresponding Source Code of all GPL-licensed components.
+  - Many prominent GPLv3 applications (e.g., VLC, Next Player, Termux) successfully distribute on Google Play and GitHub by providing explicit public source repository links in their store listings and app interfaces.
+- **Recommended Counsel Inquiry:** *"Does our proposed distribution model fully comply with GPL-3.0 Section 6 and Section 10 requirements?"*
 
 ---
 
-### Matter 4: Nominative Fair Use of Format Identifiers
+### Matter 4: Sample Asset Provenance (`hero.jpg`, `cosmos.jpg`, `anime.jpg`)
+- **Technical Context:** The demo video library assets in `app/src/main/res/drawable-nodpi/` (`hero.jpg`, `cosmos.jpg`, `anime.jpg`) provide offline placeholder artwork when no local media files are loaded.
+- **Provenance Record:**
+  - Created as synthetic demo artwork via AI image synthesis (ChatGPT / Google Stitch) for mock library UI demonstration.
+  - Contains no copyrighted film stills, proprietary studio logos, or third-party trademarked characters.
+  - Dedicated custom or CC0 public domain photography should be substituted for commercial store publication.
+
+---
+
+### Matter 5: Nominative Fair Use of Format Identifiers
 - **Technical Context:** Jadzumi Player's technical track inspector displays technical metadata to users, such as `"Dolby Digital (AC-3)"`, `"Dolby Digital Plus (E-AC-3)"`, and `"Dolby TrueHD"`.
 - **Legal Consideration:**
   - Jadzumi Player does NOT use the Dolby double-D graphic trademark, does NOT claim certification, and does NOT imply sponsorship.

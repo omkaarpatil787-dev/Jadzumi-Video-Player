@@ -6,3 +6,5 @@ keystore.properties
 *.keystore
 !signing/development.keystore
 .kotlin/
+artifacts/
+*.apk

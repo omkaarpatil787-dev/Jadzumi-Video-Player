@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.8.0.2-2563eb?style=flat-square" alt="Version 1.8.0.2"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.8.0.3-2563eb?style=flat-square" alt="Version 1.8.0.3"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -52,12 +52,12 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details>
-<summary><strong>What’s new · v1.7.3 🎨✨</strong></summary>
+<summary><strong>What’s new · v1.8.0 🎬✨</strong></summary>
 
-- **Subtitle Typography Suite & 3D Edge Effects**: Added Cinema Serif, Heavy Sans, Rounded Sans, and Roboto Condensed fonts, weight/style selections (Regular, Bold, Italic, Bold Italic), 3D raised/depressed edge bevels, soft atmospheric glows, and adjustable bottom margin calibration with a live preview card.
-- **Theme-Reactive Playback UI**: Video player overlay controls, HUD pills, seek buttons, and volume/brightness bars dynamically adapt to active themes: Light mode frosted milk-glass (`#F0F4FC`) with navy typography (`#183654`), Dark mode slate-navy (`#0F172A`), and AMOLED mode pure ink-black (`#000000`).
-- **Decluttered Minimalist Player HUD**: Streamlined single-row bottom timeline docking progress scrubber, elapsed/remaining timecode, rotation, lock, and PiP into a clean, unified dock. Secondary tools moved to the Quick Menu drawer.
-- **Pure Flat Modern Cards**: Completely eliminated hardware Skia shadow lips and corner emboss borders across all cards and settings panels (`shadowElevation = 0.dp`, `border = null`).
+- **Fix Match & Artwork Matcher**: Disambiguate films and TV series against Cinemeta and IMDb streaming catalogs, or choose custom artwork directly from your device's photo gallery.
+- **Universal 500ms Shared-Element Morph**: Screen and card transitions smoothly stretch physical geometry over a calibrated 0.5s spring curve (`cubic-bezier(0.19, 1.0, 0.22, 1.0)`).
+- **YouTube-Style Cascading Seek Chevrons**: Sleek, compact chevron indicators (`‹‹‹ 10s` and `10s ›››`) with staggered animated alphas replace oversized circular overlays.
+- **Ambient Cinema Horizon**: Diffused atmospheric glow behind hero banners in dark themes and feather-soft porcelain horizon washes in light theme.
 
 See [release notes](RELEASE_NOTES.md) for full details.
 
@@ -74,13 +74,14 @@ See [release notes](RELEASE_NOTES.md) for full details.
 | External subtitles and timing adjustments | Scene bookmarks, notes, and search | Theme-reactive playback controls |
 | Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v1.7.4
+## 📦 Latest release · v1.8.0.3
 
-- 🎯 **Poster Artwork & Metadata Accuracy**: Intelligent query sanitization, Indian/Asian audio and rip tag filtering, anchor-word preservation, OpenSearch direct title matching, and poisoned cache eviction.
-- 📐 **Responsive Aspect Ratio Modes**: Fixed scaling reactivity with direct `exo_content_frame` layout triggers supporting Letterbox, Zoom, Stretch, 16:9, 4:3, and 21:9 UltraWide.
-- 🧈 **Silky 120Hz PiP Transitions**: Decoupled insets lifecycle from PiP state and throttled Binder IPC calls, eliminating stutter and orientation thrashing.
+- 🔄 **In-App Seamless Update Studio**: Fluid 0.5s morphing update dialog based on Material 3 Expressive motion physics, live download progress, and support for 4-component release tags (`v1.8.0.x`).
+- 🖼️ **Persistent Poster Cache & Fix Match**: Resolved disk cache false-eviction, synchronized title and year extraction across scrapers, and added interactive artwork fixing from Cinemeta/IMDb or device photo gallery.
+- 🌟 **Signature Adaptive Splash Screen**: Glass-morphic squircle logo with quad-stop gradients, dual-layer 3D wings, specular front glass play symbol, and ambient radial glow across Light, Dark, and AMOLED themes.
+- 🧈 **App-Wide Expressive Motion Engine**: Calibrated 0.5s continuous shared-element geometry expansion (`cubic-bezier(0.19, 1.0, 0.22, 1.0)`), tactile elastic press physics, and shared-axis directional navigation.
 
-[Download v1.7.4](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.7.4) · [Release notes](RELEASE_NOTES.md)
+[Download v1.8.0.3](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.8.0.3) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.
@@ -90,9 +91,10 @@ reinstallation. Uninstalling can erase app settings and playback history.
 No ads, analytics, or background telemetry. Your playback history stays on your device.
 
 Online lookups are **off by default**. Enable them in **Settings → Privacy & About**
-to request movie/TV information from Wikipedia and TVMaze, plus artwork from their
-image hosts. This sends search titles to those services. Cached information and
-images remain available offline when lookups are disabled.
+to request movie/TV information and artwork from **Cinemeta** (`v3-cinemeta.strem.io`),
+**Wikipedia** (`en.wikipedia.org`), and **TVMaze** (`api.tvmaze.com`), plus official
+posters from their image delivery networks. This sends search titles to those services.
+Cached information and downloaded artwork remain available offline when lookups are disabled.
 
 GitHub update checks are available in **Privacy & About**.
 Manual checks contact GitHub when requested; automatic checks have their own

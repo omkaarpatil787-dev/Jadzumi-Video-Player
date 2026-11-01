@@ -1,8 +1,8 @@
 # ✅ Jadzumi Player — Pre-Release Compliance & Safety Checklist
 
-> **Application:** Jadzumi Player (Android) · Version: `1.4.0` · Package: `com.jadzumi.video`
+> **Application:** Jadzumi Player (Android) · Version: `1.8.0.3` · Package: `com.jadzumi.video`
 > **Target Release Environment:** GitHub Releases / F-Droid / Direct Free APK Distribution  
-> **Audit Status:** Technical updates made; release review pending · **Date:** 2026-10-20
+> **Audit Status:** Technical updates made; release review updated · **Date:** 2026-11-01
 
 ---
 
@@ -46,11 +46,15 @@
 - [x] **DTS Disclaimer Included:** Explicit disclaimer published regarding DTS, Inc. trademarks.
 
 ### Pillar 5: Privacy, Permissions & Network Transparency
-- [x] **Strictly Local Media Storage:** Playback history, resume positions, subtitle delay settings, and bookmarks remain 100% on-device in private app storage.
+- [x] **Strictly Local Media Storage:** Playback history, resume positions, subtitle delay settings, and bookmarks remain on-device in private app storage.
 - [x] **Permission Justification:**
   - `android.permission.POST_NOTIFICATIONS`: Required for Android 13+ background media playback controls.
-  - `android.permission.INTERNET` & `ACCESS_NETWORK_STATE`: Required strictly for fetching public movie posters and synopses from Wikipedia REST and TVMaze.
-- [x] **Offline Resilience:** If Wi-Fi/Internet is disconnected or unavailable, the application functions 100% offline using local sidecars (`poster.jpg`, `.nfo`) and sampled video frames.
+  - `android.permission.INTERNET` & `ACCESS_NETWORK_STATE`: Required strictly when online metadata or update checking is enabled by user preference:
+    - **Cinemeta (Stremio)**: `https://v3-cinemeta.strem.io` (IMDb catalog lookup for movies and series).
+    - **Wikipedia REST API**: `https://en.wikipedia.org` (open-search candidate title and synopsis lookup).
+    - **TVMaze API**: `https://api.tvmaze.com` (TV series episode count and metadata verification).
+    - **GitHub Releases API**: `https://api.github.com` (user-initiated or optional daily update checks).
+- [x] **Offline Resilience:** If Wi-Fi/Internet is disconnected or unavailable, the application operates offline using local sidecars (`poster.jpg`, `.nfo`) and sampled video frames. Online lookups remain disabled by default.
 
 ### Pillar 6: Playback Engine & Codec Integrity
 - [x] **HEVC Main10 & 10-bit HDR:** Preserved with automatic OLED peak luminance boost.
@@ -79,4 +83,4 @@
 - [ ] Plan upgrade continuity: a new key cannot update the previously development-key-signed APK.
 - [ ] Verify per-file exports and redistribution terms for `hero.jpg`, `cosmos.jpg`, and `anime.jpg` (owner reports ChatGPT / Google Stitch origins).
 - [ ] Complete native Corresponding Source / notice review and outstanding legal review.
-- [x] Stable release candidate is 1.4.0 (versionCode 21); publication follows signed CI.
+- [x] Stable release candidate is v1.8.0.3 (versionCode 37); publication follows signed CI.
