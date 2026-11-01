@@ -626,9 +626,9 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         showBattery = playback.showBatteryPercentage,
                         showRemainingTime = playback.showRemainingTime,
                         remainingSec = remSec,
-                        bgColor = dynamicFrostedCircleBg,
-                        rimColor = dynamicFrostedCircleRim,
-                        contentColor = playerContentColor
+                        bgColor = Color(0x66000000),
+                        rimColor = Color.White.copy(alpha = 0.18f),
+                        contentColor = Color.White.copy(alpha = 0.88f)
                     )
                 }
 
@@ -734,9 +734,9 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         showBattery = playback.showBatteryPercentage,
                                         showRemainingTime = playback.showRemainingTime,
                                         remainingSec = remSec,
-                                        bgColor = dynamicFrostedCircleBg,
-                                        rimColor = dynamicFrostedCircleRim,
-                                        contentColor = playerContentColor
+                                        bgColor = Color(0x66000000),
+                                        rimColor = Color.White.copy(alpha = 0.18f),
+                                        contentColor = Color.White.copy(alpha = 0.88f)
                                     )
                                 }
 
@@ -1369,9 +1369,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     val audioSummary = activeAudio?.let { "${it.label} (${it.codec} ${it.channels})" } ?: "Default"
     val activeSub = playback.subtitleTracks.firstOrNull { it.isSelected }
     val subSummary = activeSub?.let { "${it.label} (${it.format})" } ?: "Off"
-    val isLight = theme == "Light"
-    val menuBg = if (isLight) Color(0xF4FFFFFF) else Color(0xF00D1520)
-    val menuRim = if (isLight) Color(0x33000000) else Color.White.copy(alpha = 0.14f)
+    val menuBg = Color(0xF00D1520)
+    val menuRim = Color.White.copy(alpha = 0.14f)
 
     BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)).clickable(onClick = onDismiss)) {
         val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
@@ -2313,7 +2312,7 @@ private fun PlayerStatusPill(
         shape = RoundedCornerShape(999.dp),
         color = bgColor,
         border = BorderStroke(1.dp, rimColor),
-        shadowElevation = 8.dp,
+        shadowElevation = 0.dp,
         modifier = modifier
     ) {
         Row(

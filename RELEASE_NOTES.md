@@ -1,3 +1,28 @@
+# Jadzumi v1.7.8 — Clean Uncluttered Media Cards, Crisp Micro-Border Clarity, AOD Status Pill & Dark Cinema Quick Menu 🎬✨🧈
+
+A refined visual ergonomics and playback UI release removing redundant card chips, eliminating blurry elevation halos with crisp 1.dp hairline definition, transforming the Now Playing status pill into a subtle Always-On Display (AOD) capsule, and ensuring the Quick Customization menu retains dark cinema glass contrast across all themes.
+
+### 🧹 Clean, Uncluttered Media Cards
+- **Removed Redundant Bottom Chips**: Eliminated unnecessary tags (`HDR Master`, `10-Bit Color`, `Horror`, `Thriller`, `Adventure`) from unwatched movie cards for a clean, streamlined 2-line layout (Title + Year · Duration · Genre).
+- **Preserved Meaningful Status**: Maintained clean `✓ Watched` status badges and actionable `Resume · 42m left` indicators on in-progress titles.
+
+### 📐 Crisp Micro-Border Surface Definition
+- **Zero Blurry Elevation Shadows**: Replaced fuzzy drop-shadow elevation halos with razor-sharp 1.dp hairline surface boundaries (`Color(0xFFE2E8F0)` in Light mode, translucent white in Dark/AMOLED mode).
+- **High-Clarity Card Canvas**: Pure crisp surface contrast across both phone and tablet form factors.
+
+### 🌙 Always-On Display (AOD) Status Pill
+- **Subtle, Non-Glaring HUD**: Replaced glowing white status pill with a subtle dark translucent capsule (`Color(0x66000000)`) with soft white hairline rim and muted AOD typography (`Color.White.copy(alpha = 0.88f)`).
+- **Theme Independent Consistency**: Remains uniform and non-distracting during cinema playback regardless of whether the app theme is Light, Dark, or AMOLED.
+
+### 🎛️ Dark Cinema Quick Menu (100% Legible Fonts)
+- **High-Contrast Cinema Glass**: Fixed issue where the Right-Side Quick Menu had a white background in Light theme, which made white text and icons invisible. Quick Menu is now styled with dark cinema glass (`Color(0xF00D1520)`) unconditionally with crisp, high-contrast white text and icons.
+
+### 🌐 Metadata Accuracy & Deep Translation Support
+- **Multi-Word Overlap Matching**: Enhanced `scoreCandidate` to recognize translated and international film titles (e.g. *Kitab Sijjin and Illiyyin* accurately mapping to *The Book of Sijjin and Illiyyin*).
+- **Deep Cache Sanitization**: Strengthened `purgeBogusCache` to proactively eliminate any mismatched or legacy poisoned cache entries.
+
+---
+
 # Jadzumi v1.7.7 — Ghost PiP Fix, Micro-Border Surface Definition & De-Cluttered Media Cards 🖼️🧈🎯
 
 A targeted refinement addressing accidental PiP activations from the library/home screen, introducing elevated micro-border card surfaces, frosted glass action buttons, and a de-cluttered media card hierarchy.

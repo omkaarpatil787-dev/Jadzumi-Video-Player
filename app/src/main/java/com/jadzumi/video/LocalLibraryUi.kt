@@ -1960,10 +1960,10 @@ fun MovieSummaryCard(
     val isLight = surfaceColor.luminance() > 0.5f
     val cardBorder = BorderStroke(
         width = 1.dp,
-        color = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
-                else Color.White.copy(alpha = 0.09f)
+        color = if (isLight) Color(0xFFE2E8F0)
+                else Color.White.copy(alpha = 0.12f)
     )
-    val cardBg = if (isLight) MaterialTheme.colorScheme.surface
+    val cardBg = if (isLight) Color.White
                  else MaterialTheme.colorScheme.surfaceContainerLow
 
     Surface(
@@ -1974,7 +1974,7 @@ fun MovieSummaryCard(
         shape = RoundedCornerShape(18.dp),
         color = cardBg,
         border = cardBorder,
-        shadowElevation = if (isLight) 2.dp else 0.dp
+        shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -2145,29 +2145,6 @@ fun MovieSummaryCard(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                } else {
-                    // Audio / Codec tech chip if available, or clean secondary tag
-                    val techTag = when {
-                        video.name.contains("hdr", true) || video.name.contains("dovi", true) -> "HDR Master"
-                        video.name.contains("10bit", true) -> "10-Bit Color"
-                        metadata.genres.size > 1 -> metadata.genres[1]
-                        else -> null
-                    }
-                    if (techTag != null) {
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.70f),
-                            modifier = Modifier.padding(top = 2.dp)
-                        ) {
-                            Text(
-                                text = techTag,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.5.dp)
-                            )
-                        }
-                    }
                 }
             }
         }
@@ -2240,10 +2217,10 @@ fun TvSeriesSummaryCard(
     val isLight = surfaceColor.luminance() > 0.5f
     val cardBorder = BorderStroke(
         width = 1.dp,
-        color = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
-                else Color.White.copy(alpha = 0.09f)
+        color = if (isLight) Color(0xFFE2E8F0)
+                else Color.White.copy(alpha = 0.12f)
     )
-    val cardBg = if (isLight) MaterialTheme.colorScheme.surface
+    val cardBg = if (isLight) Color.White
                  else MaterialTheme.colorScheme.surfaceContainerLow
 
     Surface(
@@ -2254,7 +2231,7 @@ fun TvSeriesSummaryCard(
         shape = RoundedCornerShape(18.dp),
         color = cardBg,
         border = cardBorder,
-        shadowElevation = if (isLight) 2.dp else 0.dp
+        shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()

@@ -168,12 +168,17 @@ object OnlineMetadataFetcher {
                             val title = json.optString("title")
                             val synopsis = json.optString("synopsis")
                             val desc = json.optString("description")
-                            if (!isFilmOrTvWork(title, desc, synopsis) ||
+                            val keyRaw = file.nameWithoutExtension.removePrefix("mov_").removePrefix("tv_").replace("_", " ")
+
+                            val isBogus = !isFilmOrTvWork(title, desc, synopsis) ||
                                 title.equals("Sexual identity", ignoreCase = true) ||
                                 (title.equals("Blue", ignoreCase = true) && synopsis.contains("colour", ignoreCase = true)) ||
                                 title.contains("List of ", ignoreCase = true) ||
                                 title.contains("Rajesh Kava", ignoreCase = true) ||
-                                title.contains("Zombie Massacre", ignoreCase = true)) {
+                                title.contains("Zombie Massacre", ignoreCase = true) ||
+                                (keyRaw.length > 3 && scoreCandidate(keyRaw, title, synopsis, null) < 0.20f)
+
+                            if (isBogus) {
                                 file.delete()
                                 val base = file.nameWithoutExtension
                                 File(getPosterCacheDir(context), "$base.jpg").takeIf { it.exists() }?.delete()
@@ -216,15 +221,19 @@ object OnlineMetadataFetcher {
         if (qTokensList.isEmpty() || cTokensList.isEmpty()) return 0f
 
         // Anchor word check: The first significant word of the query (e.g. "Apocalypse", "Stree", "Jawan")
-        // MUST have a matching root/stem in candidate title. This completely prevents "World War Z" from matching "Apocalypse Z".
+        // MUST have a matching root/stem in candidate title, UNLESS at least 2 significant words (length >= 4)
+        // match across both titles (which supports foreign translation prefixes like "Kitab Sijjin" -> "The Book of Sijjin").
         val anchor = qTokensList[0]
-        if (anchor.length >= 3) {
-            val prefixLen = minOf(4, anchor.length)
-            val anchorPrefix = anchor.take(prefixLen)
-            val hasAnchor = cTokensList.any { it == anchor || it.startsWith(anchorPrefix) || anchor.startsWith(it.take(prefixLen)) }
-            if (!hasAnchor) {
-                return 0f
-            }
+        val prefixLen = minOf(4, anchor.length)
+        val anchorPrefix = anchor.take(prefixLen)
+        val hasAnchor = cTokensList.any { it == anchor || it.startsWith(anchorPrefix) || anchor.startsWith(it.take(prefixLen)) }
+
+        val qLongTokens = qTokensList.filter { it.length >= 4 }
+        val cLongTokens = cTokensList.filter { it.length >= 4 }
+        val multiWordOverlap = qLongTokens.count { qt -> cLongTokens.any { ct -> qt == ct || ct.startsWith(qt) || qt.startsWith(ct) } }
+
+        if (!hasAnchor && multiWordOverlap < 2) {
+            return 0f
         }
 
         val qTokens = qTokensList.toSet()
