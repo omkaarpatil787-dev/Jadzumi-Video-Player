@@ -25,7 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 internal data class MotionStyle(val enabled: Boolean = false, val expressive: Boolean = false, val light: Boolean = true) {
-    val damping get() = if (expressive) 0.70f else 0.85f
+    val damping get() = if (expressive) 0.60f else 0.78f
 }
 internal val LocalMotionStyle = staticCompositionLocalOf { MotionStyle() }
 
@@ -40,7 +40,7 @@ internal val LocalMotionStyle = staticCompositionLocalOf { MotionStyle() }
     }
     return remember(revision, reduced, lively) {
         MotionStyle(!reduced && lively && ValueAnimator.areAnimatorsEnabled(),
-            prefs.getString("motionStyle", "Gentle") == "Expressive", prefs.getBoolean("touchLight", true))
+            prefs.getString("motionStyle", "Expressive") == "Expressive", prefs.getBoolean("touchLight", true))
     }
 }
 
@@ -50,8 +50,11 @@ internal fun Modifier.touchMotion(): Modifier = composed {
     if (!style.enabled) return@composed this
     var pressed by remember { mutableStateOf(false) }
     var origin by remember { mutableStateOf(Offset.Zero) }
-    val amount by animateFloatAsState(if (pressed) 1f else 0f,
-        spring(dampingRatio = style.damping, stiffness = Spring.StiffnessMediumLow), label = "touch feedback")
+    val amount by animateFloatAsState(
+        if (pressed) 1f else 0f,
+        spring(dampingRatio = style.damping, stiffness = if (style.expressive) 600f else Spring.StiffnessMediumLow),
+        label = "touch feedback"
+    )
     val tint = MaterialTheme.colorScheme.primary
     this.pointerInput(Unit) {
         awaitPointerEventScope {
@@ -62,12 +65,12 @@ internal fun Modifier.touchMotion(): Modifier = composed {
             }
         }
     }.graphicsLayer {
-        scaleX = 1f - amount * if (style.expressive) 0.025f else 0.012f
-        scaleY = 1f - amount * if (style.expressive) 0.035f else 0.012f
+        scaleX = 1f - amount * if (style.expressive) 0.045f else 0.020f
+        scaleY = 1f - amount * if (style.expressive) 0.045f else 0.020f
     }.drawWithContent {
         drawContent()
         if (style.light && amount > 0.001f) {
-            drawRect(Brush.radialGradient(listOf(tint.copy(alpha = 0.12f * amount), tint.copy(alpha = 0f)),
+            drawRect(Brush.radialGradient(listOf(tint.copy(alpha = 0.15f * amount), tint.copy(alpha = 0f)),
                 center = origin, radius = size.maxDimension.coerceAtLeast(1f)))
         }
     }
@@ -106,7 +109,7 @@ internal fun Modifier.elasticEdge(): Modifier = composed {
 @Composable internal fun MotionCustomization() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
-    var expressive by remember { mutableStateOf(prefs.getString("motionStyle", "Gentle") == "Expressive") }
+    var expressive by remember { mutableStateOf(prefs.getString("motionStyle", "Expressive") == "Expressive") }
     var lighting by remember { mutableStateOf(prefs.getBoolean("touchLight", true)) }
 
     Column(

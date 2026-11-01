@@ -1,3 +1,18 @@
+# Jadzumi v1.8.0.2 — "The Universal Expressive Motion & Update Engine Update": 4-Part Semantic Version In-App Updater & Fluid Touch Micro-Interactions 🚀✨🧈
+
+A dedicated fluidity and maintenance release resolving in-app update detection for 4-component semantic releases (`v1.8.0.x`) and expanding Material 3 Expressive spring physics, tactile touch-lighting, and elastic micro-interactions app-wide.
+
+### 🔄 1. In-App Updater 4-Part Semantic Version Support
+- **Full Support for 4-Component Version Tags**: Updated `UpdatePolicy.kt`'s `newerStableRelease` comparator to parse and compare 4-component release tags (e.g. `v1.8.0.1`, `v1.8.0.2`) alongside standard 3-component tags (`x.y.z`).
+- **Zero Missed Releases**: Eliminates the issue where hotfix or refinement builds (`v1.8.0.x`) were previously rejected by the strict 3-token regex as "not newer". Tapping "Check for updates" now accurately detects any newer production release from GitHub Releases.
+
+### 🧈 2. App-Wide Material 3 Expressive Micro-Interactions
+- **Expressive Springs Enabled by Default**: Calibrated default damping ratio to `0.60f` with snappy `600f` stiffness for lively, organic feedback on touches, buttons, chips, and selection toolbars.
+- **Enhanced Elastic Press Physics**: Pressing cards and action buttons now delivers responsive 4.5% elastic compression with luminous radial ripple lighting.
+- **Shared-Axis Screen & Section Transitions**: Extended fluid directional slide-and-crossfade transitions to folder selectors, multi-select batch bars, and action dialogs.
+
+---
+
 # Jadzumi v1.8.0.1 — "The Persistent Art & Adaptive Splash Release": Disk Poster Cache Persistence, Adaptive Splash Screen & Universal 0.5s Continuous Morph 🎬✨🧈
 
 A critical persistence and polish update resolving the poster loading bug on app relaunch, introducing the new clean Adaptive Splash Screen with glass morphism and ambient lighting, and strictly unifying the App-Wide Continuous Shared-Element Morph Engine to 0.5s.

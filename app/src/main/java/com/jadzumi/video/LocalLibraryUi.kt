@@ -1432,7 +1432,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                                 IconButton(
                                                     onClick = { isSelectionMode = false; selectedUris.clear() },
-                                                    modifier = Modifier.size(32.dp)
+                                                    modifier = Modifier.size(32.dp).touchMotion()
                                                 ) {
                                                     Icon(Icons.Rounded.Close, "Exit selection", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
                                                 }
@@ -1445,7 +1445,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
 
                                             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                                                 val selectedVideos = remember(selectedUris.toList(), displayVideos) {
-                                                    displayVideos.filter { it.uri in selectedUris }
+                                                     displayVideos.filter { it.uri in selectedUris }
                                                 }
                                                 TextButton(
                                                     onClick = {
@@ -1454,7 +1454,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                                             selectedUris.clear()
                                                             selectedUris.addAll(displayVideos.map { it.uri })
                                                         }
-                                                    }
+                                                    },
+                                                    modifier = Modifier.touchMotion()
                                                 ) {
                                                     Text(if (selectedUris.size == displayVideos.size) "Deselect" else "Select All", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                                 }
@@ -1464,7 +1465,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                                         isSelectionMode = false
                                                         selectedUris.clear()
                                                     },
-                                                    enabled = selectedVideos.isNotEmpty()
+                                                    enabled = selectedVideos.isNotEmpty(),
+                                                    modifier = Modifier.touchMotion()
                                                 ) {
                                                     Text("Watched", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                                 }
@@ -1474,7 +1476,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                                         isSelectionMode = false
                                                         selectedUris.clear()
                                                     },
-                                                    enabled = selectedVideos.isNotEmpty()
+                                                    enabled = selectedVideos.isNotEmpty(),
+                                                    modifier = Modifier.touchMotion()
                                                 ) {
                                                     Text("Clear", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                                 }
@@ -1822,12 +1825,12 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(onClick = add, enabled = !state.busy) {
+                Button(onClick = add, enabled = !state.busy, modifier = Modifier.touchMotion()) {
                     Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("Add folder", maxLines = 1, softWrap = false)
                 }
-                OutlinedButton(onClick = library::fullRescan, enabled = !state.busy && state.folders.isNotEmpty()) {
+                OutlinedButton(onClick = library::fullRescan, enabled = !state.busy && state.folders.isNotEmpty(), modifier = Modifier.touchMotion()) {
                     Icon(Icons.Rounded.Refresh, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("Full Rescan", maxLines = 1, softWrap = false)
@@ -1860,6 +1863,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     )
     Card(
         onClick = onSelect,
+        modifier = Modifier.touchMotion(),
         shape = RoundedCornerShape(22.dp),
         border = if (isActive) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
         colors = CardDefaults.cardColors(containerColor = containerColor)
