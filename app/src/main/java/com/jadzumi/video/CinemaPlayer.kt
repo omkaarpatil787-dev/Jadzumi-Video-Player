@@ -1934,6 +1934,7 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
         }
     }
 }
+}
 
 @Composable private fun QuickMenuRow(
     icon: ImageVector,
