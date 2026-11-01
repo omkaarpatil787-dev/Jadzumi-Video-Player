@@ -94,13 +94,20 @@ object AutoFrameRateManager {
      */
     fun applySurfaceFrameRate(surface: Surface?, contentFps: Double) {
         if (surface == null || !surface.isValid) return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && contentFps.isFinite() && contentFps > 0.0) {
+        if (contentFps.isFinite() && contentFps > 0.0) {
             try {
-                surface.setFrameRate(
-                    contentFps.toFloat(),
-                    Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE,
-                    Surface.CHANGE_FRAME_RATE_ALWAYS
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    surface.setFrameRate(
+                        contentFps.toFloat(),
+                        Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE,
+                        Surface.CHANGE_FRAME_RATE_ALWAYS
+                    )
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    surface.setFrameRate(
+                        contentFps.toFloat(),
+                        Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE
+                    )
+                }
             } catch (_: Exception) {}
         }
     }
