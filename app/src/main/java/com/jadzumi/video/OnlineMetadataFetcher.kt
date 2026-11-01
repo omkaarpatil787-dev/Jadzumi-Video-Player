@@ -184,7 +184,7 @@ object OnlineMetadataFetcher {
 
                             val ratingSource = json.optString("ratingSource")
                             val isVerifiedSource = ratingSource == "imdb" || ratingSource == "tvmaze" || ratingSource == "manual"
-                            if (isVerifiedSource) continue
+                            if (isVerifiedSource) return@forEach
 
                             val isBogus = !isFilmOrTvWork(title, desc, synopsis) ||
                                 title.equals("Sexual identity", ignoreCase = true) ||
