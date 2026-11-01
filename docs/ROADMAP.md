@@ -118,8 +118,41 @@
 
 ---
 
-## Future Roadmap (Planned Next Update)
-1. **FFmpeg Audio Software Fallback (`extension-ffmpeg`)**: Automatic software decoding for unsupported OEM audio tracks (DTS, DTS-HD, TrueHD, older AC-3/E-AC-3).
-2. **Audio Delay / Sync Adjustment**: Fine-grained lip-sync slider (`±500ms` in 50ms increments).
-3. **Subtitle Sync Offset Tool**: Subtitle timing nudger (`±5.0s` in 100ms increments) for external `.srt` / `.ass`.
-4. **Auto Frame Rate (AFR) Matching**: Seamless display refresh rate switching (`Surface.setFrameRate`) with Auto / On / Off toggle under Now Playing customizations.
+### Milestone 12 (v1.9.0) — Pure Cinema & Intelligence Release (Approved & Shipped)
+- **True Auto Frame Rate (AFR) Display Mode Switching**: Exact 24.00Hz / 23.976Hz cadence matching, 120Hz/144Hz 5:5 pulldown, zero judder via `Surface.setFrameRate` (API 30+), and automatic UI display rate restoration.
+- **Biometric Private Vault (Secure Cinema Locker)**: Fingerprint / Face Unlock / device PIN cloaking for sensitive media with dedicated vault management and instant library exclusion.
+- **Cinema DNA & Viewer Persona Studio**: Offline watch history intelligence, 24h viewing heatmaps, 4K/HDR purist ratios, mileage counters, and shareable holographic viewer archetype cards.
+- **Lossless Scene Clipper & Quick Share**: Native zero-reencode `MediaExtractor` + `MediaMuxer` 1080p/4K sub-second scene trimming directly to the Android system share sheet.
+- **Smart Battery Estimator & 24Hz Eco Mode**: Real-time mA discharge telemetry, playback runtime projections, and one-tap 24Hz power saver mode.
+- **Per-Series Binge Automation & Interactive Chapters**: Configurable custom intro/outro skip timestamps per show, auto-advance, and slide-up interactive chapter navigation.
+- **Storage Analyzer & Space Saver**: Real-time storage consumption breakdown by media type, watched media identification, and safe batch cleanup.
+- **Watched / Unwatched Badges & Filter Chip**: Checkmarks on posters/cards and dedicated Watched filter chip.
+- **Version Tag**: `versionCode = 38`, `versionName = "1.9.0"`.
+
+---
+
+## 🚀 Official Milestone: Jadzumi Player v2.0 — "The Omniverse Cinema" (LOCKED)
+
+### 🌐 I. Universal Connectivity & Social Cinema
+1. **LAN Network Streaming (SMB v2/v3, WebDAV, UPnP/DLNA)**: Direct Wi-Fi streaming from PC, home NAS, Synology, or router hard drives with zero storage used.
+2. **Google Cast & Smart TV Casting**: One-tap casting to Chromecast, Android TV, Google TV, and DLNA Smart TVs with on-phone playback remote.
+3. **Local Offline "Cinema Sync" (Hotspot Watch Party)**: Synchronous playback across 2+ phones/tablets over local Wi-Fi or hotspot with zero internet needed.
+
+### 🎧 II. Audiophile Studio & 4D Physical Immersion
+4. **Spatial Cinema 3D & Binaural Virtualizer**: 5.1/7.1 acoustic room modeling for any stereo headphones.
+5. **Night Mode (DRC) & Vocal Clarifier**: Brickwall compression to eliminate loud audio spikes while lifting quiet whispers.
+6. **Haptic Cinema Subwoofer (Tactile 4D Rumble Engine)**: Converts low-frequency sub-bass (explosions, thunder, engine rumbles) into physical vibrations in your hands.
+
+### 🌈 III. Visual Atmospherics & Fluid UI
+7. **Atmospheric Screen Ambilight (OLED Edge Glow)**: Real-time edge color sampling that projects soft atmospheric light onto the letterbox black bars.
+8. **In-App Docked Mini Player (YouTube / Spotify Style)**: Swipe down to dock the player into an interactive bottom bar while continuing to browse.
+9. **Curated Franchises & Smart Box Sets**: Custom film sagas (*MCU*, *Harry Potter*, *Studio Ghibli*) and dynamic smart playlists (*"Unwatched 4K Sci-Fi"*).
+
+### 💬 IV. Next-Gen Subtitle Intelligence
+10. **One-Tap Acoustic Subtitle Auto-Sync**: Automatically corrects 1–3s subtitle timing drifts using audio energy peaks.
+11. **Dual Subtitles Studio**: Simultaneous bilingual subtitle rendering (e.g., Japanese + English) with independent font sizes and positions.
+12. **Interactive Subtitle Lexicon & Vocabulary Deck**: Tap foreign subtitle words for on-screen definitions and save them with audio snippets.
+
+### 🎨 V. Cinephile Creative Studio
+13. **Movie Color Palette & Aesthetic Frame Extractor**: Generates a 5-swatch color harmony strip with hex codes and stamps it onto a crisp 4K frame still.
+14. **Instant GIF / WebP Scene Maker**: 2–8 second animated GIF / WebP clipper with optional baked subtitles for messaging apps.
