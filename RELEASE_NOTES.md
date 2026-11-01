@@ -1,3 +1,19 @@
+# Jadzumi v1.7.9 — Full Theme Adaptive Playback Controls & Quick Menu (Light / Dark / AMOLED) 🎨✨🧈
+
+A dedicated visual consistency and theme optimization release ensuring every playback HUD overlay, quick menu option, status pill, and skip-intro button dynamically and harmoniously matches the active display appearance (Light mode, Dark mode, or AMOLED mode).
+
+### ☀️ Light Mode Harmonic Playback Controls
+- **Theme-Adaptive Quick Options Menu**: The right-side quick menu (`RightSideQuickMenu`) now renders a clean, frosted light glass container (`Color(0xF6F8FAFD)`) with crisp slate borders (`Color(0xFFD0D7DE)`), rich deep slate typography (`Color(0xFF183654)`), muted subtexts (`Color(0xFF526B85)`), and vivid primary blue accents (`Color(0xFF0061A4)`).
+- **Zero Color Inversion / White-on-White Bugs**: Every option row, telemetry card, slider, stepper button (`-` and `+`), and sub-menu adapts dynamically with 100% legibility and contrast across all three modes.
+- **Harmonized Playback Status Pill**: The top-right battery/clock pill now dynamically inherits the active frosted theme colors (`dynamicFrostedCircleBg`, `dynamicFrostedCircleRim`, `playerContentColor`), eliminating the visual clash of a dark pill amidst light controls.
+- **Theme-Adaptive Skip Intro Pill**: Replaced the hardcoded dark capsule with dynamic frosted theme styling and responsive text/accent coloring.
+
+### 🖤 Pure AMOLED & Dark Mode Fidelity
+- **AMOLED Mode**: Quick menu and status capsules render with true deep black backgrounds (`Color(0xFC000000)` and `Color(0xEE000000)`) with crisp 1.dp high-contrast white hairlines, reducing battery consumption on OLED displays.
+- **Dark Mode**: Cinematic frosted dark glass (`Color(0xF00D1520)`) with subtle specular highlights and crisp white typography.
+
+---
+
 # Jadzumi v1.7.8 — Clean Uncluttered Media Cards, Crisp Micro-Border Clarity, AOD Status Pill & Dark Cinema Quick Menu 🎬✨🧈
 
 A refined visual ergonomics and playback UI release removing redundant card chips, eliminating blurry elevation halos with crisp 1.dp hairline definition, transforming the Now Playing status pill into a subtle Always-On Display (AOD) capsule, and ensuring the Quick Customization menu retains dark cinema glass contrast across all themes.

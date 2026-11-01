@@ -626,9 +626,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         showBattery = playback.showBatteryPercentage,
                         showRemainingTime = playback.showRemainingTime,
                         remainingSec = remSec,
-                        bgColor = Color(0x66000000),
-                        rimColor = Color.White.copy(alpha = 0.18f),
-                        contentColor = Color.White.copy(alpha = 0.88f)
+                        bgColor = dynamicFrostedCircleBg,
+                        rimColor = dynamicFrostedCircleRim,
+                        contentColor = playerContentColor,
+                        accentColor = playerAccentColor
                     )
                 }
 
@@ -734,9 +735,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         showBattery = playback.showBatteryPercentage,
                                         showRemainingTime = playback.showRemainingTime,
                                         remainingSec = remSec,
-                                        bgColor = Color(0x66000000),
-                                        rimColor = Color.White.copy(alpha = 0.18f),
-                                        contentColor = Color.White.copy(alpha = 0.88f)
+                                        bgColor = dynamicFrostedCircleBg,
+                                        rimColor = dynamicFrostedCircleRim,
+                                        contentColor = playerContentColor,
+                                        accentColor = playerAccentColor
                                     )
                                 }
 
@@ -882,9 +884,9 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         interaction++
                                     },
                                     shape = RoundedCornerShape(999.dp),
-                                    color = Color(0xD9101827),
-                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                                    shadowElevation = 8.dp,
+                                    color = dynamicFrostedCircleBg,
+                                    border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                    shadowElevation = 0.dp,
                                     modifier = Modifier.align(Alignment.End).padding(bottom = 2.dp)
                                 ) {
                                     Row(
@@ -892,8 +894,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        Icon(Icons.Rounded.FastForward, null, tint = TimelineAccent, modifier = Modifier.size(16.dp))
-                                        Text("Skip Intro (+85s)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                        Icon(Icons.Rounded.FastForward, null, tint = playerAccentColor, modifier = Modifier.size(16.dp))
+                                        Text("Skip Intro (+85s)", color = playerContentColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                     }
                                 }
                             }
@@ -1349,6 +1351,36 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     }
 }
 
+private data class QuickMenuPalette(
+    val bg: Color,
+    val rim: Color,
+    val primaryText: Color,
+    val secondaryText: Color,
+    val iconTint: Color,
+    val divider: Color,
+    val accent: Color,
+    val cardBg: Color,
+    val cardBorder: Color,
+    val btnBg: Color,
+    val btnRim: Color
+)
+
+private val LocalQuickMenuPalette = staticCompositionLocalOf {
+    QuickMenuPalette(
+        bg = Color(0xF00D1520),
+        rim = Color.White.copy(alpha = 0.14f),
+        primaryText = Color.White,
+        secondaryText = Color.White.copy(alpha = 0.72f),
+        iconTint = Color.White.copy(alpha = 0.85f),
+        divider = Color.White.copy(alpha = 0.12f),
+        accent = TimelineAccent,
+        cardBg = Color.White.copy(alpha = 0.06f),
+        cardBorder = Color.White.copy(alpha = 0.12f),
+        btnBg = FrostedCircleBg,
+        btnRim = FrostedCircleRim
+    )
+}
+
 /** Panel 5: Right-Side Floating Translucent Quick Menu */
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 @Composable private fun RightSideQuickMenu(
@@ -1369,31 +1401,79 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     val audioSummary = activeAudio?.let { "${it.label} (${it.codec} ${it.channels})" } ?: "Default"
     val activeSub = playback.subtitleTracks.firstOrNull { it.isSelected }
     val subSummary = activeSub?.let { "${it.label} (${it.format})" } ?: "Off"
-    val menuBg = Color(0xF00D1520)
-    val menuRim = Color.White.copy(alpha = 0.14f)
 
-    BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)).clickable(onClick = onDismiss)) {
-        val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
-        Surface(
-            modifier = if (isPhonePortrait) {
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .clickable(enabled = false) {}
-            } else {
-                Modifier
-                    .align(Alignment.CenterEnd)
-                    .safeDrawingPadding()
-                    .padding(end = 24.dp, top = 24.dp, bottom = 24.dp)
-                    .widthIn(min = 300.dp, max = 350.dp)
-                    .clickable(enabled = false) {}
-            },
-            color = menuBg,
-            border = BorderStroke(1.dp, menuRim),
-            shape = if (isPhonePortrait) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(22.dp),
-            shadowElevation = 24.dp
-        ) {
+    val isLight = theme == "Light"
+    val isAmoled = theme == "AMOLED"
+
+    val palette = remember(theme) {
+        if (isLight) {
+            QuickMenuPalette(
+                bg = Color(0xF6F8FAFD),
+                rim = Color(0xFFD0D7DE),
+                primaryText = Color(0xFF183654),
+                secondaryText = Color(0xFF526B85),
+                iconTint = Color(0xFF334A62),
+                divider = Color(0x1F000000),
+                accent = Color(0xFF0061A4),
+                cardBg = Color(0xFFE8EEF6),
+                cardBorder = Color(0xFFCBD5E1),
+                btnBg = Color(0xFFE2EBF5),
+                btnRim = Color(0xFFCBD5E1)
+            )
+        } else if (isAmoled) {
+            QuickMenuPalette(
+                bg = Color(0xFC000000),
+                rim = Color.White.copy(alpha = 0.18f),
+                primaryText = Color.White,
+                secondaryText = Color.White.copy(alpha = 0.75f),
+                iconTint = Color.White.copy(alpha = 0.90f),
+                divider = Color.White.copy(alpha = 0.14f),
+                accent = TimelineAccent,
+                cardBg = Color(0xFF10141C),
+                cardBorder = Color.White.copy(alpha = 0.14f),
+                btnBg = Color(0xFF141923),
+                btnRim = Color.White.copy(alpha = 0.18f)
+            )
+        } else {
+            QuickMenuPalette(
+                bg = Color(0xF00D1520),
+                rim = Color.White.copy(alpha = 0.14f),
+                primaryText = Color.White,
+                secondaryText = Color.White.copy(alpha = 0.72f),
+                iconTint = Color.White.copy(alpha = 0.85f),
+                divider = Color.White.copy(alpha = 0.12f),
+                accent = TimelineAccent,
+                cardBg = Color.White.copy(alpha = 0.06f),
+                cardBorder = Color.White.copy(alpha = 0.12f),
+                btnBg = FrostedCircleBg,
+                btnRim = FrostedCircleRim
+            )
+        }
+    }
+
+    CompositionLocalProvider(LocalQuickMenuPalette provides palette) {
+        BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = if (isLight) 0.18f else 0.25f)).clickable(onClick = onDismiss)) {
+            val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
+            Surface(
+                modifier = if (isPhonePortrait) {
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .clickable(enabled = false) {}
+                } else {
+                    Modifier
+                        .align(Alignment.CenterEnd)
+                        .safeDrawingPadding()
+                        .padding(end = 24.dp, top = 24.dp, bottom = 24.dp)
+                        .widthIn(min = 300.dp, max = 350.dp)
+                        .clickable(enabled = false) {}
+                },
+                color = palette.bg,
+                border = BorderStroke(1.dp, palette.rim),
+                shape = if (isPhonePortrait) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(22.dp),
+                shadowElevation = if (isLight) 8.dp else 24.dp
+            ) {
             when (section) {
                 "main" -> {
                     Column(Modifier.heightIn(max = 560.dp).elasticEdge().verticalScroll(rememberScrollState()).padding(vertical = 10.dp)) {
@@ -1487,7 +1567,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     QuickSubMenuContainer(title = "Video Enhancer & Color Studio", onBack = { onSelectSection("main") }) {
                         if (playback.isHdr) {
                             Card(
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF2E2200)),
+                                colors = CardDefaults.cardColors(containerColor = if (isLight) Color(0xFFFFF8E1) else Color(0xFF2E2200)),
                                 border = BorderStroke(1.dp, Color(0xFFFFB300).copy(alpha = 0.45f)),
                                 shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)
@@ -1501,13 +1581,13 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     Spacer(Modifier.height(6.dp))
                                     Text(
                                         "Color enhancements are safely locked during 10-bit HDR / Dolby Vision playback to preserve native BT.2020 wide color gamut and ST 2084 / HLG dynamic range without clipping.",
-                                        color = Color.White.copy(alpha = 0.82f),
+                                        color = if (isLight) Color(0xFF5D4037) else Color.White.copy(alpha = 0.82f),
                                         fontSize = 11.sp
                                     )
                                 }
                             }
                         } else {
-                            Text("Color Profiles", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                            Text("Color Profiles", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                             ColorEnhancementProfile.entries.forEach { profile ->
                                 QuickOptionItem(
                                     label = profile.displayName,
@@ -1519,16 +1599,16 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 )
                                 Text(
                                     profile.description,
-                                    color = Color.White.copy(alpha = 0.55f),
+                                    color = palette.secondaryText,
                                     fontSize = 11.sp,
                                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 6.dp)
                                 )
                             }
 
-                            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.12f))
+                            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = palette.divider)
 
                             val params = playback.videoEnhancerParams
-                            Text("Fine-Tuning Controls", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                            Text("Fine-Tuning Controls", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
 
                             EnhancerSliderRow(
                                 title = "Contrast",
@@ -1580,7 +1660,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                                    Text("AMOLED Deep Black (Experimental)", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    Text("AMOLED Deep Black (Experimental)", color = palette.primaryText, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                                     Text(ColorStudioParams.AMOLED_WARNING, color = Color(0xFFFFB300).copy(alpha = 0.85f), fontSize = 10.sp)
                                 }
                                 Switch(
@@ -1592,7 +1672,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 )
                             }
 
-                            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.12f))
+                            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = palette.divider)
                             Row(
                                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
                                 horizontalArrangement = Arrangement.End
@@ -1602,12 +1682,12 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         playback.resetColorStudio()
                                         onMessage("Video enhancer reset to Neutral")
                                     },
-                                    border = BorderStroke(1.dp, TimelineAccent.copy(alpha = 0.45f)),
+                                    border = BorderStroke(1.dp, palette.accent.copy(alpha = 0.45f)),
                                     shape = RoundedCornerShape(10.dp)
                                 ) {
-                                    Icon(Icons.Rounded.Refresh, null, tint = TimelineAccent, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Rounded.Refresh, null, tint = palette.accent, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Reset to Neutral", color = TimelineAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("Reset to Neutral", color = palette.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -1625,10 +1705,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             playback.audioDelayMs
                         ) { playback.inspectActiveAudioStream() }
 
-                        Text("Active Stream Telemetry", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        Text("Active Stream Telemetry", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.06f)),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+                            colors = CardDefaults.cardColors(containerColor = palette.cardBg),
+                            border = BorderStroke(1.dp, palette.cardBorder),
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)
                         ) {
@@ -1648,23 +1728,23 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text("Processing:", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
+                                    Text("Processing:", color = palette.secondaryText, fontSize = 11.sp)
                                     streamInfo.activeProcessing.forEach { proc ->
                                         Surface(
                                             shape = RoundedCornerShape(6.dp),
-                                            color = TimelineAccent.copy(alpha = 0.16f),
-                                            border = BorderStroke(0.5.dp, TimelineAccent.copy(alpha = 0.35f))
+                                            color = palette.accent.copy(alpha = 0.16f),
+                                            border = BorderStroke(0.5.dp, palette.accent.copy(alpha = 0.35f))
                                         ) {
-                                            Text(proc, color = TimelineAccent, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                            Text(proc, color = palette.accent, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                         }
                                     }
                                 }
                             }
                         }
 
-                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = palette.divider)
 
-                        Text("Channel Processing Mode", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        Text("Channel Processing Mode", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                         AudioChannelMode.entries.forEach { mode ->
                             QuickOptionItem(
                                 label = mode.title,
@@ -1676,13 +1756,13 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             )
                             Text(
                                 mode.description,
-                                color = Color.White.copy(alpha = 0.55f),
+                                color = palette.secondaryText,
                                 fontSize = 11.sp,
                                 modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 6.dp)
                             )
                         }
 
-                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = palette.divider)
 
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
@@ -1690,26 +1770,26 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                                Text("Bluetooth Audio Delay (Lip-Sync)", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                Text("Negative (−) advances audio; Positive (+) delays audio to sync with Bluetooth latency", color = Color.White.copy(alpha = 0.60f), fontSize = 10.sp)
-                                Text("Current offset: ${playback.audioDelayMs}ms", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("Bluetooth Audio Delay (Lip-Sync)", color = palette.primaryText, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Negative (−) advances audio; Positive (+) delays audio to sync with Bluetooth latency", color = palette.secondaryText, fontSize = 10.sp)
+                                Text("Current offset: ${playback.audioDelayMs}ms", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                FrostedCircleButton("-50ms", { playback.updateAudioDelay(-50); onMessage("Audio Delay: ${playback.audioDelayMs}ms") }, size = 32.dp) {
-                                    Text("-", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                FrostedCircleButton("-50ms", { playback.updateAudioDelay(-50); onMessage("Audio Delay: ${playback.audioDelayMs}ms") }, size = 32.dp, bgColor = palette.btnBg, rimColor = palette.btnRim) {
+                                    Text("-", color = palette.primaryText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                                 if (playback.audioDelayMs != 0L) {
-                                    FrostedCircleButton("Reset", { playback.resetAudioDelay(); onMessage("Audio Delay: 0ms") }, size = 32.dp) {
-                                        Text("0", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    FrostedCircleButton("Reset", { playback.resetAudioDelay(); onMessage("Audio Delay: 0ms") }, size = 32.dp, bgColor = palette.btnBg, rimColor = palette.btnRim) {
+                                        Text("0", color = palette.accent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                     }
                                 }
-                                FrostedCircleButton("+50ms", { playback.updateAudioDelay(50); onMessage("Audio Delay: ${playback.audioDelayMs}ms") }, size = 32.dp) {
-                                    Text("+", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                FrostedCircleButton("+50ms", { playback.updateAudioDelay(50); onMessage("Audio Delay: ${playback.audioDelayMs}ms") }, size = 32.dp, bgColor = palette.btnBg, rimColor = palette.btnRim) {
+                                    Text("+", color = palette.primaryText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                             }
                         }
 
-                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = palette.divider)
 
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
@@ -1717,8 +1797,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                                Text("Night Mode / Dynamic Compression", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                Text("Dynamic compression amplifies quiet dialogue and dampens loud effects", color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
+                                Text("Night Mode / Dynamic Compression", color = palette.primaryText, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Dynamic compression amplifies quiet dialogue and dampens loud effects", color = palette.secondaryText, fontSize = 11.sp)
                             }
                             Switch(
                                 checked = playback.nightModeVoiceBoost,
@@ -1729,11 +1809,11 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             )
                         }
 
-                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = palette.divider)
 
-                        Text("Available Audio Tracks", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        Text("Available Audio Tracks", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                         if (playback.audioTracks.isEmpty()) {
-                            Text("Default audio stream active", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+                            Text("Default audio stream active", color = palette.secondaryText, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
                         } else {
                             playback.audioTracks.forEach { track ->
                                 QuickOptionItem(
@@ -1748,7 +1828,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                 "subs" -> {
                     QuickSubMenuContainer(title = "Subtitle settings", onBack = { onSelectSection("main") }) {
-                        Text("Active Track", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        Text("Active Track", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                         val noneSelected = playback.subtitleTracks.none { it.isSelected }
                         QuickOptionItem(
                             label = "Off",
@@ -1763,7 +1843,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             )
                         }
 
-                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color.White.copy(alpha = 0.12f))
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = palette.divider)
 
                         QuickMenuRow(
                             icon = Icons.Rounded.Add,
@@ -1786,21 +1866,21 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                                Text("Subtitle Sync Offset", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Subtitle Sync Offset", color = palette.primaryText, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                                 val sec = playback.subtitleDelayMs / 1000f
-                                Text("Offset: ${if (sec > 0) "+$sec" else "$sec"}s", color = TimelineAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("Offset: ${if (sec > 0) "+$sec" else "$sec"}s", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                FrostedCircleButton("-100ms", { playback.updateSubtitleDelay(-100); onMessage("Sub Delay: ${playback.subtitleDelayMs / 1000f}s") }, size = 32.dp) {
-                                    Text("-", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                FrostedCircleButton("-100ms", { playback.updateSubtitleDelay(-100); onMessage("Sub Delay: ${playback.subtitleDelayMs / 1000f}s") }, size = 32.dp, bgColor = palette.btnBg, rimColor = palette.btnRim) {
+                                    Text("-", color = palette.primaryText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                                 if (playback.subtitleDelayMs != 0L) {
-                                    FrostedCircleButton("Reset", { playback.resetSubtitleDelay(); onMessage("Sub Delay: 0.0s") }, size = 32.dp) {
-                                        Text("0", color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    FrostedCircleButton("Reset", { playback.resetSubtitleDelay(); onMessage("Sub Delay: 0.0s") }, size = 32.dp, bgColor = palette.btnBg, rimColor = palette.btnRim) {
+                                        Text("0", color = palette.accent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                     }
                                 }
-                                FrostedCircleButton("+100ms", { playback.updateSubtitleDelay(100); onMessage("Sub Delay: ${playback.subtitleDelayMs / 1000f}s") }, size = 32.dp) {
-                                    Text("+", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                FrostedCircleButton("+100ms", { playback.updateSubtitleDelay(100); onMessage("Sub Delay: ${playback.subtitleDelayMs / 1000f}s") }, size = 32.dp, bgColor = palette.btnBg, rimColor = palette.btnRim) {
+                                    Text("+", color = palette.primaryText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                             }
                         }
@@ -1861,6 +1941,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     value: String,
     onClick: () -> Unit
 ) {
+    val palette = LocalQuickMenuPalette.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1874,14 +1955,14 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.wrapContentWidth()
         ) {
-            Icon(icon, null, tint = Color.White.copy(alpha = 0.85f), modifier = Modifier.size(20.dp))
-            Text(label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+            Icon(icon, null, tint = palette.iconTint, modifier = Modifier.size(20.dp))
+            Text(label, color = palette.primaryText, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
         }
         if (value.isNotEmpty()) {
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 value,
-                color = Color.White.copy(alpha = 0.72f),
+                color = palette.secondaryText,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Normal,
                 maxLines = 1,
@@ -1898,16 +1979,17 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     onBack: () -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val palette = LocalQuickMenuPalette.current
     Column(Modifier.padding(vertical = 10.dp).heightIn(max = 340.dp)) {
         Row(
             Modifier.fillMaxWidth().clickable(onClick = onBack).padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = Color.White, modifier = Modifier.size(18.dp))
-            Text(title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = palette.primaryText, modifier = Modifier.size(18.dp))
+            Text(title, color = palette.primaryText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         }
-        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+        HorizontalDivider(color = palette.divider)
         LazyColumn(content = { item { Column(content = content) } })
     }
 }
@@ -1917,6 +1999,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     selected: Boolean,
     onClick: () -> Unit
 ) {
+    val palette = LocalQuickMenuPalette.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1928,13 +2011,13 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     ) {
         Text(
             label,
-            color = if (selected) TimelineAccent else Color.White,
+            color = if (selected) palette.accent else palette.primaryText,
             fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.weight(1f)
         )
         if (selected) {
-            Icon(Icons.Rounded.Check, null, tint = TimelineAccent, modifier = Modifier.size(18.dp))
+            Icon(Icons.Rounded.Check, null, tint = palette.accent, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -2228,13 +2311,14 @@ private fun NextEpisodeAutoplayBanner(
 
 @Composable
 private fun AudioTelemetryRow(label: String, value: String) {
+    val palette = LocalQuickMenuPalette.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
-        Text(value, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+        Text(label, color = palette.secondaryText, fontSize = 11.sp)
+        Text(value, color = palette.primaryText, fontSize = 11.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -2247,24 +2331,25 @@ private fun EnhancerSliderRow(
     valueRange: ClosedFloatingPointRange<Float>,
     onValueChange: (Float) -> Unit
 ) {
+    val palette = LocalQuickMenuPalette.current
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-            Text(valueText, color = TimelineAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Text(title, color = palette.primaryText, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            Text(valueText, color = palette.accent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
         }
-        Text(subtext, color = Color.White.copy(alpha = 0.55f), fontSize = 10.sp)
+        Text(subtext, color = palette.secondaryText, fontSize = 10.sp)
         Slider(
             value = value,
             onValueChange = onValueChange,
             valueRange = valueRange,
             colors = SliderDefaults.colors(
-                thumbColor = TimelineAccent,
-                activeTrackColor = TimelineAccent,
-                inactiveTrackColor = Color.White.copy(alpha = 0.20f)
+                thumbColor = palette.accent,
+                activeTrackColor = palette.accent,
+                inactiveTrackColor = palette.secondaryText.copy(alpha = 0.25f)
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -2280,6 +2365,7 @@ private fun PlayerStatusPill(
     bgColor: Color = Color(0x990A0E17),
     rimColor: Color = Color.White.copy(alpha = 0.22f),
     contentColor: Color = Color.White,
+    accentColor: Color = TimelineAccent,
     modifier: Modifier = Modifier
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -2342,7 +2428,7 @@ private fun PlayerStatusPill(
                     Icon(
                         if (isCharging) Icons.Rounded.BatteryChargingFull else Icons.Rounded.BatteryStd,
                         contentDescription = "Battery level",
-                        tint = if (isCharging) TimelineAccent else contentColor.copy(alpha = 0.9f),
+                        tint = if (isCharging) accentColor else contentColor.copy(alpha = 0.9f),
                         modifier = Modifier.size(15.dp)
                     )
                     Text(
@@ -2364,7 +2450,7 @@ private fun PlayerStatusPill(
                     Icon(
                         Icons.Rounded.Schedule,
                         contentDescription = "Remaining time",
-                        tint = TimelineAccent,
+                        tint = accentColor,
                         modifier = Modifier.size(13.dp)
                     )
                     Text(
