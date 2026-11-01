@@ -1,5 +1,6 @@
 package com.jadzumi.video
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.media.MediaCodec
@@ -32,6 +33,7 @@ import java.nio.ByteBuffer
 
 object LosslessClipExporter {
 
+    @SuppressLint("WrongConstant")
     suspend fun exportClip(
         context: Context,
         video: LocalVideo,
@@ -91,7 +93,15 @@ object LosslessClipExporter {
                     if (bufferInfo.size < 0) break
 
                     bufferInfo.presentationTimeUs = (sampleTime - startUs).coerceAtLeast(0)
-                    bufferInfo.flags = extractor.sampleFlags
+                    val sampleFlags = extractor.sampleFlags
+                    var flags = 0
+                    if ((sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC) != 0) {
+                        flags = flags or MediaCodec.BUFFER_FLAG_KEY_FRAME
+                    }
+                    if ((sampleFlags and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME) != 0) {
+                        flags = flags or MediaCodec.BUFFER_FLAG_PARTIAL_FRAME
+                    }
+                    bufferInfo.flags = flags
                     bufferInfo.offset = 0
 
                     muxer.writeSampleData(muxerTrackIndex, buffer, bufferInfo)
