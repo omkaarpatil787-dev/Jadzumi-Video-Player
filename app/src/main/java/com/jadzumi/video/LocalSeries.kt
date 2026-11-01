@@ -336,6 +336,7 @@ fun clusterVideosIntoSeries(
 
         val cachedOnline = if (context != null) {
             OnlineMetadataFetcher.getCachedTvShow(context, firstInfo.seriesTitle)
+                ?: OnlineMetadataFetcher.getCachedTvShow(context, seriesTitleCleaned)
         } else null
 
         val effectivePoster = poster ?: cachedOnline?.localPosterPath ?: cachedOnline?.posterUrl
@@ -573,18 +574,14 @@ fun extractMovieMetadata(
     }
 
     // Parse year and clean title from filename if nfo doesn't provide them
+    val (cleanFileTitle, cleanFileYear) = OnlineMetadataFetcher.extractCleanTitleAndYear(video.name)
     val yearMatch = YEAR_REGEX.find(baseName)
     val parsedYear = yearMatch?.groupValues?.get(1)
-    val rawTitle = if (yearMatch != null) baseName.substring(0, yearMatch.range.first) else baseName
-    val cleanedTitle = rawTitle
-        .replace(EpisodePatterns.RELEASE_TAGS, " ")
-        .replace(Regex("[\\[\\(]"), " ")
-        .replace(Regex("[-._()]+"), " ")
-        .trim()
-        .ifEmpty { video.title }
+    val effectiveYear = nfoMetadata?.year ?: cleanFileYear ?: parsedYear
+    val effectiveTitle = cleanFileTitle.ifBlank { video.title }
 
     val cachedOnline = if (context != null) {
-        OnlineMetadataFetcher.getCachedMovie(context, cleanedTitle, parsedYear)
+        OnlineMetadataFetcher.getCachedMovie(context, effectiveTitle, effectiveYear, video.identity)
     } else null
 
     val effectivePoster = poster ?: cachedOnline?.localPosterPath ?: cachedOnline?.posterUrl
@@ -598,8 +595,8 @@ fun extractMovieMetadata(
         ?: cachedOnline?.synopsis
 
     return MovieMetadata(
-        title = nfoMetadata?.title ?: cachedOnline?.title ?: cleanedTitle,
-        year = nfoMetadata?.year ?: cachedOnline?.year ?: parsedYear,
+        title = nfoMetadata?.title ?: cachedOnline?.title ?: effectiveTitle,
+        year = effectiveYear ?: cachedOnline?.year,
         rating = displayRating(nfoMetadata?.rating?.toDoubleOrNull()) ?: cachedOnline?.rating,
         mpaa = nfoMetadata?.mpaa,
         synopsis = detectedSynopsis,

@@ -499,8 +499,8 @@ private val destinations = listOf(
                                                         )
                                                 } else if (isInitialDetails && !isTargetDetails) {
                                                     // Deliberate 500ms shared-element collapse back to Library
-                                                    (fadeIn(animationSpec = tween(460, easing = morphCurve)) +
-                                                            scaleIn(initialScale = 0.98f, animationSpec = tween(460, easing = morphCurve)))
+                                                    (fadeIn(animationSpec = tween(500, easing = morphCurve)) +
+                                                            scaleIn(initialScale = 0.98f, animationSpec = tween(500, easing = morphCurve)))
                                                         .togetherWith(
                                                             fadeOut(animationSpec = tween(500, easing = morphCurve)) +
                                                                     scaleOut(targetScale = 0.92f, animationSpec = tween(500, easing = morphCurve))

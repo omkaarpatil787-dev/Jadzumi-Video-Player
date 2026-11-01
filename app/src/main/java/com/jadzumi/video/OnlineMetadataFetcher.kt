@@ -182,6 +182,10 @@ object OnlineMetadataFetcher {
                             val desc = json.optString("description")
                             val keyRaw = file.nameWithoutExtension.removePrefix("mov_").removePrefix("tv_").replace("_", " ")
 
+                            val ratingSource = json.optString("ratingSource")
+                            val isVerifiedSource = ratingSource == "imdb" || ratingSource == "tvmaze" || ratingSource == "manual"
+                            if (isVerifiedSource) continue
+
                             val isBogus = !isFilmOrTvWork(title, desc, synopsis) ||
                                 title.equals("Sexual identity", ignoreCase = true) ||
                                 (title.equals("Blue", ignoreCase = true) && synopsis.contains("colour", ignoreCase = true)) ||
@@ -412,55 +416,63 @@ object OnlineMetadataFetcher {
         val cacheKey = "mov_" + sanitizeKey(cleanTitle + (effectiveYear?.let { "_$it" } ?: ""))
         memoryCache[cacheKey]?.let { return it }
 
-        val cacheFile = File(getMetadataCacheDir(context), "$cacheKey.json")
-        if (cacheFile.exists()) {
-            return try {
-                val json = JSONObject(cacheFile.readText())
-                val cachedTitle = json.optString("title", cleanTitle)
-                val cachedSynopsis = json.optString("synopsis")
-                val cachedDesc = json.optString("description")
+        val cacheDir = getMetadataCacheDir(context)
+        val candidateFiles = listOfNotNull(
+            File(cacheDir, "$cacheKey.json").takeIf { it.exists() },
+            if (effectiveYear != null) File(cacheDir, "mov_${sanitizeKey(cleanTitle)}.json").takeIf { it.exists() } else null,
+            File(cacheDir, "mov_${sanitizeKey(rawTitle)}.json").takeIf { it.exists() }
+        )
 
-                // Validation: if previously cached title fails anchor similarity, is not a film, or is known bogus
-                val isBogus = cachedTitle.contains("List of ", ignoreCase = true) ||
-                              cachedTitle.contains("Rajesh Kava", ignoreCase = true) ||
-                              cachedTitle.equals("Sexual identity", ignoreCase = true) ||
-                              (cachedTitle.equals("Blue", ignoreCase = true) && cachedSynopsis.contains("colour", ignoreCase = true)) ||
-                              cachedTitle.contains("Zombie Massacre", ignoreCase = true) ||
-                              !isFilmOrTvWork(cachedTitle, cachedDesc, cachedSynopsis) ||
-                              scoreCandidate(cleanTitle, cachedTitle, cachedSynopsis, effectiveYear) < 0.25f
+        val cacheFile = candidateFiles.firstOrNull() ?: return null
+        return try {
+            val json = JSONObject(cacheFile.readText())
+            val cachedTitle = json.optString("title", cleanTitle)
+            val cachedSynopsis = json.optString("synopsis")
+            val cachedDesc = json.optString("description")
+            val ratingSource = json.optString("ratingSource")
 
-                if (isBogus) {
-                    cacheFile.delete()
-                    val posterFile = File(getPosterCacheDir(context), "${cacheKey}.jpg")
-                    if (posterFile.exists()) posterFile.delete()
-                    return null
+            val isVerifiedSource = ratingSource == "imdb" || ratingSource == "tvmaze" || ratingSource == "manual"
+            val isBogus = !isVerifiedSource && (
+                cachedTitle.contains("List of ", ignoreCase = true) ||
+                cachedTitle.contains("Rajesh Kava", ignoreCase = true) ||
+                cachedTitle.equals("Sexual identity", ignoreCase = true) ||
+                (cachedTitle.equals("Blue", ignoreCase = true) && cachedSynopsis.contains("colour", ignoreCase = true)) ||
+                cachedTitle.contains("Zombie Massacre", ignoreCase = true) ||
+                scoreCandidate(cleanTitle, cachedTitle, cachedSynopsis, effectiveYear) < 0.20f
+            )
+
+            if (isBogus) {
+                cacheFile.delete()
+                val posterFile = File(getPosterCacheDir(context), "${cacheFile.nameWithoutExtension}.jpg")
+                if (posterFile.exists()) posterFile.delete()
+                return null
+            }
+
+            val posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() }
+            val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() && File(it).exists() }
+                ?: File(getPosterCacheDir(context), "${cacheFile.nameWithoutExtension}.jpg").takeIf { it.exists() && it.length() > 500 }?.absolutePath
+                ?: posterUrl
+
+            val genresList = mutableListOf<String>()
+            val genresArr = json.optJSONArray("genres")
+            if (genresArr != null) {
+                for (i in 0 until genresArr.length()) {
+                    genresList.add(genresArr.getString(i))
                 }
-
-                val posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() }
-                val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() }
-                    ?: File(getPosterCacheDir(context), "${cacheKey}.jpg").takeIf { it.exists() && it.length() > 500 }?.absolutePath
-
-                val genresList = mutableListOf<String>()
-                val genresArr = json.optJSONArray("genres")
-                if (genresArr != null) {
-                    for (i in 0 until genresArr.length()) {
-                        genresList.add(genresArr.getString(i))
-                    }
-                }
-                val meta = OnlineMediaMetadata(
-                    title = cachedTitle,
-                    year = json.optString("year").takeIf { it.isNotBlank() },
-                    rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
-                    genres = genresList,
-                    synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
-                    posterUrl = posterUrl,
-                    localPosterPath = localPoster
-                )
-                memoryCache[cacheKey] = meta
-                meta
-            } catch (_: Exception) { null }
-        }
-        return null
+            }
+            val meta = OnlineMediaMetadata(
+                title = cachedTitle,
+                year = json.optString("year").takeIf { it.isNotBlank() },
+                rating = if (ratingSource == "tvmaze" || ratingSource == "imdb") displayRating(json.optString("rating").toDoubleOrNull()) else null,
+                genres = genresList,
+                synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
+                posterUrl = posterUrl,
+                backdropUrl = json.optString("backdropUrl").takeIf { it.isNotBlank() },
+                localPosterPath = localPoster
+            )
+            memoryCache[cacheKey] = meta
+            meta
+        } catch (_: Exception) { null }
     }
 
     fun getCachedTvShow(context: Context, rawTitle: String): OnlineMediaMetadata? {
@@ -469,43 +481,55 @@ object OnlineMetadataFetcher {
         val cacheKey = "tv_" + sanitizeKey(cleanTitle)
         memoryCache[cacheKey]?.let { return it }
 
-        val cacheFile = File(getMetadataCacheDir(context), "$cacheKey.json")
-        if (cacheFile.exists()) {
-            return try {
-                val json = JSONObject(cacheFile.readText())
-                val cachedTitle = json.optString("title", cleanTitle)
-
-                // Validation: if previously cached title fails anchor similarity, evict poisoned entry
-                if (scoreCandidate(cleanTitle, cachedTitle, null, null) <= 0f) {
-                    cacheFile.delete()
-                    return null
-                }
-
-                val posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() }
-                val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() }
-                    ?: File(getPosterCacheDir(context), "${cacheKey}.jpg").takeIf { it.exists() && it.length() > 500 }?.absolutePath
-
-                val genresList = mutableListOf<String>()
-                val genresArr = json.optJSONArray("genres")
-                if (genresArr != null) {
-                    for (i in 0 until genresArr.length()) {
-                        genresList.add(genresArr.getString(i))
-                    }
-                }
-                val meta = OnlineMediaMetadata(
-                    title = cachedTitle,
-                    year = json.optString("year").takeIf { it.isNotBlank() },
-                    rating = if (json.optString("ratingSource") == "tvmaze") displayRating(json.optString("rating").toDoubleOrNull()) else null,
-                    genres = genresList,
-                    synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
-                    posterUrl = posterUrl,
-                    localPosterPath = localPoster
-                )
-                memoryCache[cacheKey] = meta
-                meta
-            } catch (_: Exception) { null }
+        val cacheDir = getMetadataCacheDir(context)
+        val candidateFiles = mutableListOf<File>()
+        val exactFile = File(cacheDir, "$cacheKey.json")
+        if (exactFile.exists()) candidateFiles.add(exactFile)
+        val rawFile = File(cacheDir, "tv_${sanitizeKey(rawTitle)}.json")
+        if (rawFile.exists()) candidateFiles.add(rawFile)
+        if (candidateFiles.isEmpty()) {
+            cacheDir.listFiles { _, name -> name.startsWith(cacheKey) && name.endsWith(".json") }?.let {
+                candidateFiles.addAll(it)
+            }
         }
-        return null
+
+        val cacheFile = candidateFiles.firstOrNull() ?: return null
+        return try {
+            val json = JSONObject(cacheFile.readText())
+            val cachedTitle = json.optString("title", cleanTitle)
+            val ratingSource = json.optString("ratingSource")
+            val isVerifiedSource = ratingSource == "imdb" || ratingSource == "tvmaze" || ratingSource == "manual"
+
+            if (!isVerifiedSource && scoreCandidate(cleanTitle, cachedTitle, null, null) <= 0f) {
+                cacheFile.delete()
+                return null
+            }
+
+            val posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() }
+            val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() && File(it).exists() }
+                ?: File(getPosterCacheDir(context), "${cacheFile.nameWithoutExtension}.jpg").takeIf { it.exists() && it.length() > 500 }?.absolutePath
+                ?: posterUrl
+
+            val genresList = mutableListOf<String>()
+            val genresArr = json.optJSONArray("genres")
+            if (genresArr != null) {
+                for (i in 0 until genresArr.length()) {
+                    genresList.add(genresArr.getString(i))
+                }
+            }
+            val meta = OnlineMediaMetadata(
+                title = cachedTitle,
+                year = json.optString("year").takeIf { it.isNotBlank() },
+                rating = if (ratingSource == "tvmaze" || ratingSource == "imdb") displayRating(json.optString("rating").toDoubleOrNull()) else null,
+                genres = genresList,
+                synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
+                posterUrl = posterUrl,
+                backdropUrl = json.optString("backdropUrl").takeIf { it.isNotBlank() },
+                localPosterPath = localPoster
+            )
+            memoryCache[cacheKey] = meta
+            meta
+        } catch (_: Exception) { null }
     }
 
     /**
@@ -693,14 +717,16 @@ object OnlineMetadataFetcher {
                 val cachedSynopsis = json.optString("synopsis")
                 val cachedDesc = json.optString("description")
 
-                // Evict if poisoned or not a valid film work
-                val isBogus = cachedTitle.contains("List of ", ignoreCase = true) ||
-                              cachedTitle.contains("Rajesh Kava", ignoreCase = true) ||
-                              cachedTitle.equals("Sexual identity", ignoreCase = true) ||
-                              (cachedTitle.equals("Blue", ignoreCase = true) && cachedSynopsis.contains("colour", ignoreCase = true)) ||
-                              cachedTitle.contains("Zombie Massacre", ignoreCase = true) ||
-                              !isFilmOrTvWork(cachedTitle, cachedDesc, cachedSynopsis) ||
-                              scoreCandidate(cleanTitle, cachedTitle, cachedSynopsis, effectiveYear) < 0.25f
+                val ratingSource = json.optString("ratingSource")
+                val isVerifiedSource = ratingSource == "imdb" || ratingSource == "tvmaze" || ratingSource == "manual"
+                val isBogus = !isVerifiedSource && (
+                    cachedTitle.contains("List of ", ignoreCase = true) ||
+                    cachedTitle.contains("Rajesh Kava", ignoreCase = true) ||
+                    cachedTitle.equals("Sexual identity", ignoreCase = true) ||
+                    (cachedTitle.equals("Blue", ignoreCase = true) && cachedSynopsis.contains("colour", ignoreCase = true)) ||
+                    cachedTitle.contains("Zombie Massacre", ignoreCase = true) ||
+                    scoreCandidate(cleanTitle, cachedTitle, cachedSynopsis, effectiveYear) < 0.20f
+                )
 
                 if (isBogus) {
                     cacheFile.delete()
@@ -708,7 +734,8 @@ object OnlineMetadataFetcher {
                     if (posterFile.exists()) posterFile.delete()
                 } else {
                     val posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() }
-                    val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() }
+                    val localPoster = json.optString("localPoster").takeIf { it.isNotBlank() && File(it).exists() }
+                        ?: File(getPosterCacheDir(context), "${cacheKey}.jpg").takeIf { it.exists() && it.length() > 500 }?.absolutePath
                         ?: posterUrl?.let { downloadAndCachePoster(context, it, cacheKey) }
 
                     val genresList = mutableListOf<String>()

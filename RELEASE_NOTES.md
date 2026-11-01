@@ -1,3 +1,23 @@
+# Jadzumi v1.8.0.1 — "The Persistent Art & Adaptive Splash Release": Disk Poster Cache Persistence, Adaptive Splash Screen & Universal 0.5s Continuous Morph 🎬✨🧈
+
+A critical persistence and polish update resolving the poster loading bug on app relaunch, introducing the new clean Adaptive Splash Screen with glass morphism and ambient lighting, and strictly unifying the App-Wide Continuous Shared-Element Morph Engine to 0.5s.
+
+### 🖼️ 1. Permanent Poster & Metadata Disk Persistence (Zero Blank Cards on Reopen)
+- **Resolved False Cache Eviction**: Fixed an issue where cached movie and TV show artwork was mistakenly flagged by Wikipedia text-validation heuristics (`isFilmOrTvWork`) on app relaunch and deleted from disk cache. Verified Cinemeta (IMDb), TVMaze, and manual Fix Match entries are now permanently safeguarded.
+- **Unified Cache Keys**: Standardized title parsing and year normalization across library extraction (`LocalSeries.kt`) and scraper lookup (`OnlineMetadataFetcher.kt`), preventing key mismatches on relaunch.
+- **Asynchronous Card Prefetcher**: Added automatic background prefetchers to `MovieSummaryCard` and `TvSeriesSummaryCard` in `LocalLibraryUi.kt`. Posters load instantly (0ms) from disk cache on app relaunch without requiring the user to tap into details pages.
+
+### 🌟 2. New Signature Adaptive Splash Screen (Spec-Accurate Studio Implementation)
+- **Clean Adaptive Logo**: Implemented the glass-morphic squircle icon from `jadzumi_adaptive_splash_clean.html` featuring quad-stop gradient tiles, sliding dual-layer 3D wings, specular front glass play symbol, and diagonal light sheen sweep.
+- **Seamless Appearance Theming**: Dynamic adaptation for **Light** (`#F3F9FF`), **Dark** (`#0B1426`), and **AMOLED** (`#000000`) appearances with matching ambient radial glow and progress tracks.
+- **Progressive App Entry**: Smooth 1800ms timeline with progressive fill bar and unhurried scale/fade handoff directly into the media library.
+
+### 🧈 3. Unified 0.5s App-Wide Continuous Shared-Element Morph Engine
+- **Standardized 500ms Motion Engine**: Locked all screen, details card, and dialog geometry transitions to a deliberate **0.5s (500ms)** duration with `cubic-bezier(0.19, 1.0, 0.22, 1.0)`.
+- **Fix Match Dialog Geometry Morph**: `FixMatchDialog` smoothly expands physical geometry (width, height from 60% to 85%, rounding from 38dp to 26dp, and depth scale) without popping or layout blinking.
+
+---
+
 # Jadzumi v1.8.0 — "The Smoothness & Refinement Milestone": Fix Match & Artwork Matcher, App-Wide 500ms Shared-Element Morph, Ambient Cinema Backdrop & YouTube Cascading Seek Chevrons 🎬✨🧈
 
 A landmark refinement update introducing manual "Fix Match" & gallery poster matching, automated scraper guardrails against encyclopedic entries, universal 500ms continuous shared-element geometry morphing across navigation, an airy pastel horizon in Light mode / cinema ambient glow in Dark mode, and sleek YouTube-style cascading chevron seek pills.

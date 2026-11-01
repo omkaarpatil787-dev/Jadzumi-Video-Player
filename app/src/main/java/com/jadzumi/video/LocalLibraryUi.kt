@@ -1947,8 +1947,34 @@ fun MovieSummaryCard(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val metadata = remember(video, sidecars) {
-        extractMovieMetadata(video, sidecars, context)
+    var livePosterUri by remember(video.identity) {
+        mutableStateOf<String?>(null)
+    }
+
+    LaunchedEffect(video.identity, video.name) {
+        val (cleanTitle, cleanYear) = OnlineMetadataFetcher.extractCleanTitleAndYear(video.name)
+        val cached = OnlineMetadataFetcher.getCachedMovie(context, cleanTitle, cleanYear, video.identity)
+        val cachedPoster = cached?.localPosterPath ?: cached?.posterUrl
+        if (cachedPoster != null) {
+            livePosterUri = cachedPoster
+        } else {
+            val fetched = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                OnlineMetadataFetcher.fetchMovieMetadata(context, cleanTitle, cleanYear, video.identity)
+            }
+            val fetchedPoster = fetched?.localPosterPath ?: fetched?.posterUrl
+            if (fetchedPoster != null) {
+                livePosterUri = fetchedPoster
+            }
+        }
+    }
+
+    val metadata = remember(video, sidecars, livePosterUri) {
+        val base = extractMovieMetadata(video, sidecars, context)
+        if (base.posterUri == null && livePosterUri != null) {
+            base.copy(posterUri = livePosterUri, backdropUri = base.backdropUri ?: livePosterUri)
+        } else {
+            base
+        }
     }
     val savedPos = playback.savedPosition(video)
     val dur = video.duration.takeIf { it > 0 } ?: 1000L
@@ -2207,6 +2233,27 @@ fun TvSeriesSummaryCard(
     isPosterAspect: Boolean = true,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    var livePosterUri by remember(series.title) {
+        mutableStateOf<String?>(null)
+    }
+
+    LaunchedEffect(series.title) {
+        val cached = OnlineMetadataFetcher.getCachedTvShow(context, series.title)
+        val cachedPoster = cached?.localPosterPath ?: cached?.posterUrl
+        if (cachedPoster != null) {
+            livePosterUri = cachedPoster
+        } else {
+            val fetched = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                OnlineMetadataFetcher.fetchTvShowMetadata(context, series.title)
+            }
+            val fetchedPoster = fetched?.localPosterPath ?: fetched?.posterUrl
+            if (fetchedPoster != null) {
+                livePosterUri = fetchedPoster
+            }
+        }
+    }
+
     val watched = remember(series, playback.historyVersion) { series.watchedCount(playback) }
     val total = series.totalEpisodes
     val isCompleted = total > 0 && watched >= total
@@ -2236,10 +2283,12 @@ fun TvSeriesSummaryCard(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
+            val effectivePoster = series.posterUri ?: livePosterUri
+            val effectiveBackdrop = series.backdropUri ?: livePosterUri ?: effectivePoster
             val imageUri = if (isPosterAspect) {
-                series.posterUri ?: series.backdropUri
+                effectivePoster ?: effectiveBackdrop
             } else {
-                series.backdropUri ?: series.posterUri
+                effectiveBackdrop ?: effectivePoster
             }
             val targetAspect = if (isPosterAspect) (2f / 3f) else (16f / 9f)
 
