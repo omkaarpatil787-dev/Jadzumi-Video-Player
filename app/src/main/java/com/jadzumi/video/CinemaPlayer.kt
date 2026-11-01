@@ -349,7 +349,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         DisposableEffect(playback.matchRefreshRate, playback.playRequested, activity) {
             val previous = activity.window.attributes.preferredDisplayModeId
             if (playback.matchRefreshRate && playback.playRequested) {
-                val contentFps = playback.inspectionInfo.frameRate ?: 24.0
+                val contentFps = playback.runtimeVideoFormat?.frameRate ?: 24.0
                 val match = AutoFrameRateManager.findOptimalDisplayMode(activity, contentFps)
                 if (match != null) {
                     AutoFrameRateManager.applyDisplayMode(activity, match)
@@ -409,7 +409,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 view.requestLayout()
                 SubtitlePreferences.applyToPlayerView(view.context, view)
                 if (playback.matchRefreshRate && playback.playRequested) {
-                    val contentFps = playback.inspectionInfo.frameRate ?: 24.0
+                    val contentFps = playback.runtimeVideoFormat?.frameRate ?: 24.0
                     val sv = view.videoSurfaceView as? android.view.SurfaceView
                     AutoFrameRateManager.applySurfaceFrameRate(sv?.holder?.surface, contentFps)
                 }

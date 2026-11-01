@@ -32,6 +32,13 @@ data class StorageBreakdown(
     val watchedVideos: List<LocalVideo>
 )
 
+fun formatBytes(bytes: Long): String {
+    if (bytes <= 0) return "0 B"
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    val digitGroups = (kotlin.math.log10(bytes.toDouble()) / kotlin.math.log10(1024.0)).toInt().coerceIn(0, units.size - 1)
+    return String.format(java.util.Locale.US, "%.1f %s", bytes / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups])
+}
+
 object StorageAnalyzerHelper {
     fun analyze(videos: List<LocalVideo>, playback: PlaybackController): StorageBreakdown {
         var totalBytes = 0L

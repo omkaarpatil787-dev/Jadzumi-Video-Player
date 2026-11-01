@@ -230,7 +230,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     // Binge Automation: Per-Series Auto-Skip Intro & Outro
                     video?.episode?.let {
                         val v = video ?: return@let
-                        val binge = BingeManager.getSettings(app, v.name.substringBeforeLast('.', v.name))
+                        val binge = BingeManager.getSettings(getApplication(), v.name.substringBeforeLast('.', v.name))
                         if (binge.autoSkipIntro && p.isPlaying && position in 1_000L..12_000L && position < binge.introSkipSeconds * 1000L) {
                             seekTo(binge.introSkipSeconds * 1000L)
                         }
