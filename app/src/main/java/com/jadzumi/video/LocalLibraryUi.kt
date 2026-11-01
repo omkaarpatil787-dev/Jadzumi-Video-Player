@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -1955,13 +1956,25 @@ fun MovieSummaryCard(
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progress = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
 
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val isLight = surfaceColor.luminance() > 0.5f
+    val cardBorder = BorderStroke(
+        width = 1.dp,
+        color = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
+                else Color.White.copy(alpha = 0.09f)
+    )
+    val cardBg = if (isLight) MaterialTheme.colorScheme.surface
+                 else MaterialTheme.colorScheme.surfaceContainerLow
+
     Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = cardBg,
+        border = cardBorder,
+        shadowElevation = if (isLight) 2.dp else 0.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -1990,11 +2003,11 @@ fun MovieSummaryCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.42f)
+                        .fillMaxHeight(0.45f)
                         .align(Alignment.BottomCenter)
                         .background(
                             Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))
                             )
                         )
                 )
@@ -2008,17 +2021,17 @@ fun MovieSummaryCard(
                 }
                 Surface(
                     shape = CircleShape,
-                    color = Color.Black.copy(alpha = 0.68f),
-                    border = BorderStroke(0.75.dp, Color.White.copy(alpha = 0.20f)),
+                    color = Color.Black.copy(alpha = 0.72f),
+                    border = BorderStroke(0.75.dp, Color.White.copy(alpha = 0.25f)),
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.5.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
                         if (metadata.rating != null) {
-                            Icon(Icons.Rounded.Star, null, Modifier.size(10.dp), tint = Color(0xFFF9AB00))
+                            Icon(Icons.Rounded.Star, null, Modifier.size(10.5.dp), tint = Color(0xFFF9AB00))
                             Text(metadata.rating, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             Text("·", fontSize = 9.5.sp, color = Color.White.copy(alpha = 0.6f))
                         }
@@ -2031,15 +2044,17 @@ fun MovieSummaryCard(
                     }
                 }
 
-                // Quick Play/Resume button floating on bottom-right of poster
+                // Quick Play/Resume button floating on bottom-right of poster with frosted glass & depth
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f),
                     contentColor = MaterialTheme.colorScheme.onPrimary,
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                    shadowElevation = 4.dp,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(8.dp)
-                        .size(32.dp)
+                        .size(34.dp)
                         .clickable {
                             playback.open(video)
                         }
@@ -2048,32 +2063,39 @@ fun MovieSummaryCard(
                         Icon(
                             Icons.Rounded.PlayArrow,
                             contentDescription = "Play movie",
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(19.dp)
                         )
                     }
                 }
 
-                // Progress Line at bottom of thumbnail
+                // Progress Line at bottom of thumbnail with dark underlay track
                 if (progress > 0f) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
-                            .fillMaxWidth(progress)
-                            .height(3.dp)
-                            .background(if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
-                    )
+                            .fillMaxWidth()
+                            .height(3.5.dp)
+                            .background(Color.Black.copy(alpha = 0.40f))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(progress)
+                                .background(if (isWatched) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
+                        )
+                    }
                 }
             }
 
             // Info Section
             Column(
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 Text(
                     text = metadata.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -2095,19 +2117,56 @@ fun MovieSummaryCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(Modifier.height(1.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    if (isWatched) {
+                // Dynamic Status / Action Row (No duplicate genre repetition!)
+                if (isWatched) {
+                    Row(
+                        modifier = Modifier.padding(top = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Icon(Icons.Rounded.CheckCircle, null, Modifier.size(13.dp), tint = Color(0xFF1E8E3E))
-                        Text("Watched", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E8E3E))
-                    } else if (inProgress) {
-                        Text("Resume at ${timecode(savedPos / 1000)}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-                    } else {
-                        Text(metadata.genres.firstOrNull() ?: "Movie", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
+                        Text("Watched", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1E8E3E))
+                    }
+                } else if (inProgress) {
+                    val remainingSec = (dur - savedPos) / 1000
+                    val remHours = remainingSec / 3600
+                    val remMins = (remainingSec % 3600) / 60
+                    val remStr = if (remHours > 0) "${remHours}h ${remMins}m left" else "${remMins}m left"
+                    Row(
+                        modifier = Modifier.padding(top = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Rounded.Schedule, null, Modifier.size(13.dp), tint = MaterialTheme.colorScheme.primary)
+                        Text(
+                            "Resume · $remStr",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                } else {
+                    // Audio / Codec tech chip if available, or clean secondary tag
+                    val techTag = when {
+                        video.name.contains("hdr", true) || video.name.contains("dovi", true) -> "HDR Master"
+                        video.name.contains("10bit", true) -> "10-Bit Color"
+                        metadata.genres.size > 1 -> metadata.genres[1]
+                        else -> null
+                    }
+                    if (techTag != null) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.70f),
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            Text(
+                                text = techTag,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.5.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -2177,13 +2236,25 @@ fun TvSeriesSummaryCard(
     val progress = if (total > 0) (watched.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
     val nextEp = remember(series, playback.historyVersion) { series.nextUnwatchedEpisode(playback) }
 
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val isLight = surfaceColor.luminance() > 0.5f
+    val cardBorder = BorderStroke(
+        width = 1.dp,
+        color = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
+                else Color.White.copy(alpha = 0.09f)
+    )
+    val cardBg = if (isLight) MaterialTheme.colorScheme.surface
+                 else MaterialTheme.colorScheme.surfaceContainerLow
+
     Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = cardBg,
+        border = cardBorder,
+        shadowElevation = if (isLight) 2.dp else 0.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -2213,11 +2284,11 @@ fun TvSeriesSummaryCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.42f)
+                        .fillMaxHeight(0.45f)
                         .align(Alignment.BottomCenter)
                         .background(
                             Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))
                             )
                         )
                 )
@@ -2226,17 +2297,17 @@ fun TvSeriesSummaryCard(
                 val seasonsText = "${series.seasonCount} Season${if (series.seasonCount > 1) "s" else ""}"
                 Surface(
                     shape = CircleShape,
-                    color = Color.Black.copy(alpha = 0.68f),
-                    border = BorderStroke(0.75.dp, Color.White.copy(alpha = 0.20f)),
+                    color = Color.Black.copy(alpha = 0.72f),
+                    border = BorderStroke(0.75.dp, Color.White.copy(alpha = 0.25f)),
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.5.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
                         if (series.rating != null) {
-                            Icon(Icons.Rounded.Star, null, Modifier.size(10.dp), tint = Color(0xFFF9AB00))
+                            Icon(Icons.Rounded.Star, null, Modifier.size(10.5.dp), tint = Color(0xFFF9AB00))
                             Text(series.rating, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             Text("·", fontSize = 9.5.sp, color = Color.White.copy(alpha = 0.6f))
                         }
@@ -2249,16 +2320,18 @@ fun TvSeriesSummaryCard(
                     }
                 }
 
-                // If next episode is available, show a floating mini play button on the bottom right
+                // If next episode is available, show a floating mini play button on the bottom right with frosted glass & depth
                 if (nextEp != null) {
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f),
                         contentColor = MaterialTheme.colorScheme.onPrimary,
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                        shadowElevation = 4.dp,
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(8.dp)
-                            .size(32.dp)
+                            .size(34.dp)
                             .clickable {
                                 playback.open(nextEp)
                             }
@@ -2267,33 +2340,40 @@ fun TvSeriesSummaryCard(
                             Icon(
                                 Icons.Rounded.PlayArrow,
                                 contentDescription = "Play next episode",
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                         }
                     }
                 }
 
-                // Progress Line at bottom of thumbnail
+                // Progress Line at bottom of thumbnail with dark underlay track
                 if (progress > 0f) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
-                            .fillMaxWidth(progress)
-                            .height(3.dp)
-                            .background(if (isCompleted) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
-                    )
+                            .fillMaxWidth()
+                            .height(3.5.dp)
+                            .background(Color.Black.copy(alpha = 0.40f))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(progress)
+                                .background(if (isCompleted) Color(0xFF1E8E3E) else MaterialTheme.colorScheme.primary)
+                        )
+                    }
                 }
             }
 
             // Info Section
             Column(
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 Text(
                     text = series.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

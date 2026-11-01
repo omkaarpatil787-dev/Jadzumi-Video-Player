@@ -67,7 +67,12 @@ class MainActivity : ComponentActivity() {
         enableMaxRefreshRate()
         AppIconManager.syncLauncherAlias(this)
 
-        setContent { JadzumiApp(playback) }
+        setContent {
+            LaunchedEffect(playback.video, playback.fullscreen, playback.playing) {
+                updatePip()
+            }
+            JadzumiApp(playback)
+        }
     }
 
     private fun enableMaxRefreshRate() {
@@ -139,7 +144,21 @@ class MainActivity : ComponentActivity() {
     }
 
     fun updatePip() {
-        if (!supportsPip() || playback.video == null) return
+        if (!supportsPip()) return
+        if (playback.video == null || !playback.fullscreen || !playback.playing) {
+            videoBounds = null
+            if (Build.VERSION.SDK_INT >= 31) {
+                runCatching {
+                    setPictureInPictureParams(
+                        PictureInPictureParams.Builder()
+                            .setAutoEnterEnabled(false)
+                            .build()
+                    )
+                }
+            }
+            updateHdrColorMode()
+            return
+        }
         runCatching { setPictureInPictureParams(pipParams()) }
         updateHdrColorMode()
     }

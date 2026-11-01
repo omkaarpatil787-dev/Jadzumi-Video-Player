@@ -2,7 +2,7 @@
 <p align="center">An overview of the app, its architecture, and release progress.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.7.6-2563eb?style=flat-square" alt="Version 1.7.6"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.7.7-2563eb?style=flat-square" alt="Version 1.7.7"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -18,7 +18,7 @@ FFmpeg decoder fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
-| **v1.7.6 · build 30** | Android 8.0+ · ARM64 | Direct Cinemeta (IMDb & Streaming Catalog) Integration · Multi-Tier Accurate Poster Resolution |
+| **v1.7.7 · build 31** | Android 8.0+ · ARM64 | Ghost PiP Safety Revocation · Micro-Border Card Surface Definition · De-Cluttered Media Hierarchy |
 
 ## 📸 Screenshots
 

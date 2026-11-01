@@ -1,3 +1,19 @@
+# Jadzumi v1.7.7 — Ghost PiP Fix, Micro-Border Surface Definition & De-Cluttered Media Cards 🖼️🧈🎯
+
+A targeted refinement addressing accidental PiP activations from the library/home screen, introducing elevated micro-border card surfaces, frosted glass action buttons, and a de-cluttered media card hierarchy.
+
+### 🛑 Ghost PiP Revocation & State Safety
+- **Explicit OS Auto-PiP Revocation**: Completely fixed the issue where returning home from the Movies or TV Shows library triggered Picture-in-Picture. Whenever video playback closes or stops, `updatePip()` explicitly sends `setAutoEnterEnabled(false)` to Android OS (API 31+).
+- **Reactive Activity Inset Sync**: Added an active `LaunchedEffect` directly in `MainActivity` root content to ensure the OS never retains auto-enter PiP permission when the user is browsing the library.
+
+### 🎨 Refined Movie & TV Series Cards
+- **Micro-Border Surface Definition**: Added layered 1.dp micro-borders (`outlineVariant` with 2.dp elevation in Light mode, translucent white in Dark/AMOLED mode) eliminating flat card fade-out.
+- **De-Cluttered Hierarchy (No Genre Repetition)**: Removed redundant genre labels on the card footer. Dynamically replaces them with clean `✓ Watched` badges, remaining playtime chips (`Resume · 42m left`), or technical format tags (`HDR Master`, `10-Bit Color`).
+- **Tactile Frosted Action Buttons**: Quick play buttons now feature frosted glass rims, micro-shadows, and smooth touch-motion response.
+- **High-Contrast Progress Tracks**: Added a dark underlay channel behind card playback progress indicators for crisp visibility across any artwork.
+
+---
+
 # Jadzumi v1.7.6 — Direct Cinemeta (IMDb & Streaming Catalog) Integration for 100% Accurate Artwork 🎬🔥🖼️
 
 A major artwork and metadata accuracy release integrating direct access to the **Cinemeta entertainment catalog** (powered by IMDb and Metahub streaming indexes), delivering 100% accurate, high-definition official posters and backdrops for OTT releases, international movies, and regional cinema without API key limits.
