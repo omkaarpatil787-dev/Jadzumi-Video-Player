@@ -269,6 +269,7 @@ private fun CandidateMatchRow(
                 if (!candidate.posterUrl.isNullOrBlank()) {
                     SidecarImage(
                         uri = candidate.posterUrl,
+                        fallbackVideo = null,
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
