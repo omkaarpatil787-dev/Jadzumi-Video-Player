@@ -86,6 +86,8 @@ fun TvShowDetailsPage(
         series.watchedCount(playback)
     }
 
+    var showBingeDialog by rememberSaveable { mutableStateOf(false) }
+
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         val isTablet = maxWidth >= 840.dp
         val horizontalPad = if (isTablet) 28.dp else 16.dp
@@ -256,6 +258,22 @@ fun TvShowDetailsPage(
                                 Text("English [Styled ASS / SRT]", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
                             }
                         }
+
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                            modifier = Modifier.clickable { showBingeDialog = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(Icons.Rounded.FastForward, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary)
+                                Text("Binge Automation", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
                     }
                 }
             }
@@ -360,6 +378,13 @@ fun TvShowDetailsPage(
                     }
                 }
             }
+        }
+
+        if (showBingeDialog) {
+            BingeSettingsDialog(
+                seriesName = series.title,
+                onDismiss = { showBingeDialog = false }
+            )
         }
     }
 }

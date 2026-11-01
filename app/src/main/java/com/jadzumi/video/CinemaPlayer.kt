@@ -183,6 +183,15 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         }
     }
 
+    var showChaptersDrawer by remember(video.identity) { mutableStateOf(false) }
+    var showTrimmerDialog by remember(video.identity) { mutableStateOf(false) }
+    var showBingeDialog by remember(video.identity) { mutableStateOf(false) }
+
+    val powerManager = remember { CinemaPowerManager(activity) }
+    DisposableEffect(Unit) {
+        onDispose { powerManager.release() }
+    }
+
     EpisodeContinuationPrompt(playback)
     toolsSection?.let { section ->
         PlayerToolsDialog(section, playback, onMessage = { message = it; interaction++ }, onDismiss = { toolsSection = null })
@@ -336,14 +345,21 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             }
         }
 
-        // Release the UI's maximum-rate preference while Media3 requests a seamless content rate.
+        // True Auto Frame Rate (AFR) matching
         DisposableEffect(playback.matchRefreshRate, playback.playRequested, activity) {
             val previous = activity.window.attributes.preferredDisplayModeId
             if (playback.matchRefreshRate && playback.playRequested) {
-                activity.window.attributes = activity.window.attributes.apply { preferredDisplayModeId = 0 }
+                val contentFps = playback.inspectionInfo.frameRate ?: 24.0
+                val match = AutoFrameRateManager.findOptimalDisplayMode(activity, contentFps)
+                if (match != null) {
+                    AutoFrameRateManager.applyDisplayMode(activity, match)
+                    message = "AFR: ${match.description}"
+                } else {
+                    activity.window.attributes = activity.window.attributes.apply { preferredDisplayModeId = 0 }
+                }
             }
             onDispose {
-                activity.window.attributes = activity.window.attributes.apply { preferredDisplayModeId = previous }
+                AutoFrameRateManager.restoreMaxRefreshRate(activity)
             }
         }
 
@@ -392,9 +408,16 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 view.keepScreenOn = playback.playRequested
                 view.requestLayout()
                 SubtitlePreferences.applyToPlayerView(view.context, view)
+                if (playback.matchRefreshRate && playback.playRequested) {
+                    val contentFps = playback.inspectionInfo.frameRate ?: 24.0
+                    val sv = view.videoSurfaceView as? android.view.SurfaceView
+                    AutoFrameRateManager.applySurfaceFrameRate(sv?.holder?.surface, contentFps)
+                }
             },
             onReset = null,
             onRelease = {
+                val sv = it.videoSurfaceView as? android.view.SurfaceView
+                AutoFrameRateManager.clearSurfaceFrameRate(sv?.holder?.surface)
                 it.player = null
                 playerViewRef = null
             }
@@ -777,6 +800,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         showBattery = playback.showBatteryPercentage,
                                         showRemainingTime = playback.showRemainingTime,
                                         remainingSec = remSec,
+                                        isEcoMode = powerManager.isEcoModeEnabled,
                                         bgColor = dynamicFrostedCircleBg,
                                         rimColor = dynamicFrostedCircleRim,
                                         contentColor = playerContentColor,
@@ -1182,6 +1206,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             section = section,
                             theme = theme,
                             isMinimalHud = isMinimalHud,
+                            powerManager = powerManager,
                             onToggleMinimalHud = {
                                 val next = !isMinimalHud
                                 isMinimalHud = next
@@ -1191,6 +1216,9 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             },
                             onSelectSection = { quickMenuSection = it; interaction++ },
                             onAddExternalSubtitle = { subtitleFileLauncher.launch(arrayOf("*/*")) },
+                            onOpenChapters = { showChaptersDrawer = true; quickMenuSection = null },
+                            onOpenTrimmer = { showTrimmerDialog = true; quickMenuSection = null },
+                            onOpenBinge = { showBingeDialog = true; quickMenuSection = null },
                             onOpenTools = { section ->
                                 if (section == "bookmarks") playback.pauseForNotes()
                                 toolsSection = section; quickMenuSection = null
@@ -1252,6 +1280,37 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     }
                 }
             }
+        }
+
+        if (showChaptersDrawer) {
+            val extractedChapters by produceState(emptyList<VideoChapter>(), video.identity) {
+                value = ChapterExtractor.extractChapters(activity, video)
+            }
+            ChapterDrawerSheet(
+                chapters = extractedChapters,
+                currentPositionMs = playback.position,
+                onSeekToChapter = { pos ->
+                    playback.seekTo(pos)
+                    message = "Jumped to chapter"
+                },
+                onDismiss = { showChaptersDrawer = false }
+            )
+        }
+
+        if (showTrimmerDialog) {
+            VideoTrimmerDialog(
+                video = video,
+                currentPosMs = playback.position,
+                onMessage = { message = it },
+                onDismiss = { showTrimmerDialog = false }
+            )
+        }
+
+        if (showBingeDialog) {
+            BingeSettingsDialog(
+                seriesName = video.name.substringBeforeLast('.', video.name),
+                onDismiss = { showBingeDialog = false }
+            )
         }
     }
 
@@ -1430,9 +1489,13 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
     section: String,
     theme: String = "Dark",
     isMinimalHud: Boolean = true,
+    powerManager: CinemaPowerManager? = null,
     onToggleMinimalHud: () -> Unit = {},
     onSelectSection: (String) -> Unit,
     onAddExternalSubtitle: () -> Unit,
+    onOpenChapters: () -> Unit = {},
+    onOpenTrimmer: () -> Unit = {},
+    onOpenBinge: () -> Unit = {},
     onSearchSubtitles: () -> Unit,
     onOpenTools: (String) -> Unit,
     onMessage: (String) -> Unit,
@@ -1543,6 +1606,38 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                         QuickMenuRow(Icons.Rounded.Bookmark, "Scene bookmarks", "", { onOpenTools("bookmarks") })
                         QuickMenuRow(Icons.Rounded.Bedtime, "Sleep controls", if (playback.sleepPlan != null) "Active" else "Off", { onOpenTools("sleep") })
                         QuickMenuRow(Icons.Rounded.PlaylistPlay, "Episode continuity", "", { onOpenTools("continuity") })
+                        QuickMenuRow(
+                            icon = Icons.Rounded.BookmarkBorder,
+                            label = "Chapters & Acts",
+                            value = if (playback.chapters.isNotEmpty()) "${playback.chapters.size} marks" else "Acts",
+                            onClick = onOpenChapters
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.ContentCut,
+                            label = "Clip Scene",
+                            value = "Instant 1080p/4K",
+                            onClick = onOpenTrimmer
+                        )
+                        if (playback.video?.episode != null) {
+                            QuickMenuRow(
+                                icon = Icons.Rounded.FastForward,
+                                label = "Binge Automation",
+                                value = "Auto-Skip Intro/Outro",
+                                onClick = onOpenBinge
+                            )
+                        }
+                        if (powerManager != null) {
+                            val powerStatus = powerManager.getStatus()
+                            QuickMenuRow(
+                                icon = Icons.Rounded.Eco,
+                                label = "Cinema Eco Mode",
+                                value = if (powerManager.isEcoModeEnabled) "Active" else "Off",
+                                onClick = {
+                                    powerManager.toggleEcoMode()
+                                    onMessage(if (powerManager.isEcoModeEnabled) "Cinema Eco Mode: Active (Optimized Battery)" else "Cinema Eco Mode: Off")
+                                }
+                            )
+                        }
                         QuickMenuRow(
                             icon = Icons.Rounded.AspectRatio,
                             label = "Fit / Aspect ratio",
@@ -2405,6 +2500,7 @@ private fun PlayerStatusPill(
     showBattery: Boolean,
     showRemainingTime: Boolean = false,
     remainingSec: Long? = null,
+    isEcoMode: Boolean = false,
     bgColor: Color = Color(0x990A0E17),
     rimColor: Color = Color.White.copy(alpha = 0.22f),
     contentColor: Color = Color.White,
@@ -2452,6 +2548,15 @@ private fun PlayerStatusPill(
             val hasClock = showClock && timeText.isNotEmpty()
             val hasBattery = showBattery && batteryText.isNotEmpty()
 
+            if (isEcoMode) {
+                Icon(
+                    Icons.Rounded.Eco,
+                    contentDescription = "Cinema Eco Active",
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(13.dp)
+                )
+                Text("·", color = contentColor.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
             if (hasClock) {
                 Text(
                     text = timeText,

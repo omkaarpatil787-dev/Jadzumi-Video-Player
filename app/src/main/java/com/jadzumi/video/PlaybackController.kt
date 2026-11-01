@@ -227,6 +227,20 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     if (dialogueWindow?.reachedEnd(position) == true) stopDialogueReplay(restorePlaybackState = true)
                     if (++pollCount % 10 == 0) save()
 
+                    // Binge Automation: Per-Series Auto-Skip Intro & Outro
+                    video?.episode?.let {
+                        val v = video ?: return@let
+                        val binge = BingeManager.getSettings(app, v.name.substringBeforeLast('.', v.name))
+                        if (binge.autoSkipIntro && p.isPlaying && position in 1_000L..12_000L && position < binge.introSkipSeconds * 1000L) {
+                            seekTo(binge.introSkipSeconds * 1000L)
+                        }
+                        val remaining = currentDur - position
+                        if (binge.autoSkipOutro && p.isPlaying && currentDur > 180_000L && remaining in 1_000L..(binge.outroSkipSeconds * 1000L) && endedHandledFor != v.identity) {
+                            endedHandledFor = v.identity
+                            playNextEpisode()
+                        }
+                    }
+
 
                 }
             }

@@ -1,6 +1,6 @@
 # ✅ Jadzumi Player — Pre-Release Compliance & Safety Checklist
 
-> **Application:** Jadzumi Player (Android) · Version: `1.8.0.3` · Package: `com.jadzumi.video`
+> **Application:** Jadzumi Player (Android) · Version: `1.9.0` · Package: `com.jadzumi.video`
 > **Target Release Environment:** GitHub Releases / F-Droid / Direct Free APK Distribution  
 > **Audit Status:** Technical updates made; release review updated · **Date:** 2026-11-01
 
@@ -83,4 +83,4 @@
 - [ ] Plan upgrade continuity: a new key cannot update the previously development-key-signed APK.
 - [ ] Verify per-file exports and redistribution terms for `hero.jpg`, `cosmos.jpg`, and `anime.jpg` (owner reports ChatGPT / Google Stitch origins).
 - [ ] Complete native Corresponding Source / notice review and outstanding legal review.
-- [x] Stable release candidate is v1.8.0.3 (versionCode 37); publication follows signed CI.
+- [x] Stable release candidate is v1.9.0 (versionCode 38); publication follows signed CI.

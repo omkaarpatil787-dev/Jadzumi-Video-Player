@@ -133,7 +133,7 @@ private val destinations = listOf(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable fun JadzumiApp(playback: PlaybackController) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("appearance", 0) }
@@ -143,11 +143,24 @@ private val destinations = listOf(
     var themeBloomEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("themeBloom", true)) }
     var firstLaunchCardShown by rememberSaveable { mutableStateOf(prefs.getBoolean("pad5_welcome_done", false)) }
 
+    val vaultManager = remember { PrivateVaultManager(context) }
+    var showVaultSheet by remember { mutableStateOf(false) }
+    var showDnaSheet by remember { mutableStateOf(false) }
+    var showStorageSheet by remember { mutableStateOf(false) }
+
     var route by rememberSaveable { mutableStateOf("Home") }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var demo by rememberSaveable { mutableStateOf(false) }
     val library = remember { LocalLibrary.get(context) }
     val localState by library.state.collectAsState()
+
+    val vaultedUris = remember(vaultManager.isUnlocked) { vaultManager.getVaultedUris() }
+    val effectiveLocalState = remember(localState, vaultedUris) {
+        if (vaultedUris.isEmpty()) localState
+        else localState.copy(
+            videos = localState.videos.filter { !vaultedUris.contains(it.uri) }
+        )
+    }
     var query by rememberSaveable { mutableStateOf("") }
     var cornerStyle by rememberSaveable { mutableStateOf(prefs.getString("cornerStyle", "Rounded") ?: "Rounded") }
     var bottomBarStyle by rememberSaveable { mutableStateOf(prefs.getString("bottomBarStyle", "Icons and labels") ?: "Icons and labels") }
@@ -283,14 +296,35 @@ private val destinations = listOf(
                                                         )
                                                     }
 
-                                                    IconButton(
-                                                        onClick = { library.rescan() },
-                                                        enabled = !localState.busy && localState.folders.isNotEmpty()
-                                                    ) {
-                                                        if (localState.busy) {
-                                                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                                                        } else {
-                                                            Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        IconButton(
+                                                            onClick = { showDnaSheet = true },
+                                                            modifier = Modifier.size(34.dp)
+                                                        ) {
+                                                            Icon(Icons.Rounded.AutoAwesome, "Cinema DNA & Persona", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
+                                                        }
+                                                        IconButton(
+                                                            onClick = { showVaultSheet = true },
+                                                            modifier = Modifier.size(34.dp)
+                                                        ) {
+                                                            Icon(Icons.Rounded.Lock, "Private Vault", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
+                                                        }
+                                                        IconButton(
+                                                            onClick = { showStorageSheet = true },
+                                                            modifier = Modifier.size(34.dp)
+                                                        ) {
+                                                            Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
+                                                        }
+                                                        IconButton(
+                                                            onClick = { library.rescan() },
+                                                            enabled = !localState.busy && localState.folders.isNotEmpty(),
+                                                            modifier = Modifier.size(34.dp)
+                                                        ) {
+                                                            if (localState.busy) {
+                                                                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                                            } else {
+                                                                Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -465,14 +499,25 @@ private val destinations = listOf(
                                                 }
                                             }
 
-                                            IconButton(
-                                                onClick = { library.rescan() },
-                                                enabled = !localState.busy && localState.folders.isNotEmpty()
-                                            ) {
-                                                if (localState.busy) {
-                                                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                                                } else {
-                                                    Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                IconButton(onClick = { showDnaSheet = true }) {
+                                                    Icon(Icons.Rounded.AutoAwesome, "Cinema DNA & Persona", tint = MaterialTheme.colorScheme.primary)
+                                                }
+                                                IconButton(onClick = { showVaultSheet = true }) {
+                                                    Icon(Icons.Rounded.Lock, "Private Vault", tint = MaterialTheme.colorScheme.primary)
+                                                }
+                                                IconButton(onClick = { showStorageSheet = true }) {
+                                                    Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary)
+                                                }
+                                                IconButton(
+                                                    onClick = { library.rescan() },
+                                                    enabled = !localState.busy && localState.folders.isNotEmpty()
+                                                ) {
+                                                    if (localState.busy) {
+                                                        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                                                    } else {
+                                                        Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
+                                                    }
                                                 }
                                             }
                                         }
@@ -568,9 +613,9 @@ private val destinations = listOf(
                                             }
                                         } else if (video != null) DetailPage(video)
                                         else when (current) {
-                                            "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
-                                            "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
-                                            "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "Home", "Library" -> LocalLibraryPage(effectiveLocalState, library, playback, query, { selectedId = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "Movies", "Videos" -> LocalLibraryPage(effectiveLocalState, library, playback, query, { selectedId = it }, defaultCategory = "Movies", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "TV Shows" -> LocalLibraryPage(effectiveLocalState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "Folders" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
                                                 effectiveTheme = effectiveTheme,
@@ -733,6 +778,53 @@ private val destinations = listOf(
             }
 
             UpdateHost()
+
+            if (showVaultSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showVaultSheet = false },
+                    containerColor = Color.Transparent
+                ) {
+                    PrivateVaultSheet(
+                        vaultManager = vaultManager,
+                        allVideos = localState.videos,
+                        onPlayVideo = {
+                            playback.open(it)
+                            playback.fullscreen = true
+                        },
+                        onMessage = { /* toast */ },
+                        onDismiss = { showVaultSheet = false }
+                    )
+                }
+            }
+
+            if (showDnaSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showDnaSheet = false },
+                    containerColor = Color.Transparent
+                ) {
+                    CinemaDnaSheet(
+                        videos = localState.videos,
+                        playback = playback,
+                        onDismiss = { showDnaSheet = false }
+                    )
+                }
+            }
+
+            if (showStorageSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showStorageSheet = false },
+                    containerColor = Color.Transparent
+                ) {
+                    StorageAnalyzerSheet(
+                        videos = localState.videos,
+                        playback = playback,
+                        onVideoDeleted = { library.rescan() },
+                        onMessage = { /* toast */ },
+                        onDismiss = { showStorageSheet = false }
+                    )
+                }
+            }
+
             CinemaPlayer(playback, reducedMotion, glassIntensity, effectiveTheme)
 
             if (showSplash) {

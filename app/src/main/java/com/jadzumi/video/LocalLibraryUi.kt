@@ -609,7 +609,8 @@ private fun CategoryQuickCard(
 fun StorageSummaryCard(
     videoCount: Int,
     totalIndexedBytes: Long,
-    onAddFolder: () -> Unit
+    onAddFolder: () -> Unit,
+    onAnalyzeStorage: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val stat = remember { runCatching { android.os.StatFs(android.os.Environment.getDataDirectory().path) }.getOrNull() }
@@ -650,15 +651,31 @@ fun StorageSummaryCard(
                             )
                         }
                     }
-                    Button(
-                        onClick = onAddFolder,
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Add Folder", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Button(
+                            onClick = onAddFolder,
+                            shape = RoundedCornerShape(20.dp),
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                        ) {
+                            Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Add Folder", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                        if (onAnalyzeStorage != null) {
+                            OutlinedButton(
+                                onClick = onAnalyzeStorage,
+                                shape = RoundedCornerShape(20.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Icon(Icons.Rounded.PieChart, null, Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Clean", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 } else {
                     Row(
@@ -689,14 +706,27 @@ fun StorageSummaryCard(
                                 )
                             }
                         }
-                        Button(
-                            onClick = onAddFolder,
-                            shape = RoundedCornerShape(20.dp),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                        ) {
-                            Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Add folder", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            if (onAnalyzeStorage != null) {
+                                OutlinedButton(
+                                    onClick = onAnalyzeStorage,
+                                    shape = RoundedCornerShape(20.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(Icons.Rounded.PieChart, null, Modifier.size(15.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Clean", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            Button(
+                                onClick = onAddFolder,
+                                shape = RoundedCornerShape(20.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                            ) {
+                                Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Add folder", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
@@ -875,7 +905,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     val displayVideos = remember(videos, activeFilter, activeSort, playback.historyVersion) {
         val filtered = when (activeFilter) {
             "In Progress" -> videos.filter { playback.isInProgress(it) }
-            "Unwatched" -> videos.filter { playback.savedPosition(it) == 0L }
+            "Unwatched" -> videos.filter { playback.savedPosition(it) == 0L && !playback.isWatched(it) }
+            "Watched" -> videos.filter { playback.isWatched(it) }
             "4K UHD" -> videos.filter { it.width >= 3840 || it.height >= 2160 || it.name.contains("2160", true) || it.name.contains("4k", true) || it.name.contains("uhd", true) }
             "Recently Added" -> videos.sortedByDescending { it.modified }
             else -> videos
@@ -1369,6 +1400,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         video = movie,
                                         isSelectionMode = isSelectionMode,
                                         isSelected = movie.uri in selectedUris,
+                                        isWatched = playback.isWatched(movie),
                                         onLongClick = {
                                             if (!isSelectionMode) {
                                                 isSelectionMode = true
@@ -1567,6 +1599,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         video = video,
                                         isSelectionMode = isSelectionMode,
                                         isSelected = video.uri in selectedUris,
+                                        isWatched = playback.isWatched(video),
                                         onLongClick = {
                                             if (!isSelectionMode) {
                                                 isSelectionMode = true
@@ -2049,6 +2082,20 @@ fun MovieSummaryCard(
                     video.name.contains("hevc", true) || video.name.contains("x265", true) -> "HEVC"
                     else -> "HD"
                 }
+
+                if (isWatched) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFF2E7D32).copy(alpha = 0.92f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.40f)),
+                        modifier = Modifier.align(Alignment.TopStart).padding(8.dp).size(24.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.Check, contentDescription = "Watched", tint = Color.White, modifier = Modifier.size(15.dp))
+                        }
+                    }
+                }
+
                 Surface(
                     shape = CircleShape,
                     color = Color.Black.copy(alpha = 0.72f),
@@ -2485,6 +2532,7 @@ fun TvSeriesSummaryCard(
     video: LocalVideo,
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
+    isWatched: Boolean = false,
     onDelete: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     select: () -> Unit
@@ -2523,13 +2571,29 @@ fun TvSeriesSummaryCard(
 
                 LocalThumbnail(video, Modifier.size(thumbWidth, thumbHeight).clip(RoundedCornerShape(14.dp)))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        video.title,
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            video.title,
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.bodyLarge,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        if (isWatched) {
+                            Spacer(Modifier.width(6.dp))
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF2E7D32).copy(alpha = 0.20f),
+                                contentColor = Color(0xFF4CAF50),
+                                modifier = Modifier.size(18.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Rounded.Check, null, modifier = Modifier.size(12.dp))
+                                }
+                            }
+                        }
+                    }
                     val sizeText = if (video.bytes >= 0) " · ${Formatter.formatFileSize(context, video.bytes)}" else ""
                     val durText = if (video.duration > 0) timecode(video.duration / 1000) else "Duration unavailable"
                     Text(
@@ -2634,6 +2698,17 @@ private fun LocalPosterGridCard(
                     ) {
                         if (isSelected) {
                             Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                } else if (isWatched) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFF2E7D32).copy(alpha = 0.92f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                        modifier = Modifier.padding(6.dp).size(22.dp).align(Alignment.TopEnd)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.Check, contentDescription = "Watched", tint = Color.White, modifier = Modifier.size(14.dp))
                         }
                     }
                 }

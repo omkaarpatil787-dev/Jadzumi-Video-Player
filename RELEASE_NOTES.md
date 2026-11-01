@@ -1,3 +1,51 @@
+# Jadzumi v1.9.0 — "The Pure Cinema & Intelligence Release": True Auto Frame Rate, Biometric Vault, Lossless Scene Clipper, Storage Space Saver, Binge Automation & Cinema DNA Persona Studio 🎬🛡️⚡
+
+A monumental feature release introducing precision hardware display matching, private biometric vault storage, instant lossless scene clipping, automated binge watching, intelligent storage cleaning, and an offline Cinema DNA persona analytics studio.
+
+### 🎯 1. True Auto Frame Rate (AFR) Display Mode Switching
+- **Judder-Free 24fps Cinema Cadence**: Queries `Display.supportedModes` to negotiate exact refresh rates (24.00Hz, 23.976Hz) or integer multiples (120Hz for 5:5 cadence, 144Hz for 6:6 cadence), completely eliminating 3:2 pull-down stutter.
+- **Hardware Surface API Integration**: Applies `Surface.setFrameRate(fps, FRAME_RATE_COMPATIBILITY_FIXED_SOURCE)` on Android 11+ (API 30+) for zero-flicker rate transitions.
+- **Fluid UI Restoration**: Automatically restores maximum device refresh rate (120Hz/144Hz) upon leaving cinema playback for ultra-responsive navigation.
+
+### 🛡️ 2. Biometric Private Vault (Secure Cinema Locker)
+- **Hardware-Backed Protection**: Lock sensitive films or personal recordings behind device fingerprint, Face Unlock, or device PIN using Android `BiometricPrompt`.
+- **Absolute Library Cloaking**: Vaulted videos are immediately hidden from Home, Movies, TV Shows, search queries, and recent carousels.
+- **Auto-Relock Security**: Vault automatically relocks whenever leaving the sheet, minimizing the app, or locking the device.
+
+### ✂️ 3. Instant Lossless Video Clip Trimmer & Share
+- **Zero Re-Encoding Stream Copy**: Extracts clean 1080p and 4K MP4 clips in 1–2 seconds using Android's native `MediaExtractor` and `MediaMuxer`.
+- **Interactive Dual-Slider Trim Bar**: Fine-tune clip start and end points with live preview timecodes.
+- **One-Tap Direct Share**: Launches standard Android share sheet to send clips straight to WhatsApp, Discord, Telegram, or device storage.
+
+### 🍿 4. Smart Per-Series Binge Automation
+- **Custom Intro & Outro Timers**: Save custom intro skip lengths (10s–180s) and credits windows per TV series.
+- **Auto-Skip Intro**: Automatically fast-forwards through opening themes within the first 12 seconds of playback.
+- **Auto-Skip Credits & Next**: Automatically starts the next episode when credits begin rolling, eliminating manual scrubbing.
+
+### 💾 5. Storage Analyzer & Space Saver
+- **Watched Media Cleanup**: Scans library for completed movies and episodes and calculates total recoverable space.
+- **Safe Batch Reclaim**: One-tap "Clean All" to safely purge completed files via Storage Access Framework, reclaiming gigabytes of device storage.
+- **Heavyweight File Inspector**: Instantly identifies massive files (> 3 GB) taking up local space.
+
+### 🧬 6. Cinema DNA & Viewer Persona Studio
+- **Offline Viewing Intelligence**: Analyzes local SQLite watch logs to compute total hours, prime-time viewing heatmap, and 4K ratios.
+- **Authentic Viewer Archetypes**: Unlocks fun cinema personas including *The Midnight Binge Architect*, *The 4K HDR Purist*, *The Hyper-Velocity Scholar*, *The Franchise Marathoner*, and *The Authentic Cinephile*.
+- **Holographic Frosted Persona Card**: Generates an aesthetic shareable card with your archetype motto and top stats. 100% offline and private.
+
+### 🔖 7. Interactive Chapter Drawer & Timeline Notches
+- **Narrative Act & Chapter Navigation**: Slide-up drawer displaying all video chapters and acts with live playing indicators.
+- **Timeline Notches**: Subtle vertical divider marks rendered directly on the scrub bar with haptic snap during scrubbing.
+
+### 🔋 8. Smart Cinema Battery Estimator & Eco Mode
+- **Traveler's Companion**: Monitors battery level and real-time discharge to project remaining watch time (e.g., *"~4h 15m left ≈ 2.5 episodes"*).
+- **Cinema Eco Mode**: Enforces 24Hz display mode and optimizes hardware decoders to stretch battery life during flights and travel.
+
+### ✅ 9. Watched / Unwatched State Badges & Filter Chip
+- **Visual Checkmark Badges**: Distinct emerald checkmark badges on watched movie posters, TV cards, and episode rows.
+- **Library Filter Parity**: Added dedicated "Watched" filter chip alongside "In Progress", "Unwatched", "4K UHD", and "Recently Added".
+
+---
+
 # Jadzumi v1.8.0.3 — "The Project Integrity & Regulatory Alignment Release": Documentation Parity, Repository Hygiene & Privacy Disclosures 🛡️✨
 
 A project governance and repository refinement release addressing documentation parity, clarifying privacy endpoint disclosures, removing legacy binary artifacts, decluttering historic checkpoint logs, and updating compliance records.

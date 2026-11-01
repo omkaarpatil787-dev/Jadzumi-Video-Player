@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.8.0.3-2563eb?style=flat-square" alt="Version 1.8.0.3"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.9.0-2563eb?style=flat-square" alt="Version 1.9.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -74,14 +74,17 @@ See [release notes](RELEASE_NOTES.md) for full details.
 | External subtitles and timing adjustments | Scene bookmarks, notes, and search | Theme-reactive playback controls |
 | Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v1.8.0.3
+## 📦 Latest release · v1.9.0
 
-- 🔄 **In-App Seamless Update Studio**: Fluid 0.5s morphing update dialog based on Material 3 Expressive motion physics, live download progress, and support for 4-component release tags (`v1.8.0.x`).
-- 🖼️ **Persistent Poster Cache & Fix Match**: Resolved disk cache false-eviction, synchronized title and year extraction across scrapers, and added interactive artwork fixing from Cinemeta/IMDb or device photo gallery.
-- 🌟 **Signature Adaptive Splash Screen**: Glass-morphic squircle logo with quad-stop gradients, dual-layer 3D wings, specular front glass play symbol, and ambient radial glow across Light, Dark, and AMOLED themes.
-- 🧈 **App-Wide Expressive Motion Engine**: Calibrated 0.5s continuous shared-element geometry expansion (`cubic-bezier(0.19, 1.0, 0.22, 1.0)`), tactile elastic press physics, and shared-axis directional navigation.
+- 🎬 **True Auto Frame Rate (AFR) Display Mode Switching**: Seamless 24.00Hz / 23.976Hz cadence matching, 120Hz/144Hz 5:5 pulldown, zero judder via `Surface.setFrameRate` (API 30+), and automatic UI display rate restoration.
+- 🔐 **Biometric Private Vault (Secure Cinema Locker)**: Fingerprint / Face Unlock / device PIN cloaking for sensitive media with dedicated vault management and instant library exclusion.
+- 📊 **Cinema DNA & Viewer Persona Studio**: Offline watch history intelligence, 24h viewing heatmaps, 4K/HDR purist ratios, mileage counters, and shareable holographic viewer archetype cards (*The Midnight Binge Architect*, *The 4K HDR Purist*, etc.).
+- ✂️ **Lossless Scene Clipper & Quick Share**: Native zero-reencode `MediaExtractor` + `MediaMuxer` 1080p/4K sub-second scene trimming directly to the Android system share sheet.
+- ⚡ **Smart Battery Estimator & 24Hz Eco Mode**: Real-time mA discharge telemetry, playback runtime projections ("~4h 15m remaining / ~2.5 episodes"), and one-tap 24Hz power saver mode.
+- ⏩ **Per-Series Binge Automation & Interactive Chapters**: Configurable custom intro/outro skip timestamps per show, auto-advance, and slide-up interactive chapter navigation with timeline notch markers.
+- 💾 **Storage Analyzer & Space Saver**: Real-time storage consumption breakdown by media type, watched media identification, and safe batch cleanup.
 
-[Download v1.8.0.3](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.8.0.3) · [Release notes](RELEASE_NOTES.md)
+[Download v1.9.0](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.9.0) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.
