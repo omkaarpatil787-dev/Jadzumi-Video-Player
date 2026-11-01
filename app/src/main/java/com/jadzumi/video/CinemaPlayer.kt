@@ -14,15 +14,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.rememberScrollState
@@ -480,7 +472,11 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             ) { change, amount ->
                                 if (isGestureValid && !playback.locked && playback.swipeGesturesEnabled) {
                                     change.consume()
+                                    val wasAtMax = level >= 1f
                                     level = (level - amount / size.height.coerceAtLeast(1)).coerceIn(if (left) 0.05f else 0f, 1f)
+                                    if (level >= 1f && !wasAtMax) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
                                     if (left) activity.window.attributes = activity.window.attributes.apply { screenBrightness = level }
                                     else audio.setStreamVolume(AudioManager.STREAM_MUSIC, (level * audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)).toInt(), 0)
                                     hudSide = if (left) "Brightness" else "Volume"
@@ -495,58 +491,104 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     CircularProgressIndicator(Modifier.align(Alignment.Center).size(42.dp), color = Color.White, strokeWidth = 2.5.dp)
                 }
 
-                // YouTube-Style Double-Tap Fast-Forward / Rewind Ripple Overlays (Sized to match 54dp seek buttons)
+                // YouTube-Style Double-Tap Fast-Forward / Rewind Pill with Cascading Chevrons
                 val activeSide = rippleSide ?: lastActiveSide
                 AnimatedVisibility(
                     visible = rippleSide != null,
-                    enter = fadeIn(tween(120)) + scaleIn(initialScale = 0.85f),
-                    exit = fadeOut(tween(220)) + scaleOut(targetScale = 1.05f),
+                    enter = fadeIn(tween(140)) + scaleIn(initialScale = 0.88f),
+                    exit = fadeOut(tween(240)) + scaleOut(targetScale = 1.04f),
                     modifier = Modifier.align(if (activeSide == "left") Alignment.CenterStart else Alignment.CenterEnd)
                 ) {
                     val isLeft = activeSide == "left"
                     val totalSec = playback.seekIncrementSeconds * rippleCount.coerceAtLeast(1)
+                    val infiniteTransition = rememberInfiniteTransition(label = "chevronTransition")
+                    val chAlpha1 by infiniteTransition.animateFloat(
+                        initialValue = 0.35f, targetValue = 1f,
+                        animationSpec = infiniteRepeatable(tween(550, delayMillis = 0), RepeatMode.Reverse),
+                        label = "ch1"
+                    )
+                    val chAlpha2 by infiniteTransition.animateFloat(
+                        initialValue = 0.35f, targetValue = 1f,
+                        animationSpec = infiniteRepeatable(tween(550, delayMillis = 150), RepeatMode.Reverse),
+                        label = "ch2"
+                    )
+                    val chAlpha3 by infiniteTransition.animateFloat(
+                        initialValue = 0.35f, targetValue = 1f,
+                        animationSpec = infiniteRepeatable(tween(550, delayMillis = 300), RepeatMode.Reverse),
+                        label = "ch3"
+                    )
+
                     Surface(
                         modifier = Modifier
-                            .padding(horizontal = 24.dp)
-                            .size(54.dp)
-                            .clip(CircleShape),
+                            .padding(horizontal = 28.dp)
+                            .height(38.dp)
+                            .wrapContentWidth(),
                         shape = CircleShape,
                         color = dynamicFrostedCircleBg,
                         border = BorderStroke(1.dp, dynamicFrostedCircleRim)
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Icon(
-                                if (isLeft) Icons.Rounded.Replay10 else Icons.Rounded.Forward10,
-                                null,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(Modifier.height(1.dp))
-                            Text(
-                                if (isLeft) "-${totalSec}s" else "+${totalSec}s",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp,
-                                maxLines = 1
-                            )
+                            if (isLeft) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("‹", color = Color.White.copy(alpha = chAlpha1), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text("‹", color = Color.White.copy(alpha = chAlpha2), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text("‹", color = Color.White.copy(alpha = chAlpha3), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Spacer(Modifier.width(2.dp))
+                                Text(
+                                    "${totalSec}s",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                            } else {
+                                Text(
+                                    "${totalSec}s",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                                Spacer(Modifier.width(2.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("›", color = Color.White.copy(alpha = chAlpha1), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text("›", color = Color.White.copy(alpha = chAlpha2), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text("›", color = Color.White.copy(alpha = chAlpha3), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
                 }
 
-                // Horizontal Swipe Brightness / Volume Capsule HUD
+                // Horizontal Swipe Brightness / Volume Capsule HUD with Elastic Rubber-Band Boundary
                 hudSide?.let { side ->
                     val isBright = side == "Brightness"
+                    val isCeiling = hudValue >= 1f
+                    val elasticScaleX by animateFloatAsState(
+                        targetValue = if (isCeiling) 1.07f else 1.0f,
+                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+                        label = "elasticScaleX"
+                    )
+                    val elasticScaleY by animateFloatAsState(
+                        targetValue = if (isCeiling) 0.94f else 1.0f,
+                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+                        label = "elasticScaleY"
+                    )
+
                     Surface(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .safeDrawingPadding()
-                            .padding(top = 74.dp),
+                            .padding(top = 74.dp)
+                            .graphicsLayer {
+                                scaleX = elasticScaleX
+                                scaleY = elasticScaleY
+                            },
                         color = QuickMenuBg,
-                        border = BorderStroke(1.dp, FrostedCircleRim),
+                        border = BorderStroke(1.dp, if (isCeiling) Color(0xFFF59E0B).copy(alpha = 0.5f) else FrostedCircleRim),
                         shape = RoundedCornerShape(999.dp),
                         shadowElevation = 16.dp
                     ) {
@@ -558,7 +600,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             Icon(
                                 if (isBright) Icons.Rounded.Brightness6 else Icons.AutoMirrored.Rounded.VolumeUp,
                                 null,
-                                tint = Color.White,
+                                tint = if (isCeiling) Color(0xFFF59E0B) else Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
@@ -570,12 +612,12 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             LinearProgressIndicator(
                                 progress = { hudValue.coerceIn(0f, 1f) },
                                 modifier = Modifier.width(110.dp).height(5.dp).clip(CircleShape),
-                                color = TimelineAccent,
+                                color = if (isCeiling) Color(0xFFF59E0B) else TimelineAccent,
                                 trackColor = Color.White.copy(alpha = 0.22f)
                             )
                             Text(
                                 "${(hudValue * 100).roundToInt()}%",
-                                color = Color.White,
+                                color = if (isCeiling) Color(0xFFF59E0B) else Color.White,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.widthIn(min = 34.dp)

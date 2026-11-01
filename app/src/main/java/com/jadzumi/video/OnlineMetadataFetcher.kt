@@ -16,6 +16,18 @@ import java.net.URLEncoder
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
+data class CandidateMatch(
+    val id: String,
+    val title: String,
+    val year: String? = null,
+    val rating: String? = null,
+    val genres: List<String> = emptyList(),
+    val synopsis: String? = null,
+    val posterUrl: String? = null,
+    val backdropUrl: String? = null,
+    val provider: String = "Cinemeta / IMDb"
+)
+
 data class OnlineMediaMetadata(
     val title: String,
     val year: String? = null,
@@ -267,11 +279,133 @@ object OnlineMetadataFetcher {
         return score
     }
 
-    private fun sanitizeKey(key: String): String {
+    fun sanitizeKey(key: String): String {
         return key.lowercase(Locale.US).replace(Regex("[^a-z0-9_]"), "_").take(64)
     }
 
-    fun getCachedMovie(context: Context, rawTitle: String, hintYear: String? = null): OnlineMediaMetadata? {
+    fun getManualOverride(context: Context, videoIdentity: String): OnlineMediaMetadata? {
+        return try {
+            val prefs = context.getSharedPreferences("metadata_manual_overrides", Context.MODE_PRIVATE)
+            val raw = prefs.getString(videoIdentity, null) ?: return null
+            val json = JSONObject(raw)
+            val genresList = mutableListOf<String>()
+            json.optJSONArray("genres")?.let { arr ->
+                for (i in 0 until arr.length()) genresList.add(arr.getString(i))
+            }
+            OnlineMediaMetadata(
+                title = json.getString("title"),
+                year = json.optString("year").takeIf { it.isNotBlank() },
+                rating = json.optString("rating").takeIf { it.isNotBlank() },
+                genres = genresList,
+                synopsis = json.optString("synopsis").takeIf { it.isNotBlank() },
+                posterUrl = json.optString("posterUrl").takeIf { it.isNotBlank() },
+                backdropUrl = json.optString("backdropUrl").takeIf { it.isNotBlank() },
+                localPosterPath = json.optString("localPosterPath").takeIf { it.isNotBlank() }
+            )
+        } catch (_: Exception) { null }
+    }
+
+    fun setManualOverride(context: Context, videoIdentity: String, meta: OnlineMediaMetadata) {
+        try {
+            val prefs = context.getSharedPreferences("metadata_manual_overrides", Context.MODE_PRIVATE)
+            val json = JSONObject().apply {
+                put("title", meta.title)
+                put("year", meta.year ?: "")
+                put("rating", meta.rating ?: "")
+                put("genres", JSONArray(meta.genres))
+                put("synopsis", meta.synopsis ?: "")
+                put("posterUrl", meta.posterUrl ?: "")
+                put("backdropUrl", meta.backdropUrl ?: "")
+                put("localPosterPath", meta.localPosterPath ?: "")
+            }
+            prefs.edit().putString(videoIdentity, json.toString()).apply()
+            memoryCache[videoIdentity] = meta
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to save manual override: ${e.message}")
+        }
+    }
+
+    fun copyCustomPosterToCache(context: Context, imageUri: android.net.Uri, key: String): String? {
+        return try {
+            val destFile = File(getPosterCacheDir(context), "custom_${sanitizeKey(key)}.jpg")
+            context.contentResolver.openInputStream(imageUri)?.use { input ->
+                FileOutputStream(destFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            destFile.absolutePath
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to copy custom poster: ${e.message}")
+            null
+        }
+    }
+
+    suspend fun searchCandidates(
+        context: Context,
+        query: String,
+        isSeries: Boolean = false
+    ): List<CandidateMatch> = withContext(Dispatchers.IO) {
+        val results = mutableListOf<CandidateMatch>()
+        val cleanQ = query.trim()
+        if (cleanQ.isBlank()) return@withContext results
+        if (!isNetworkConnected(context) || !isOnlineMetadataEnabled(context)) return@withContext results
+
+        try {
+            val type = if (isSeries) "series" else "movie"
+            val searchUrl = "https://v3-cinemeta.strem.io/catalog/$type/top/search=" +
+                    URLEncoder.encode(cleanQ, "UTF-8") + ".json"
+            val conn = openOnlineConnection(context, searchUrl)
+            if (conn != null) {
+                conn.connectTimeout = 6000
+                conn.readTimeout = 8000
+                if (conn.responseCode == 200) {
+                    val body = conn.inputStream.bufferedReader().use { it.readText() }
+                    val root = JSONObject(body)
+                    val metas = root.optJSONArray("metas")
+                    if (metas != null) {
+                        for (i in 0 until metas.length().coerceAtMost(10)) {
+                            val item = metas.getJSONObject(i)
+                            val id = item.optString("id")
+                            val name = item.optString("name")
+                            val yearStr = item.optString("year").takeIf { it.isNotBlank() }
+                            val poster = item.optString("poster").takeIf { it.isNotBlank() }
+                            val syn = item.optString("description").takeIf { it.isNotBlank() }
+                            val rStr = item.optString("imdbRating").takeIf { it.isNotBlank() }
+                            val rVal = rStr?.toDoubleOrNull()?.let { displayRating(it) }
+                            val genres = mutableListOf<String>()
+                            item.optJSONArray("genres")?.let { gArr ->
+                                for (g in 0 until gArr.length().coerceAtMost(3)) {
+                                    genres.add(gArr.getString(g))
+                                }
+                            }
+                            if (name.isNotBlank()) {
+                                results.add(
+                                    CandidateMatch(
+                                        id = id,
+                                        title = name,
+                                        year = yearStr,
+                                        rating = rVal,
+                                        genres = genres,
+                                        synopsis = syn,
+                                        posterUrl = poster,
+                                        backdropUrl = item.optString("background").takeIf { it.isNotBlank() },
+                                        provider = "Cinemeta / IMDb"
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+
+        return@withContext results
+    }
+
+    fun getCachedMovie(context: Context, rawTitle: String, hintYear: String? = null, videoIdentity: String? = null): OnlineMediaMetadata? {
+        if (videoIdentity != null) {
+            getManualOverride(context, videoIdentity)?.let { return it }
+        }
         val (cleanTitle, extractedYear) = extractCleanTitleAndYear(rawTitle)
         val effectiveYear = hintYear ?: extractedYear
         if (cleanTitle.length < 2) return null
@@ -535,8 +669,12 @@ object OnlineMetadataFetcher {
     suspend fun fetchMovieMetadata(
         context: Context,
         rawTitle: String,
-        hintYear: String? = null
+        hintYear: String? = null,
+        videoIdentity: String? = null
     ): OnlineMediaMetadata? = withContext(Dispatchers.IO) {
+        if (videoIdentity != null) {
+            getManualOverride(context, videoIdentity)?.let { return@withContext it }
+        }
         val (cleanTitle, extractedYear) = extractCleanTitleAndYear(rawTitle)
         val effectiveYear = hintYear ?: extractedYear
         if (cleanTitle.length < 2) return@withContext null

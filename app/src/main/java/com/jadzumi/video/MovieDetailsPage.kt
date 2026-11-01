@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,9 +53,10 @@ fun MovieDetailsPage(
     val searchTitle = cleanFileTitle.ifBlank { video.title }
     val searchYear = cleanFileYear ?: metadata.year
 
+    var showFixMatch by remember { mutableStateOf(false) }
     var onlineMeta by remember(video.identity) { mutableStateOf<OnlineMediaMetadata?>(null) }
     LaunchedEffect(video.identity, searchTitle, searchYear) {
-        val fetched = OnlineMetadataFetcher.fetchMovieMetadata(context, searchTitle, searchYear)
+        val fetched = OnlineMetadataFetcher.fetchMovieMetadata(context, searchTitle, searchYear, video.identity)
         if (fetched != null) {
             onlineMeta = fetched
         }
@@ -85,12 +87,48 @@ fun MovieDetailsPage(
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progressFraction = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
 
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val isLight = surfaceColor.luminance() > 0.5f
+
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         val isTablet = maxWidth >= 840.dp
         val horizontalPad = if (isTablet) 28.dp else 16.dp
         val topPad = if (isTablet) 20.dp else 12.dp
         val scrollState = rememberLazyListState()
 
+        // Ambient Horizon / Cinema Glow Layer
+        if (isLight) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(260.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0xFFFEF3C7).copy(alpha = 0.55f),
+                                Color(0xFFFEF08A).copy(alpha = 0.18f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(320.dp)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                TimelineAccent.copy(alpha = 0.22f),
+                                Color(0xFF0F172A).copy(alpha = 0.08f),
+                                Color.Transparent
+                            ),
+                            radius = 650f
+                        )
+                    )
+            )
+        }
 
         LazyColumn(
             state = scrollState,
@@ -131,31 +169,63 @@ fun MovieDetailsPage(
                         )
                     }
 
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                        modifier = Modifier.wrapContentWidth()
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                            modifier = Modifier.wrapContentWidth()
                         ) {
-                            Icon(
-                                if (onlineMeta != null) Icons.Rounded.CloudDone else Icons.Rounded.Storage,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                if (onlineMeta != null) (if (isTablet) "Online artwork & metadata" else "Online Art")
-                                else if (metadata.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
-                                else if (isTablet) "Hardware Offline Analysis" else "Offline",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Icon(
+                                    if (onlineMeta != null) Icons.Rounded.CloudDone else Icons.Rounded.Storage,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    if (onlineMeta != null) (if (isTablet) "Online artwork & metadata" else "Online Art")
+                                    else if (metadata.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
+                                    else if (isTablet) "Hardware Offline Analysis" else "Offline",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Surface(
+                            onClick = { showFixMatch = true },
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
+                            modifier = Modifier.wrapContentWidth()
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Edit,
+                                    contentDescription = "Fix Match",
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    "Fix Match",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
@@ -186,13 +256,14 @@ fun MovieDetailsPage(
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 verticalAlignment = Alignment.Top
                             ) {
-                                // Poster Thumbnail (2:3 aspect ratio)
+                                // Poster Thumbnail (2:3 aspect ratio) - Clickable to Fix Match
                                 Box(
                                     modifier = Modifier
                                         .width(posterWidth)
                                         .aspectRatio(2f / 3f)
                                         .clip(RoundedCornerShape(18.dp))
                                         .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                        .clickable { showFixMatch = true }
                                 ) {
                                     SidecarImage(
                                         uri = effectiveMetadata.posterUri ?: effectiveMetadata.backdropUri,
@@ -468,6 +539,19 @@ fun MovieDetailsPage(
                     Text("Cancel")
                 }
             }
+        )
+    }
+
+    if (showFixMatch) {
+        FixMatchDialog(
+            initialQuery = searchTitle,
+            videoIdentity = video.identity,
+            currentMetadata = effectiveMetadata,
+            onMatchApplied = { newMeta ->
+                onlineMeta = newMeta
+                showFixMatch = false
+            },
+            onDismiss = { showFixMatch = false }
         )
     }
 }

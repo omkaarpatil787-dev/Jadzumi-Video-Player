@@ -488,19 +488,22 @@ private val destinations = listOf(
                                                 val isTargetDetails = targetState !in mainTabs
                                                 val isInitialDetails = initialState !in mainTabs
 
+                                                val morphCurve = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f)
                                                 if (!isInitialDetails && isTargetDetails) {
-                                                    // Fluid, hardware-accelerated entrance into Details (iOS / ColorOS style)
-                                                    (fadeIn(animationSpec = tween(360, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))) +
-                                                            scaleIn(initialScale = 0.95f, animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessLow)))
+                                                    // Deliberate 500ms shared-element spring entrance into Details
+                                                    (fadeIn(animationSpec = tween(500, easing = morphCurve)) +
+                                                            scaleIn(initialScale = 0.92f, animationSpec = tween(500, easing = morphCurve)))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing))
+                                                            fadeOut(animationSpec = tween(260, easing = FastOutLinearInEasing)) +
+                                                                    scaleOut(targetScale = 0.98f, animationSpec = tween(260, easing = FastOutLinearInEasing))
                                                         )
                                                 } else if (isInitialDetails && !isTargetDetails) {
-                                                    // Clean, responsive return to Library
-                                                    (fadeIn(animationSpec = tween(340, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))))
+                                                    // Deliberate 500ms shared-element collapse back to Library
+                                                    (fadeIn(animationSpec = tween(460, easing = morphCurve)) +
+                                                            scaleIn(initialScale = 0.98f, animationSpec = tween(460, easing = morphCurve)))
                                                         .togetherWith(
-                                                            fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing)) +
-                                                                    scaleOut(targetScale = 0.95f, animationSpec = tween(220, easing = FastOutLinearInEasing))
+                                                            fadeOut(animationSpec = tween(500, easing = morphCurve)) +
+                                                                    scaleOut(targetScale = 0.92f, animationSpec = tween(500, easing = morphCurve))
                                                         )
                                                 } else {
                                                     // Navigating between tabs: silky smooth shared-axis animated crossfade (like iOS / ColorOS)

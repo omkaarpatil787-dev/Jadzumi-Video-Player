@@ -1,3 +1,28 @@
+# Jadzumi v1.8.0 — "The Smoothness & Refinement Milestone": Fix Match & Artwork Matcher, App-Wide 500ms Shared-Element Morph, Ambient Cinema Backdrop & YouTube Cascading Seek Chevrons 🎬✨🧈
+
+A landmark refinement update introducing manual "Fix Match" & gallery poster matching, automated scraper guardrails against encyclopedic entries, universal 500ms continuous shared-element geometry morphing across navigation, an airy pastel horizon in Light mode / cinema ambient glow in Dark mode, and sleek YouTube-style cascading chevron seek pills.
+
+### 🔍 1. "Fix Match" & Artwork Matcher (Manual & Online Disambiguation)
+- **Interactive Fix Match Dialog**: Added a prominent yet elegant "✏️ Fix Match" action button on `MovieDetailsPage` (also accessible by directly tapping the poster thumbnail) to correct any metadata or poster mismatch in seconds.
+- **Cinemeta & IMDb Streaming Catalog Search**: Search by title or paste an IMDb ID (`tt...`) to view top verified candidate cards with official posters, release years, IMDb star ratings, and synopses.
+- **Custom Local Gallery Poster Picker**: Pick any local image from your device's photo gallery (`image/*`) to use as custom cover art.
+- **Automated Scraper Guardrails**: Added strict filters rejecting non-film encyclopedic concepts (colors, dictionaries, sociological articles, and disambiguations) so files like *Blue*, *Apocalypse Z*, and *Sapiosexual* never match conceptual articles.
+- **Persistent Local Overrides**: Manual matches are stored permanently in local storage and update the movie details immediately with zero app restarts.
+
+### ✦ 2. Universal 500ms Continuous Shared-Element Geometry Morph
+- **Calibrated Motion Curve**: Standardized screen and card transitions to a deliberate **500ms spring curve** (`cubic-bezier(0.19, 1, 0.22, 1)`).
+- **Continuous Geometry Interpolation**: When navigating between Library Cards and Movie Details, card boundaries (width, height, rounding, depth) physically stretch and collapse to their coordinates at 60 FPS without blank screen flashes or layout cuts.
+
+### ✨ 3. Ambient Cinema Backdrop & Airy Light Horizon
+- **Light Mode Porcelain Perfection**: Replaced muddy dark color smudges with an airy, feather-soft pastel horizon wash (`#FEF3C7` ➔ `#FEF08A` ➔ transparent) and high-depth colored poster drop shadows, preserving 100% contrast on deep slate text.
+- **Dark & AMOLED Ambient Glow**: Diffused, atmospheric cinema radial glow behind the hero banner on `MovieDetailsPage`.
+
+### ⚡ 4. YouTube-Style Cascading Chevrons Seek Pill & Elastic Boundary Bump
+- **Compact Chevron Seek Capsule**: Replaced oversized circular overlays with a sleek YouTube-style cascading chevron pill (`‹‹‹ 10s` and `10s ›››`) with staggered animated alphas that floats compactly and disappears without obstructing playback.
+- **Elastic Rubber-Band Squash & Stretch**: Volume and Brightness HUD now performs an elastic rubber-band squash & stretch (`scaleX = 1.07f, scaleY = 0.94f`) with physical boundary haptic feedback upon reaching the 100% ceiling.
+
+---
+
 # Jadzumi v1.7.9 — Full Theme Adaptive Playback Controls & Quick Menu (Light / Dark / AMOLED) 🎨✨🧈
 
 A dedicated visual consistency and theme optimization release ensuring every playback HUD overlay, quick menu option, status pill, and skip-intro button dynamically and harmoniously matches the active display appearance (Light mode, Dark mode, or AMOLED mode).
