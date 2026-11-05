@@ -1729,15 +1729,15 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             }
                             Spacer(Modifier.height(8.dp))
                             QuickOptionItem(
-                                label = if (playback.hdrShadowBoost) "HDR Shadow Clarifier: Active (+50% Shadow Detail)" else "HDR Shadow Clarifier: Off (Native Shadows)",
-                                selected = playback.hdrShadowBoost,
+                                label = if (playback.brightnessBoost) "HDR Peak Luminance Boost: 100%" else "HDR Peak Luminance Boost: Auto",
+                                selected = playback.brightnessBoost,
                                 onClick = {
-                                    playback.toggleHdrShadowBoost()
-                                    onMessage(if (playback.hdrShadowBoost) "HDR Shadow Clarifier: Active" else "HDR Shadow Clarifier: Off")
+                                    playback.updateBrightnessBoost(!playback.brightnessBoost)
+                                    onMessage(if (playback.brightnessBoost) "HDR Peak Luminance: 100%" else "HDR Peak Luminance: Auto")
                                 }
                             )
                             Text(
-                                "Lifts dark shadows in nighttime and dim scenes while protecting specular highlights and BT.2020 color accuracy.",
+                                "Maximizes display panel specular headroom to illuminate dark scenes and highlights.",
                                 color = palette.secondaryText,
                                 fontSize = 11.sp,
                                 modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 6.dp)

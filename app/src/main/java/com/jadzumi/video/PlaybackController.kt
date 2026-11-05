@@ -456,10 +456,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun applyVideoEffects() {
         val p = player ?: return
         try {
-            // When Natural profile is chosen and parameters are neutral,
+            // Rule: When HDR is active, or Natural profile is chosen, or parameters are neutral,
             // strictly pass emptyList() to preserve 100% zero-copy, untouched SurfaceView playback.
-            // If shadowLift or parameters are customized, VideoEnhancerEffect applies GPU color/shadow tuning.
-            if (videoEnhancerProfile == ColorEnhancementProfile.NATURAL && videoEnhancerParams.isNeutral()) {
+            if (isHdr || videoEnhancerProfile == ColorEnhancementProfile.NATURAL || videoEnhancerParams.isNeutral()) {
                 p.setVideoEffects(emptyList())
             } else {
                 p.setVideoEffects(listOf(VideoEnhancerEffect(videoEnhancerParams)))

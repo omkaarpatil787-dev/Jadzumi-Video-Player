@@ -64,6 +64,7 @@ object HdrCodecSelector {
         }
     }
 
+    @Suppress("DEPRECATION")
     fun isDolbyVisionDisplaySupported(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
         return runCatching {
@@ -71,7 +72,6 @@ object HdrCodecSelector {
             val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try { context.display } catch (_: Exception) { wm?.defaultDisplay }
             } else {
-                @Suppress("DEPRECATION")
                 wm?.defaultDisplay
             }
             val hdrCaps = display?.hdrCapabilities ?: return@runCatching false
@@ -79,6 +79,7 @@ object HdrCodecSelector {
         }.getOrDefault(false)
     }
 
+    @Suppress("DEPRECATION")
     fun isHdr10PlusSupported(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
         return runCatching {
@@ -86,7 +87,6 @@ object HdrCodecSelector {
             val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try { context.display } catch (_: Exception) { wm?.defaultDisplay }
             } else {
-                @Suppress("DEPRECATION")
                 wm?.defaultDisplay
             }
             val hdrCaps = display?.hdrCapabilities ?: return@runCatching false
