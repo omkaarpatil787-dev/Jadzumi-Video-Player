@@ -2,7 +2,7 @@
 <p align="center">An overview of the app, its architecture, and release progress.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.9.0-2563eb?style=flat-square" alt="Version 1.9.0"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.9.1-2563eb?style=flat-square" alt="Version 1.9.1"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -18,6 +18,7 @@ FFmpeg decoder fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
+| **v1.9.1 · build 39** | Android 8.0+ · ARM64 | Smart Dolby Vision / HDR10+ Fallback Decoder, Universal 10-Bit Window Pipeline, HDR Shadow Clarifier, Status Badging |
 | **v1.9.0 · build 38** | Android 8.0+ · ARM64 | True Auto Frame Rate (AFR), Biometric Private Vault, Cinema DNA Studio, Lossless Scene Clipper, Battery Estimator & Eco Mode, Binge Automation |
 | **v1.8.0.3 · build 37** | Android 8.0+ · ARM64 | Documentation Integrity & Privacy Endpoint Disclosures, Artifacts & Archive Cleanup, Corresponding Source Verification |
 | **v1.8.0.2 · build 36** | Android 8.0+ · ARM64 | 4-Component Semantic In-App Update Detection, App-Wide Material 3 Expressive Micro-Interactions |

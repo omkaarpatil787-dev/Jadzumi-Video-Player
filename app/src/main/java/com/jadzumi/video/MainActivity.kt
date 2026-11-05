@@ -135,8 +135,10 @@ class MainActivity : ComponentActivity() {
 
     fun updateHdrColorMode(isOled: Boolean = DeviceHardwareInspector.isOledOrAmoledDisplay(this)) {
         if (Build.VERSION.SDK_INT >= 26) {
-            val shouldBoostHdr = playback.video != null && (playback.brightnessBoost || (playback.isHdr && isOled))
-            window.colorMode = if (shouldBoostHdr) {
+            // Enable 10-bit HDR window mode whenever an HDR10, HDR10+, HLG, or Dolby Vision
+            // video is active, or if brightness boost is explicitly requested, on all compatible displays.
+            val shouldEnableHdr = playback.video != null && (playback.isHdr || playback.brightnessBoost)
+            window.colorMode = if (shouldEnableHdr) {
                 ActivityInfo.COLOR_MODE_HDR
             } else {
                 ActivityInfo.COLOR_MODE_DEFAULT

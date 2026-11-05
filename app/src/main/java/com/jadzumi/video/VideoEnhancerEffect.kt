@@ -20,10 +20,15 @@ class VideoEnhancerEffect(
 ) : RgbMatrix {
 
     override fun getMatrix(presentationTimeUs: Long, useHdr: Boolean): FloatArray {
-        // If HDR is active, strictly return the 4x4 identity matrix to preserve
-        // 10-bit wide color gamut (BT.2020 / PQ / HLG) without SDR clipping.
-        if (useHdr || params.isNeutral()) {
+        if (params.isNeutral()) {
             return IDENTITY_MATRIX.clone()
+        }
+
+        if (useHdr) {
+            // Under HDR / BT.2020 wide color gamut: preserve native saturation & vibrance
+            // while allowing shadow lift and gentle contrast expansion to rescue crushed shadows
+            val hdrSafeParams = params.copy(saturation = 1.0f, vibrance = 0.0f)
+            return computeTransformationMatrix(hdrSafeParams)
         }
 
         return computeTransformationMatrix(params)

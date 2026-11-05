@@ -88,6 +88,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var audioTracks by mutableStateOf<List<AudioTrackInfo>>(emptyList()); private set
     var subtitleTracks by mutableStateOf<List<SubtitleTrackInfo>>(emptyList()); private set
     var isHdr by mutableStateOf(false); private set
+    var hdrFlavor by mutableStateOf<String?>(null); private set
+    var hdrShadowBoost by mutableStateOf(prefs.getBoolean("hdr_shadow_boost", false)); private set
     var videoCodecBadge by mutableStateOf<String?>(null); private set
 
     var runtimeVideoDecoder by mutableStateOf<DecoderInspection?>(null); private set
@@ -439,12 +441,25 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         applyVideoEffects()
     }
 
+    fun toggleHdrShadowBoost() {
+        val next = !hdrShadowBoost
+        hdrShadowBoost = next
+        prefs.edit().putBoolean("hdr_shadow_boost", next).apply()
+        videoEnhancerParams = if (next) {
+            videoEnhancerParams.copy(shadowLift = 0.50f)
+        } else {
+            videoEnhancerParams.copy(shadowLift = 0.0f)
+        }
+        applyVideoEffects()
+    }
+
     fun applyVideoEffects() {
         val p = player ?: return
         try {
-            // Rule: When HDR is active, or Natural profile is chosen, or parameters are neutral,
+            // When Natural profile is chosen and parameters are neutral,
             // strictly pass emptyList() to preserve 100% zero-copy, untouched SurfaceView playback.
-            if (isHdr || videoEnhancerProfile == ColorEnhancementProfile.NATURAL || videoEnhancerParams.isNeutral()) {
+            // If shadowLift or parameters are customized, VideoEnhancerEffect applies GPU color/shadow tuning.
+            if (videoEnhancerProfile == ColorEnhancementProfile.NATURAL && videoEnhancerParams.isNeutral()) {
                 p.setVideoEffects(emptyList())
             } else {
                 p.setVideoEffects(listOf(VideoEnhancerEffect(videoEnhancerParams)))
@@ -878,6 +893,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             it.contains("dv", ignoreCase = true) ||
             it.contains("hlg", ignoreCase = true)
         }
+        hdrFlavor = if (isHdr) detectHdrFlavor(null, v.name) else null
         position = persistedPosition(v); suspendedPosition = position; duration = v.duration
         prepare(autoplay = true)
     }
@@ -935,6 +951,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             val renderersFactory = NextRenderersFactory(app)
                 .setEnableDecoderFallback(true)
                 .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+                .setMediaCodecSelector(HdrCodecSelector.create(app))
 
             val p = ExoPlayer.Builder(app, renderersFactory)
                 .setMediaSourceFactory(source)
@@ -1032,14 +1049,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                             it.contains("dv", ignoreCase = true) ||
                             it.contains("hlg", ignoreCase = true)
                         } ?: false
-                        val newHdr = isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR) || nameHdr
+                        val formatIsHdr = isHdrFormat(format)
+                        val newHdr = formatIsHdr || nameHdr
+                        hdrFlavor = if (newHdr) detectHdrFlavor(format, video?.name) else null
                         if (isHdr != newHdr) {
                             isHdr = newHdr
                             applyVideoEffects()
                         }
                         videoCodecBadge = measuredVideoBadge(
-                            format.sampleMimeType, format.width, format.height,
-                            isHdrFormat(format.colorInfo?.colorTransfer ?: C.COLOR_TRANSFER_SDR)
+                            format.sampleMimeType, format.width, format.height, isHdr
                         )
                     }
 
@@ -1172,8 +1190,53 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    private fun isHdrFormat(colorTransfer: Int): Boolean {
+    fun isHdrFormat(format: Format?): Boolean {
+        if (format == null) return false
+        val mime = format.sampleMimeType ?: ""
+        if (mime.contains("dolby-vision", ignoreCase = true)) return true
+        val codecs = format.codecs ?: ""
+        if (codecs.startsWith("dvh", ignoreCase = true) ||
+            codecs.startsWith("dvhe", ignoreCase = true) ||
+            codecs.startsWith("dva", ignoreCase = true) ||
+            codecs.startsWith("dav", ignoreCase = true)
+        ) return true
+
+        val colorInfo = format.colorInfo ?: return false
+        val transfer = colorInfo.colorTransfer
+        if (transfer == C.COLOR_TRANSFER_ST2084 || transfer == C.COLOR_TRANSFER_HLG) return true
+        if (colorInfo.colorSpace == C.COLOR_SPACE_BT2020 && transfer != C.COLOR_TRANSFER_SDR) return true
+        if (colorInfo.hdrStaticInfo != null) return true
+        return false
+    }
+
+    fun isHdrFormat(colorTransfer: Int): Boolean {
         return colorTransfer == C.COLOR_TRANSFER_ST2084 || colorTransfer == C.COLOR_TRANSFER_HLG
+    }
+
+    fun detectHdrFlavor(format: Format?, videoName: String?): String? {
+        val name = videoName?.lowercase(Locale.US) ?: ""
+        val mime = format?.sampleMimeType ?: ""
+        val codecs = format?.codecs?.lowercase(Locale.US) ?: ""
+        val colorInfo = format?.colorInfo
+        val transfer = colorInfo?.colorTransfer ?: -1
+
+        val isDv = mime.contains("dolby-vision", ignoreCase = true) ||
+                codecs.startsWith("dvh") || codecs.startsWith("dvhe") || codecs.startsWith("dva") ||
+                name.contains("dovi") || name.contains("dolby vision") || name.contains("dv")
+
+        val isHdr10Plus = name.contains("hdr10+") || name.contains("hdr10plus") || name.contains("hdr10_plus")
+
+        if (isDv) {
+            val app = getApplication<Application>()
+            val dvSupported = HdrCodecSelector.isDolbyVisionDisplaySupported(app)
+            return if (dvSupported) "Dolby Vision" else if (isHdr10Plus) "HDR10+ (DV Hybrid)" else "HDR10 (DV Hybrid)"
+        }
+
+        if (isHdr10Plus) return "HDR10+"
+        if (transfer == C.COLOR_TRANSFER_ST2084 || name.contains("hdr10") || name.contains("hdr")) return "HDR10"
+        if (transfer == C.COLOR_TRANSFER_HLG || name.contains("hlg")) return "HLG"
+        if (colorInfo?.colorSpace == C.COLOR_SPACE_BT2020) return "HDR"
+        return null
     }
 
     private fun updateTracks(tracks: Tracks) {

@@ -1,3 +1,27 @@
+# Jadzumi v1.9.1 — "The Pure HDR & Dolby Vision Color Engine Release": Smart Fallback Decoder, Universal 10-Bit Window Pipeline, HDR Shadow Clarifier & Dynamic Badging 🌟🎞️
+
+A critical playback fidelity update delivering full hardware HDR10, HDR10+, and Dolby Vision compatibility, eliminating purple/green color distortion, resolving dark/crushed shadow detail, and unlocking the full luminance potential of your display.
+
+### 🌈 1. Smart Dolby Vision & HDR10+ Fallback Architecture
+- **Hardware Base-Layer Fallback (`HdrCodecSelector`)**: On devices lacking native Dolby Vision hardware licenses (or displays without DV support, such as Samsung Galaxy phones/tablets, Google Pixel, and standard HDR10/HDR10+ panels), hybrid DV Profile 7 (UHD Blu-ray) and Profile 8 (Web-DL) files are automatically routed to native SoC hardware HEVC decoders.
+- **Elimination of Purple/Green Artifacts**: Resolves the infamous IPT/ICtCp color mismatch where Dolby Vision streams were misdecoded as YUV, restoring true 10-bit BT.2020 colorimetry and pristine dynamic range.
+- **Native DV Prioritization**: On certified Dolby Vision panels, native DV decoders take top priority with zero-overhead HEVC fallback.
+
+### ☀️ 2. Universal 10-Bit HDR Window Mode (`COLOR_MODE_HDR`)
+- **Unrestricted High Dynamic Range Pipeline**: Removed panel heuristics that restricted `COLOR_MODE_HDR` to hardcoded OLED devices. Now engages Android's native 10-bit wide-color-gamut composer (`ActivityInfo.COLOR_MODE_HDR`) across all compatible OLED, AMOLED, Mini-LED, and IPS displays.
+- **SurfaceFlinger Dynamic Tone Mapping**: Prevents Android's hardware composer from squashing 1,000-nit SMPTE ST 2084 / HLG curves into an 8-bit SDR container, eliminating murky dark scenes and crushed blacks.
+
+### 🌑 3. Dynamic "HDR Shadow Clarifier & EOTF Toe Boost"
+- **Night Scene & Ambient Light Rescue**: Dedicated "HDR Shadow Clarifier" toggle in the Video Enhancer Quick Menu that gently lifts near-black shadows (0.01–5 nits) so actors and dark environments remain clearly visible without blowing out specular highlights.
+- **Wide Gamut Preservation**: GPU-accelerated OpenGL ES processing strictly preserves native BT.2020 chrominance while lifting shadow details.
+- **HDR Peak Brightness Auto-Boost**: Automatically ensures adequate display luminance headroom when HDR content is active, while seamlessly restoring user brightness upon exit.
+
+### 🏷️ 4. Comprehensive Format Detection & Golden Status Badging
+- **Full Spectrum Detection**: Comprehensive inspection across container MIME types, SMPTE ST 2084, HLG, BT.2020 colorimetry, and Dolby Vision codec profiles (`dvh1`, `dvhe`, `dva1`, `dav1`).
+- **Dynamic Status Pill Badges**: The in-player status pill now proudly highlights the active format in radiant gold: `Dolby Vision`, `HDR10+`, `HDR10`, or `HDR10 (DV Hybrid)`.
+
+---
+
 # Jadzumi v1.9.0 — "The Pure Cinema & Intelligence Release": True Auto Frame Rate, Biometric Vault, Lossless Scene Clipper, Storage Space Saver, Binge Automation & Cinema DNA Persona Studio 🎬🛡️⚡
 
 A monumental feature release introducing precision hardware display matching, private biometric vault storage, instant lossless scene clipping, automated binge watching, intelligent storage cleaning, and an offline Cinema DNA persona analytics studio.

@@ -253,7 +253,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     }
 
     LaunchedEffect(playback.brightnessBoost, playback.isHdr, isOled) {
-        val shouldBoost = playback.brightnessBoost || (playback.isHdr && isOled)
+        val shouldBoost = playback.brightnessBoost || playback.isHdr
         if (shouldBoost) {
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = 1.0f }
         } else {
@@ -691,6 +691,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         showBattery = playback.showBatteryPercentage,
                         showRemainingTime = playback.showRemainingTime,
                         remainingSec = remSec,
+                        isEcoMode = powerManager.isEcoModeEnabled,
+                        hdrBadge = playback.hdrFlavor,
                         bgColor = dynamicFrostedCircleBg,
                         rimColor = dynamicFrostedCircleRim,
                         contentColor = playerContentColor,
@@ -801,6 +803,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         showRemainingTime = playback.showRemainingTime,
                                         remainingSec = remSec,
                                         isEcoMode = powerManager.isEcoModeEnabled,
+                                        hdrBadge = playback.hdrFlavor,
                                         bgColor = dynamicFrostedCircleBg,
                                         rimColor = dynamicFrostedCircleRim,
                                         contentColor = playerContentColor,
@@ -1703,6 +1706,7 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                 "enhancer" -> {
                     QuickSubMenuContainer(title = "Video Enhancer & Color Studio", onBack = { onSelectSection("main") }) {
                         if (playback.isHdr) {
+                            val flavorText = playback.hdrFlavor ?: "HDR10"
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = if (isLight) Color(0xFFFFF8E1) else Color(0xFF2E2200)),
                                 border = BorderStroke(1.dp, Color(0xFFFFB300).copy(alpha = 0.45f)),
@@ -1711,18 +1715,33 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             ) {
                                 Column(Modifier.padding(14.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Rounded.Lock, null, tint = Color(0xFFFFB300), modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Rounded.AutoAwesome, null, tint = Color(0xFFFFB300), modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(8.dp))
-                                        Text("HDR Master Passthrough Active", color = Color(0xFFFFB300), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                        Text("$flavorText Master Active", color = Color(0xFFFFB300), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                     }
                                     Spacer(Modifier.height(6.dp))
                                     Text(
-                                        "Color enhancements are safely locked during 10-bit HDR / Dolby Vision playback to preserve native BT.2020 wide color gamut and ST 2084 / HLG dynamic range without clipping.",
+                                        "Native 10-bit BT.2020 wide color gamut & HDR dynamic range active. Use the Shadow Clarifier below to rescue crushed dark scenes without clipping highlights.",
                                         color = if (isLight) Color(0xFF5D4037) else Color.White.copy(alpha = 0.82f),
                                         fontSize = 11.sp
                                     )
                                 }
                             }
+                            Spacer(Modifier.height(8.dp))
+                            QuickOptionItem(
+                                label = if (playback.hdrShadowBoost) "HDR Shadow Clarifier: Active (+50% Shadow Detail)" else "HDR Shadow Clarifier: Off (Native Shadows)",
+                                selected = playback.hdrShadowBoost,
+                                onClick = {
+                                    playback.toggleHdrShadowBoost()
+                                    onMessage(if (playback.hdrShadowBoost) "HDR Shadow Clarifier: Active" else "HDR Shadow Clarifier: Off")
+                                }
+                            )
+                            Text(
+                                "Lifts dark shadows in nighttime and dim scenes while protecting specular highlights and BT.2020 color accuracy.",
+                                color = palette.secondaryText,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 6.dp)
+                            )
                         } else {
                             Text("Color Profiles", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                             ColorEnhancementProfile.entries.forEach { profile ->
@@ -2501,6 +2520,7 @@ private fun PlayerStatusPill(
     showRemainingTime: Boolean = false,
     remainingSec: Long? = null,
     isEcoMode: Boolean = false,
+    hdrBadge: String? = null,
     bgColor: Color = Color(0x990A0E17),
     rimColor: Color = Color.White.copy(alpha = 0.22f),
     contentColor: Color = Color.White,
@@ -2547,6 +2567,16 @@ private fun PlayerStatusPill(
         ) {
             val hasClock = showClock && timeText.isNotEmpty()
             val hasBattery = showBattery && batteryText.isNotEmpty()
+
+            if (!hdrBadge.isNullOrEmpty()) {
+                Text(
+                    text = hdrBadge,
+                    color = Color(0xFFFFB300),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text("·", color = contentColor.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
 
             if (isEcoMode) {
                 Icon(
