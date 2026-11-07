@@ -141,7 +141,7 @@ fun DockedMiniPlayer(
 
                     // Jump Forward +10s
                     IconButton(
-                        onClick = { playback.seekDelta(10_000L) },
+                        onClick = { playback.skip(10_000L) },
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
@@ -154,7 +154,7 @@ fun DockedMiniPlayer(
 
                     // Play / Pause
                     IconButton(
-                        onClick = { playback.playPause() },
+                        onClick = { playback.toggle() },
                         modifier = Modifier
                             .size(36.dp)
                             .background(accentColor.copy(alpha = 0.15f), CircleShape)
