@@ -118,16 +118,17 @@
 
 ---
 
-### Milestone 12 (v1.9.0) — Pure Cinema & Intelligence Release (Approved & Shipped)
+### Milestone 12 (v1.9.0–v1.9.1.2) — Pure Cinema, Universal Seeking & HDR Engine (Approved & Shipped)
+- **Universal Constant-Bitrate & Fallback Seeking Engine**: Full CBR seeking fallback and edit-list workarounds for unindexed MKV (`Cues`-less), MP4 (fragmented/unindexed), and AVI/TS files with adaptive timeline seekability.
+- **Pure HDR & Dolby Vision Color Engine**: Interactive HDR Profile Router (`Auto`, `Dolby Vision Master`, `HDR10+ Dynamic Metadata`, `HDR10 Base Layer`, `SDR Tone-Mapped`) with hardware HEVC base-layer fallback resolving AMOLED black-crush and chromatic fringing.
+- **Active HDR Shadow Clarifier & Luminance Boost**: Real `Off (Native)`, `Mild (+25%)`, and `High (+50%)` near-black shadow lift for dark scenes without clipping specular highlights.
 - **True Auto Frame Rate (AFR) Display Mode Switching**: Exact 24.00Hz / 23.976Hz cadence matching, 120Hz/144Hz 5:5 pulldown, zero judder via `Surface.setFrameRate` (API 30+), and automatic UI display rate restoration.
-- **Biometric Private Vault (Secure Cinema Locker)**: Fingerprint / Face Unlock / device PIN cloaking for sensitive media with dedicated vault management and instant library exclusion.
-- **Cinema DNA & Viewer Persona Studio**: Offline watch history intelligence, 24h viewing heatmaps, 4K/HDR purist ratios, mileage counters, and shareable holographic viewer archetype cards.
 - **Lossless Scene Clipper & Quick Share**: Native zero-reencode `MediaExtractor` + `MediaMuxer` 1080p/4K sub-second scene trimming directly to the Android system share sheet.
 - **Smart Battery Estimator & 24Hz Eco Mode**: Real-time mA discharge telemetry, playback runtime projections, and one-tap 24Hz power saver mode.
 - **Per-Series Binge Automation & Interactive Chapters**: Configurable custom intro/outro skip timestamps per show, auto-advance, and slide-up interactive chapter navigation.
 - **Storage Analyzer & Space Saver**: Real-time storage consumption breakdown by media type, watched media identification, and safe batch cleanup.
-- **Watched / Unwatched Badges & Filter Chip**: Checkmarks on posters/cards and dedicated Watched filter chip.
-- **Version Tag**: `versionCode = 38`, `versionName = "1.9.0"`.
+- **Gimmick Pruning & Fluidity Polish**: Decommissioned non-essential background modules (Private Vault, Cinema DNA, Dialogue Replay, Bookmarks, Passport Stubs) for a streamlined, blazing-fast native video engine.
+- **Version Tag**: `versionCode = 41`, `versionName = "1.9.1.2"`.
 
 ---
 
