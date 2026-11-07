@@ -1,3 +1,17 @@
+# Jadzumi v1.9.1.2 (Hotfix) — "Universal Seeking & Unindexed Media Engine" ⏩🚀
+
+A critical playback enhancement enabling smooth fast-forward, rewind, and timeline scrubbing on video files with missing, corrupted, or fragmented seek indexes, and streamlining the core media library.
+
+### ⏩ 1. Universal Constant-Bitrate & Fallback Seeking Engine
+- **Unindexed Video Rescue**: Configured Media3 `DefaultExtractorsFactory` with `.setConstantBitrateSeekingEnabled(true)` and `.setConstantBitrateSeekingAlwaysEnabled(true)`, allowing ExoPlayer to accurately calculate seek offsets based on average bitrate and duration whenever a video file is missing its container index table (`Cues` in MKV, `moov`/`stss` in MP4, `idx1` in AVI, or TS transport streams).
+- **Edit List Workaround**: Enabled `Mp4Extractor.FLAG_WORKAROUND_IGNORE_EDIT_LISTS` to prevent corrupted seeking on non-standard MP4 edits.
+- **Adaptive Seekable Fallback**: Decoupled UI timeline scrubbing and gesture seeking from rigid seekable flags, ensuring jump buttons and scrubbers remain active on all local files with known durations (`duration > 0 && !isCurrentMediaItemLive`).
+
+### 🧹 2. App Vault Removal & Performance Decluttering
+- **Complete App Vault Removal**: Fully decommissioned the Private Vault and biometric prompt locker across the app, removing background SharedPreferences listeners, UI lock sheets, and card overlays for pure offline video player performance.
+
+---
+
 # Jadzumi v1.9.1.1 (Hotfix) — "Precision HDR Profile Router & Core Player Stabilization" 🚀✨
 
 A critical hotfix and refinement release addressing AMOLED HDR10+ playback, biometric vault repairs, binge automation accuracy, and codebase decluttering.

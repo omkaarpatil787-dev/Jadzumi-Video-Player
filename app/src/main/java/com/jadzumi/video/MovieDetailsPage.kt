@@ -89,8 +89,6 @@ fun MovieDetailsPage(
 
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isLight = surfaceColor.luminance() > 0.5f
-    val vaultManager = remember { PrivateVaultManager(context) }
-    var isVaulted by remember(video.uri) { mutableStateOf(vaultManager.isVaulted(video.uri)) }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         val isTablet = maxWidth >= 840.dp
@@ -383,26 +381,6 @@ fun MovieDetailsPage(
                                     }
 
                                     IconButton(
-                                        onClick = {
-                                            if (isVaulted) {
-                                                vaultManager.removeFromVault(video.uri)
-                                                isVaulted = false
-                                            } else {
-                                                vaultManager.moveToVault(video.uri)
-                                                isVaulted = true
-                                            }
-                                        },
-                                        modifier = Modifier.size(46.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
-                                    ) {
-                                        Icon(
-                                            if (isVaulted) Icons.Rounded.LockOpen else Icons.Rounded.Lock,
-                                            contentDescription = if (isVaulted) "Remove from Private Vault" else "Move to Private Vault",
-                                            modifier = Modifier.size(20.dp),
-                                            tint = if (isVaulted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                                        )
-                                    }
-
-                                    IconButton(
                                         onClick = { confirmDelete = true },
                                         modifier = Modifier.size(46.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
                                     ) {
@@ -475,26 +453,6 @@ fun MovieDetailsPage(
                                             )
                                             Spacer(Modifier.width(4.dp))
                                             Text(if (isWatched) "Watched" else "Mark Done", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                        }
-
-                                        IconButton(
-                                            onClick = {
-                                                if (isVaulted) {
-                                                    vaultManager.removeFromVault(video.uri)
-                                                    isVaulted = false
-                                                } else {
-                                                    vaultManager.moveToVault(video.uri)
-                                                    isVaulted = true
-                                                }
-                                            },
-                                            modifier = Modifier.size(46.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
-                                        ) {
-                                            Icon(
-                                                if (isVaulted) Icons.Rounded.LockOpen else Icons.Rounded.Lock,
-                                                contentDescription = if (isVaulted) "Remove from Private Vault" else "Move to Private Vault",
-                                                modifier = Modifier.size(20.dp),
-                                                tint = if (isVaulted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                                            )
                                         }
 
                                         IconButton(

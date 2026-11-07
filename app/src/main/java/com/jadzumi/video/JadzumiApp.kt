@@ -143,8 +143,6 @@ private val destinations = listOf(
     var themeBloomEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("themeBloom", true)) }
     var firstLaunchCardShown by rememberSaveable { mutableStateOf(prefs.getBoolean("pad5_welcome_done", false)) }
 
-    val vaultManager = remember { PrivateVaultManager(context) }
-    var showVaultSheet by remember { mutableStateOf(false) }
     var showStorageSheet by remember { mutableStateOf(false) }
 
     var route by rememberSaveable { mutableStateOf("Home") }
@@ -153,13 +151,6 @@ private val destinations = listOf(
     val library = remember { LocalLibrary.get(context) }
     val localState by library.state.collectAsState()
 
-    val vaultedUris = remember(vaultManager.isUnlocked) { vaultManager.getVaultedUris() }
-    val effectiveLocalState = remember(localState, vaultedUris) {
-        if (vaultedUris.isEmpty()) localState
-        else localState.copy(
-            videos = localState.videos.filter { !vaultedUris.contains(it.uri) }
-        )
-    }
     var query by rememberSaveable { mutableStateOf("") }
     var cornerStyle by rememberSaveable { mutableStateOf(prefs.getString("cornerStyle", "Rounded") ?: "Rounded") }
     var bottomBarStyle by rememberSaveable { mutableStateOf(prefs.getString("bottomBarStyle", "Icons and labels") ?: "Icons and labels") }
@@ -296,12 +287,6 @@ private val destinations = listOf(
                                                     }
 
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                                        IconButton(
-                                                            onClick = { showVaultSheet = true },
-                                                            modifier = Modifier.size(34.dp)
-                                                        ) {
-                                                            Icon(Icons.Rounded.Lock, "Private Vault", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
-                                                        }
                                                         IconButton(
                                                             onClick = { showStorageSheet = true },
                                                             modifier = Modifier.size(34.dp)
@@ -493,9 +478,6 @@ private val destinations = listOf(
                                             }
 
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                IconButton(onClick = { showVaultSheet = true }) {
-                                                    Icon(Icons.Rounded.Lock, "Private Vault", tint = MaterialTheme.colorScheme.primary)
-                                                }
                                                 IconButton(onClick = { showStorageSheet = true }) {
                                                     Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary)
                                                 }
@@ -603,9 +585,9 @@ private val destinations = listOf(
                                             }
                                         } else if (video != null) DetailPage(video)
                                         else when (current) {
-                                            "Home", "Library" -> LocalLibraryPage(effectiveLocalState, library, playback, query, { selectedId = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
-                                            "Movies", "Videos" -> LocalLibraryPage(effectiveLocalState, library, playback, query, { selectedId = it }, defaultCategory = "Movies", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
-                                            "TV Shows" -> LocalLibraryPage(effectiveLocalState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "Folders" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
                                                 effectiveTheme = effectiveTheme,
@@ -768,24 +750,6 @@ private val destinations = listOf(
             }
 
             UpdateHost()
-
-            if (showVaultSheet) {
-                ModalBottomSheet(
-                    onDismissRequest = { showVaultSheet = false },
-                    containerColor = Color.Transparent
-                ) {
-                    PrivateVaultSheet(
-                        vaultManager = vaultManager,
-                        allVideos = localState.videos,
-                        onPlayVideo = {
-                            playback.open(it)
-                            playback.fullscreen = true
-                        },
-                        onMessage = { /* toast */ },
-                        onDismiss = { showVaultSheet = false }
-                    )
-                }
-            }
 
             if (showStorageSheet) {
                 ModalBottomSheet(

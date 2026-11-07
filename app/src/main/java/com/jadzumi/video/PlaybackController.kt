@@ -18,6 +18,8 @@ import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.ContentDataSource
 import androidx.media3.datasource.DataSource
+import androidx.media3.extractor.DefaultExtractorsFactory
+import androidx.media3.extractor.mp4.Mp4Extractor
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DecoderReuseEvaluation
@@ -937,7 +939,12 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         try {
             require(v.uri.toUri().scheme == "content")
             val app = getApplication<Application>()
-            val source = DefaultMediaSourceFactory(DataSource.Factory { ContentDataSource(app) })
+            val extractorsFactory = DefaultExtractorsFactory()
+                .setConstantBitrateSeekingEnabled(true)
+                .setConstantBitrateSeekingAlwaysEnabled(true)
+                .setMp4ExtractorFlags(Mp4Extractor.FLAG_WORKAROUND_IGNORE_EDIT_LISTS)
+
+            val source = DefaultMediaSourceFactory(DataSource.Factory { ContentDataSource(app) }, extractorsFactory)
 
             val instantLoadControl = DefaultLoadControl.Builder()
                 .setBufferDurationsMs(1_500, 8_000, 100, 250)
@@ -1021,7 +1028,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                         player.playerError == null)
                     speed = player.playbackParameters.speed
                     if (player.isPlaying) { completed = false; endedHandledFor = null }
-                    seekable = player.isCurrentMediaItemSeekable
+                    seekable = player.isCurrentMediaItemSeekable || (duration > 0 && !player.isCurrentMediaItemLive)
 
                     val size = player.videoSize
                     if (size.width > 0 && size.height > 0) {

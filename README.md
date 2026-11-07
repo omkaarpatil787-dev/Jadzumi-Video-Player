@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.9.1.1-2563eb?style=flat-square" alt="Version 1.9.1.1"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.9.1.2-2563eb?style=flat-square" alt="Version 1.9.1.2"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -74,15 +74,13 @@ See [release notes](RELEASE_NOTES.md) for full details.
 | External subtitles and timing adjustments | Scene bookmarks, notes, and search | Theme-reactive playback controls |
 | Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v1.9.1.1 (Hotfix)
+## 📦 Latest release · v1.9.1.2 (Hotfix)
 
-- 🌟 **Interactive HDR Profile Switcher**: Direct in-player switching between `Auto`, `Dolby Vision`, `HDR10+`, `HDR10 Base`, and `SDR Tone-Mapped` to fix tone-mapping on AMOLED HDR10+ displays.
-- 🌑 **Active AMOLED Shadow Clarifier**: Real `Off`, `Mild +25%`, and `High +50%` controls directly inside the Video Enhancer card to rescue crushed dark scenes without highlight clipping.
-- 🛡️ **Biometric Private Vault Fixed & 1-Tap Cloaking**: Direct lock/vault toggle on all video cards and movie pages with modernized Android 11+ `BiometricPrompt` flags.
-- 🍿 **Accurate Smart Binge Automation**: Unified series key normalization ensures custom intro and outro skip timers apply across all episodes with accurate `Skip Intro (Xs)` pills and Next Episode cards.
-- 🧹 **Gimmick Removal & Fluidity Polish**: Pruned non-essential background features (Cinema DNA, Dialogue Replay, Bookmarks) for maximum playback fluidity.
+- ⏩ **Universal Constant-Bitrate & Fallback Seeking**: Media3 `DefaultExtractorsFactory` configured with CBR seeking fallback and edit-list workarounds, making all unindexed MKV (missing `Cues`), MP4 (fragmented/unindexed), and AVI/TS video files fully seekable.
+- 🎯 **Adaptive Seekable Fallback**: Timeline scrubbing, jump buttons (+10s/-10s), and gestures stay active across all local files with known durations.
+- 🧹 **App Vault Removal**: Fully removed the Private Vault and biometric locker to streamline core player performance.
 
-[Download v1.9.1.1](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.9.1.1) · [Release notes](RELEASE_NOTES.md)
+[Download v1.9.1.2](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.9.1.2) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.
