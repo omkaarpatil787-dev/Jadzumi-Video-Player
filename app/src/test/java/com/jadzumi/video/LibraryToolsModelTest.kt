@@ -27,15 +27,4 @@ class LibraryToolsModelTest {
         assertEquals(0, episodesAfterEnd(SleepPlan(SleepMode.END_CURRENT)))
         assertEquals(1, episodesAfterEnd(SleepPlan(SleepMode.EPISODES, episodes = 2)))
     }
-    @Test fun sceneNotesRoundTripAndKeepTimestampOrdering() {
-        val entries = listOf(SceneBookmark("b", 12000, "Later", "line 1\n日本語"), SceneBookmark("a", 0, "Opening"))
-        val decoded = SceneBookmarkCodec.decode(SceneBookmarkCodec.encode(entries))
-        assertEquals(entries.sortedBy { it.positionMs }, decoded)
-        assertTrue(SceneBookmarkCodec.notesExport("Movie", decoded).contains("00:00:12"))
-    }
-    @Test fun invalidSceneRecordsAreRejected() {
-        try { SceneBookmarkCodec.decode("not a bookmark file"); fail() } catch (_: IllegalArgumentException) {}
-        try { SceneBookmarkCodec.encode(listOf(SceneBookmark("x", -1, "Bad"))); fail() } catch (_: IllegalArgumentException) {}
-        try { SceneBookmarkCodec.encode(List(201) { SceneBookmark("$it", 0, "Scene") }); fail() } catch (_: IllegalArgumentException) {}
-    }
 }

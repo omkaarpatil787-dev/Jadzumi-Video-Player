@@ -145,7 +145,6 @@ private val destinations = listOf(
 
     val vaultManager = remember { PrivateVaultManager(context) }
     var showVaultSheet by remember { mutableStateOf(false) }
-    var showDnaSheet by remember { mutableStateOf(false) }
     var showStorageSheet by remember { mutableStateOf(false) }
 
     var route by rememberSaveable { mutableStateOf("Home") }
@@ -297,12 +296,6 @@ private val destinations = listOf(
                                                     }
 
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                                        IconButton(
-                                                            onClick = { showDnaSheet = true },
-                                                            modifier = Modifier.size(34.dp)
-                                                        ) {
-                                                            Icon(Icons.Rounded.AutoAwesome, "Cinema DNA & Persona", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
-                                                        }
                                                         IconButton(
                                                             onClick = { showVaultSheet = true },
                                                             modifier = Modifier.size(34.dp)
@@ -500,9 +493,6 @@ private val destinations = listOf(
                                             }
 
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                IconButton(onClick = { showDnaSheet = true }) {
-                                                    Icon(Icons.Rounded.AutoAwesome, "Cinema DNA & Persona", tint = MaterialTheme.colorScheme.primary)
-                                                }
                                                 IconButton(onClick = { showVaultSheet = true }) {
                                                     Icon(Icons.Rounded.Lock, "Private Vault", tint = MaterialTheme.colorScheme.primary)
                                                 }
@@ -793,19 +783,6 @@ private val destinations = listOf(
                         },
                         onMessage = { /* toast */ },
                         onDismiss = { showVaultSheet = false }
-                    )
-                }
-            }
-
-            if (showDnaSheet) {
-                ModalBottomSheet(
-                    onDismissRequest = { showDnaSheet = false },
-                    containerColor = Color.Transparent
-                ) {
-                    CinemaDnaSheet(
-                        videos = localState.videos,
-                        playback = playback,
-                        onDismiss = { showDnaSheet = false }
                     )
                 }
             }

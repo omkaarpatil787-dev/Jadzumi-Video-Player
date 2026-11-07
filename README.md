@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.9.1-2563eb?style=flat-square" alt="Version 1.9.1"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.9.1.1-2563eb?style=flat-square" alt="Version 1.9.1.1"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -74,15 +74,15 @@ See [release notes](RELEASE_NOTES.md) for full details.
 | External subtitles and timing adjustments | Scene bookmarks, notes, and search | Theme-reactive playback controls |
 | Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v1.9.1
+## 📦 Latest release · v1.9.1.1 (Hotfix)
 
-- 🌟 **Smart Dolby Vision & HDR10+ Fallback Architecture**: Automatically routes hybrid Dolby Vision Profile 7 & 8 files with HDR10/HDR10+ base layers to SoC hardware HEVC decoders on non-DV certified panels (Samsung, Pixel, standard panels), completely eliminating purple/green color distortion.
-- ☀️ **Universal 10-Bit HDR Window Mode**: Unlocks native `COLOR_MODE_HDR` wide-color-gamut composer across all compatible OLED, AMOLED, Mini-LED, and IPS displays, preventing SurfaceFlinger from crushing 1000-nit HDR curves into 8-bit SDR.
-- 🌑 **HDR Shadow Clarifier & Night Scene Boost**: Dedicated Quick Menu control that lifts near-black shadows (0.01–5 nits) in dark scenes (such as nighttime interiors) while preserving native BT.2020 color accuracy and specular highlights.
-- 🏷️ **Dynamic Golden Status Badging**: Live status pill highlights the exact active stream format: `Dolby Vision`, `HDR10+`, `HDR10`, or `HDR10 (DV Hybrid)`.
-- 🎬 **v1.9 Core Features**: Includes True Auto Frame Rate (AFR) matching, Biometric Private Vault, Cinema DNA Studio, Lossless Scene Clipper, Storage Space Saver, and Per-Series Binge Automation.
+- 🌟 **Interactive HDR Profile Switcher**: Direct in-player switching between `Auto`, `Dolby Vision`, `HDR10+`, `HDR10 Base`, and `SDR Tone-Mapped` to fix tone-mapping on AMOLED HDR10+ displays.
+- 🌑 **Active AMOLED Shadow Clarifier**: Real `Off`, `Mild +25%`, and `High +50%` controls directly inside the Video Enhancer card to rescue crushed dark scenes without highlight clipping.
+- 🛡️ **Biometric Private Vault Fixed & 1-Tap Cloaking**: Direct lock/vault toggle on all video cards and movie pages with modernized Android 11+ `BiometricPrompt` flags.
+- 🍿 **Accurate Smart Binge Automation**: Unified series key normalization ensures custom intro and outro skip timers apply across all episodes with accurate `Skip Intro (Xs)` pills and Next Episode cards.
+- 🧹 **Gimmick Removal & Fluidity Polish**: Pruned non-essential background features (Cinema DNA, Dialogue Replay, Bookmarks) for maximum playback fluidity.
 
-[Download v1.9.1](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.9.1) · [Release notes](RELEASE_NOTES.md)
+[Download v1.9.1.1](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.9.1.1) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.

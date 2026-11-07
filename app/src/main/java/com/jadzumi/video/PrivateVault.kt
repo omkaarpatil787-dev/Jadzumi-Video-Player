@@ -65,21 +65,34 @@ class PrivateVaultManager(private val context: Context) {
     }
 
     fun canAuthenticate(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val km = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
-            return km?.isDeviceSecure == true
-        }
         val km = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
-        return km?.isKeyguardSecure == true
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            km?.isDeviceSecure == true
+        } else {
+            km?.isKeyguardSecure == true
+        }
     }
 
     fun authenticate(activity: Activity, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        if (!canAuthenticate()) {
+            // If device has no screen lock/PIN/fingerprint enrolled, grant access directly
+            isUnlocked = true
+            onSuccess()
+            return
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val promptBuilder = BiometricPrompt.Builder(activity)
                 .setTitle("Unlock Private Cinema Vault")
                 .setSubtitle("Confirm your biometric identity or device credentials to access hidden videos")
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                promptBuilder.setAllowedAuthenticators(
+                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                    android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                )
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                @Suppress("DEPRECATION")
                 promptBuilder.setDeviceCredentialAllowed(true)
             } else {
                 promptBuilder.setNegativeButton("Cancel", activity.mainExecutor) { _, _ ->
@@ -115,7 +128,6 @@ class PrivateVaultManager(private val context: Context) {
                 isUnlocked = true
                 onSuccess()
             } else {
-                // If no device lock, allow access with caution warning
                 isUnlocked = true
                 onSuccess()
             }

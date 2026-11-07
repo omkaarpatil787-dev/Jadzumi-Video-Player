@@ -826,7 +826,12 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         selectedUris.clear()
     }
 
-    val allVideos = remember(state.videos) { state.videos.distinctBy { it.identity } }
+    val vaultManager = remember { PrivateVaultManager(context) }
+    val vaultedUris = remember(vaultManager.isUnlocked) { vaultManager.getVaultedUris() }
+    val allVideos = remember(state.videos, vaultedUris, vaultManager.isUnlocked) {
+        val distinct = state.videos.distinctBy { it.identity }
+        if (vaultManager.isUnlocked) distinct else distinct.filterNot { vaultedUris.contains(it.uri) }
+    }
 
     val seriesList = remember(state.videos, state.sidecars) { state.tvSeries }
     val moviesCount = remember(allVideos) { allVideos.count { it.episode == null } }
@@ -2538,6 +2543,8 @@ fun TvSeriesSummaryCard(
     select: () -> Unit
 ) {
     val context = LocalContext.current
+    val vaultManager = remember { PrivateVaultManager(context) }
+    var isVaulted by remember(video.uri) { mutableStateOf(vaultManager.isVaulted(video.uri)) }
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -2613,6 +2620,27 @@ fun TvSeriesSummaryCard(
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (!isSelectionMode) {
+                        IconButton(
+                            onClick = {
+                                if (isVaulted) {
+                                    vaultManager.removeFromVault(video.uri)
+                                    isVaulted = false
+                                } else {
+                                    vaultManager.moveToVault(video.uri)
+                                    isVaulted = true
+                                }
+                            },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                if (isVaulted) Icons.Rounded.LockOpen else Icons.Rounded.Lock,
+                                if (isVaulted) "Remove from Vault" else "Move to Private Vault",
+                                tint = if (isVaulted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                     if (onDelete != null && !isSelectionMode) {
                         IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
                             Icon(Icons.Rounded.DeleteOutline, "Delete video from storage", tint = MaterialTheme.colorScheme.error)

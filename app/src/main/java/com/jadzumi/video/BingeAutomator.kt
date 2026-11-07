@@ -32,15 +32,25 @@ object BingeManager {
     private fun getPrefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    fun getSettings(context: Context, seriesKey: String): SeriesBingeSettings {
+    fun resolveSeriesKey(videoName: String): String {
+        val parsed = EpisodePatterns.parse(videoName)
+        if (parsed != null && parsed.seriesTitle.isNotBlank()) {
+            return parsed.seriesTitle.trim()
+        }
+        return videoName.substringBeforeLast('.', videoName).trim()
+    }
+
+    fun getSettings(context: Context, rawKey: String): SeriesBingeSettings {
         val prefs = getPrefs(context)
-        val normalized = seriesKey.trim().lowercase()
+        val normalized = rawKey.trim().lowercase()
+        val resolved = resolveSeriesKey(rawKey).lowercase()
+        val key = if (prefs.contains("${normalized}_intro")) normalized else resolved
         return SeriesBingeSettings(
-            seriesKey = normalized,
-            introSkipSeconds = prefs.getInt("${normalized}_intro", 85),
-            outroSkipSeconds = prefs.getInt("${normalized}_outro", 60),
-            autoSkipIntro = prefs.getBoolean("${normalized}_auto_intro", false),
-            autoSkipOutro = prefs.getBoolean("${normalized}_auto_outro", false)
+            seriesKey = key,
+            introSkipSeconds = prefs.getInt("${key}_intro", 85),
+            outroSkipSeconds = prefs.getInt("${key}_outro", 60),
+            autoSkipIntro = prefs.getBoolean("${key}_auto_intro", false),
+            autoSkipOutro = prefs.getBoolean("${key}_auto_outro", false)
         )
     }
 

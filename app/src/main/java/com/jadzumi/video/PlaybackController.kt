@@ -158,10 +158,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var audioDelayMs by mutableLongStateOf(prefs.getLong("audio_delay", 0L))
     var subtitleDelayMs by mutableLongStateOf(prefs.getLong("sub_delay", 0L))
     var nightModeVoiceBoost by mutableStateOf(prefs.getBoolean("night_mode", false))
-    var dialogueReplayActive by mutableStateOf(false); private set
-    private var dialogueWindow: DialogueReplayWindow? = null
-    private var replaySeekParameters: SeekParameters? = null
-    private var replayReturnToPause = false
+
+    // HDR Profile & AMOLED Shadow Clarifier Controls
+    var hdrProfileMode by mutableStateOf(HdrProfileMode.AUTO); private set
+    var hdrShadowClarifierLevel by mutableFloatStateOf(0f); private set // 0f = Off (Native), 0.25f = Mild (+25%), 0.50f = High (+50%)
 
     // GPU Video Enhancer & Color Studio
     var videoEnhancerProfile by mutableStateOf(
@@ -211,8 +211,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var sleepRemainingSeconds by mutableLongStateOf(0L); private set
     private var fadedPlayer: ExoPlayer? = null
     private var volumeBeforeFade: Float? = null
-    var bookmarkVersion by mutableIntStateOf(0); private set
-
     init {
         createNotificationChannel()
         viewModelScope.launch {
@@ -226,20 +224,27 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                         if (duration != currentDur) updateChapters(currentDur)
                         duration = currentDur
                     }
-                    if (dialogueWindow?.reachedEnd(position) == true) stopDialogueReplay(restorePlaybackState = true)
                     if (++pollCount % 10 == 0) save()
 
                     // Binge Automation: Per-Series Auto-Skip Intro & Outro
-                    video?.episode?.let {
-                        val v = video ?: return@let
-                        val binge = BingeManager.getSettings(getApplication(), v.name.substringBeforeLast('.', v.name))
-                        if (binge.autoSkipIntro && p.isPlaying && position in 1_000L..12_000L && position < binge.introSkipSeconds * 1000L) {
-                            seekTo(binge.introSkipSeconds * 1000L)
-                        }
-                        val remaining = currentDur - position
-                        if (binge.autoSkipOutro && p.isPlaying && currentDur > 180_000L && remaining in 1_000L..(binge.outroSkipSeconds * 1000L) && endedHandledFor != v.identity) {
-                            endedHandledFor = v.identity
-                            playNextEpisode()
+                    val v = video
+                    if (v != null) {
+                        val isEpisode = v.episode != null || EpisodePatterns.parse(v.name) != null
+                        if (isEpisode) {
+                            val binge = BingeManager.getSettings(getApplication(), BingeManager.resolveSeriesKey(v.name))
+                            if (binge.autoSkipIntro && p.isPlaying && position in 1_000L..15_000L && position < binge.introSkipSeconds * 1000L) {
+                                seekTo(binge.introSkipSeconds * 1000L)
+                            }
+                            val remaining = currentDur - position
+                            val outroMs = binge.outroSkipSeconds * 1000L
+                            if (currentDur > 180_000L && remaining in 1_000L..outroMs) {
+                                if (binge.autoSkipOutro && p.isPlaying && endedHandledFor != v.identity) {
+                                    endedHandledFor = v.identity
+                                    playNextEpisode()
+                                } else if (!binge.autoSkipOutro && nextEpisode != null && nextEpisodeCountdown == null && countdownDismissedForVideo != v.identity) {
+                                    startNextEpisodeCountdown(v, (remaining / 1000L).toInt().coerceIn(3, 15))
+                                }
+                            }
                         }
                     }
 
@@ -374,14 +379,13 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun applyNightMode() {
         try {
             val sessionId = player?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
-            val needEnhancer = nightModeVoiceBoost || dialogueReplayActive || audioChannelMode == AudioChannelMode.DIALOGUE_FOCUS
+            val needEnhancer = nightModeVoiceBoost || audioChannelMode == AudioChannelMode.DIALOGUE_FOCUS
             if (needEnhancer && sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
                 if (loudnessEnhancer == null) {
                     loudnessEnhancer = android.media.audiofx.LoudnessEnhancer(sessionId)
                 }
                 val gain = when {
                     nightModeVoiceBoost -> 600
-                    dialogueReplayActive -> 500
                     audioChannelMode == AudioChannelMode.DIALOGUE_FOCUS -> 350
                     else -> 0
                 }
@@ -815,32 +819,22 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         return false
     }
 
-    fun pauseForNotes(): Long {
-        val at = player?.currentPosition ?: position
-        player?.pause()
-        if (player?.playbackState == Player.STATE_ENDED) dismissNextEpisodeCountdown()
-        save()
-        return at.coerceAtLeast(0)
-    }
-    fun sceneBookmarks(): List<SceneBookmark> {
-        @Suppress("UNUSED_EXPRESSION")
-        bookmarkVersion
-        val v = video ?: return emptyList()
-        return SceneBookmarkStore.read(getApplication(), v.identity)
-    }
-    fun saveScene(title: String, note: String, atMs: Long, id: String? = null): Boolean {
-        val v = video ?: return false
-        return runCatching {
-            val values = sceneBookmarks().filterNot { it.id == id } + SceneBookmark(id ?: java.util.UUID.randomUUID().toString(), boundedPosition(atMs, duration), title.trim(), note)
-            SceneBookmarkStore.write(getApplication(), v.identity, values)
-            bookmarkVersion++
-            true
-        }.getOrDefault(false)
-    }
-    fun removeScene(id: String) {
-        val v = video ?: return
-        SceneBookmarkStore.write(getApplication(), v.identity, sceneBookmarks().filterNot { it.id == id })
-        bookmarkVersion++
+    fun startNextEpisodeCountdown(current: LocalVideo, durationSec: Int = 10) {
+        if (nextCountdownJob != null || countdownDismissedForVideo == current.identity) return
+        val next = nextEpisode ?: return
+        val warning = episodeContinuationWarning(current.name, next.name)
+        if (warning != null) return
+        nextCountdownJob = viewModelScope.launch {
+            for (seconds in durationSec downTo 1) {
+                if (video?.identity != current.identity) return@launch
+                nextEpisodeCountdown = seconds
+                delay(1000)
+            }
+            nextEpisodeCountdown = null
+            if (autoplayNext) {
+                confirmNextEpisode(next)
+            }
+        }
     }
 
     fun open(v: LocalVideo, queue: List<LocalVideo> = emptyList()) {
@@ -885,12 +879,16 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         }
         release()
         video = v; fullscreen = true; locked = false; error = null; completed = false; aspect = 16f / 9f; aspectMode = AspectRatioMode.FIT; resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-        isHdr = v.name.let {
-            it.contains("hdr", ignoreCase = true) ||
-            it.contains("10bit", ignoreCase = true) ||
-            it.contains("dovi", ignoreCase = true) ||
-            it.contains("dv", ignoreCase = true) ||
-            it.contains("hlg", ignoreCase = true)
+        isHdr = when (hdrProfileMode) {
+            HdrProfileMode.SDR_TONEMAPPED -> false
+            HdrProfileMode.DOLBY_VISION, HdrProfileMode.HDR10_PLUS, HdrProfileMode.HDR10 -> true
+            HdrProfileMode.AUTO -> v.name.let {
+                it.contains("hdr", ignoreCase = true) ||
+                it.contains("10bit", ignoreCase = true) ||
+                it.contains("dovi", ignoreCase = true) ||
+                it.contains("dv", ignoreCase = true) ||
+                it.contains("hlg", ignoreCase = true)
+            }
         }
         hdrFlavor = if (isHdr) detectHdrFlavor(null, v.name) else null
         position = persistedPosition(v); suspendedPosition = position; duration = v.duration
@@ -950,7 +948,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             val renderersFactory = NextRenderersFactory(app)
                 .setEnableDecoderFallback(true)
                 .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
-                .setMediaCodecSelector(HdrCodecSelector.create(app))
+                .setMediaCodecSelector(HdrCodecSelector.create(app, hdrProfileMode))
 
             val p = ExoPlayer.Builder(app, renderersFactory)
                 .setMediaSourceFactory(source)
@@ -1005,7 +1003,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
             p.addListener(object : Player.Listener {
                 override fun onAudioSessionIdChanged(audioSessionId: Int) {
-                    if (nightModeVoiceBoost || dialogueReplayActive) applyNightMode()
+                    if (nightModeVoiceBoost) applyNightMode()
                 }
 
                 override fun onTracksChanged(tracks: Tracks) {
@@ -1015,9 +1013,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
                 override fun onEvents(player: Player, events: Player.Events) {
                     if (this@PlaybackController.player !== player) return
-                    if (dialogueReplayActive && (!player.playWhenReady || player.playbackState == Player.STATE_ENDED)) {
-                        stopDialogueReplay()
-                    }
                     playing = player.isPlaying
                     buffering = player.playbackState == Player.STATE_BUFFERING
                     playRequested = (player.playWhenReady &&
@@ -1079,7 +1074,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
                 override fun onPlayerError(exception: PlaybackException) {
                     if (player !== p) return
-                    stopDialogueReplay()
                     val curPos = p.currentPosition
                     val dur = p.duration.takeIf { it > 0 } ?: duration
                     val isNearEnd = dur > 0 && (curPos >= dur - 2500L || position >= dur - 2500L || (dur > 10000L && curPos.toFloat() / dur >= 0.98f))
@@ -1133,7 +1127,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             applySavedTrackLanguages(p)
             p.setMediaItem(mediaItem)
             p.prepare()
-            if (nightModeVoiceBoost || dialogueReplayActive) applyNightMode()
+            if (nightModeVoiceBoost) applyNightMode()
             if (suspendedPosition > 0 && rememberProgress) {
                 p.seekTo(suspendedPosition)
             }
@@ -1213,6 +1207,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     fun detectHdrFlavor(format: Format?, videoName: String?): String? {
+        if (hdrProfileMode != HdrProfileMode.AUTO) {
+            return when (hdrProfileMode) {
+                HdrProfileMode.DOLBY_VISION -> "Dolby Vision"
+                HdrProfileMode.HDR10_PLUS -> "HDR10+"
+                HdrProfileMode.HDR10 -> "HDR10"
+                HdrProfileMode.SDR_TONEMAPPED -> "SDR Tone-Mapped"
+                HdrProfileMode.AUTO -> null
+            }
+        }
         val name = videoName?.lowercase(Locale.US) ?: ""
         val mime = format?.sampleMimeType ?: ""
         val codecs = format?.codecs?.lowercase(Locale.US) ?: ""
@@ -1335,39 +1338,42 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         updateNotification()
     }
 
-    fun replayDialogue(): Boolean {
-        val p = player ?: return false
-        if (!seekable) return false
-        val window = dialogueReplayWindow(p.currentPosition, duration) ?: return false
-        stopDialogueReplay()
-        replayReturnToPause = !p.playWhenReady
-        replaySeekParameters = p.seekParameters
-        dialogueWindow = window
-        dialogueReplayActive = true
-        applyNightMode() // Temporary effect only: never changes the saved voice-boost preference.
-        p.setSeekParameters(SeekParameters.EXACT)
-        p.seekTo(window.startMs)
-        position = window.startMs
-        nextEpisodeCountdown = null
-        p.play()
-        return true
+    fun setHdrProfile(mode: HdrProfileMode) {
+        if (hdrProfileMode == mode) return
+        hdrProfileMode = mode
+        val v = video ?: return
+        val curPos = player?.currentPosition ?: position
+        val wasPlaying = playing
+        release()
+        video = v; fullscreen = true; locked = false; error = null; completed = false; aspect = 16f / 9f; aspectMode = AspectRatioMode.FIT; resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        isHdr = when (mode) {
+            HdrProfileMode.SDR_TONEMAPPED -> false
+            HdrProfileMode.DOLBY_VISION, HdrProfileMode.HDR10_PLUS, HdrProfileMode.HDR10 -> true
+            HdrProfileMode.AUTO -> v.name.let {
+                it.contains("hdr", ignoreCase = true) ||
+                it.contains("10bit", ignoreCase = true) ||
+                it.contains("dovi", ignoreCase = true) ||
+                it.contains("dv", ignoreCase = true) ||
+                it.contains("hlg", ignoreCase = true)
+            }
+        }
+        hdrFlavor = detectHdrFlavor(null, v.name)
+        position = curPos; suspendedPosition = curPos; duration = v.duration
+        prepare(autoplay = wasPlaying)
+        if (curPos > 0) {
+            player?.seekTo(curPos)
+        }
     }
 
-    fun stopDialogueReplay(restorePlaybackState: Boolean = false) {
-        if (!dialogueReplayActive) return
-        val pauseAfter = restorePlaybackState && replayReturnToPause
-        dialogueReplayActive = false
-        dialogueWindow = null
-        replaySeekParameters?.let { player?.setSeekParameters(it) }
-        replaySeekParameters = null
-        replayReturnToPause = false
-        applyNightMode()
-        if (pauseAfter) player?.pause()
+    fun setHdrShadowClarifier(level: Float) {
+        hdrShadowClarifierLevel = level
+        if (hdrProfileMode == HdrProfileMode.SDR_TONEMAPPED) {
+            updateColorParams(videoEnhancerParams.copy(shadowLift = level))
+        }
     }
 
     fun seekTo(value: Long) {
         if (seekable) {
-            stopDialogueReplay()
             nextCountdownJob?.cancel(); nextCountdownJob = null; nextEpisodeCountdown = null
             continuationPrompt = null; endedHandledFor = null
             completed = false
@@ -1381,7 +1387,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun seekToSubtitle(value: Long) {
         val p = player ?: return
         if (!seekable) return
-        stopDialogueReplay()
         val previous = p.seekParameters
         p.setSeekParameters(SeekParameters.EXACT)
         seekTo(value)
@@ -1400,7 +1405,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     fun flushProgress() = save()
 
-    fun refreshHistory() { historyVersion++; bookmarkVersion++ }
+    fun refreshHistory() { historyVersion++ }
 
     private fun save() {
         val v = video ?: return
@@ -1434,7 +1439,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     private fun release() {
         restoreSleepVolume()
-        stopDialogueReplay()
         save()
         try {
             loudnessEnhancer?.enabled = false

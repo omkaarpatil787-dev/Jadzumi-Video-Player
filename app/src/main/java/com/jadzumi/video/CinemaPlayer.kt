@@ -252,10 +252,17 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         }
     }
 
-    LaunchedEffect(playback.brightnessBoost, playback.isHdr, isOled) {
+    LaunchedEffect(playback.brightnessBoost, playback.isHdr, playback.hdrShadowClarifierLevel, isOled) {
+        val clarifier = playback.hdrShadowClarifierLevel
         val shouldBoost = playback.brightnessBoost || playback.isHdr
         if (shouldBoost) {
-            activity.window.attributes = activity.window.attributes.apply { screenBrightness = 1.0f }
+            val targetBrightness = when {
+                playback.brightnessBoost -> 1.0f
+                clarifier >= 0.50f -> 1.0f
+                clarifier >= 0.25f -> 0.85f
+                else -> 0.70f
+            }
+            activity.window.attributes = activity.window.attributes.apply { screenBrightness = targetBrightness }
         } else {
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = previousBrightness }
         }
@@ -811,26 +818,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     )
                                 }
 
-                                if (!isMinimalHud) {
-                                    FrostedCircleButton(
-                                        label = if (playback.dialogueReplayActive) "Stop dialogue replay" else "What did they say? Replay 10 seconds",
-                                        onClick = {
-                                            if (playback.dialogueReplayActive) {
-                                                playback.stopDialogueReplay(restorePlaybackState = true)
-                                                message = "Dialogue replay stopped"
-                                            } else {
-                                                message = if (playback.replayDialogue()) "Replaying dialogue with temporary voice boost" else "Replay unavailable until this video can seek"
-                                            }
-                                            interaction++
-                                        },
-                                        enabled = playback.seekable,
-                                        size = 44.dp,
-                                        bgColor = dynamicFrostedCircleBg,
-                                        rimColor = dynamicFrostedCircleRim
-                                    ) {
-                                        Icon(Icons.Rounded.Replay10, null, Modifier.size(22.dp), tint = if (playback.dialogueReplayActive) playerAccentColor else playerContentColor)
-                                    }
-                                }
+
 
                                 FrostedCircleButton(
                                     label = "Cinema settings",
@@ -943,13 +931,16 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             }
 
-                            // Skip Intro Pill Button (Visible in first 2.5 minutes)
-                            val showSkipIntro = playback.duration > 180_000 && playback.position in 3_000..150_000
+                            // Skip Intro Pill Button (Accurate per-series timestamp)
+                            val seriesBingeKey = remember(video.name) { BingeManager.resolveSeriesKey(video.name) }
+                            val bingeSettings = remember(seriesBingeKey) { BingeManager.getSettings(context, seriesBingeKey) }
+                            val introLimitMs = bingeSettings.introSkipSeconds * 1000L
+                            val showSkipIntro = playback.duration > 180_000 && playback.position in 2_000..introLimitMs
                             if (showSkipIntro) {
                                 Surface(
                                     onClick = {
-                                        playback.skip(85_000)
-                                        message = "Skipped Intro (+85s)"
+                                        playback.seekTo(introLimitMs)
+                                        message = "Skipped Intro (${bingeSettings.introSkipSeconds}s)"
                                         interaction++
                                     },
                                     shape = RoundedCornerShape(999.dp),
@@ -964,7 +955,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         Icon(Icons.Rounded.FastForward, null, tint = playerAccentColor, modifier = Modifier.size(16.dp))
-                                        Text("Skip Intro (+85s)", color = playerContentColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                        Text("Skip Intro (${bingeSettings.introSkipSeconds}s)", color = playerContentColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                     }
                                 }
                             }
@@ -1223,7 +1214,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             onOpenTrimmer = { showTrimmerDialog = true; quickMenuSection = null },
                             onOpenBinge = { showBingeDialog = true; quickMenuSection = null },
                             onOpenTools = { section ->
-                                if (section == "bookmarks") playback.pauseForNotes()
                                 toolsSection = section; quickMenuSection = null
                             },
                             onSearchSubtitles = {
@@ -1311,7 +1301,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
         if (showBingeDialog) {
             BingeSettingsDialog(
-                seriesName = video.name.substringBeforeLast('.', video.name),
+                seriesName = BingeManager.resolveSeriesKey(video.name),
                 onDismiss = { showBingeDialog = false }
             )
         }
@@ -1606,7 +1596,7 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                 onMessage(if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off")
                             }
                         )
-                        QuickMenuRow(Icons.Rounded.Bookmark, "Scene bookmarks", "", { onOpenTools("bookmarks") })
+
                         QuickMenuRow(Icons.Rounded.Bedtime, "Sleep controls", if (playback.sleepPlan != null) "Active" else "Off", { onOpenTools("sleep") })
                         QuickMenuRow(Icons.Rounded.PlaylistPlay, "Episode continuity", "", { onOpenTools("continuity") })
                         QuickMenuRow(
@@ -1705,13 +1695,18 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
 
                 "enhancer" -> {
                     QuickSubMenuContainer(title = "Video Enhancer & Color Studio", onBack = { onSelectSection("main") }) {
-                        if (playback.isHdr) {
+                        val isPotentialHdr = playback.isHdr || playback.video?.name?.let {
+                            it.contains("hdr", ignoreCase = true) || it.contains("10bit", ignoreCase = true) ||
+                            it.contains("dovi", ignoreCase = true) || it.contains("dv", ignoreCase = true)
+                        } == true
+
+                        if (isPotentialHdr || playback.isHdr) {
                             val flavorText = playback.hdrFlavor ?: "HDR10"
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = if (isLight) Color(0xFFFFF8E1) else Color(0xFF2E2200)),
                                 border = BorderStroke(1.dp, Color(0xFFFFB300).copy(alpha = 0.45f)),
                                 shape = RoundedCornerShape(14.dp),
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp)
                             ) {
                                 Column(Modifier.padding(14.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1727,7 +1722,46 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                     )
                                 }
                             }
-                            Spacer(Modifier.height(8.dp))
+
+                            Text("HDR Profile Selection", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                            HdrProfileMode.entries.forEach { mode ->
+                                QuickOptionItem(
+                                    label = mode.displayName,
+                                    selected = playback.hdrProfileMode == mode,
+                                    onClick = {
+                                        playback.setHdrProfile(mode)
+                                        onMessage("HDR Profile: ${mode.displayName.substringBefore(" (")}")
+                                    }
+                                )
+                            }
+
+                            HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
+
+                            Text("HDR Shadow Clarifier (AMOLED Black-Crush Rescue)", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                            val clarifierLevels = listOf(
+                                0.0f to "Off (Native Master Curve)",
+                                0.25f to "Mild (+25% Shadow Lift)",
+                                0.50f to "High (+50% Shadow Lift)"
+                            )
+                            clarifierLevels.forEach { (level, label) ->
+                                QuickOptionItem(
+                                    label = label,
+                                    selected = kotlin.math.abs(playback.hdrShadowClarifierLevel - level) < 0.01f,
+                                    onClick = {
+                                        playback.setHdrShadowClarifier(level)
+                                        onMessage("Shadow Clarifier: $label")
+                                    }
+                                )
+                            }
+                            Text(
+                                "Lifts dark shadows and shadow silhouettes on AMOLED panels without clipping highlights or over-saturating.",
+                                color = palette.secondaryText,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 6.dp)
+                            )
+
+                            HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
+
                             QuickOptionItem(
                                 label = if (playback.brightnessBoost) "HDR Peak Luminance Boost: 100%" else "HDR Peak Luminance Boost: Auto",
                                 selected = playback.brightnessBoost,

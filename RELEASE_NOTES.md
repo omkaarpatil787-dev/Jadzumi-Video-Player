@@ -1,3 +1,27 @@
+# Jadzumi v1.9.1.1 (Hotfix) — "Precision HDR Profile Router & Core Player Stabilization" 🚀✨
+
+A critical hotfix and refinement release addressing AMOLED HDR10+ playback, biometric vault repairs, binge automation accuracy, and codebase decluttering.
+
+### 🌟 1. Interactive HDR Profile Switcher & Real AMOLED Shadow Clarifier
+- **Manual HDR Profile Router**: Instant toggle between `Auto (Display Match)`, `Dolby Vision Master`, `HDR10+ Dynamic Metadata`, `HDR10 / Base Layer (BT.2020)`, and `SDR Tone-Mapped (Full Color Studio)`.
+- **AMOLED HDR10+ Decoding Fix**: Resolves severe black-crush on Samsung Galaxy, OnePlus, Xiaomi, and other AMOLED panels when playing hybrid Dolby Vision Profile 7 & 8 files by enabling one-tap hardware HEVC base-layer routing.
+- **Physical Shadow Clarifier Control**: Integrated real Shadow Clarifier options (`Off`, `Mild +25%`, `High +50%`) directly into the Enhancer menu, boosting near-black EOTF toe levels and display driving voltage to rescue dark night scenes without highlight clipping.
+
+### 🛡️ 2. Biometric Private Vault Restoration & Quick-Lock Action
+- **1-Tap Lock / Cloak**: Added direct "Move to Private Vault" / "Remove from Vault" buttons to all video library cards and movie detail pages.
+- **Modernized BiometricPrompt Flags**: Updated Android 11+ (API 30+) authentication flags using `BIOMETRIC_STRONG or DEVICE_CREDENTIAL` with seamless fallback for un-enrolled devices.
+- **True Library Cloaking**: Vaulted media files are completely invisible from public library, search, and recents until unlocked with fingerprint or PIN.
+
+### 🍿 3. Smart Binge Automation Alignment & Accurate Skip Timers
+- **Series Key Normalization**: Unified series identification across episode details and playback controller using `resolveSeriesKey()`, ensuring custom intro and outro skip timers apply across all episodes in a show.
+- **Dynamic "Skip Intro (Xs)" Pill**: Reads custom series intro timestamps (e.g. 85s, 90s) dynamically and seeks directly past the intro.
+- **Reliable Next Episode Card**: Automatically presents the Next Episode autoplay countdown card during the credits window.
+
+### 🧹 4. Gimmick Pruning & Fluidity Optimization
+- **Cleaned Non-Essential Features**: Removed *Cinema DNA & Viewer Persona Studio*, *Dialogue Replay*, and *Scene Bookmarks & Notes*, reducing background memory footprint and boosting player UI fluidity and responsiveness.
+
+---
+
 # Jadzumi v1.9.1 — "The Pure HDR & Dolby Vision Color Engine Release": Smart Fallback Decoder, Universal 10-Bit Window Pipeline, HDR Shadow Clarifier & Dynamic Badging 🌟🎞️
 
 A critical playback fidelity update delivering full hardware HDR10, HDR10+, and Dolby Vision compatibility, eliminating purple/green color distortion, resolving dark/crushed shadow detail, and unlocking the full luminance potential of your display.

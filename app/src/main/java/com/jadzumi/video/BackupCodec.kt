@@ -8,7 +8,7 @@ import java.util.Properties
 /** Versioned local backup. No media, folder permissions, cached artwork or credentials. */
 object BackupCodec {
     const val MAX_BYTES = 1_048_576
-    val namespaces = setOf("playback", "appearance", "subtitle_prefs", "jadzumi_settings", "scene_bookmarks")
+    val namespaces = setOf("playback", "appearance", "subtitle_prefs", "jadzumi_settings")
     private val booleans = setOf("match_refresh_rate", "bg_audio", "brightness_boost", "remember_progress", "save_track_prefs", "swipe_gestures", "night_mode", "extract_thumbnails", "scan_sidecars", "autoplay_next")
     private val appearanceBooleans = setOf("touchLight", "reducedMotion", "livelyAnimations", "themeBloom", "dockAutoMinimize", "pad5_welcome_done")
     private val appearanceStrings = setOf("motionStyle", "theme", "cornerStyle", "bottomBarStyle")
@@ -35,8 +35,6 @@ object BackupCodec {
             "font", "color", "bg", "edge" -> value is String && value.length <= 128
             else -> false
         }
-        "scene_bookmarks" -> key.matches(Regex("[a-f0-9]{64}")) && value is String &&
-            runCatching { SceneBookmarkCodec.decode(value); true }.getOrDefault(false)
         "jadzumi_settings" -> key == "local_sandbox" && value is Boolean
         else -> false
     }
@@ -64,11 +62,10 @@ object BackupCodec {
         val result = mutableMapOf<String, MutableMap<String, Any>>()
         p.stringPropertyNames().filter { it != "format" && it != "version" }.forEach { entry ->
             val namespace = entry.substringBefore('.')
-            require(p.getProperty("version") != "1" || namespace != "scene_bookmarks") { "Bookmarks require backup version 2" }
             require(namespace in namespaces && '.' in entry) { "Unknown backup section" }
             val key = String(Base64.getUrlDecoder().decode(entry.substringAfter('.')), Charsets.UTF_8)
             val raw = p.getProperty(entry)
-            val maximum = if (namespace == "scene_bookmarks") SceneBookmarkCodec.MAX_BYTES + 2 else 4096
+            val maximum = 4096
             require(raw.length in 2..maximum && raw[1] == ':') { "Invalid backup entry" }
             val value: Any = when (raw[0]) {
                 'b' -> raw.substring(2).toBooleanStrict()
