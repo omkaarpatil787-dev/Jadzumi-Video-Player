@@ -933,7 +933,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                             // Skip Intro Pill Button (Accurate per-series timestamp)
                             val seriesBingeKey = remember(video.name) { BingeManager.resolveSeriesKey(video.name) }
-                            val bingeSettings = remember(seriesBingeKey) { BingeManager.getSettings(context, seriesBingeKey) }
+                            val bingeSettings = remember(seriesBingeKey) { BingeManager.getSettings(activity, seriesBingeKey) }
                             val introLimitMs = bingeSettings.introSkipSeconds * 1000L
                             val showSkipIntro = playback.duration > 180_000 && playback.position in 2_000..introLimitMs
                             if (showSkipIntro) {
