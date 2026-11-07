@@ -1,3 +1,28 @@
+# Jadzumi v2.0.0 — "The Omniverse Cinema" (Iteration 1: Audiophile Studio & Visual Immersion) 🌌🎧✨
+
+Welcome to **Jadzumi 2.0**! This major milestone kicks off the locked *Omniverse Cinema* roadmap, bringing physical 4D immersion, binaural 3D acoustics, dynamic OLED edge glow, and multitasking in-app mini player docking.
+
+### 🎧 1. Spatial Cinema 3D & Binaural Virtualizer
+- **Hardware-Accelerated 3D Acoustic Field**: Integrated Android's native DSP `Virtualizer` to model multi-channel 3D acoustic room reflections for headphones and stereo speaker setups.
+- **Selectable Acoustic Profiles**: One-tap toggle between `Off (Stereo Direct)`, `Subtle (Club Acoustic)`, `Studio 3D (Reference Room)`, and `Wide IMAX 3D (Acoustic Theater)`.
+- **Global & Quick Menu Access**: Accessible both within the video player Quick Menu and under **Settings → Audio**.
+
+### 📳 2. 4D Tactile Cinema Subwoofer (Haptic Rumble Engine)
+- **Low-Frequency Action Rumbles**: Live sub-bass FFT analysis (20Hz–120Hz) converts explosions, thunder, and heavy engine rumbles into authentic tactile haptic pulses in your hands.
+- **Intensity Presets**: Choose between `Off`, `Gentle (Subtle Rumble)`, `Balanced (4D Cinema)`, and `High-Octane (Subwoofer Punch)`.
+- **Haptic Safety**: Debounced pulse interval prevents continuous motor strain and honors battery efficiency.
+
+### 🌈 3. Atmospheric Screen Ambilight (OLED Edge Glow)
+- **Beyond-the-Bezel Canvas Expansion**: Projects soft, dynamic ambient gradient halos radiating from the active video content onto top/bottom letterbox and side pillarbox black bars.
+- **Lighting Dynamics**: Select between `Off`, `Subtle (Calm Ambient)`, and `Expressive (Dynamic Halo)` with smooth 600ms animated color blending.
+
+### 📱 4. In-App Docked Mini Player (YouTube / Spotify Style)
+- **Seamless Multitasking**: Swipe down on `CinemaPlayer` or tap the new header minimize button to dock playback into an interactive floating bottom card while continuing to browse your library, search movies, or adjust settings.
+- **Integrated Controls**: Features top linear progress indicator, mini video glyph, title/duration timecode, jump +10s forward, play/pause toggle, and quick dismiss.
+- **1-Tap Re-Expansion**: Tap anywhere on the docked card body to return seamlessly to full-screen cinema mode with zero audio interruption.
+
+---
+
 # Jadzumi v1.9.1.2 (Hotfix) — "Universal Seeking & Unindexed Media Engine" ⏩🚀
 
 A critical playback enhancement enabling smooth fast-forward, rewind, and timeline scrubbing on video files with missing, corrupted, or fragmented seek indexes, and streamlining the core media library.

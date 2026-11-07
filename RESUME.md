@@ -18,6 +18,7 @@ FFmpeg decoder fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
+| **v2.0.0 · build 42** | Android 8.0+ · ARM64 | Spatial Cinema 3D Binaural Virtualizer, 4D Tactile Cinema Subwoofer (Haptic Rumble), Atmospheric Screen Ambilight, In-App Docked Mini Player |
 | **v1.9.1.2 · build 41** | Android 8.0+ · ARM64 | Universal Constant-Bitrate & Fallback Seeking for Unindexed Files, Adaptive Duration Seeking, App Vault Removal |
 | **v1.9.1.1 · build 40** | Android 8.0+ · ARM64 | Interactive HDR Profile Switcher & Active Shadow Clarifier (AMOLED Crush Fix), Series Binge Alignment, Gimmick Pruning |
 | **v1.9.1 · build 39** | Android 8.0+ · ARM64 | Smart Dolby Vision / HDR10+ Fallback Decoder, Universal 10-Bit Window Pipeline, HDR Shadow Clarifier, Status Badging |

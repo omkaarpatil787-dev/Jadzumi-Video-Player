@@ -712,6 +712,22 @@ private val destinations = listOf(
                                     }
                                 }
 
+                                // In-App Docked Mini Player (YouTube / Spotify Style)
+                                if (playback.video != null && playback.isDocked) {
+                                    val bottomPad = if (selectedId == null) {
+                                        if (isTablet) 82.dp else 74.dp
+                                    } else {
+                                        if (isTablet) 16.dp else 12.dp
+                                    }
+                                    DockedMiniPlayer(
+                                        playback = playback,
+                                        theme = effectiveTheme,
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .padding(bottom = bottomPad)
+                                    )
+                                }
+
                                 // Floating Frosted Glass Bottom Navigation Bar (Universal across Phones, Foldables & Tablets)
                                 if (selectedId == null) {
                                     FloatingFrostedBottomBar(
@@ -1557,6 +1573,37 @@ private val settingsCategories = listOf(
                                     }
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+                                        Text("Spatial Cinema 3D Virtualizer", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                        Text("Binaural acoustic room modeling for stereo headphones and speakers", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Spatial3DMode.entries.forEach { mode ->
+                                                FilterChip(
+                                                    selected = playback.spatial3DMode == mode,
+                                                    onClick = { playback.setSpatial3D(mode) },
+                                                    label = { Text(mode.displayName.substringBefore(" (")) }
+                                                )
+                                            }
+                                        }
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+                                        Text("4D Cinema Subwoofer (Tactile Rumble)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                        Text("Converts sub-bass audio (20Hz–120Hz) and explosions into physical haptic rumbles", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            HapticSubwooferMode.entries.forEach { mode ->
+                                                FilterChip(
+                                                    selected = playback.hapticSubwooferMode == mode,
+                                                    onClick = {
+                                                        playback.setHapticSubwoofer(mode)
+                                                        playback.hapticSubwooferEngine.triggerPulse(mode)
+                                                    },
+                                                    label = { Text(mode.displayName.substringBefore(" (")) }
+                                                )
+                                            }
+                                        }
+                                    }
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
                                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                             Column(Modifier.weight(1f)) {
                                                 Text("Bluetooth Audio Delay Compensation", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
@@ -1991,6 +2038,24 @@ private val settingsCategories = listOf(
                                             Text("Smoothly collapse floating navigation into a bouncy mini-pill while scrolling movies or browsing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = dockAutoMinimize, onCheckedChange = onDockAutoMinimize)
+                                    }
+                                }
+                            }
+
+                            // Atmospheric Screen Ambilight Panel
+                            item {
+                                Panel {
+                                    Text("Atmospheric Screen Ambilight (OLED Edge Glow)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Dynamic ambient glow cast onto letterbox and pillarbox black bars during video playback.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        AmbilightMode.entries.forEach { mode ->
+                                            FilterChip(
+                                                selected = playback.ambilightMode == mode,
+                                                onClick = { playback.setAmbilight(mode) },
+                                                label = { Text(mode.displayName) }
+                                            )
+                                        }
                                     }
                                 }
                             }

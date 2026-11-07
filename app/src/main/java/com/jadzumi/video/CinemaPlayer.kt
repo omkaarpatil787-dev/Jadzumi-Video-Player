@@ -90,6 +90,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     theme: String = "Dark"
 ) {
     val video = playback.video ?: return
+    if (playback.isDocked) return
     val activity = LocalActivity.current as? MainActivity ?: return
     val coroutineScope = rememberCoroutineScope()
     val isOled = remember { DeviceHardwareInspector.isOledOrAmoledDisplay(activity) }
@@ -384,6 +385,12 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             pv.resizeMode = playback.aspectMode.resizeMode
             pv.requestLayout()
         }
+
+        CinemaAmbilight(
+            mode = playback.ambilightMode,
+            accentColor = playerAccentColor,
+            isPlaying = playback.playing
+        )
 
         AndroidView(
             factory = { ctx ->
@@ -747,6 +754,15 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     rimColor = dynamicFrostedCircleRim
                                 ) {
                                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, Modifier.size(20.dp), tint = playerContentColor)
+                                }
+                                FrostedCircleButton(
+                                    label = "Dock player",
+                                    onClick = { playback.dock() },
+                                    size = 44.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(Icons.Rounded.KeyboardArrowDown, "Dock player", Modifier.size(24.dp), tint = playerContentColor)
                                 }
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text(
@@ -1644,10 +1660,28 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             onClick = { onSelectSection("enhancer") }
                         )
                         QuickMenuRow(
+                            icon = Icons.Rounded.WbTwilight,
+                            label = "Screen Ambilight Glow",
+                            value = playback.ambilightMode.displayName.substringBefore(" ("),
+                            onClick = { onSelectSection("ambilight") }
+                        )
+                        QuickMenuRow(
                             icon = Icons.Rounded.GraphicEq,
                             label = "Audio track",
                             value = audioSummary,
                             onClick = { onSelectSection("audio") }
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.SurroundSound,
+                            label = "Spatial Cinema 3D",
+                            value = playback.spatial3DMode.displayName.substringBefore(" ("),
+                            onClick = { onSelectSection("spatial_3d") }
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Vibration,
+                            label = "4D Cinema Subwoofer",
+                            value = playback.hapticSubwooferMode.displayName.substringBefore(" ("),
+                            onClick = { onSelectSection("subwoofer") }
                         )
                         QuickMenuRow(
                             icon = Icons.Rounded.Subtitles,
@@ -2118,6 +2152,70 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             value = "",
                             onClick = { onClosePlayer(); onDismiss() }
                         )
+                    }
+                }
+
+                "spatial_3d" -> {
+                    QuickSubMenuContainer(title = "Spatial Cinema 3D Virtualizer", onBack = { onSelectSection("main") }) {
+                        Text(
+                            "Expands stereo audio into a 3D binaural acoustic room model for headphones and multi-speaker setups.",
+                            color = palette.secondaryText,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                        Spatial3DMode.entries.forEach { mode ->
+                            QuickOptionItem(
+                                label = mode.displayName,
+                                selected = playback.spatial3DMode == mode,
+                                onClick = {
+                                    playback.setSpatial3D(mode)
+                                    onMessage("Spatial 3D: ${mode.displayName.substringBefore(" (")}")
+                                }
+                            )
+                        }
+                    }
+                }
+
+                "subwoofer" -> {
+                    QuickSubMenuContainer(title = "4D Cinema Subwoofer", onBack = { onSelectSection("main") }) {
+                        Text(
+                            "Converts low-frequency sub-bass (20Hz–120Hz) and explosions into physical haptic rumbles.",
+                            color = palette.secondaryText,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                        HapticSubwooferMode.entries.forEach { mode ->
+                            QuickOptionItem(
+                                label = mode.displayName,
+                                selected = playback.hapticSubwooferMode == mode,
+                                onClick = {
+                                    playback.setHapticSubwoofer(mode)
+                                    playback.hapticSubwooferEngine.triggerPulse(mode)
+                                    onMessage("4D Subwoofer: ${mode.displayName.substringBefore(" (")}")
+                                }
+                            )
+                        }
+                    }
+                }
+
+                "ambilight" -> {
+                    QuickSubMenuContainer(title = "Screen Ambilight Glow", onBack = { onSelectSection("main") }) {
+                        Text(
+                            "Dynamic atmospheric glow expanding from video edges onto letterbox and pillarbox black bars.",
+                            color = palette.secondaryText,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                        AmbilightMode.entries.forEach { mode ->
+                            QuickOptionItem(
+                                label = mode.displayName,
+                                selected = playback.ambilightMode == mode,
+                                onClick = {
+                                    playback.setAmbilight(mode)
+                                    onMessage("Ambilight: ${mode.displayName.substringBefore(" (")}")
+                                }
+                            )
+                        }
                     }
                 }
             }

@@ -132,28 +132,27 @@
 
 ---
 
-## 🚀 Official Milestone: Jadzumi Player v2.0 — "The Omniverse Cinema" (LOCKED)
+## 🚀 Official Milestone: Jadzumi Player v2.0 — "The Omniverse Cinema" (IN PROGRESS)
 
-### 🌐 I. Universal Connectivity & Social Cinema
+### ✅ Shipped in v2.0.0 (Iteration 1: Audiophile Studio & Visual Immersion)
+- **Spatial Cinema 3D & Binaural Virtualizer**: Hardware DSP `Virtualizer` soundstage room modeling (`Off`, `Subtle`, `Studio 3D`, `Wide IMAX 3D`).
+- **Haptic Cinema Subwoofer (Tactile 4D Rumble Engine)**: Live sub-bass FFT (20Hz–120Hz) converting low-end explosions and rumbles into physical vibrations (`Gentle`, `Balanced`, `High-Octane`).
+- **Atmospheric Screen Ambilight (OLED Edge Glow)**: Dynamic ambient glow cast onto letterbox and pillarbox black bars (`Off`, `Subtle`, `Expressive`).
+- **In-App Docked Mini Player (YouTube / Spotify Style)**: Gesture swipe-down to dock into floating bottom mini player capsule with continuous playback.
+- **Version Tag**: `versionCode = 42`, `versionName = "2.0.0"`.
+
+---
+
+### 💬 Active Next Tracks: Iteration 2 (Subtitle Intelligence & Cinephile Studio)
+1. **Dual Subtitles Studio**: Simultaneous bilingual subtitle rendering (e.g., Japanese + English) with independent font sizes and positions.
+2. **One-Tap Acoustic Subtitle Auto-Sync**: Automatically corrects 1–3s subtitle timing drifts using audio energy peaks.
+3. **Curated Franchises & Smart Box Sets**: Custom film sagas (*MCU*, *Harry Potter*, *Studio Ghibli*) and dynamic smart playlists (*"Unwatched 4K Sci-Fi"*).
+4. **Movie Color Palette & Aesthetic Frame Extractor**: Generates a 5-swatch color harmony strip with hex codes and stamps it onto a crisp 4K frame still.
+5. **Instant GIF / WebP Scene Maker**: 2–8 second animated GIF / WebP clipper with optional baked subtitles for messaging apps.
+
+---
+
+### 🌐 Upcoming Track: Iteration 3 (Universal Connectivity & Social Cinema)
 1. **LAN Network Streaming (SMB v2/v3, WebDAV, UPnP/DLNA)**: Direct Wi-Fi streaming from PC, home NAS, Synology, or router hard drives with zero storage used.
 2. **Google Cast & Smart TV Casting**: One-tap casting to Chromecast, Android TV, Google TV, and DLNA Smart TVs with on-phone playback remote.
 3. **Local Offline "Cinema Sync" (Hotspot Watch Party)**: Synchronous playback across 2+ phones/tablets over local Wi-Fi or hotspot with zero internet needed.
-
-### 🎧 II. Audiophile Studio & 4D Physical Immersion
-4. **Spatial Cinema 3D & Binaural Virtualizer**: 5.1/7.1 acoustic room modeling for any stereo headphones.
-5. **Night Mode (DRC) & Vocal Clarifier**: Brickwall compression to eliminate loud audio spikes while lifting quiet whispers.
-6. **Haptic Cinema Subwoofer (Tactile 4D Rumble Engine)**: Converts low-frequency sub-bass (explosions, thunder, engine rumbles) into physical vibrations in your hands.
-
-### 🌈 III. Visual Atmospherics & Fluid UI
-7. **Atmospheric Screen Ambilight (OLED Edge Glow)**: Real-time edge color sampling that projects soft atmospheric light onto the letterbox black bars.
-8. **In-App Docked Mini Player (YouTube / Spotify Style)**: Swipe down to dock the player into an interactive bottom bar while continuing to browse.
-9. **Curated Franchises & Smart Box Sets**: Custom film sagas (*MCU*, *Harry Potter*, *Studio Ghibli*) and dynamic smart playlists (*"Unwatched 4K Sci-Fi"*).
-
-### 💬 IV. Next-Gen Subtitle Intelligence
-10. **One-Tap Acoustic Subtitle Auto-Sync**: Automatically corrects 1–3s subtitle timing drifts using audio energy peaks.
-11. **Dual Subtitles Studio**: Simultaneous bilingual subtitle rendering (e.g., Japanese + English) with independent font sizes and positions.
-12. **Interactive Subtitle Lexicon & Vocabulary Deck**: Tap foreign subtitle words for on-screen definitions and save them with audio snippets.
-
-### 🎨 V. Cinephile Creative Studio
-13. **Movie Color Palette & Aesthetic Frame Extractor**: Generates a 5-swatch color harmony strip with hex codes and stamps it onto a crisp 4K frame still.
-14. **Instant GIF / WebP Scene Maker**: 2–8 second animated GIF / WebP clipper with optional baked subtitles for messaging apps.

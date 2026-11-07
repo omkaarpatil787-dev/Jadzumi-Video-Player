@@ -186,6 +186,17 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     ); private set
 
     private var loudnessEnhancer: android.media.audiofx.LoudnessEnhancer? = null
+    val spatialAudioEngine = SpatialAudioEngine(application)
+    val hapticSubwooferEngine = HapticSubwooferEngine(application)
+
+    var spatial3DMode by mutableStateOf(Spatial3DMode.fromId(prefs.getString("spatial_3d_mode", "off")))
+        private set
+    var hapticSubwooferMode by mutableStateOf(HapticSubwooferMode.fromId(prefs.getString("haptic_subwoofer_mode", "off")))
+        private set
+    var ambilightMode by mutableStateOf(AmbilightMode.fromId(prefs.getString("ambilight_mode", "subtle")))
+        private set
+    var isDocked by mutableStateOf(false)
+        private set
     var historyVersion by mutableIntStateOf(0); private set
 
     private val channelId = "playback_channel"
@@ -399,6 +410,41 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 loudnessEnhancer = null
             }
         } catch (_: Exception) {}
+    }
+
+    fun applySpatialAudio() {
+        val sessionId = player?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
+        spatialAudioEngine.attach(sessionId, spatial3DMode)
+    }
+
+    fun applyHapticSubwoofer() {
+        val sessionId = player?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
+        hapticSubwooferEngine.attach(sessionId, hapticSubwooferMode)
+    }
+
+    fun setSpatial3D(mode: Spatial3DMode) {
+        spatial3DMode = mode
+        prefs.edit().putString("spatial_3d_mode", mode.id).apply()
+        applySpatialAudio()
+    }
+
+    fun setHapticSubwoofer(mode: HapticSubwooferMode) {
+        hapticSubwooferMode = mode
+        prefs.edit().putString("haptic_subwoofer_mode", mode.id).apply()
+        applyHapticSubwoofer()
+    }
+
+    fun setAmbilight(mode: AmbilightMode) {
+        ambilightMode = mode
+        prefs.edit().putString("ambilight_mode", mode.id).apply()
+    }
+
+    fun dock() {
+        isDocked = true
+    }
+
+    fun undock() {
+        isDocked = false
     }
 
     // --- GPU Video Enhancer & Color Studio Methods ---
@@ -1011,6 +1057,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             p.addListener(object : Player.Listener {
                 override fun onAudioSessionIdChanged(audioSessionId: Int) {
                     if (nightModeVoiceBoost) applyNightMode()
+                    applySpatialAudio()
+                    applyHapticSubwoofer()
                 }
 
                 override fun onTracksChanged(tracks: Tracks) {
@@ -1135,6 +1183,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             p.setMediaItem(mediaItem)
             p.prepare()
             if (nightModeVoiceBoost) applyNightMode()
+            applySpatialAudio()
+            applyHapticSubwoofer()
             if (suspendedPosition > 0 && rememberProgress) {
                 p.seekTo(suspendedPosition)
             }
@@ -1452,6 +1502,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             loudnessEnhancer?.release()
             loudnessEnhancer = null
         } catch (_: Exception) {}
+        spatialAudioEngine.release()
+        hapticSubwooferEngine.release()
+        isDocked = false
         val oldPlayer = player
         player = null; mediaItemAssigned = false
         runtimeVideoDecoder = null; runtimeAudioDecoder = null

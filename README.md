@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-1.9.1.2-2563eb?style=flat-square" alt="Version 1.9.1.2"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.0-2563eb?style=flat-square" alt="Version 2.0.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -74,13 +74,14 @@ See [release notes](RELEASE_NOTES.md) for full details.
 | External subtitles and timing adjustments | Scene bookmarks, notes, and search | Theme-reactive playback controls |
 | Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v1.9.1.2 (Hotfix)
+## 📦 Latest release · v2.0.0 — "The Omniverse Cinema"
 
-- ⏩ **Universal Constant-Bitrate & Fallback Seeking**: Media3 `DefaultExtractorsFactory` configured with CBR seeking fallback and edit-list workarounds, making all unindexed MKV (missing `Cues`), MP4 (fragmented/unindexed), and AVI/TS video files fully seekable.
-- 🎯 **Adaptive Seekable Fallback**: Timeline scrubbing, jump buttons (+10s/-10s), and gestures stay active across all local files with known durations.
-- 🧹 **App Vault Removal**: Fully removed the Private Vault and biometric locker to streamline core player performance.
+- 🎧 **Spatial Cinema 3D Virtualizer**: Hardware DSP multi-channel acoustic modeling for headphones and multi-speaker setups (`Off`, `Subtle`, `Studio 3D`, `Wide IMAX 3D`).
+- 📳 **4D Tactile Cinema Subwoofer**: Live sub-bass FFT (20Hz–120Hz) analysis converting explosions and heavy bass rumbles into physical haptic rumbles in your hands.
+- 🌈 **Atmospheric Screen Ambilight**: Dynamic ambient glow cast onto letterbox and pillarbox black bars for a bezel-less visual experience.
+- 📱 **In-App Docked Mini Player**: YouTube/Spotify-style swipe-to-dock floating bottom card for seamless video listening while browsing the app.
 
-[Download v1.9.1.2](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v1.9.1.2) · [Release notes](RELEASE_NOTES.md)
+[Download v2.0.0](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v2.0.0) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.
