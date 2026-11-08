@@ -816,6 +816,9 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     val libraryPrefs = remember(context) { context.getSharedPreferences("appearance", Context.MODE_PRIVATE) }
     var isGridView by rememberSaveable { mutableStateOf(libraryPrefs.getBoolean("library_grid_view", false)) }
     var isPosterAspect by rememberSaveable { mutableStateOf(libraryPrefs.getBoolean("library_poster_aspect", true)) }
+    var libraryDensity by rememberSaveable {
+        mutableStateOf(libraryPrefs.getString("library_density", "comfortable") ?: "comfortable")
+    }
     var activeFilter by rememberSaveable { mutableStateOf("All") }
     var activeSort by rememberSaveable { mutableStateOf("Date Added") }
     var isSelectionMode by rememberSaveable { mutableStateOf(false) }
@@ -1261,6 +1264,34 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                                     )
                                                 }
                                             }
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                                modifier = Modifier.size(36.dp)
+                                            ) {
+                                                IconButton(
+                                                    onClick = {
+                                                        libraryDensity = when (libraryDensity) {
+                                                            "compact" -> "comfortable"
+                                                            "comfortable" -> "spacious"
+                                                            else -> "compact"
+                                                        }
+                                                        libraryPrefs.edit().putString("library_density", libraryDensity).apply()
+                                                    },
+                                                    modifier = Modifier.fillMaxSize()
+                                                ) {
+                                                    Icon(
+                                                        when (libraryDensity) {
+                                                            "compact" -> Icons.Rounded.DensitySmall
+                                                            "spacious" -> Icons.Rounded.DensityLarge
+                                                            else -> Icons.Rounded.DensityMedium
+                                                        },
+                                                        contentDescription = "Grid Density: ${libraryDensity.replaceFirstChar { it.uppercase() }}",
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                            }
                                         }
                                         Surface(
                                             shape = CircleShape,
@@ -1293,6 +1324,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         seriesList = filteredSeries,
                                         playback = playback,
                                         isPosterAspect = isPosterAspect,
+                                        density = libraryDensity,
                                         onSelect = { select("series:${it.id}") }
                                     )
                                 }
@@ -1359,6 +1391,34 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                                     )
                                                 }
                                             }
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                                                modifier = Modifier.size(36.dp)
+                                            ) {
+                                                IconButton(
+                                                    onClick = {
+                                                        libraryDensity = when (libraryDensity) {
+                                                            "compact" -> "comfortable"
+                                                            "comfortable" -> "spacious"
+                                                            else -> "compact"
+                                                        }
+                                                        libraryPrefs.edit().putString("library_density", libraryDensity).apply()
+                                                    },
+                                                    modifier = Modifier.fillMaxSize()
+                                                ) {
+                                                    Icon(
+                                                        when (libraryDensity) {
+                                                            "compact" -> Icons.Rounded.DensitySmall
+                                                            "spacious" -> Icons.Rounded.DensityLarge
+                                                            else -> Icons.Rounded.DensityMedium
+                                                        },
+                                                        contentDescription = "Grid Density: ${libraryDensity.replaceFirstChar { it.uppercase() }}",
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                            }
                                         }
                                         Surface(
                                             shape = CircleShape,
@@ -1401,6 +1461,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                         sidecars = state.sidecars,
                                         playback = playback,
                                         isPosterAspect = isPosterAspect,
+                                        density = libraryDensity,
                                         onSelect = { select(it.uri) }
                                     )
                                 }
@@ -2017,29 +2078,31 @@ fun MovieCardGrid(
     sidecars: Map<String, List<LocalSidecar>>,
     playback: PlaybackController,
     isPosterAspect: Boolean = true,
+    density: String = "comfortable",
     onSelect: (LocalVideo) -> Unit
 ) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val minColWidth = when (density) {
+            "compact" -> 104.dp
+            "spacious" -> 194.dp
+            else -> 142.dp
+        }
+        val gap = when (density) {
+            "compact" -> 10.dp
+            "spacious" -> 18.dp
+            else -> 14.dp
+        }
         val columns = if (isPosterAspect) {
-            when {
-                maxWidth >= 1200.dp -> 6
-                maxWidth >= 840.dp -> 4
-                maxWidth >= 540.dp -> 3
-                else -> 2
-            }
+            ((maxWidth + gap) / (minColWidth + gap)).toInt().coerceIn(2, 6)
         } else {
-            when {
-                maxWidth >= 1000.dp -> 4
-                maxWidth >= 680.dp -> 3
-                else -> 2
-            }
+            ((maxWidth + gap) / (minColWidth * 1.35f + gap)).toInt().coerceIn(2, 5)
         }
         val rows = movies.chunked(columns)
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(gap + 2.dp)) {
             rows.forEach { rowMovies ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    horizontalArrangement = Arrangement.spacedBy(gap)
                 ) {
                     rowMovies.forEach { movie ->
                         Box(Modifier.weight(1f)) {
@@ -2048,6 +2111,7 @@ fun MovieCardGrid(
                                 sidecars = sidecars,
                                 playback = playback,
                                 isPosterAspect = isPosterAspect,
+                                density = density,
                                 onClick = { onSelect(movie) }
                             )
                         }
@@ -2068,6 +2132,7 @@ fun MovieSummaryCard(
     sidecars: Map<String, List<LocalSidecar>>,
     playback: PlaybackController,
     isPosterAspect: Boolean = true,
+    density: String = "comfortable",
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -2116,12 +2181,17 @@ fun MovieSummaryCard(
     val cardBg = if (isLight) Color.White
                  else MaterialTheme.colorScheme.surfaceContainerLow
 
-    Surface(
+        val cardRadius = when (density) {
+            "compact" -> 12.dp
+            "spacious" -> 22.dp
+            else -> 18.dp
+        }
+        Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(cardRadius),
         color = cardBg,
         border = cardBorder,
         shadowElevation = 0.dp
@@ -2320,29 +2390,31 @@ fun TvSeriesCardGrid(
     seriesList: List<TvSeries>,
     playback: PlaybackController,
     isPosterAspect: Boolean = true,
+    density: String = "comfortable",
     onSelect: (TvSeries) -> Unit
 ) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val minColWidth = when (density) {
+            "compact" -> 104.dp
+            "spacious" -> 194.dp
+            else -> 142.dp
+        }
+        val gap = when (density) {
+            "compact" -> 10.dp
+            "spacious" -> 18.dp
+            else -> 14.dp
+        }
         val columns = if (isPosterAspect) {
-            when {
-                maxWidth >= 1200.dp -> 6
-                maxWidth >= 840.dp -> 4
-                maxWidth >= 540.dp -> 3
-                else -> 2
-            }
+            ((maxWidth + gap) / (minColWidth + gap)).toInt().coerceIn(2, 6)
         } else {
-            when {
-                maxWidth >= 1000.dp -> 4
-                maxWidth >= 680.dp -> 3
-                else -> 2
-            }
+            ((maxWidth + gap) / (minColWidth * 1.35f + gap)).toInt().coerceIn(2, 5)
         }
         val rows = seriesList.chunked(columns)
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(gap + 2.dp)) {
             rows.forEach { rowSeries ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    horizontalArrangement = Arrangement.spacedBy(gap)
                 ) {
                     rowSeries.forEach { series ->
                         Box(Modifier.weight(1f)) {
@@ -2350,6 +2422,7 @@ fun TvSeriesCardGrid(
                                 series = series,
                                 playback = playback,
                                 isPosterAspect = isPosterAspect,
+                                density = density,
                                 onClick = { onSelect(series) }
                             )
                         }
@@ -2369,6 +2442,7 @@ fun TvSeriesSummaryCard(
     series: TvSeries,
     playback: PlaybackController,
     isPosterAspect: Boolean = true,
+    density: String = "comfortable",
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -2408,12 +2482,17 @@ fun TvSeriesSummaryCard(
     val cardBg = if (isLight) Color.White
                  else MaterialTheme.colorScheme.surfaceContainerLow
 
-    Surface(
+        val cardRadius = when (density) {
+            "compact" -> 12.dp
+            "spacious" -> 22.dp
+            else -> 18.dp
+        }
+        Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(cardRadius),
         color = cardBg,
         border = cardBorder,
         shadowElevation = 0.dp

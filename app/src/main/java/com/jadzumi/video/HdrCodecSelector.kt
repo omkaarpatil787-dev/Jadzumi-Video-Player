@@ -63,10 +63,11 @@ object HdrCodecSelector {
                         }
                     }
                     HdrProfileMode.DOLBY_VISION -> {
-                        // Prioritize native Dolby Vision decoders with fallback to HEVC
-                        if (defaultDecoders.isNotEmpty()) {
-                            return@MediaCodecSelector defaultDecoders
-                        }
+                        // Prioritize native Dolby Vision decoders with fallback to hardware HEVC
+                        val combined = ArrayList<MediaCodecInfo>(defaultDecoders.size + hevcDecoders.size)
+                        combined.addAll(defaultDecoders)
+                        combined.addAll(hevcDecoders)
+                        return@MediaCodecSelector combined
                     }
                     HdrProfileMode.SDR_TONEMAPPED -> {
                         // Route through HEVC for tone-mapped playback
@@ -76,7 +77,7 @@ object HdrCodecSelector {
                     }
                     HdrProfileMode.AUTO -> {
                         val displaySupportsDv = isDolbyVisionDisplaySupported(context)
-                        // On AMOLED HDR10+ displays without certified Dolby Vision hardware decoding (e.g. Samsung Galaxy),
+                        // On AMOLED HDR10+ displays without certified Dolby Vision hardware decoding (e.g. Samsung Galaxy, Xiaomi Pad 5),
                         // route directly to hardware HEVC decoders for clean 10-bit BT.2020 HDR10/HDR10+ base layer
                         if (!displaySupportsDv || defaultDecoders.isEmpty()) {
                             if (hevcDecoders.isNotEmpty()) {
@@ -89,14 +90,34 @@ object HdrCodecSelector {
                         return@MediaCodecSelector combined
                     }
                 }
-            } else if (isHevc && profileMode == HdrProfileMode.DOLBY_VISION) {
-                val dvDecoders = runCatching {
-                    MediaCodecSelector.DEFAULT.getDecoderInfos(
-                        MimeTypes.VIDEO_DOLBY_VISION, requiresSecureDecoder, requiresTunnelingDecoder
-                    )
-                }.getOrDefault(emptyList())
-                if (dvDecoders.isNotEmpty()) {
-                    return@MediaCodecSelector dvDecoders
+            } else if (isHevc) {
+                when (profileMode) {
+                    HdrProfileMode.DOLBY_VISION -> {
+                        val dvDecoders = runCatching {
+                            MediaCodecSelector.DEFAULT.getDecoderInfos(
+                                MimeTypes.VIDEO_DOLBY_VISION, requiresSecureDecoder, requiresTunnelingDecoder
+                            )
+                        }.getOrDefault(emptyList())
+                        if (dvDecoders.isNotEmpty()) {
+                            val combined = ArrayList<MediaCodecInfo>(dvDecoders.size + defaultDecoders.size)
+                            combined.addAll(dvDecoders)
+                            combined.addAll(defaultDecoders)
+                            return@MediaCodecSelector combined
+                        }
+                    }
+                    HdrProfileMode.HDR10_PLUS, HdrProfileMode.HDR10, HdrProfileMode.AUTO -> {
+                        // Prioritize hardware accelerated decoders over software fallbacks
+                        val (hw, sw) = defaultDecoders.partition { it.hardwareAccelerated }
+                        if (hw.isNotEmpty()) {
+                            val sorted = ArrayList<MediaCodecInfo>(defaultDecoders.size)
+                            sorted.addAll(hw)
+                            sorted.addAll(sw)
+                            return@MediaCodecSelector sorted
+                        }
+                    }
+                    HdrProfileMode.SDR_TONEMAPPED -> {
+                        // Let ExoPlayer decode via standard HEVC path
+                    }
                 }
             }
 
@@ -128,6 +149,13 @@ object HdrCodecSelector {
 
     fun isHdr10Supported(context: Context): Boolean {
         val types = getSupportedHdrTypes(context)
-        return types.any { it == Display.HdrCapabilities.HDR_TYPE_HDR10 }
+        if (types.any { it == Display.HdrCapabilities.HDR_TYPE_HDR10 }) return true
+        if (Build.VERSION.SDK_INT >= 26) {
+            val dm = context.getSystemService(Context.DISPLAY_SERVICE) as? android.hardware.display.DisplayManager
+            val display = dm?.getDisplay(Display.DEFAULT_DISPLAY)
+                ?: (context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
+            if (display?.isHdr == true) return true
+        }
+        return false
     }
 }

@@ -248,17 +248,9 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         }
     }
 
-    LaunchedEffect(playback.brightnessBoost, playback.isHdr, playback.hdrShadowClarifierLevel, isOled) {
-        val clarifier = playback.hdrShadowClarifierLevel
-        val shouldBoost = playback.brightnessBoost || playback.isHdr
-        if (shouldBoost) {
-            val targetBrightness = when {
-                playback.brightnessBoost -> 1.0f
-                clarifier >= 0.50f -> 1.0f
-                clarifier >= 0.25f -> 0.85f
-                else -> 0.70f
-            }
-            activity.window.attributes = activity.window.attributes.apply { screenBrightness = targetBrightness }
+    LaunchedEffect(playback.brightnessBoost, playback.isHdr, isOled) {
+        if (playback.brightnessBoost) {
+            activity.window.attributes = activity.window.attributes.apply { screenBrightness = 1.0f }
         } else {
             activity.window.attributes = activity.window.attributes.apply { screenBrightness = previousBrightness }
         }
@@ -291,30 +283,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 animationSpec = tween(420, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))
             )
         }
-    }
-
-    if (playback.inPip) {
-        AndroidView(
-            factory = { ctx ->
-                PlayerView(ctx).apply {
-                    useController = false
-                    setKeepContentOnPlayerReset(true)
-                }
-            },
-            modifier = Modifier.fillMaxSize(),
-            update = { view ->
-                if (view.player !== playback.player) view.player = playback.player
-                val contentFrame = view.findViewById<AspectRatioFrameLayout>(androidx.media3.ui.R.id.exo_content_frame)
-                val targetRatio = playback.aspectMode.forcedRatio ?: playback.aspect
-                if (contentFrame != null) {
-                    if (targetRatio > 0f) contentFrame.setAspectRatio(targetRatio)
-                    contentFrame.setResizeMode(playback.aspectMode.resizeMode)
-                }
-                view.resizeMode = playback.aspectMode.resizeMode
-                view.keepScreenOn = playback.playRequested
-            }
-        )
-        return
     }
 
     BoxWithConstraints(
@@ -718,10 +686,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     exit = exitAnim
                 ) {
                     val subtleScrim = Brush.verticalGradient(
-                        0.0f to (if (isLight) Color.Black.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.68f)),
-                        0.22f to Color.Transparent,
-                        0.76f to Color.Transparent,
-                        1.0f to (if (isLight) Color.Black.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.78f))
+                        0.0f to Color.Black.copy(alpha = 0.53f),
+                        0.37f to Color.Transparent,
+                        0.58f to Color.Transparent,
+                        1.0f to Color.Black.copy(alpha = 0.68f)
                     )
                     Box(
                         Modifier
@@ -730,7 +698,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             .safeDrawingPadding()
                             .padding(horizontal = 24.dp, vertical = 18.dp)
                     ) {
-                        // PANEL 1 & 4: CINEMATIC TOP BAR
+                        // PANEL 1 & 4: CINEMATIC TOP BAR (Approved v2.0 HTML Specification)
                         Row(
                             Modifier.align(Alignment.TopCenter).fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -781,34 +749,35 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             }
 
-                            // Top-Right Icons: Clean and uncluttered glassy controls
+                            // Top-Right Icons: Clean, uncluttered glassy controls per HTML spec
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                                 if (!isMinimalHud) {
-                                    val isVoiceClarityActive = playback.nightModeVoiceBoost
-                                    val voiceScale by animateFloatAsState(
-                                        targetValue = if (isVoiceClarityActive) 1.08f else 1.0f,
-                                        animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow),
-                                        label = "voiceScale"
-                                    )
                                     FrostedCircleButton(
-                                        label = if (isVoiceClarityActive) "Voice Clarity: On" else "Voice Clarity: Off",
-                                        onClick = {
-                                            playback.updateNightMode(!playback.nightModeVoiceBoost)
-                                            message = if (playback.nightModeVoiceBoost) "Voice Clarity: On" else "Voice Clarity: Off"
-                                            interaction++
-                                        },
+                                        label = "Subtitles",
+                                        onClick = { quickMenuSection = "subs"; interaction++ },
                                         size = 44.dp,
-                                        bgColor = if (isVoiceClarityActive) playerAccentColor.copy(alpha = 0.22f) else dynamicFrostedCircleBg,
-                                        rimColor = if (isVoiceClarityActive) playerAccentColor.copy(alpha = 0.65f) else dynamicFrostedCircleRim,
-                                        modifier = Modifier.graphicsLayer {
-                                            scaleX = voiceScale
-                                            scaleY = voiceScale
-                                        }
+                                        bgColor = dynamicFrostedCircleBg,
+                                        rimColor = dynamicFrostedCircleRim
                                     ) {
                                         Icon(
-                                            Icons.Rounded.GraphicEq,
-                                            contentDescription = if (isVoiceClarityActive) "Voice Clarity: On" else "Voice Clarity: Off",
-                                            tint = if (isVoiceClarityActive) playerAccentColor else playerContentColor,
+                                            Icons.Rounded.ClosedCaption,
+                                            contentDescription = "Subtitles",
+                                            tint = playerContentColor,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+
+                                    FrostedCircleButton(
+                                        label = "Playback Diagnostics",
+                                        onClick = { toolsSection = "diagnostics"; interaction++ },
+                                        size = 44.dp,
+                                        bgColor = dynamicFrostedCircleBg,
+                                        rimColor = dynamicFrostedCircleRim
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.Analytics,
+                                            contentDescription = "Diagnostics",
+                                            tint = playerContentColor,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -828,8 +797,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     )
                                 }
 
-
-
                                 FrostedCircleButton(
                                     label = "Cinema settings",
                                     onClick = { quickMenuSection = "main"; interaction++ },
@@ -842,7 +809,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             }
                         }
 
-                        // PANEL 1: CENTRAL FROSTED-GLASS CIRCULAR PLAY/PAUSE & 10s SKIP CONTROLS
+                        // PANEL 1: CENTRAL PRIMARY LAVENDER PLAY/PAUSE & 10s SKIP CONTROLS (Approved v2.0 HTML Specification)
                         Row(
                             Modifier.align(Alignment.Center),
                             horizontalArrangement = Arrangement.spacedBy(28.dp),
@@ -863,33 +830,39 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     }
                                     interaction++
                                 },
-                                size = 54.dp,
-                                bgColor = dynamicFrostedCircleBg,
-                                rimColor = dynamicFrostedCircleRim,
-                                contentColor = playerContentColor
+                                size = 46.dp,
+                                bgColor = Color(0xD432303E),
+                                rimColor = Color.White.copy(alpha = 0.12f),
+                                contentColor = Color.White
                             )
 
-                            FrostedCircleButton(
-                                label = if (playback.playRequested) "Pause" else "Play",
+                            // Approved Primary Play/Pause in Lavender #DDC8FF with deep ink #241A31 icon
+                            Surface(
                                 onClick = { playback.toggle(); interaction++ },
-                                size = 82.dp,
-                                bgColor = dynamicFrostedCircleBg,
-                                rimColor = dynamicFrostedCircleRim
+                                shape = CircleShape,
+                                color = Color(0xFFDDC8FF),
+                                contentColor = Color(0xFF241A31),
+                                shadowElevation = 8.dp,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .touchMotion()
                             ) {
-                                AnimatedContent(
-                                    targetState = playback.playRequested,
-                                    transitionSpec = {
-                                        (fadeIn(tween(160)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
-                                            .togetherWith(fadeOut(tween(120)) + scaleOut(targetScale = 0.72f))
-                                    },
-                                    label = "playPauseIcon"
-                                ) { isPlaying ->
-                                    Icon(
-                                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                        contentDescription = if (isPlaying) "Pause" else "Play",
-                                        tint = playerContentColor,
-                                        modifier = Modifier.size(38.dp)
-                                    )
+                                Box(contentAlignment = Alignment.Center) {
+                                    AnimatedContent(
+                                        targetState = playback.playRequested,
+                                        transitionSpec = {
+                                            (fadeIn(tween(160)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
+                                                .togetherWith(fadeOut(tween(120)) + scaleOut(targetScale = 0.72f))
+                                        },
+                                        label = "playPauseIcon"
+                                    ) { isPlaying ->
+                                        Icon(
+                                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                            contentDescription = if (isPlaying) "Pause" else "Play",
+                                            tint = Color(0xFF241A31),
+                                            modifier = Modifier.size(30.dp)
+                                        )
+                                    }
                                 }
                             }
 
@@ -908,10 +881,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     }
                                     interaction++
                                 },
-                                size = 54.dp,
-                                bgColor = dynamicFrostedCircleBg,
-                                rimColor = dynamicFrostedCircleRim,
-                                contentColor = playerContentColor
+                                size = 46.dp,
+                                bgColor = Color(0xD432303E),
+                                rimColor = Color.White.copy(alpha = 0.12f),
+                                contentColor = Color.White
                             )
                         }
 
@@ -1583,6 +1556,8 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
             when (section) {
                 "main" -> {
                     Column(Modifier.heightIn(max = 560.dp).elasticEdge().verticalScroll(rememberScrollState()).padding(vertical = 10.dp)) {
+                        // Category 1: Playback & Display
+                        QuickMenuCategoryHeader("PLAYBACK & DISPLAY")
                         QuickMenuRow(
                             icon = Icons.Rounded.Speed,
                             label = "Playback speed",
@@ -1590,10 +1565,52 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             onClick = { onSelectSection("speed") }
                         )
                         QuickMenuRow(
+                            icon = Icons.Rounded.AspectRatio,
+                            label = "Fit / Aspect ratio",
+                            value = playback.aspectMode.displayName.substringBefore(" ("),
+                            onClick = { onSelectSection("aspect") }
+                        )
+                        QuickMenuRow(
                             icon = if (isMinimalHud) Icons.Rounded.ViewSidebar else Icons.Rounded.Splitscreen,
                             label = "Minimalist HUD",
                             value = if (isMinimalHud) "On" else "Off",
                             onClick = onToggleMinimalHud
+                        )
+                        QuickMenuRow(Icons.Rounded.Bedtime, "Sleep controls", if (playback.sleepPlan != null) "Active" else "Off", { onOpenTools("sleep") })
+                        QuickMenuRow(Icons.Rounded.PlaylistPlay, "Episode continuity", "", { onOpenTools("continuity") })
+
+                        HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
+
+                        // Category 2: Video & Color Studio
+                        QuickMenuCategoryHeader("VIDEO & COLOR STUDIO")
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Tune,
+                            label = "Video Enhancer & HDR",
+                            value = if (playback.isHdr) (playback.hdrFlavor ?: "HDR Master") else playback.videoEnhancerProfile.displayName.substringBefore(" ("),
+                            onClick = { onSelectSection("enhancer") }
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Analytics,
+                            label = "Playback Diagnostics",
+                            value = "Nerd Stats",
+                            onClick = { onOpenTools("diagnostics") }
+                        )
+
+                        HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
+
+                        // Category 3: Audio & Soundstage
+                        QuickMenuCategoryHeader("AUDIO & SOUNDSTAGE")
+                        QuickMenuRow(
+                            icon = Icons.Rounded.GraphicEq,
+                            label = "Audio track",
+                            value = audioSummary,
+                            onClick = { onSelectSection("audio") }
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.SurroundSound,
+                            label = "Spatial Cinema 3D",
+                            value = playback.spatial3DMode.displayName.substringBefore(" ("),
+                            onClick = { onSelectSection("spatial_3d") }
                         )
                         QuickMenuRow(
                             icon = Icons.Rounded.RecordVoiceOver,
@@ -1605,8 +1622,21 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             }
                         )
 
-                        QuickMenuRow(Icons.Rounded.Bedtime, "Sleep controls", if (playback.sleepPlan != null) "Active" else "Off", { onOpenTools("sleep") })
-                        QuickMenuRow(Icons.Rounded.PlaylistPlay, "Episode continuity", "", { onOpenTools("continuity") })
+                        HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
+
+                        // Category 4: Subtitles
+                        QuickMenuCategoryHeader("SUBTITLES & CAPTIONS")
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Subtitles,
+                            label = "Subtitle track",
+                            value = subSummary,
+                            onClick = { onSelectSection("subs") }
+                        )
+
+                        HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
+
+                        // Category 5: Cinephile Studio
+                        QuickMenuCategoryHeader("CINEPHILE STUDIO")
                         QuickMenuRow(
                             icon = Icons.Rounded.BookmarkBorder,
                             label = "Chapters & Acts",
@@ -1639,36 +1669,9 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                 onClick = onOpenBinge
                             )
                         }
-                        QuickMenuRow(
-                            icon = Icons.Rounded.AspectRatio,
-                            label = "Fit / Aspect ratio",
-                            value = playback.aspectMode.displayName.substringBefore(" ("),
-                            onClick = { onSelectSection("aspect") }
-                        )
-                        QuickMenuRow(
-                            icon = Icons.Rounded.Tune,
-                            label = "Video Enhancer",
-                            value = if (playback.isHdr) "HDR Master" else playback.videoEnhancerProfile.displayName.substringBefore(" ("),
-                            onClick = { onSelectSection("enhancer") }
-                        )
-                        QuickMenuRow(
-                            icon = Icons.Rounded.GraphicEq,
-                            label = "Audio track",
-                            value = audioSummary,
-                            onClick = { onSelectSection("audio") }
-                        )
-                        QuickMenuRow(
-                            icon = Icons.Rounded.SurroundSound,
-                            label = "Spatial Cinema 3D",
-                            value = playback.spatial3DMode.displayName.substringBefore(" ("),
-                            onClick = { onSelectSection("spatial_3d") }
-                        )
-                        QuickMenuRow(
-                            icon = Icons.Rounded.Subtitles,
-                            label = "Subtitle track",
-                            value = subSummary,
-                            onClick = { onSelectSection("subs") }
-                        )
+
+                        HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
+
                         QuickMenuRow(
                             icon = Icons.Rounded.Settings,
                             label = "More settings",
@@ -1709,12 +1712,9 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
 
                 "enhancer" -> {
                     QuickSubMenuContainer(title = "Video Enhancer & Color Studio", onBack = { onSelectSection("main") }) {
-                        val isPotentialHdr = playback.isHdr || playback.video?.name?.let {
-                            it.contains("hdr", ignoreCase = true) || it.contains("10bit", ignoreCase = true) ||
-                            it.contains("dovi", ignoreCase = true) || it.contains("dv", ignoreCase = true)
-                        } == true
+                        val isHdrActive = playback.isHdr
 
-                        if (isPotentialHdr || playback.isHdr) {
+                        if (isHdrActive) {
                             val flavorText = playback.hdrFlavor ?: "HDR10"
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = if (isLight) Color(0xFFFFF8E1) else Color(0xFF2E2200)),
@@ -1806,6 +1806,20 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                     color = palette.secondaryText,
                                     fontSize = 11.sp,
                                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 6.dp)
+                                )
+                            }
+
+                            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = palette.divider)
+
+                            Text("HDR Output & Profile Mode", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                            HdrProfileMode.entries.forEach { mode ->
+                                QuickOptionItem(
+                                    label = mode.displayName,
+                                    selected = playback.hdrProfileMode == mode,
+                                    onClick = {
+                                        playback.setHdrProfile(mode)
+                                        onMessage("HDR Profile: ${mode.displayName.substringBefore(" (")}")
+                                    }
                                 )
                             }
 
@@ -2182,6 +2196,18 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
         }
     }
 }
+}
+
+@Composable private fun QuickMenuCategoryHeader(title: String) {
+    val palette = LocalQuickMenuPalette.current
+    Text(
+        text = title,
+        color = palette.accent,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 0.8.sp,
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+    )
 }
 
 @Composable private fun QuickMenuRow(

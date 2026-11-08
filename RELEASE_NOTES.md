@@ -1,3 +1,39 @@
+# Jadzumi v2.0.2 (Hotfix & UI Evolution) — "Immersive Now Playing & HDR Master Pipeline" 🌌🎬✨
+
+A precision hotfix and interface refinement release implementing the approved Jadzumi Player v2.0 UI specification, eliminating Picture-in-Picture (PiP) judder, decluttering player settings, perfecting the 10-bit HDR/SDR pipeline, and introducing real-time read-only playback diagnostics.
+
+### 🖼️ 1. Approved Jadzumi Player v2.0 UI Refinements
+- **Living Cards & Adaptive Density**:
+  - Implemented 3 user-selectable grid density presets (`Compact` @ 104dp min-width / 10dp gap / 12dp radius, `Comfortable` @ 142dp min-width / 14dp gap / 18dp radius, `Spacious` @ 194dp min-width / 18dp gap / 22dp radius) with responsive column computation based on available container width, persisted in SharedPreferences (`library_density`).
+  - Living cards with artwork-first rest states, subtle 4dp bottom progress bars for in-progress videos, and light compression press microinteractions (`touchMotion`).
+- **Immersive Now Playing UI**:
+  - Top HUD with floating Back button, video title, and real-time codec/resolution line at left; Subtitles, Playback Diagnostics, and Quick Menu shortcuts at right.
+  - Symmetrical center controls featuring a 56dp primary Play/Pause button in Lavender (`#ddc8ff`) with deep ink glyph (`#241a31`), flanked by balanced ±10s seek buttons (`#32303e`).
+  - Vignette vertical veil matching specification (`rgba(0,0,0,0.53)` top to `rgba(0,0,0,0.68)` bottom).
+
+### 🚀 2. Smooth Picture-in-Picture (PiP) Transitions
+- **Zero Surface Recreation**: Eliminated redundant `PlayerView` composition switching across `inPip` states, ensuring the native hardware `SurfaceView` and MediaCodec pipeline remain continuously mounted without dropped frames or stutter.
+- **Android 12+ (API 31+) Smooth OS Morph**: Avoided collision between `onUserLeaveHint()` manual calls and `setAutoEnterEnabled(true)` framework morph animations.
+
+### 🌈 3. HDR Playback Pipeline & Brightness Restoration
+- **Strict 10-Bit SDR vs. HDR Distinction**: Completely audited and corrected Media3 `ColorInfo` handling: videos declaring explicit `C.COLOR_TRANSFER_SDR` (such as 10-bit SDR anime encodes) are never falsely classified as HDR from bit depth or file tags alone.
+- **Auto Specular Headroom**: Eradicated unexpected screen brightness jumps. System screen brightness is preserved during HDR playback; 100% boost is only applied if explicitly toggled by the user.
+- **AMOLED HDR10+ / Dolby Vision Hybrid Compatibility**: Robust decoder selection and display matching for AMOLED HDR10+ displays (such as Xiaomi Pad 5 and Samsung Galaxy devices), prioritizing native SoC hardware HEVC decoders for clean BT.2020 PQ rendering without purple/green tinting.
+- **Persistent HDR Profile Selector**: Freely switch between `Auto (Display Match)`, `Dolby Vision Master`, `HDR10+ Dynamic Metadata`, `HDR10 / Base Layer (BT.2020)`, and `SDR Tone-Mapped`.
+
+### 📊 4. Real-Time Read-Only Playback Diagnostics
+- 1-Tap access to live stream metrics: Resolution, Frame Rate, Container Aspect Ratio, Video Codec, Hardware/Software Decoder Name, Color Primaries (BT.2020 vs BT.709), Color Transfer (ST 2084 PQ vs HLG vs SDR), Bit Depth, Display HDR Capabilities, and Audio Stream Details.
+
+### 🗂️ 5. Decluttered Quick Menu
+- Reorganized the crowded Quick Menu into 5 clean, categorized sections with clear headers and dividers:
+  1. *Playback & Display* (Speed, Aspect Ratio, Minimalist HUD, Sleep Controls, Continuity)
+  2. *Video & Color Studio* (Video Enhancer, HDR Profile, Playback Diagnostics)
+  3. *Audio & Soundstage* (Audio Tracks, Spatial Cinema 3D, Voice Clarity)
+  4. *Subtitles & Captions* (Subtitle Tracks, Dual Subtitles Studio)
+  5. *Cinephile Studio* (Chapters & Acts, Scene Clipper, 5-Swatch Palette, Binge Automation)
+
+---
+
 # Jadzumi v2.0.1 (Hotfix) — "Omniverse Cinema Suite & Gimmick-Free Player" 🌌🎬🚀
 
 A major hotfix and feature expansion release delivering the complete *Omniverse Cinema* suite, pruning non-essential gimmicks (Ambilight glow, Eco mode, and 4D subwoofer rumble), and resolving AMOLED HDR10+ playback routing.

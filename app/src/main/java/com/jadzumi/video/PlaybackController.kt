@@ -162,7 +162,12 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     var nightModeVoiceBoost by mutableStateOf(prefs.getBoolean("night_mode", false))
 
     // HDR Profile & AMOLED Shadow Clarifier Controls
-    var hdrProfileMode by mutableStateOf(HdrProfileMode.AUTO); private set
+    var hdrProfileMode by mutableStateOf(
+        runCatching {
+            val saved = prefs.getString("hdr_profile_mode", "auto") ?: "auto"
+            HdrProfileMode.entries.find { it.id == saved } ?: HdrProfileMode.AUTO
+        }.getOrDefault(HdrProfileMode.AUTO)
+    ); private set
     var hdrShadowClarifierLevel by mutableFloatStateOf(0f); private set // 0f = Off (Native), 0.25f = Mild (+25%), 0.50f = High (+50%)
 
     // GPU Video Enhancer & Color Studio
@@ -926,11 +931,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             HdrProfileMode.SDR_TONEMAPPED -> false
             HdrProfileMode.DOLBY_VISION, HdrProfileMode.HDR10_PLUS, HdrProfileMode.HDR10 -> true
             HdrProfileMode.AUTO -> v.name.let {
-                it.contains("hdr", ignoreCase = true) ||
-                it.contains("10bit", ignoreCase = true) ||
+                it.contains("hdr10", ignoreCase = true) ||
                 it.contains("dovi", ignoreCase = true) ||
-                it.contains("dv", ignoreCase = true) ||
-                it.contains("hlg", ignoreCase = true)
+                it.contains("dolby vision", ignoreCase = true) ||
+                it.contains("hlg", ignoreCase = true) ||
+                Regex("""\bhdr\b""", RegexOption.IGNORE_CASE).containsMatchIn(it)
             }
         }
         hdrFlavor = if (isHdr) detectHdrFlavor(null, v.name) else null
@@ -1085,15 +1090,17 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     val format = player.videoFormat
                     if (format != null) {
                         runtimeVideoFormat = inspectedVideo(format)
-                        val nameHdr = video?.name?.let {
-                            it.contains("hdr", ignoreCase = true) ||
-                            it.contains("10bit", ignoreCase = true) ||
-                            it.contains("dovi", ignoreCase = true) ||
-                            it.contains("dv", ignoreCase = true) ||
-                            it.contains("hlg", ignoreCase = true)
-                        } ?: false
+                        val colorInfo = format.colorInfo
+                        val isExplicitSdr = colorInfo != null && colorInfo.colorTransfer == C.COLOR_TRANSFER_SDR
                         val formatIsHdr = isHdrFormat(format)
-                        val newHdr = formatIsHdr || nameHdr
+                        val nameHdr = if (isExplicitSdr) false else (video?.name?.let {
+                            it.contains("hdr10", ignoreCase = true) ||
+                            it.contains("dovi", ignoreCase = true) ||
+                            it.contains("dolby vision", ignoreCase = true) ||
+                            it.contains("hlg", ignoreCase = true) ||
+                            Regex("""\b(hdr|dv)\b""", RegexOption.IGNORE_CASE).containsMatchIn(it)
+                        } ?: false)
+                        val newHdr = if (isExplicitSdr) false else (formatIsHdr || nameHdr)
                         hdrFlavor = if (newHdr) detectHdrFlavor(format, video?.name) else null
                         if (isHdr != newHdr) {
                             isHdr = newHdr
@@ -1235,6 +1242,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     fun isHdrFormat(format: Format?): Boolean {
         if (format == null) return false
+        val colorInfo = format.colorInfo
+        // An explicit SDR color transfer is definitively not HDR, regardless of 10-bit depth or naming
+        if (colorInfo != null && colorInfo.colorTransfer == C.COLOR_TRANSFER_SDR) return false
+
         val mime = format.sampleMimeType ?: ""
         if (mime.contains("dolby-vision", ignoreCase = true)) return true
         val codecs = format.codecs ?: ""
@@ -1244,7 +1255,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             codecs.startsWith("dav", ignoreCase = true)
         ) return true
 
-        val colorInfo = format.colorInfo ?: return false
+        if (colorInfo == null) return false
         val transfer = colorInfo.colorTransfer
         if (transfer == C.COLOR_TRANSFER_ST2084 || transfer == C.COLOR_TRANSFER_HLG) return true
         if (colorInfo.colorSpace == C.COLOR_SPACE_BT2020 && transfer != C.COLOR_TRANSFER_SDR) return true
@@ -1266,15 +1277,19 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 HdrProfileMode.AUTO -> null
             }
         }
+        val colorInfo = format?.colorInfo
+        val transfer = colorInfo?.colorTransfer ?: -1
+        if (colorInfo != null && transfer == C.COLOR_TRANSFER_SDR) return null
+
         val name = videoName?.lowercase(Locale.US) ?: ""
         val mime = format?.sampleMimeType ?: ""
         val codecs = format?.codecs?.lowercase(Locale.US) ?: ""
-        val colorInfo = format?.colorInfo
-        val transfer = colorInfo?.colorTransfer ?: -1
 
+        val hasDvName = name.contains("dovi") || name.contains("dolby vision") ||
+                Regex("""\b(dv|dovi)\b""", RegexOption.IGNORE_CASE).containsMatchIn(name)
         val isDv = mime.contains("dolby-vision", ignoreCase = true) ||
                 codecs.startsWith("dvh") || codecs.startsWith("dvhe") || codecs.startsWith("dva") ||
-                name.contains("dovi") || name.contains("dolby vision") || name.contains("dv")
+                hasDvName
 
         val isHdr10Plus = name.contains("hdr10+") || name.contains("hdr10plus") || name.contains("hdr10_plus")
 
@@ -1286,7 +1301,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         }
 
         if (isHdr10Plus) return "HDR10+"
-        if (transfer == C.COLOR_TRANSFER_ST2084 || name.contains("hdr10") || name.contains("hdr")) return "HDR10"
+        if (transfer == C.COLOR_TRANSFER_ST2084 || name.contains("hdr10") || Regex("""\bhdr\b""", RegexOption.IGNORE_CASE).containsMatchIn(name)) return "HDR10"
         if (transfer == C.COLOR_TRANSFER_HLG || name.contains("hlg")) return "HLG"
         if (colorInfo?.colorSpace == C.COLOR_SPACE_BT2020) return "HDR"
         return null
@@ -1392,6 +1407,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun setHdrProfile(mode: HdrProfileMode) {
         if (hdrProfileMode == mode) return
         hdrProfileMode = mode
+        prefs.edit().putString("hdr_profile_mode", mode.id).apply()
         val v = video ?: return
         val curPos = player?.currentPosition ?: position
         val wasPlaying = playing
@@ -1401,11 +1417,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             HdrProfileMode.SDR_TONEMAPPED -> false
             HdrProfileMode.DOLBY_VISION, HdrProfileMode.HDR10_PLUS, HdrProfileMode.HDR10 -> true
             HdrProfileMode.AUTO -> v.name.let {
-                it.contains("hdr", ignoreCase = true) ||
-                it.contains("10bit", ignoreCase = true) ||
+                it.contains("hdr10", ignoreCase = true) ||
                 it.contains("dovi", ignoreCase = true) ||
-                it.contains("dv", ignoreCase = true) ||
-                it.contains("hlg", ignoreCase = true)
+                it.contains("dolby vision", ignoreCase = true) ||
+                it.contains("hlg", ignoreCase = true) ||
+                Regex("""\b(hdr|dv)\b""", RegexOption.IGNORE_CASE).containsMatchIn(it)
             }
         }
         hdrFlavor = detectHdrFlavor(null, v.name)

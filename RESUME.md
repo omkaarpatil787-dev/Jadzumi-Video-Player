@@ -2,7 +2,7 @@
 <p align="center">An overview of the app, its architecture, and release progress.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.1-2563eb?style=flat-square" alt="Version 2.0.1"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.2-2563eb?style=flat-square" alt="Version 2.0.2"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -18,6 +18,7 @@ FFmpeg decoder fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
+| **v2.0.2 · build 44** | Android 8.0+ · ARM64 | Immersive Now Playing UI (HTML Spec), Adaptive Density & Living Cards, Smooth PiP Transitions, 10-bit SDR/HDR Pipeline Audit, Read-Only Playback Diagnostics, Decluttered Quick Menu |
 | **v2.0.1 · build 43** | Android 8.0+ · ARM64 | Dual Subtitles Studio, Acoustic Subtitle Auto-Sync, Curated Sagas & Franchises, Aesthetic Palette Extractor, Animated Scene Clipper, LAN Streaming (SMB/WebDAV/DLNA), Robust AMOLED HDR10+ Router, Gimmick Pruning |
 | **v2.0.0 · build 42** | Android 8.0+ · ARM64 | Spatial Cinema 3D Binaural Virtualizer, In-App Docked Mini Player |
 | **v1.9.1.2 · build 41** | Android 8.0+ · ARM64 | Universal Constant-Bitrate & Fallback Seeking for Unindexed Files, Adaptive Duration Seeking, App Vault Removal |

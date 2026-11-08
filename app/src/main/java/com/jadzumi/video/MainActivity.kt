@@ -135,9 +135,12 @@ class MainActivity : ComponentActivity() {
 
     fun updateHdrColorMode(isOled: Boolean = DeviceHardwareInspector.isOledOrAmoledDisplay(this)) {
         if (Build.VERSION.SDK_INT >= 26) {
-            // Enable 10-bit HDR window mode whenever an HDR10, HDR10+, HLG, or Dolby Vision
-            // video is active, or if brightness boost is explicitly requested, on all compatible displays.
-            val shouldEnableHdr = playback.video != null && (playback.isHdr || playback.brightnessBoost)
+            // Enable 10-bit HDR window mode ONLY when true HDR content (HDR10, HDR10+, HLG, or Dolby Vision)
+            // is playing AND the current display actually supports HDR output.
+            val isDisplayHdr = HdrCodecSelector.isHdr10Supported(this) ||
+                    HdrCodecSelector.isDolbyVisionDisplaySupported(this) ||
+                    HdrCodecSelector.isHdr10PlusSupported(this)
+            val shouldEnableHdr = playback.video != null && playback.isHdr && isDisplayHdr
             window.colorMode = if (shouldEnableHdr) {
                 ActivityInfo.COLOR_MODE_HDR
             } else {
@@ -180,7 +183,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (playback.video != null && playback.fullscreen && playback.playing) enterCinemaPip()
+        // On Android 12+ (API 31+), setAutoEnterEnabled(true) handles the smooth OS PiP morph directly.
+        // Calling enterPictureInPictureMode() manually in onUserLeaveHint causes animation collision and stutter.
+        if (Build.VERSION.SDK_INT < 31 && playback.video != null && playback.fullscreen && playback.playing) {
+            enterCinemaPip()
+        }
     }
 
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {

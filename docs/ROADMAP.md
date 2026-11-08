@@ -134,6 +134,28 @@
 
 ## 🚀 Official Milestone: Jadzumi Player v2.0 — "The Omniverse Cinema"
 
+### ✅ Shipped in v2.0.2 (Hotfix & UI Evolution — Approved HTML Specification)
+- **Living Cards & Adaptive Density**:
+  - Implemented 3 user-selectable grid density presets (`Compact` @ 104dp min-width / 10dp gap / 12dp radius, `Comfortable` @ 142dp min-width / 14dp gap / 18dp radius, `Spacious` @ 194dp min-width / 18dp gap / 22dp radius) with responsive column computation based on available container width, persisted in SharedPreferences (`library_density`).
+  - Living cards with artwork-first rest states, subtle 4dp bottom progress bars for in-progress videos, and light compression press microinteractions (`touchMotion`).
+- **Immersive Now Playing UI**:
+  - Top HUD with floating Back button, video title, and real-time codec/resolution line at left; Subtitles, Playback Diagnostics, and Quick Menu shortcuts at right.
+  - Symmetrical center controls featuring a 56dp primary Play/Pause button in Lavender (`#ddc8ff`) with deep ink glyph (`#241a31`), flanked by balanced ±10s seek buttons (`#32303e`).
+  - Vignette vertical veil matching specification (`rgba(0,0,0,0.53)` top to `rgba(0,0,0,0.68)` bottom).
+- **Smooth Picture-in-Picture (PiP) Transitions**:
+  - Zero `PlayerView` composition switching across `inPip` states, ensuring the native hardware `SurfaceView` and MediaCodec pipeline remain continuously mounted without dropped frames or stutter.
+  - Avoided collision between `onUserLeaveHint()` manual calls and Android 12+ (API 31+) `setAutoEnterEnabled(true)` OS morph animations.
+- **HDR Playback Pipeline & Brightness Restoration**:
+  - Strict 10-Bit SDR vs. HDR Distinction: videos declaring explicit `C.COLOR_TRANSFER_SDR` (such as 10-bit SDR anime encodes) are never falsely classified as HDR from bit depth or file tags alone.
+  - Eradicated unexpected screen brightness jumps. System screen brightness is preserved during HDR playback; 100% boost is only applied if explicitly toggled by the user.
+  - AMOLED HDR10+ / Dolby Vision Hybrid Compatibility: Robust decoder selection and display matching for AMOLED HDR10+ displays (such as Xiaomi Pad 5 and Samsung Galaxy devices), prioritizing native SoC hardware HEVC decoders for clean BT.2020 PQ rendering without purple/green tinting.
+  - Persistent HDR Profile Selector: Freely switch between `Auto (Display Match)`, `Dolby Vision Master`, `HDR10+ Dynamic Metadata`, `HDR10 / Base Layer (BT.2020)`, and `SDR Tone-Mapped`.
+- **Real-Time Read-Only Playback Diagnostics**:
+  - 1-Tap access to live stream metrics: Resolution, Frame Rate, Container Aspect Ratio, Video Codec, Hardware/Software Decoder Name, Color Primaries (BT.2020 vs BT.709), Color Transfer (ST 2084 PQ vs HLG vs SDR), Bit Depth, Display HDR Capabilities, and Audio Stream Details.
+- **Decluttered Quick Menu**:
+  - Reorganized the crowded Quick Menu into 5 clean, categorized sections with clear headers and dividers (*Playback & Display*, *Video & Color Studio*, *Audio & Soundstage*, *Subtitles & Captions*, *Cinephile Studio*).
+- **Version Tag**: `versionCode = 44`, `versionName = "2.0.2"`.
+
 ### ✅ Shipped in v2.0.1 (Hotfix & Omniverse Suite Completion)
 - **Dual Subtitles Studio**: Simultaneous bilingual subtitle rendering with custom secondary track styling and independent selection.
 - **One-Tap Acoustic Subtitle Auto-Sync**: Automatically corrects subtitle timing drifts using audio energy peaks.

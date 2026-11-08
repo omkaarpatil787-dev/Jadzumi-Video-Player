@@ -42,6 +42,7 @@ fun PlayerToolsDialog(
                     "sleep" -> "Sleep Controls"
                     "palette" -> "Aesthetic Color Harmony & Frame Still"
                     "clip" -> "Animated Scene Clipper"
+                    "diagnostics" -> "Playback Diagnostics"
                     else -> "Episode Continuity"
                 }
             )
@@ -50,6 +51,44 @@ fun PlayerToolsDialog(
             val base = Modifier.fillMaxWidth().heightIn(max = 480.dp)
             Column(base.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 when (section) {
+                    "diagnostics" -> {
+                        val vInfo = playback.runtimeVideoFormat
+                        Text("Video Stream", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
+                        val resStr = "${vInfo?.width ?: video.width}×${vInfo?.height ?: video.height}"
+                        val fpsStr = inspectionFrameRate(vInfo?.frameRate) ?: "Container native"
+                        Text("Resolution: $resStr @ $fpsStr", fontSize = 12.sp)
+                        Text("Aspect Ratio: ${String.format(java.util.Locale.US, "%.2f:1", playback.aspect)} (${playback.aspectMode.displayName.substringBefore(" (")})", fontSize = 12.sp)
+                        Text("Codec: ${inspectionVideoCodec(vInfo?.mime) ?: "HEVC / AVC"}", fontSize = 12.sp)
+                        val dec = playback.runtimeVideoDecoder
+                        val decType = if (dec?.hardware == DecoderHardware.HARDWARE) "Hardware Accelerated" else if (dec?.hardware == DecoderHardware.SOFTWARE) "Software (FFmpeg)" else "Native MediaCodec"
+                        Text("Decoder: ${dec?.name ?: "c2.android.video"} ($decType)", fontSize = 12.sp)
+
+                        HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                        Text("Color & Dynamic Range", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
+                        val prim = when (vInfo?.colorStandard) { 6 -> "BT.2020 (Wide Gamut)"; 1 -> "BT.709"; 2, 4 -> "BT.601"; else -> if (playback.isHdr) "BT.2020" else "Standard Gamut" }
+                        val xfer = when (vInfo?.colorTransfer) { 6 -> "SMPTE ST 2084 (PQ)"; 7 -> "ARIB STD-B67 (HLG)"; 3 -> "SDR (Standard)"; else -> if (playback.isHdr) "HDR Transfer" else "SDR (Standard)" }
+                        val bDepth = vInfo?.bitDepth?.let { "${it}-bit" } ?: if (playback.isHdr) "10-bit" else "8-bit"
+                        Text("Color Primaries: $prim", fontSize = 12.sp)
+                        Text("Transfer: $xfer", fontSize = 12.sp)
+                        Text("Dynamic Range: ${playback.hdrFlavor ?: if (playback.isHdr) "HDR10" else "SDR"}", fontSize = 12.sp)
+                        Text("Bit Depth: $bDepth", fontSize = 12.sp)
+                        Text("Profile Mode: ${playback.hdrProfileMode.displayName}", fontSize = 12.sp)
+
+                        HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                        Text("Display Capabilities", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
+                        Text("HDR10: ${if (HdrCodecSelector.isHdr10Supported(context)) "Supported" else "Not Reported"}", fontSize = 12.sp)
+                        Text("HDR10+: ${if (HdrCodecSelector.isHdr10PlusSupported(context)) "Supported" else "Not Reported"}", fontSize = 12.sp)
+                        Text("Dolby Vision: ${if (HdrCodecSelector.isDolbyVisionDisplaySupported(context)) "Supported" else "Not Reported"}", fontSize = 12.sp)
+                        Text("Window Color Mode: ${if (playback.isHdr) "HDR (Wide Gamut 10-bit)" else "SDR (Default)"}", fontSize = 12.sp)
+
+                        HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                        Text("Audio Stream", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
+                        val activeAud = playback.audioTracks.firstOrNull { it.isSelected }
+                        Text("Track: ${activeAud?.let { "${it.label} (${it.codec} ${it.channels})" } ?: "Default Audio"}", fontSize = 12.sp)
+                        playback.runtimeAudioDecoder?.let { audDec ->
+                            Text("Audio Decoder: ${audDec.name}", fontSize = 12.sp)
+                        }
+                    }
                     "sleep" -> {
                         val plan = playback.sleepPlan
                         Text(when (plan?.mode) {
