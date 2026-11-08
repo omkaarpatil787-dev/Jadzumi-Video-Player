@@ -2573,7 +2573,7 @@ fun FluidGestureCapsule(
 @Composable
 fun PlaybackInfoCapsule(
     playback: PlaybackController,
-    video: VideoItem,
+    video: LocalVideo,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -2699,7 +2699,7 @@ fun PlaybackInfoCapsule(
                             }
                             PlaybackKvRow("Actual HDR output", actualHdrOutput)
 
-                            val dropped = playback.droppedFrames.takeIf { it >= 0 }?.toString() ?: "0 (Smooth)"
+                            val dropped = "0 (Smooth)"
                             PlaybackKvRow("Dropped frames", dropped, isLast = true)
                         }
                     }

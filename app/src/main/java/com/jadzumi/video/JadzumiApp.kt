@@ -942,11 +942,9 @@ fun GeminiGlowingJadzumiLogo(
                 .clip(CircleShape)
                 .background(
                     Brush.radialGradient(
-                        colorStops = arrayOf(
-                            0.0f to Color(0xFFB78BF9).copy(alpha = glowPulse * 0.55f),
-                            0.38f to Color(0xFF8E5FCA).copy(alpha = glowPulse * 0.20f),
-                            0.72f to Color.Transparent
-                        )
+                        0.0f to Color(0xFFB78BF9).copy(alpha = glowPulse * 0.55f),
+                        0.38f to Color(0xFF8E5FCA).copy(alpha = glowPulse * 0.20f),
+                        0.72f to Color.Transparent
                     )
                 )
         )
@@ -984,11 +982,9 @@ fun GeminiGlowingJadzumiLogo(
                         .clip(RoundedCornerShape(cornerRadius))
                         .background(
                             Brush.linearGradient(
-                                colorStops = arrayOf(
-                                    0.0f to Color.Transparent,
-                                    0.5f to Color(0x33F5E4FF),
-                                    1.0f to Color.Transparent
-                                ),
+                                0.0f to Color.Transparent,
+                                0.5f to Color(0x33F5E4FF),
+                                1.0f to Color.Transparent,
                                 start = Offset(sweepOffset - 40f, 0f),
                                 end = Offset(sweepOffset + 40f, size.value)
                             )

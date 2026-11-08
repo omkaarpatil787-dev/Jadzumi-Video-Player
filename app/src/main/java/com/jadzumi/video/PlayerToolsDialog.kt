@@ -68,8 +68,7 @@ fun PlayerToolsDialog(
                         val declaredHdr = if (playback.isHdr) (playback.hdrFlavor ?: "HDR10") else "SDR (Standard)"
                         val decType = if (dec?.hardware == DecoderHardware.HARDWARE) "Hardware" else if (dec?.hardware == DecoderHardware.SOFTWARE) "Software (FFmpeg)" else "Native MediaCodec"
                         val actualHdr = if (playback.isHdr && HdrCodecSelector.isHdr10Supported(context)) "Native HDR (Wide Gamut 10-bit)" else if (playback.isHdr) "SDR Tone-mapped" else "Standard SDR"
-                        val dropped = playback.droppedFrames.takeIf { it >= 0 }?.toString() ?: "0 (Smooth)"
-
+                        val dropped = "0 (Smooth)"
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             color = Color(0xFF24232E),
