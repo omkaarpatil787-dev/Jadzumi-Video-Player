@@ -1,5 +1,7 @@
 package com.jadzumi.video
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable

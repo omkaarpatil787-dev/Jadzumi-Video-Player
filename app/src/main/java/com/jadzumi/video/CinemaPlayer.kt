@@ -1752,7 +1752,7 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                         onBack = { onSelectSection("main") },
                         badgeText = playback.aspectMode.displayName.substringBefore(" (")
                     ) {
-                        val quickAspects = listOf(AspectRatioMode.FIT_SCREEN, AspectRatioMode.CROP_ZOOM, AspectRatioMode.STRETCH_FULL, AspectRatioMode.RATIO_16_9)
+                        val quickAspects = listOf(AspectRatioMode.FIT, AspectRatioMode.ZOOM, AspectRatioMode.FILL, AspectRatioMode.RATIO_16_9)
                         if (playback.aspectMode in quickAspects) {
                             SlidingSegmentedControl(
                                 items = quickAspects,
@@ -1763,9 +1763,9 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                 },
                                 labelProvider = { mode ->
                                     when (mode) {
-                                        AspectRatioMode.FIT_SCREEN -> "Fit"
-                                        AspectRatioMode.CROP_ZOOM -> "Zoom"
-                                        AspectRatioMode.STRETCH_FULL -> "Stretch"
+                                        AspectRatioMode.FIT -> "Fit"
+                                        AspectRatioMode.ZOOM -> "Zoom"
+                                        AspectRatioMode.FILL -> "Fill"
                                         AspectRatioMode.RATIO_16_9 -> "16:9"
                                         else -> mode.displayName.substringBefore(" (")
                                     }
