@@ -1,6 +1,5 @@
 package com.jadzumi.video
 
-import android.content.Context
 import androidx.compose.runtime.Immutable
 import java.util.Locale
 
@@ -14,19 +13,22 @@ data class CinemaFranchise(
     val posterUri: String? = null
 ) {
     val totalDurationMs: Long get() = films.sumOf { it.duration }
-    val watchedCount: Int get() = films.count { it.watched }
-    val progressPercent: Float get() = if (films.isNotEmpty()) watchedCount.toFloat() / films.size.toFloat() else 0f
-    val isComplete: Boolean get() = films.isNotEmpty() && watchedCount == films.size
-    val nextUnwatchedFilm: LocalVideo? get() = films.firstOrNull { !it.watched } ?: films.firstOrNull()
+    val nextUnwatchedFilm: LocalVideo? get() = films.firstOrNull()
 }
 
 /**
  * Intelligent Movie Franchises & Box Set Curating Engine.
  *
  * Automatically detects and groups movies into sequential sagas and box sets,
- * computing total saga runtime, completion progress, and next chronological movie in saga.
+ * computing total saga runtime, completion progress, and chronological film order.
  */
 object CinemaFranchiseManager {
+
+    private val YEAR_REGEX = Regex("""\b(19\d\d|20\d\d)\b""")
+
+    private fun extractYear(name: String): Int {
+        return YEAR_REGEX.find(name)?.value?.toIntOrNull() ?: 0
+    }
 
     private val FRANCHISE_DEFINITIONS = listOf(
         Triple("harry_potter", "Harry Potter Saga", listOf("harry potter", "philosopher's stone", "sorcerer's stone", "chamber of secrets", "prisoner of azkaban", "goblet of fire", "order of the phoenix", "half-blood prince", "deathly hallows")),
@@ -52,10 +54,9 @@ object CinemaFranchiseManager {
             val matchingFilms = moviesOnly.filter { video ->
                 val titleLower = (video.title + " " + video.name).lowercase(Locale.US)
                 keywords.any { keyword -> titleLower.contains(keyword) }
-            }.sortedBy { it.year ?: 0 }
+            }.sortedBy { extractYear(it.name) }
 
             if (matchingFilms.size >= 2) {
-                val poster = matchingFilms.firstNotNullOfOrNull { it.posterUri ?: it.thumbnailUri }
                 franchises.add(
                     CinemaFranchise(
                         id = id,
@@ -63,7 +64,7 @@ object CinemaFranchiseManager {
                         description = "${matchingFilms.size} feature films in chronological saga order",
                         tagKeywords = keywords,
                         films = matchingFilms,
-                        posterUri = poster
+                        posterUri = matchingFilms.firstOrNull()?.uri
                     )
                 )
             }

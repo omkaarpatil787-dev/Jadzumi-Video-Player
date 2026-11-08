@@ -2111,7 +2111,6 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                 onClick = { playback.selectSecondarySubtitle(track); onMessage("Dual Subtitles: ${track.label} Active") }
                             )
                         }
-                        }
                     }
                 }
 
@@ -2182,7 +2181,6 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
             }
         }
     }
-}
 }
 
 @Composable private fun QuickMenuRow(

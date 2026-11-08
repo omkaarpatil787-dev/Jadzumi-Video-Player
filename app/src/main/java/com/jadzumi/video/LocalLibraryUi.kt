@@ -920,6 +920,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     }
 
     val movieList = remember(videos) { videos.filter { it.episode == null } }
+    val franchises = remember(movieList) { CinemaFranchiseManager.detectFranchises(movieList) }
 
     val filteredSeries = remember(seriesList, query) {
         seriesList.filter { matchesQuery(query, it.title, it.studio, it.synopsis) }
@@ -1384,7 +1385,6 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                 }
                             }
 
-                            val franchises = remember(movieList) { CinemaFranchiseManager.detectFranchises(movieList) }
                             if (franchises.isNotEmpty()) {
                                 item {
                                     CinemaFranchiseShelf(
@@ -3207,13 +3207,13 @@ private fun FranchiseCard(
                 )
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (franchise.isComplete) Color(0xFF10B981).copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceContainerHighest
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest
                 ) {
                     Text(
-                        if (franchise.isComplete) "✓ Complete" else "${franchise.watchedCount}/${franchise.films.size} Watched",
+                        "${franchise.films.size} Films",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (franchise.isComplete) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
@@ -3225,16 +3225,6 @@ private fun FranchiseCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            )
-
-            LinearProgressIndicator(
-                progress = { franchise.progressPercent },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(CircleShape),
-                color = if (franchise.isComplete) Color(0xFF10B981) else MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
             )
 
             Row(
