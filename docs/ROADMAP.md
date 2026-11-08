@@ -132,27 +132,26 @@
 
 ---
 
-## 🚀 Official Milestone: Jadzumi Player v2.0 — "The Omniverse Cinema" (IN PROGRESS)
+## 🚀 Official Milestone: Jadzumi Player v2.0 — "The Omniverse Cinema"
+
+### ✅ Shipped in v2.0.1 (Hotfix & Omniverse Suite Completion)
+- **Dual Subtitles Studio**: Simultaneous bilingual subtitle rendering with custom secondary track styling and independent selection.
+- **One-Tap Acoustic Subtitle Auto-Sync**: Automatically corrects subtitle timing drifts using audio energy peaks.
+- **Curated Franchises & Smart Box Sets**: Chronological saga grouping (Harry Potter, Resident Evil, MCU, Star Wars, LotR, Fast & Furious, John Wick, Dark Knight, etc.) with completion progress tracking.
+- **Movie Aesthetic Color Harmony & Frame Extractor**: 5-swatch palette generator with hex codes stamped onto frame stills.
+- **Instant GIF / WebP Scene Maker**: 2–6s animated scene clipper and instant Android share sheet export.
+- **Universal LAN & Network Streaming**: Direct streaming from Windows SMB v2/v3, NAS, and WebDAV/DLNA endpoints without local storage overhead.
+- **AMOLED HDR10+ Display Matching & Profile Router**: Robust DisplayManager-backed HDR capability detection, explicit user selection between Dolby Vision, HDR10+, HDR10 (BT.2020 base layer), and SDR Tone-Mapped, fixing color shifts and black crush on AMOLED HDR10+ displays.
+- **Pure Gimmick-Free Player**: Completely removed screen ambilight glow, cinema eco mode, and 4D subwoofer rumble along with `VIBRATE` permission for pure 120Hz/144Hz fluidity.
+- **Version Tag**: `versionCode = 43`, `versionName = "2.0.1"`.
 
 ### ✅ Shipped in v2.0.0 (Iteration 1: Audiophile Studio & Visual Immersion)
 - **Spatial Cinema 3D & Binaural Virtualizer**: Hardware DSP `Virtualizer` soundstage room modeling (`Off`, `Subtle`, `Studio 3D`, `Wide IMAX 3D`).
-- **Haptic Cinema Subwoofer (Tactile 4D Rumble Engine)**: Live sub-bass FFT (20Hz–120Hz) converting low-end explosions and rumbles into physical vibrations (`Gentle`, `Balanced`, `High-Octane`).
-- **Atmospheric Screen Ambilight (OLED Edge Glow)**: Dynamic ambient glow cast onto letterbox and pillarbox black bars (`Off`, `Subtle`, `Expressive`).
 - **In-App Docked Mini Player (YouTube / Spotify Style)**: Gesture swipe-down to dock into floating bottom mini player capsule with continuous playback.
 - **Version Tag**: `versionCode = 42`, `versionName = "2.0.0"`.
 
 ---
 
-### 💬 Active Next Tracks: Iteration 2 (Subtitle Intelligence & Cinephile Studio)
-1. **Dual Subtitles Studio**: Simultaneous bilingual subtitle rendering (e.g., Japanese + English) with independent font sizes and positions.
-2. **One-Tap Acoustic Subtitle Auto-Sync**: Automatically corrects 1–3s subtitle timing drifts using audio energy peaks.
-3. **Curated Franchises & Smart Box Sets**: Custom film sagas (*MCU*, *Harry Potter*, *Studio Ghibli*) and dynamic smart playlists (*"Unwatched 4K Sci-Fi"*).
-4. **Movie Color Palette & Aesthetic Frame Extractor**: Generates a 5-swatch color harmony strip with hex codes and stamps it onto a crisp 4K frame still.
-5. **Instant GIF / WebP Scene Maker**: 2–8 second animated GIF / WebP clipper with optional baked subtitles for messaging apps.
-
----
-
 ### 🌐 Upcoming Track: Iteration 3 (Universal Connectivity & Social Cinema)
-1. **LAN Network Streaming (SMB v2/v3, WebDAV, UPnP/DLNA)**: Direct Wi-Fi streaming from PC, home NAS, Synology, or router hard drives with zero storage used.
-2. **Google Cast & Smart TV Casting**: One-tap casting to Chromecast, Android TV, Google TV, and DLNA Smart TVs with on-phone playback remote.
-3. **Local Offline "Cinema Sync" (Hotspot Watch Party)**: Synchronous playback across 2+ phones/tablets over local Wi-Fi or hotspot with zero internet needed.
+1. **Google Cast & Smart TV Casting**: One-tap casting to Chromecast, Android TV, Google TV, and DLNA Smart TVs with on-phone playback remote.
+2. **Local Offline "Cinema Sync" (Hotspot Watch Party)**: Synchronous playback across 2+ phones/tablets over local Wi-Fi or hotspot with zero internet needed.

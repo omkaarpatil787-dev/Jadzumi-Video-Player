@@ -187,13 +187,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     private var loudnessEnhancer: android.media.audiofx.LoudnessEnhancer? = null
     val spatialAudioEngine = SpatialAudioEngine(application)
-    val hapticSubwooferEngine = HapticSubwooferEngine(application)
+    val dualSubtitleStudio = DualSubtitleStudio(application)
 
     var spatial3DMode by mutableStateOf(Spatial3DMode.fromId(prefs.getString("spatial_3d_mode", "off")))
-        private set
-    var hapticSubwooferMode by mutableStateOf(HapticSubwooferMode.fromId(prefs.getString("haptic_subwoofer_mode", "off")))
-        private set
-    var ambilightMode by mutableStateOf(AmbilightMode.fromId(prefs.getString("ambilight_mode", "subtle")))
         private set
     var isDocked by mutableStateOf(false)
         private set
@@ -417,26 +413,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         spatialAudioEngine.attach(sessionId, spatial3DMode)
     }
 
-    fun applyHapticSubwoofer() {
-        val sessionId = player?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
-        hapticSubwooferEngine.attach(sessionId, hapticSubwooferMode)
-    }
-
     fun setSpatial3D(mode: Spatial3DMode) {
         spatial3DMode = mode
         prefs.edit().putString("spatial_3d_mode", mode.id).apply()
         applySpatialAudio()
-    }
-
-    fun setHapticSubwoofer(mode: HapticSubwooferMode) {
-        hapticSubwooferMode = mode
-        prefs.edit().putString("haptic_subwoofer_mode", mode.id).apply()
-        applyHapticSubwoofer()
-    }
-
-    fun setAmbilight(mode: AmbilightMode) {
-        ambilightMode = mode
-        prefs.edit().putString("ambilight_mode", mode.id).apply()
     }
 
     fun dock() {
@@ -445,6 +425,21 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     fun undock() {
         isDocked = false
+    }
+
+    fun selectSecondarySubtitle(track: SubtitleTrackInfo?, uri: Uri? = null) {
+        viewModelScope.launch {
+            dualSubtitleStudio.loadSecondaryTrack(track, uri)
+        }
+    }
+
+    fun autoSyncSubtitles(): Boolean {
+        val offset = dualSubtitleStudio.calculateAcousticAutoSyncOffset(position)
+        if (offset != 0L) {
+            updateSubtitleDelay(offset)
+            return true
+        }
+        return false
     }
 
     // --- GPU Video Enhancer & Color Studio Methods ---
@@ -1058,7 +1053,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 override fun onAudioSessionIdChanged(audioSessionId: Int) {
                     if (nightModeVoiceBoost) applyNightMode()
                     applySpatialAudio()
-                    applyHapticSubwoofer()
                 }
 
                 override fun onTracksChanged(tracks: Tracks) {
@@ -1184,7 +1178,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             p.prepare()
             if (nightModeVoiceBoost) applyNightMode()
             applySpatialAudio()
-            applyHapticSubwoofer()
             if (suspendedPosition > 0 && rememberProgress) {
                 p.seekTo(suspendedPosition)
             }
@@ -1288,7 +1281,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         if (isDv) {
             val app = getApplication<Application>()
             val dvSupported = HdrCodecSelector.isDolbyVisionDisplaySupported(app)
-            return if (dvSupported) "Dolby Vision" else if (isHdr10Plus) "HDR10+ (DV Hybrid)" else "HDR10 (DV Hybrid)"
+            val hdr10PlusSupported = HdrCodecSelector.isHdr10PlusSupported(app)
+            return if (dvSupported) "Dolby Vision" else if (hdr10PlusSupported || isHdr10Plus) "HDR10+ (DV Hybrid)" else "HDR10 (DV Hybrid)"
         }
 
         if (isHdr10Plus) return "HDR10+"
@@ -1503,7 +1497,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             loudnessEnhancer = null
         } catch (_: Exception) {}
         spatialAudioEngine.release()
-        hapticSubwooferEngine.release()
+        viewModelScope.launch { dualSubtitleStudio.loadSecondaryTrack(null) }
         isDocked = false
         val oldPlayer = player
         player = null; mediaItemAssigned = false

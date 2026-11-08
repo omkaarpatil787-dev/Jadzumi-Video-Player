@@ -1384,6 +1384,16 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                                 }
                             }
 
+                            val franchises = remember(movieList) { CinemaFranchiseManager.detectFranchises(movieList) }
+                            if (franchises.isNotEmpty()) {
+                                item {
+                                    CinemaFranchiseShelf(
+                                        franchises = franchises,
+                                        onSelectFilm = { select(it.uri) }
+                                    )
+                                }
+                            }
+
                             if (isGridView) {
                                 item {
                                     MovieCardGrid(
@@ -1640,6 +1650,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var remove by remember { mutableStateOf<LocalFolder?>(null) }
     var videoToDelete by remember { mutableStateOf<LocalVideo?>(null) }
+    val networkManager = remember { NetworkStorageManager(context) }
+    var showAddShareDialog by remember { mutableStateOf(false) }
     val active = state.folders.firstOrNull { it.uri == selected } ?: state.folders.firstOrNull()
     val videos = state.videos.filter { it.folder == active?.uri }
     val totalBytes = remember(videos) { videos.sumOf { it.bytes.coerceAtLeast(0) } }
@@ -1664,6 +1676,13 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(bottom = 24.dp)
                     ) {
+                        item {
+                            NetworkSharesShelf(
+                                networkManager = networkManager,
+                                onAddClick = { showAddShareDialog = true },
+                                onSelectShare = { select(it.serverAddress) }
+                            )
+                        }
                         if (state.folders.isEmpty()) {
                             item { LocalPanel { Text("No folders connected", fontWeight = FontWeight.Bold); Text("Add a folder using Android's file picker.") } }
                         }
@@ -1712,6 +1731,13 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                     totalIndexedBytes = state.videos.sumOf { it.bytes.coerceAtLeast(0) },
                     onAddFolder = add
                 )
+                }
+                item {
+                    NetworkSharesShelf(
+                        networkManager = networkManager,
+                        onAddClick = { showAddShareDialog = true },
+                        onSelectShare = { select(it.serverAddress) }
+                    )
                 }
                 if (state.folders.isEmpty()) {
                     item { LocalPanel { Text("No folders connected", fontWeight = FontWeight.Bold); Text("Add a folder using Android's file picker.") } }
@@ -1824,6 +1850,67 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                 ) { Text("Delete permanently") }
             },
             dismissButton = { TextButton(onClick = { videoToDelete = null }) { Text("Cancel") } }
+        )
+    }
+
+    if (showAddShareDialog) {
+        var shareName by remember { mutableStateOf("") }
+        var shareType by remember { mutableStateOf("SMB") }
+        var serverAddr by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showAddShareDialog = false },
+            icon = { Icon(Icons.Rounded.Lan, null, tint = MaterialTheme.colorScheme.primary) },
+            title = { Text("Add Network Stream / Share") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = shareName,
+                        onValueChange = { shareName = it },
+                        label = { Text("Share Name (e.g. Living Room NAS)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = serverAddr,
+                        onValueChange = { serverAddr = it },
+                        label = { Text("Stream URL (smb://, http://, webdav://)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("SMB", "WebDAV", "DLNA").forEach { type ->
+                            FilterChip(
+                                selected = shareType == type,
+                                onClick = { shareType = type },
+                                label = { Text(type) }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (serverAddr.isNotBlank()) {
+                            networkManager.addShare(
+                                name = shareName.ifBlank { "Network Share" },
+                                type = shareType,
+                                address = serverAddr
+                            )
+                            showAddShareDialog = false
+                        }
+                    },
+                    enabled = serverAddr.isNotBlank()
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddShareDialog = false }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 }
@@ -3030,6 +3117,287 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
             Image(frame.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         } else {
             ShimmerPlaceholder(Modifier.fillMaxSize())
+        }
+    }
+}
+
+@Composable
+private fun CinemaFranchiseShelf(
+    franchises: List<CinemaFranchise>,
+    onSelectFilm: (LocalVideo) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(
+                    Icons.Rounded.CollectionsBookmark,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    "Curated Sagas & Box Sets",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+            ) {
+                Text(
+                    "${franchises.size} Sagas",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp)
+        ) {
+            items(franchises, key = { it.id }) { franchise ->
+                FranchiseCard(franchise = franchise, onSelectFilm = onSelectFilm)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FranchiseCard(
+    franchise: CinemaFranchise,
+    onSelectFilm: (LocalVideo) -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
+        border = subtleCardBorder(strokeWidth = 0.75.dp),
+        modifier = Modifier
+            .width(280.dp)
+            .clickable {
+                val target = franchise.nextUnwatchedFilm ?: franchise.films.firstOrNull()
+                target?.let(onSelectFilm)
+            }
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    franchise.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (franchise.isComplete) Color(0xFF10B981).copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceContainerHighest
+                ) {
+                    Text(
+                        if (franchise.isComplete) "✓ Complete" else "${franchise.watchedCount}/${franchise.films.size} Watched",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (franchise.isComplete) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Text(
+                franchise.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            LinearProgressIndicator(
+                progress = { franchise.progressPercent },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(CircleShape),
+                color = if (franchise.isComplete) Color(0xFF10B981) else MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 2.dp)
+            ) {
+                franchise.films.take(3).forEach { film ->
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f),
+                        modifier = Modifier.clickable { onSelectFilm(film) }
+                    ) {
+                        Text(
+                            film.title.take(14),
+                            fontSize = 10.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                if (franchise.films.size > 3) {
+                    Text(
+                        "+${franchise.films.size - 3}",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NetworkSharesShelf(
+    networkManager: NetworkStorageManager,
+    onAddClick: () -> Unit,
+    onSelectShare: (NetworkShare) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(
+                    Icons.Rounded.Lan,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    "Network & LAN Streaming",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            FilledTonalButton(
+                onClick = onAddClick,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                modifier = Modifier.height(32.dp)
+            ) {
+                Icon(Icons.Rounded.Add, null, Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Add Share", fontSize = 12.sp)
+            }
+        }
+
+        if (networkManager.shares.isEmpty()) {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    "Stream directly from Windows SMB, WebDAV, or UPnP/DLNA with zero local disk space.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 2.dp)
+            ) {
+                items(networkManager.shares, key = { it.id }) { share ->
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
+                        border = subtleCardBorder(strokeWidth = 0.75.dp),
+                        modifier = Modifier
+                            .width(240.dp)
+                            .clickable { onSelectShare(share) }
+                    ) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    share.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                ) {
+                                    Text(
+                                        share.type,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                share.serverAddress,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Tap to stream",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                IconButton(
+                                    onClick = { networkManager.removeShare(share.id) },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Close,
+                                        contentDescription = "Remove Share",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

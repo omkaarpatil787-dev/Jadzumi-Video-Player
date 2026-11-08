@@ -44,18 +44,20 @@ object HdrCodecSelector {
 
             val isDolbyVision = mimeType.equals(MimeTypes.VIDEO_DOLBY_VISION, ignoreCase = true) ||
                     mimeType.contains("dolby-vision", ignoreCase = true)
+            val isHevc = mimeType.equals(MimeTypes.VIDEO_H265, ignoreCase = true) ||
+                    mimeType.contains("hevc", ignoreCase = true)
+
+            // Obtain hardware HEVC decoders for HDR10/HDR10+ base-layer fallback
+            val hevcDecoders = runCatching {
+                if (isHevc) defaultDecoders else MediaCodecSelector.DEFAULT.getDecoderInfos(
+                    MimeTypes.VIDEO_H265, requiresSecureDecoder, requiresTunnelingDecoder
+                )
+            }.getOrDefault(emptyList())
 
             if (isDolbyVision) {
-                // Obtain hardware HEVC decoders for HDR10/HDR10+ base-layer fallback
-                val hevcDecoders = runCatching {
-                    MediaCodecSelector.DEFAULT.getDecoderInfos(
-                        MimeTypes.VIDEO_H265, requiresSecureDecoder, requiresTunnelingDecoder
-                    )
-                }.getOrDefault(emptyList())
-
                 when (profileMode) {
                     HdrProfileMode.HDR10, HdrProfileMode.HDR10_PLUS -> {
-                        // Explicitly force native SoC HEVC hardware decoders for the 10-bit HDR10 base layer
+                        // Explicitly force native SoC HEVC hardware decoders for the 10-bit HDR10/HDR10+ base layer
                         if (hevcDecoders.isNotEmpty()) {
                             return@MediaCodecSelector hevcDecoders
                         }
@@ -74,6 +76,8 @@ object HdrCodecSelector {
                     }
                     HdrProfileMode.AUTO -> {
                         val displaySupportsDv = isDolbyVisionDisplaySupported(context)
+                        // On AMOLED HDR10+ displays without certified Dolby Vision hardware decoding (e.g. Samsung Galaxy),
+                        // route directly to hardware HEVC decoders for clean 10-bit BT.2020 HDR10/HDR10+ base layer
                         if (!displaySupportsDv || defaultDecoders.isEmpty()) {
                             if (hevcDecoders.isNotEmpty()) {
                                 return@MediaCodecSelector hevcDecoders
@@ -85,6 +89,15 @@ object HdrCodecSelector {
                         return@MediaCodecSelector combined
                     }
                 }
+            } else if (isHevc && profileMode == HdrProfileMode.DOLBY_VISION) {
+                val dvDecoders = runCatching {
+                    MediaCodecSelector.DEFAULT.getDecoderInfos(
+                        MimeTypes.VIDEO_DOLBY_VISION, requiresSecureDecoder, requiresTunnelingDecoder
+                    )
+                }.getOrDefault(emptyList())
+                if (dvDecoders.isNotEmpty()) {
+                    return@MediaCodecSelector dvDecoders
+                }
             }
 
             defaultDecoders
@@ -92,32 +105,29 @@ object HdrCodecSelector {
     }
 
     @Suppress("DEPRECATION")
-    fun isDolbyVisionDisplaySupported(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+    fun getSupportedHdrTypes(context: Context): IntArray {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return intArrayOf()
         return runCatching {
-            val wm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
-            val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                try { context.display } catch (_: Exception) { wm?.defaultDisplay }
-            } else {
-                wm?.defaultDisplay
-            }
-            val hdrCaps = display?.hdrCapabilities ?: return@runCatching false
-            hdrCaps.supportedHdrTypes.contains(Display.HdrCapabilities.HDR_TYPE_DOLBY_VISION)
-        }.getOrDefault(false)
+            val dm = context.getSystemService(Context.DISPLAY_SERVICE) as? android.hardware.display.DisplayManager
+            val display = dm?.getDisplay(Display.DEFAULT_DISPLAY)
+                ?: (context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
+            display?.hdrCapabilities?.supportedHdrTypes ?: intArrayOf()
+        }.getOrDefault(intArrayOf())
     }
 
-    @Suppress("DEPRECATION")
+    fun isDolbyVisionDisplaySupported(context: Context): Boolean {
+        val types = getSupportedHdrTypes(context)
+        return types.any { it == Display.HdrCapabilities.HDR_TYPE_DOLBY_VISION }
+    }
+
     fun isHdr10PlusSupported(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
-        return runCatching {
-            val wm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
-            val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                try { context.display } catch (_: Exception) { wm?.defaultDisplay }
-            } else {
-                wm?.defaultDisplay
-            }
-            val hdrCaps = display?.hdrCapabilities ?: return@runCatching false
-            hdrCaps.supportedHdrTypes.contains(Display.HdrCapabilities.HDR_TYPE_HDR10_PLUS)
-        }.getOrDefault(false)
+        val types = getSupportedHdrTypes(context)
+        return types.any { it == Display.HdrCapabilities.HDR_TYPE_HDR10_PLUS }
+    }
+
+    fun isHdr10Supported(context: Context): Boolean {
+        val types = getSupportedHdrTypes(context)
+        return types.any { it == Display.HdrCapabilities.HDR_TYPE_HDR10 }
     }
 }

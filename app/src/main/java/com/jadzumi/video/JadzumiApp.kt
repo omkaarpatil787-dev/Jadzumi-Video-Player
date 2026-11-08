@@ -1587,23 +1587,6 @@ private val settingsCategories = listOf(
                                     }
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-                                        Text("4D Cinema Subwoofer (Tactile Rumble)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                        Text("Converts sub-bass audio (20Hz–120Hz) and explosions into physical haptic rumbles", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
-                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            HapticSubwooferMode.entries.forEach { mode ->
-                                                FilterChip(
-                                                    selected = playback.hapticSubwooferMode == mode,
-                                                    onClick = {
-                                                        playback.setHapticSubwoofer(mode)
-                                                        playback.hapticSubwooferEngine.triggerPulse(mode)
-                                                    },
-                                                    label = { Text(mode.displayName.substringBefore(" (")) }
-                                                )
-                                            }
-                                        }
-                                    }
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
                                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                             Column(Modifier.weight(1f)) {
                                                 Text("Bluetooth Audio Delay Compensation", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
@@ -2038,24 +2021,6 @@ private val settingsCategories = listOf(
                                             Text("Smoothly collapse floating navigation into a bouncy mini-pill while scrolling movies or browsing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = dockAutoMinimize, onCheckedChange = onDockAutoMinimize)
-                                    }
-                                }
-                            }
-
-                            // Atmospheric Screen Ambilight Panel
-                            item {
-                                Panel {
-                                    Text("Atmospheric Screen Ambilight (OLED Edge Glow)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("Dynamic ambient glow cast onto letterbox and pillarbox black bars during video playback.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
-
-                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        AmbilightMode.entries.forEach { mode ->
-                                            FilterChip(
-                                                selected = playback.ambilightMode == mode,
-                                                onClick = { playback.setAmbilight(mode) },
-                                                label = { Text(mode.displayName) }
-                                            )
-                                        }
                                     }
                                 }
                             }

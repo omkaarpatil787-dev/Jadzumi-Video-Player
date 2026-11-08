@@ -1,3 +1,32 @@
+# Jadzumi v2.0.1 (Hotfix) — "Omniverse Cinema Suite & Gimmick-Free Player" 🌌🎬🚀
+
+A major hotfix and feature expansion release delivering the complete *Omniverse Cinema* suite, pruning non-essential gimmicks (Ambilight glow, Eco mode, and 4D subwoofer rumble), and resolving AMOLED HDR10+ playback routing.
+
+### 👥 1. Dual Subtitles Studio & Acoustic Subtitle Auto-Sync
+- **Simultaneous Bilingual Subtitles**: Render two independent subtitle tracks at the same time (e.g., English primary dialogue with Japanese or Spanish secondary learning subtitles) with custom color overlays.
+- **⚡ Acoustic Subtitle Auto-Sync**: 1-Tap intelligent auto-synchronization aligning subtitle cue timestamps with dialogue peaks, eliminating drift and sync errors without tedious manual offset adjustments.
+
+### 📚 2. Curated Franchises & Smart Box Sets Shelf
+- **Automated Saga Detection**: Automatically clusters and groups film sagas (Harry Potter, Resident Evil, Marvel Cinematic Universe, Star Wars, The Lord of the Rings & Hobbit, The Dark Knight, Fast & Furious, John Wick, Mission Impossible, Matrix, Alien, and Jurassic) in strict chronological order.
+- **Watched Progress & Next-Up Film**: Displays real-time completion progress (`✓ X / Y Watched`) and 1-tap playback of the next unwatched movie in the saga.
+
+### 🎨 3. Movie Aesthetic Color Harmony & Instant Scene Maker
+- **Aesthetic Color Harmony Extractor**: Extracts a 5-swatch harmonic color palette with hex codes directly from the current video frame using intelligent luminance and chroma clustering.
+- **Instant GIF / WebP Scene Maker**: 1-tap export of 2–6 second high-fidelity animated scene clips with instant Android system share sheet dispatch.
+
+### 🌐 4. Universal LAN & Network Streaming (SMB / WebDAV / DLNA)
+- **High-Throughput Wi-Fi Streaming**: Direct playback from Windows PC shared folders (SMB v2/v3), NAS units (Synology, QNAP), WebDAV servers, and UPnP/DLNA media servers with zero device storage consumed.
+- **Integrated Storage Management**: Add, browse, and organize network endpoints directly from the Folders & Storage page.
+
+### 🌟 5. Robust HDR Profile Switcher & AMOLED Display Match
+- **Intelligent MediaCodec Routing**: Resolves purple/green color shifts and black crush on AMOLED HDR10+ displays (such as Samsung Galaxy phones & tablets) by routing Dolby Vision hybrid profiles directly to hardware 10-bit HEVC BT.2020 decoders.
+- **Manual HDR Profile Switcher**: Choose explicitly between `Auto (Display Match)`, `Dolby Vision Master`, `HDR10+ Dynamic Metadata`, `HDR10 / Base Layer (BT.2020)`, and `SDR Tone-Mapped`.
+
+### 🧹 6. Complete Gimmick Removal & Battery Optimization
+- **Cleaned Non-Essential Simulations**: Fully removed *Screen Ambilight Glow*, *Cinema Eco Mode*, and *4D Cinema Subwoofer Engine*, eliminating the `VIBRATE` permission and reducing background CPU/GPU thread contention for peak 120Hz/144Hz fluidity.
+
+---
+
 # Jadzumi v2.0.0 — "The Omniverse Cinema" (Iteration 1: Audiophile Studio & Visual Immersion) 🌌🎧✨
 
 Welcome to **Jadzumi 2.0**! This major milestone kicks off the locked *Omniverse Cinema* roadmap, bringing physical 4D immersion, binaural 3D acoustics, dynamic OLED edge glow, and multitasking in-app mini player docking.

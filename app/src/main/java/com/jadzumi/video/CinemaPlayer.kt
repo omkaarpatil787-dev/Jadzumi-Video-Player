@@ -188,11 +188,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     var showTrimmerDialog by remember(video.identity) { mutableStateOf(false) }
     var showBingeDialog by remember(video.identity) { mutableStateOf(false) }
 
-    val powerManager = remember { CinemaPowerManager(activity) }
-    DisposableEffect(Unit) {
-        onDispose { powerManager.release() }
-    }
-
     EpisodeContinuationPrompt(playback)
     toolsSection?.let { section ->
         PlayerToolsDialog(section, playback, onMessage = { message = it; interaction++ }, onDismiss = { toolsSection = null })
@@ -386,12 +381,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
             pv.requestLayout()
         }
 
-        CinemaAmbilight(
-            mode = playback.ambilightMode,
-            accentColor = playerAccentColor,
-            isPlaying = playback.playing
-        )
-
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
@@ -436,6 +425,13 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 playerViewRef = null
             }
         )
+
+        if (playback.dualSubtitleStudio.isSecondaryEnabled) {
+            val secCue = playback.dualSubtitleStudio.getActiveCue(playback.position)
+            Box(Modifier.fillMaxSize().padding(bottom = 86.dp), contentAlignment = Alignment.BottomCenter) {
+                SecondarySubtitleOverlay(text = secCue)
+            }
+        }
 
             if (!playback.inPip) {
                 val audio = remember { activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
@@ -705,7 +701,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         showBattery = playback.showBatteryPercentage,
                         showRemainingTime = playback.showRemainingTime,
                         remainingSec = remSec,
-                        isEcoMode = powerManager.isEcoModeEnabled,
                         hdrBadge = playback.hdrFlavor,
                         bgColor = dynamicFrostedCircleBg,
                         rimColor = dynamicFrostedCircleRim,
@@ -825,7 +820,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         showBattery = playback.showBatteryPercentage,
                                         showRemainingTime = playback.showRemainingTime,
                                         remainingSec = remSec,
-                                        isEcoMode = powerManager.isEcoModeEnabled,
                                         hdrBadge = playback.hdrFlavor,
                                         bgColor = dynamicFrostedCircleBg,
                                         rimColor = dynamicFrostedCircleRim,
@@ -1216,7 +1210,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             section = section,
                             theme = theme,
                             isMinimalHud = isMinimalHud,
-                            powerManager = powerManager,
                             onToggleMinimalHud = {
                                 val next = !isMinimalHud
                                 isMinimalHud = next
@@ -1498,7 +1491,6 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
     section: String,
     theme: String = "Dark",
     isMinimalHud: Boolean = true,
-    powerManager: CinemaPowerManager? = null,
     onToggleMinimalHud: () -> Unit = {},
     onSelectSection: (String) -> Unit,
     onAddExternalSubtitle: () -> Unit,
@@ -1627,24 +1619,24 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             value = "Instant 1080p/4K",
                             onClick = onOpenTrimmer
                         )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.ColorLens,
+                            label = "Aesthetic Color Harmony & Frame",
+                            value = "5-Swatch Palette",
+                            onClick = { onOpenTools("palette") }
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Animation,
+                            label = "Create Animated Scene Clip",
+                            value = "Instant WebP",
+                            onClick = { onOpenTools("clip") }
+                        )
                         if (playback.video?.episode != null) {
                             QuickMenuRow(
                                 icon = Icons.Rounded.FastForward,
                                 label = "Binge Automation",
                                 value = "Auto-Skip Intro/Outro",
                                 onClick = onOpenBinge
-                            )
-                        }
-                        if (powerManager != null) {
-                            val powerStatus = powerManager.getStatus()
-                            QuickMenuRow(
-                                icon = Icons.Rounded.Eco,
-                                label = "Cinema Eco Mode",
-                                value = if (powerManager.isEcoModeEnabled) "Active" else "Off",
-                                onClick = {
-                                    powerManager.toggleEcoMode()
-                                    onMessage(if (powerManager.isEcoModeEnabled) "Cinema Eco Mode: Active (Optimized Battery)" else "Cinema Eco Mode: Off")
-                                }
                             )
                         }
                         QuickMenuRow(
@@ -1660,12 +1652,6 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             onClick = { onSelectSection("enhancer") }
                         )
                         QuickMenuRow(
-                            icon = Icons.Rounded.WbTwilight,
-                            label = "Screen Ambilight Glow",
-                            value = playback.ambilightMode.displayName.substringBefore(" ("),
-                            onClick = { onSelectSection("ambilight") }
-                        )
-                        QuickMenuRow(
                             icon = Icons.Rounded.GraphicEq,
                             label = "Audio track",
                             value = audioSummary,
@@ -1676,12 +1662,6 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             label = "Spatial Cinema 3D",
                             value = playback.spatial3DMode.displayName.substringBefore(" ("),
                             onClick = { onSelectSection("spatial_3d") }
-                        )
-                        QuickMenuRow(
-                            icon = Icons.Rounded.Vibration,
-                            label = "4D Cinema Subwoofer",
-                            value = playback.hapticSubwooferMode.displayName.substringBefore(" ("),
-                            onClick = { onSelectSection("subwoofer") }
                         )
                         QuickMenuRow(
                             icon = Icons.Rounded.Subtitles,
@@ -2095,6 +2075,12 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                 Text("Offset: ${if (sec > 0) "+$sec" else "$sec"}s", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                FrostedCircleButton("Auto-Sync", {
+                                    val synced = playback.autoSyncSubtitles()
+                                    onMessage(if (synced) "Acoustic Auto-Sync: Timestamps Aligned" else "Acoustic Auto-Sync: Subtitles Already In Sync")
+                                }, size = 32.dp, bgColor = palette.btnBg, rimColor = palette.btnRim) {
+                                    Icon(Icons.Rounded.AutoAwesome, "Auto-Sync", tint = palette.accent, modifier = Modifier.size(15.dp))
+                                }
                                 FrostedCircleButton("-100ms", { playback.updateSubtitleDelay(-100); onMessage("Sub Delay: ${playback.subtitleDelayMs / 1000f}s") }, size = 32.dp, bgColor = palette.btnBg, rimColor = palette.btnRim) {
                                     Text("-", color = palette.primaryText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
@@ -2107,6 +2093,24 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                     Text("+", color = palette.primaryText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                             }
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = palette.divider)
+
+                        Text("Dual Subtitles Studio (Secondary Track)", color = palette.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                        val secTrack = playback.dualSubtitleStudio.secondaryTrack
+                        QuickOptionItem(
+                            label = "Off (Single Subtitle)",
+                            selected = secTrack == null,
+                            onClick = { playback.selectSecondarySubtitle(null); onMessage("Secondary Subtitle Off") }
+                        )
+                        playback.subtitleTracks.filter { !it.isSelected }.forEach { track ->
+                            QuickOptionItem(
+                                label = "${track.label} (${track.format})",
+                                selected = secTrack == track,
+                                onClick = { playback.selectSecondarySubtitle(track); onMessage("Dual Subtitles: ${track.label} Active") }
+                            )
+                        }
                         }
                     }
                 }
@@ -2170,49 +2174,6 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                 onClick = {
                                     playback.setSpatial3D(mode)
                                     onMessage("Spatial 3D: ${mode.displayName.substringBefore(" (")}")
-                                }
-                            )
-                        }
-                    }
-                }
-
-                "subwoofer" -> {
-                    QuickSubMenuContainer(title = "4D Cinema Subwoofer", onBack = { onSelectSection("main") }) {
-                        Text(
-                            "Converts low-frequency sub-bass (20Hz–120Hz) and explosions into physical haptic rumbles.",
-                            color = palette.secondaryText,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                        )
-                        HapticSubwooferMode.entries.forEach { mode ->
-                            QuickOptionItem(
-                                label = mode.displayName,
-                                selected = playback.hapticSubwooferMode == mode,
-                                onClick = {
-                                    playback.setHapticSubwoofer(mode)
-                                    playback.hapticSubwooferEngine.triggerPulse(mode)
-                                    onMessage("4D Subwoofer: ${mode.displayName.substringBefore(" (")}")
-                                }
-                            )
-                        }
-                    }
-                }
-
-                "ambilight" -> {
-                    QuickSubMenuContainer(title = "Screen Ambilight Glow", onBack = { onSelectSection("main") }) {
-                        Text(
-                            "Dynamic atmospheric glow expanding from video edges onto letterbox and pillarbox black bars.",
-                            color = palette.secondaryText,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                        )
-                        AmbilightMode.entries.forEach { mode ->
-                            QuickOptionItem(
-                                label = mode.displayName,
-                                selected = playback.ambilightMode == mode,
-                                onClick = {
-                                    playback.setAmbilight(mode)
-                                    onMessage("Ambilight: ${mode.displayName.substringBefore(" (")}")
                                 }
                             )
                         }
@@ -2651,7 +2612,6 @@ private fun PlayerStatusPill(
     showBattery: Boolean,
     showRemainingTime: Boolean = false,
     remainingSec: Long? = null,
-    isEcoMode: Boolean = false,
     hdrBadge: String? = null,
     bgColor: Color = Color(0x990A0E17),
     rimColor: Color = Color.White.copy(alpha = 0.22f),
@@ -2710,15 +2670,6 @@ private fun PlayerStatusPill(
                 Text("·", color = contentColor.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
 
-            if (isEcoMode) {
-                Icon(
-                    Icons.Rounded.Eco,
-                    contentDescription = "Cinema Eco Active",
-                    tint = Color(0xFF4CAF50),
-                    modifier = Modifier.size(13.dp)
-                )
-                Text("·", color = contentColor.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
             if (hasClock) {
                 Text(
                     text = timeText,

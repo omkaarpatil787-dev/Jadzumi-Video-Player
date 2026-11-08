@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.0-2563eb?style=flat-square" alt="Version 2.0.0"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.1-2563eb?style=flat-square" alt="Version 2.0.1"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -74,14 +74,17 @@ See [release notes](RELEASE_NOTES.md) for full details.
 | External subtitles and timing adjustments | Scene bookmarks, notes, and search | Theme-reactive playback controls |
 | Background audio and picture-in-picture | Episode continuity and sleep timer | Refresh rate matching |
 
-## 📦 Latest release · v2.0.0 — "The Omniverse Cinema"
+## 📦 Latest release · v2.0.1 (Hotfix) — "Omniverse Cinema Suite & Gimmick-Free Player"
 
-- 🎧 **Spatial Cinema 3D Virtualizer**: Hardware DSP multi-channel acoustic modeling for headphones and multi-speaker setups (`Off`, `Subtle`, `Studio 3D`, `Wide IMAX 3D`).
-- 📳 **4D Tactile Cinema Subwoofer**: Live sub-bass FFT (20Hz–120Hz) analysis converting explosions and heavy bass rumbles into physical haptic rumbles in your hands.
-- 🌈 **Atmospheric Screen Ambilight**: Dynamic ambient glow cast onto letterbox and pillarbox black bars for a bezel-less visual experience.
-- 📱 **In-App Docked Mini Player**: YouTube/Spotify-style swipe-to-dock floating bottom card for seamless video listening while browsing the app.
+- 👥 **Dual Subtitles Studio**: Simultaneous bilingual subtitle rendering with custom secondary styling and independent track selection.
+- ⚡ **Acoustic Subtitle Auto-Sync**: 1-Tap intelligent peak auto-synchronization aligning subtitle cues with dialogue.
+- 📚 **Curated Franchises & Smart Box Sets**: Chronological saga grouping (Harry Potter, Resident Evil, MCU, Star Wars, LotR, etc.) with completion progress tracking.
+- 🎨 **Movie Aesthetic Palette & Scene Clipper**: 5-swatch color harmony extraction with hex codes and 2–6s animated WebP scene sharing.
+- 🌐 **LAN & Network Streaming**: Direct streaming from Windows SMB v2/v3, NAS, and WebDAV/DLNA endpoints without local storage overhead.
+- 🌟 **HDR Profile Router & AMOLED Display Match**: Explicit manual switching between DV, HDR10+, HDR10 Base, and SDR Tone-Mapped, fixing tint issues on AMOLED HDR10+ devices.
+- 🧹 **Pure Gimmick-Free Player**: Removed ambient glow, eco mode, and subwoofer rumble to ensure pure 120Hz/144Hz smoothness.
 
-[Download v2.0.0](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v2.0.0) · [Release notes](RELEASE_NOTES.md)
+[Download v2.0.1](https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/tag/v2.0.1) · [Release notes](RELEASE_NOTES.md)
 
 **Upgrading from an older development-signed APK?** The new signing key requires
 reinstallation. Uninstalling can erase app settings and playback history.
