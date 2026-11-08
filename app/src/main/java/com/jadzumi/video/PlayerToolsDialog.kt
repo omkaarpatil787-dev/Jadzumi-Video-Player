@@ -2,11 +2,13 @@ package com.jadzumi.video
 
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -18,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
@@ -53,40 +56,45 @@ fun PlayerToolsDialog(
                 when (section) {
                     "diagnostics" -> {
                         val vInfo = playback.runtimeVideoFormat
-                        Text("Video Stream", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
-                        val resStr = "${vInfo?.width ?: video.width}×${vInfo?.height ?: video.height}"
-                        val fpsStr = inspectionFrameRate(vInfo?.frameRate) ?: "Container native"
-                        Text("Resolution: $resStr @ $fpsStr", fontSize = 12.sp)
-                        Text("Aspect Ratio: ${String.format(java.util.Locale.US, "%.2f:1", playback.aspect)} (${playback.aspectMode.displayName.substringBefore(" (")})", fontSize = 12.sp)
-                        Text("Codec: ${inspectionVideoCodec(vInfo?.mime) ?: "HEVC / AVC"}", fontSize = 12.sp)
                         val dec = playback.runtimeVideoDecoder
-                        val decType = if (dec?.hardware == DecoderHardware.HARDWARE) "Hardware Accelerated" else if (dec?.hardware == DecoderHardware.SOFTWARE) "Software (FFmpeg)" else "Native MediaCodec"
-                        Text("Decoder: ${dec?.name ?: "c2.android.video"} ($decType)", fontSize = 12.sp)
+                        val codecStr = inspectionVideoCodec(vInfo?.mime) ?: vInfo?.mime?.substringAfterLast("/")?.uppercase() ?: "HEVC"
+                        val resStr = "${vInfo?.width ?: video.width} × ${vInfo?.height ?: video.height}"
+                        val xfer = when (vInfo?.colorTransfer) {
+                            6 -> "SMPTE ST 2084 (PQ)"
+                            7 -> "ARIB STD-B67 (HLG)"
+                            3 -> "BT.709 / SDR"
+                            else -> if (playback.isHdr) "SMPTE ST 2084 (PQ)" else "SDR (Standard)"
+                        }
+                        val declaredHdr = if (playback.isHdr) (playback.hdrFlavor ?: "HDR10") else "SDR (Standard)"
+                        val decType = if (dec?.hardware == DecoderHardware.HARDWARE) "Hardware" else if (dec?.hardware == DecoderHardware.SOFTWARE) "Software (FFmpeg)" else "Native MediaCodec"
+                        val actualHdr = if (playback.isHdr && HdrCodecSelector.isHdr10Supported(context)) "Native HDR (Wide Gamut 10-bit)" else if (playback.isHdr) "SDR Tone-mapped" else "Standard SDR"
+                        val dropped = playback.droppedFrames.takeIf { it >= 0 }?.toString() ?: "0 (Smooth)"
 
-                        HorizontalDivider(Modifier.padding(vertical = 4.dp))
-                        Text("Color & Dynamic Range", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
-                        val prim = when (vInfo?.colorStandard) { 6 -> "BT.2020 (Wide Gamut)"; 1 -> "BT.709"; 2, 4 -> "BT.601"; else -> if (playback.isHdr) "BT.2020" else "Standard Gamut" }
-                        val xfer = when (vInfo?.colorTransfer) { 6 -> "SMPTE ST 2084 (PQ)"; 7 -> "ARIB STD-B67 (HLG)"; 3 -> "SDR (Standard)"; else -> if (playback.isHdr) "HDR Transfer" else "SDR (Standard)" }
-                        val bDepth = vInfo?.bitDepth?.let { "${it}-bit" } ?: if (playback.isHdr) "10-bit" else "8-bit"
-                        Text("Color Primaries: $prim", fontSize = 12.sp)
-                        Text("Transfer: $xfer", fontSize = 12.sp)
-                        Text("Dynamic Range: ${playback.hdrFlavor ?: if (playback.isHdr) "HDR10" else "SDR"}", fontSize = 12.sp)
-                        Text("Bit Depth: $bDepth", fontSize = 12.sp)
-                        Text("Profile Mode: ${playback.hdrProfileMode.displayName}", fontSize = 12.sp)
-
-                        HorizontalDivider(Modifier.padding(vertical = 4.dp))
-                        Text("Display Capabilities", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
-                        Text("HDR10: ${if (HdrCodecSelector.isHdr10Supported(context)) "Supported" else "Not Reported"}", fontSize = 12.sp)
-                        Text("HDR10+: ${if (HdrCodecSelector.isHdr10PlusSupported(context)) "Supported" else "Not Reported"}", fontSize = 12.sp)
-                        Text("Dolby Vision: ${if (HdrCodecSelector.isDolbyVisionDisplaySupported(context)) "Supported" else "Not Reported"}", fontSize = 12.sp)
-                        Text("Window Color Mode: ${if (playback.isHdr) "HDR (Wide Gamut 10-bit)" else "SDR (Default)"}", fontSize = 12.sp)
-
-                        HorizontalDivider(Modifier.padding(vertical = 4.dp))
-                        Text("Audio Stream", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
-                        val activeAud = playback.audioTracks.firstOrNull { it.isSelected }
-                        Text("Track: ${activeAud?.let { "${it.label} (${it.codec} ${it.channels})" } ?: "Default Audio"}", fontSize = 12.sp)
-                        playback.runtimeAudioDecoder?.let { audDec ->
-                            Text("Audio Decoder: ${audDec.name}", fontSize = 12.sp)
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Color(0xFF24232E),
+                            border = BorderStroke(1.dp, Color(0xFF454050)),
+                            shape = RoundedCornerShape(18.dp)
+                        ) {
+                            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Video / Decoder / Output", color = Color(0xFFDDC8FF), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Surface(color = Color(0xFF35303E), shape = CircleShape) {
+                                        Text("READ-ONLY", color = Color(0xFFD8C4F7), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                                    }
+                                }
+                                DiagnosticsKvRow("Source video codec", codecStr)
+                                DiagnosticsKvRow("Source resolution", resStr)
+                                DiagnosticsKvRow("Source transfer", xfer)
+                                DiagnosticsKvRow("Declared HDR metadata", declaredHdr)
+                                DiagnosticsKvRow("Actual decoder", "${dec?.name ?: "c2.android.video"} ($decType)")
+                                DiagnosticsKvRow("Actual HDR output", actualHdr)
+                                DiagnosticsKvRow("Dropped frames", dropped, isLast = true)
+                            }
                         }
                     }
                     "sleep" -> {
@@ -226,5 +234,22 @@ fun EpisodeContinuationPrompt(playback: PlaybackController) {
             text = { Text("${playback.continuationMessage}\n\n${next.name}") },
             dismissButton = { TextButton(onClick = playback::dismissNextEpisodeCountdown) { Text("Stay here") } },
             confirmButton = { TextButton(onClick = { playback.confirmNextEpisode(next) }) { Text("Play next") } })
+    }
+}
+
+@Composable
+private fun DiagnosticsKvRow(label: String, value: String, isLast: Boolean = false) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(label, color = Color(0xFFB3ABBF), fontSize = 12.sp)
+            Text(value, color = Color(0xFFF5F1FB), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
+        }
+        if (!isLast) {
+            HorizontalDivider(color = Color(0xFF393543), thickness = 1.dp)
+        }
     }
 }

@@ -135,6 +135,11 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
     val showAnyHud = playback.showPlayerClock || playback.showBatteryPercentage || playback.showRemainingTime
 
+    var showDiagnosticsCapsule by remember(video.identity) { mutableStateOf(false) }
+    var seekGestureDeltaText by remember(video.identity) { mutableStateOf<String?>(null) }
+    var seekGestureIsForward by remember(video.identity) { mutableStateOf(true) }
+    var seekGestureProgress by remember(video.identity) { mutableFloatStateOf(0f) }
+
     var subtitleSearchCues by remember(video.identity) { mutableStateOf<List<SubtitleSearchCue>?>(null) }
     var subtitleSearchBusy by remember(video.identity) { mutableStateOf(false) }
     val subtitleSearchLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -447,7 +452,13 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                             rippleCount = 1
                                         }
                                         playback.skip(if (isLeft) -seekDeltaMs else seekDeltaMs)
-                                        message = if (isLeft) "−${playback.seekIncrementSeconds * rippleCount}s" else "+${playback.seekIncrementSeconds * rippleCount}s"
+                                        val seekSec = playback.seekIncrementSeconds * rippleCount
+                                        val seekTxt = if (isLeft) "−${seekSec}s" else "+${seekSec}s"
+                                        message = seekTxt
+                                        seekGestureIsForward = !isLeft
+                                        seekGestureDeltaText = seekTxt
+                                        seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
+                                        hudSide = "Seek"
                                         interaction++
                                     }
                                 }
@@ -564,66 +575,37 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     }
                 }
 
-                // Horizontal Swipe Brightness / Volume Capsule HUD with Elastic Rubber-Band Boundary
-                hudSide?.let { side ->
-                    val isBright = side == "Brightness"
-                    val isCeiling = hudValue >= 1f
-                    val elasticScaleX by animateFloatAsState(
-                        targetValue = if (isCeiling) 1.07f else 1.0f,
-                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
-                        label = "elasticScaleX"
-                    )
-                    val elasticScaleY by animateFloatAsState(
-                        targetValue = if (isCeiling) 0.94f else 1.0f,
-                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
-                        label = "elasticScaleY"
-                    )
-
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .safeDrawingPadding()
-                            .padding(top = 74.dp)
-                            .graphicsLayer {
-                                scaleX = elasticScaleX
-                                scaleY = elasticScaleY
-                            },
-                        color = QuickMenuBg,
-                        border = BorderStroke(1.dp, if (isCeiling) Color(0xFFF59E0B).copy(alpha = 0.5f) else FrostedCircleRim),
-                        shape = RoundedCornerShape(999.dp),
-                        shadowElevation = 16.dp
-                    ) {
-                        Row(
-                            Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(
-                                if (isBright) Icons.Rounded.Brightness6 else Icons.AutoMirrored.Rounded.VolumeUp,
-                                null,
-                                tint = if (isCeiling) Color(0xFFF59E0B) else Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                side,
-                                color = Color.White.copy(alpha = 0.90f),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            LinearProgressIndicator(
-                                progress = { hudValue.coerceIn(0f, 1f) },
-                                modifier = Modifier.width(110.dp).height(5.dp).clip(CircleShape),
-                                color = if (isCeiling) Color(0xFFF59E0B) else TimelineAccent,
-                                trackColor = Color.White.copy(alpha = 0.22f)
-                            )
-                            Text(
-                                "${(hudValue * 100).roundToInt()}%",
-                                color = if (isCeiling) Color(0xFFF59E0B) else Color.White,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.widthIn(min = 34.dp)
-                            )
+                // Next-Gen Cinematic Gesture Capsule (Approved Cinema Controls 2.0 Specification)
+                AnimatedVisibility(
+                    visible = hudSide != null,
+                    enter = fadeIn(tween(260, easing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f))) +
+                            scaleIn(spring(dampingRatio = 0.72f, stiffness = 420f), initialScale = 0.86f),
+                    exit = fadeOut(tween(220)) + scaleOut(targetScale = 0.90f),
+                    modifier = Modifier.align(Alignment.Center)
+                ) {
+                    hudSide?.let { side ->
+                        val isBright = side == "Brightness"
+                        val isSeek = side == "Seek"
+                        val icon = when {
+                            isBright -> if (hudValue < 0.35f) Icons.Rounded.BrightnessLow else if (hudValue < 0.75f) Icons.Rounded.BrightnessMedium else Icons.Rounded.BrightnessHigh
+                            isSeek -> if (seekGestureIsForward) Icons.Rounded.FastForward else Icons.Rounded.FastRewind
+                            else -> Icons.AutoMirrored.Rounded.VolumeUp
                         }
+                        val valueText = when {
+                            isSeek -> seekGestureDeltaText ?: "+10s"
+                            else -> "${(hudValue * 100).roundToInt()}%"
+                        }
+                        val fraction = when {
+                            isSeek -> seekGestureProgress
+                            else -> hudValue
+                        }
+
+                        FluidGestureCapsule(
+                            type = side,
+                            valueText = valueText,
+                            fraction = fraction,
+                            icon = icon
+                        )
                     }
                 }
 
@@ -769,15 +751,15 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
 
                                     FrostedCircleButton(
                                         label = "Playback Diagnostics",
-                                        onClick = { toolsSection = "diagnostics"; interaction++ },
+                                        onClick = { showDiagnosticsCapsule = !showDiagnosticsCapsule; interaction++ },
                                         size = 44.dp,
-                                        bgColor = dynamicFrostedCircleBg,
-                                        rimColor = dynamicFrostedCircleRim
+                                        bgColor = if (showDiagnosticsCapsule) Color(0xFFDDC8FF).copy(alpha = 0.22f) else dynamicFrostedCircleBg,
+                                        rimColor = if (showDiagnosticsCapsule) Color(0xFFDDC8FF) else dynamicFrostedCircleRim
                                     ) {
                                         Icon(
                                             Icons.Rounded.Analytics,
                                             contentDescription = "Diagnostics",
-                                            tint = playerContentColor,
+                                            tint = if (showDiagnosticsCapsule) Color(0xFFDDC8FF) else playerContentColor,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -823,6 +805,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     val stepSec = playback.seekIncrementSeconds
                                     playback.skip(-seekDeltaMs)
                                     seekBackAccumulator += stepSec
+                                    seekGestureIsForward = false
+                                    seekGestureDeltaText = "−${seekBackAccumulator}s"
+                                    seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
+                                    hudSide = "Seek"
                                     seekBackJob?.cancel()
                                     seekBackJob = coroutineScope.launch {
                                         kotlinx.coroutines.delay(950)
@@ -874,6 +860,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     val stepSec = playback.seekIncrementSeconds
                                     playback.skip(seekDeltaMs)
                                     seekFwdAccumulator += stepSec
+                                    seekGestureIsForward = true
+                                    seekGestureDeltaText = "+${seekFwdAccumulator}s"
+                                    seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
+                                    hudSide = "Seek"
                                     seekFwdJob?.cancel()
                                     seekFwdJob = coroutineScope.launch {
                                         kotlinx.coroutines.delay(950)
@@ -1196,7 +1186,13 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             onOpenTrimmer = { showTrimmerDialog = true; quickMenuSection = null },
                             onOpenBinge = { showBingeDialog = true; quickMenuSection = null },
                             onOpenTools = { section ->
-                                toolsSection = section; quickMenuSection = null
+                                if (section == "diagnostics") {
+                                    showDiagnosticsCapsule = true
+                                    quickMenuSection = null
+                                } else {
+                                    toolsSection = section
+                                    quickMenuSection = null
+                                }
                             },
                             onSearchSubtitles = {
                                 if (!subtitleSearchBusy) subtitleSearchLauncher.launch(arrayOf("*/*"))
@@ -1206,6 +1202,20 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             onClosePlayer = dismissPlayerWithFluidity
                         )
                     }
+                }
+
+                // Approved Next-Gen Playback Information Capsule (User-invoked, Read-only Diagnostics)
+                AnimatedVisibility(
+                    visible = showDiagnosticsCapsule,
+                    enter = fadeIn(tween(320, easing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f))) +
+                            slideInVertically(initialOffsetY = { -it / 6 }),
+                    exit = fadeOut(tween(240)) + slideOutVertically(targetOffsetY = { -it / 6 })
+                ) {
+                    PlaybackInfoCapsule(
+                        playback = playback,
+                        video = video,
+                        onDismiss = { showDiagnosticsCapsule = false }
+                    )
                 }
 
                 // Milestone 5A: 10-Second Next-Episode Autoplay Countdown Banner
@@ -1545,15 +1555,27 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                         .align(Alignment.CenterEnd)
                         .safeDrawingPadding()
                         .padding(end = 24.dp, top = 24.dp, bottom = 24.dp)
-                        .widthIn(min = 300.dp, max = 350.dp)
+                        .widthIn(min = 320.dp, max = 380.dp)
                         .clickable(enabled = false) {}
                 },
-                color = palette.bg,
-                border = BorderStroke(1.dp, palette.rim),
-                shape = if (isPhonePortrait) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(22.dp),
+                color = if (isLight) palette.bg else if (isPhonePortrait) Color(0xF5302C3A) else Color(0xF52B2835),
+                border = BorderStroke(1.dp, if (isLight) palette.rim else Color(0xFF51475D)),
+                shape = if (isPhonePortrait) RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp) else RoundedCornerShape(24.dp),
                 shadowElevation = if (isLight) 8.dp else 24.dp
             ) {
-            when (section) {
+                Column {
+                    if (isPhonePortrait) {
+                        Box(
+                            modifier = Modifier
+                                .padding(top = 12.dp, bottom = 4.dp)
+                                .align(Alignment.CenterHorizontally)
+                                .width(32.dp)
+                                .height(4.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF8B8096))
+                        )
+                    }
+                    when (section) {
                 "main" -> {
                     Column(Modifier.heightIn(max = 560.dp).elasticEdge().verticalScroll(rememberScrollState()).padding(vertical = 10.dp)) {
                         // Category 1: Playback & Display
@@ -1682,7 +1704,28 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                 }
 
                 "speed" -> {
-                    QuickSubMenuContainer(title = "Playback speed", onBack = { onSelectSection("main") }) {
+                    QuickSubMenuContainer(
+                        title = "Playback speed",
+                        onBack = { onSelectSection("main") },
+                        badgeText = "${playback.speed}x"
+                    ) {
+                        val quickRates = listOf(0.75f, 1.0f, 1.25f, 1.5f)
+                        if (playback.speed in quickRates) {
+                            SlidingSegmentedControl(
+                                items = quickRates,
+                                selectedItem = playback.speed,
+                                onItemSelected = { rate ->
+                                    playback.changeSpeed(rate)
+                                    onMessage("Speed: ${rate}x")
+                                },
+                                labelProvider = { if (it == 1.0f) "1.0x" else "${it}x" },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(42.dp)
+                                    .padding(horizontal = 14.dp, vertical = 2.dp)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
                         listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f).forEach { rate ->
                             QuickOptionItem(
                                 label = if (rate == 1.0f) "1.0x (Normal)" else "${rate}x",
@@ -1694,7 +1737,36 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                 }
 
                 "aspect" -> {
-                    QuickSubMenuContainer(title = "Fit / Aspect ratio", onBack = { onSelectSection("main") }) {
+                    QuickSubMenuContainer(
+                        title = "Fit / Aspect ratio",
+                        onBack = { onSelectSection("main") },
+                        badgeText = playback.aspectMode.displayName.substringBefore(" (")
+                    ) {
+                        val quickAspects = listOf(AspectRatioMode.FIT_SCREEN, AspectRatioMode.CROP_ZOOM, AspectRatioMode.STRETCH_FULL, AspectRatioMode.RATIO_16_9)
+                        if (playback.aspectMode in quickAspects) {
+                            SlidingSegmentedControl(
+                                items = quickAspects,
+                                selectedItem = playback.aspectMode,
+                                onItemSelected = { mode ->
+                                    playback.setAspectRatioMode(mode)
+                                    onMessage("Aspect: ${mode.displayName.substringBefore(" (")}")
+                                },
+                                labelProvider = { mode ->
+                                    when (mode) {
+                                        AspectRatioMode.FIT_SCREEN -> "Fit"
+                                        AspectRatioMode.CROP_ZOOM -> "Zoom"
+                                        AspectRatioMode.STRETCH_FULL -> "Stretch"
+                                        AspectRatioMode.RATIO_16_9 -> "16:9"
+                                        else -> mode.displayName.substringBefore(" (")
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(42.dp)
+                                    .padding(horizontal = 14.dp, vertical = 2.dp)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
                         AspectRatioMode.values().forEach { mode ->
                             QuickOptionItem(
                                 label = mode.displayName,
@@ -2197,6 +2269,7 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
     }
 }
 }
+}
 
 @Composable private fun QuickMenuCategoryHeader(title: String) {
     val palette = LocalQuickMenuPalette.current
@@ -2252,19 +2325,68 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
 @Composable private fun QuickSubMenuContainer(
     title: String,
     onBack: () -> Unit,
+    badgeText: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val palette = LocalQuickMenuPalette.current
-    Column(Modifier.padding(vertical = 10.dp).heightIn(max = 340.dp)) {
+    Column(Modifier.padding(vertical = 10.dp).heightIn(max = 440.dp)) {
         Row(
-            Modifier.fillMaxWidth().clickable(onClick = onBack).padding(horizontal = 16.dp, vertical = 10.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = palette.primaryText, modifier = Modifier.size(18.dp))
-            Text(title, color = palette.primaryText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Row(
+                Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable(onClick = onBack)
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.08f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "Back",
+                            tint = palette.primaryText,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = title,
+                    color = palette.primaryText,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            if (badgeText != null) {
+                Surface(
+                    color = Color(0xFF35303E),
+                    shape = CircleShape
+                ) {
+                    Text(
+                        text = badgeText,
+                        color = Color(0xFFD8C4F7),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                    )
+                }
+            }
         }
-        HorizontalDivider(color = palette.divider)
+        HorizontalDivider(
+            modifier = Modifier.padding(top = 6.dp, bottom = 8.dp),
+            color = palette.divider
+        )
         LazyColumn(content = { item { Column(content = content) } })
     }
 }
@@ -2275,24 +2397,331 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
     onClick: () -> Unit
 ) {
     val palette = LocalQuickMenuPalette.current
-    Row(
+    Surface(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .touchMotion()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 14.dp, vertical = 3.dp)
+            .heightIn(min = 45.dp)
+            .touchMotion(),
+        shape = RoundedCornerShape(14.dp),
+        color = if (selected) Color(0xFF4B3E5B) else Color(0xFF3A3545),
+        border = BorderStroke(1.dp, if (selected) Color(0xFFB49BD1) else Color.Transparent)
     ) {
-        Text(
-            label,
-            color = if (selected) palette.accent else palette.primaryText,
-            fontSize = 14.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            modifier = Modifier.weight(1f)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = label,
+                color = if (selected) Color(0xFFF4ECFF) else Color(0xFFE2DCE8),
+                fontSize = 13.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                modifier = Modifier.weight(1f)
+            )
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Rounded.Check,
+                    contentDescription = "Selected",
+                    tint = Color(0xFFDDC8FF),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun <T> SlidingSegmentedControl(
+    items: List<T>,
+    selectedItem: T,
+    onItemSelected: (T) -> Unit,
+    labelProvider: (T) -> String,
+    modifier: Modifier = Modifier
+) {
+    val selectedIndex = items.indexOf(selectedItem).coerceAtLeast(0)
+    BoxWithConstraints(
+        modifier = modifier
+            .background(Color(0xFF302E3B), CircleShape)
+            .padding(4.dp)
+    ) {
+        val count = items.size.coerceAtLeast(1)
+        val tabWidth = maxWidth / count
+
+        val indicatorOffset by animateDpAsState(
+            targetValue = tabWidth * selectedIndex,
+            animationSpec = tween(380, easing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f)),
+            label = "indicatorOffset"
         )
-        if (selected) {
-            Icon(Icons.Rounded.Check, null, tint = palette.accent, modifier = Modifier.size(18.dp))
+
+        Box(
+            modifier = Modifier
+                .offset(x = indicatorOffset)
+                .width(tabWidth)
+                .fillMaxHeight()
+                .clip(CircleShape)
+                .background(Color(0xFFDDC8FF))
+        )
+
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items.forEachIndexed { index, item ->
+                val isSelected = index == selectedIndex
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(CircleShape)
+                        .clickable { onItemSelected(item) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = labelProvider(item),
+                        color = if (isSelected) Color(0xFF241A31) else Color(0xFFBFB7CC),
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                        fontSize = 12.sp,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Approved Next-Gen Cinematic Gesture Capsule (Cinema Controls 2.0 Specification)
+@Composable
+fun FluidGestureCapsule(
+    type: String,
+    valueText: String,
+    fraction: Float,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    isCompact: Boolean = false
+) {
+    Surface(
+        modifier = modifier
+            .widthIn(min = if (isCompact) 58.dp else 140.dp)
+            .animateContentSize(spring(dampingRatio = 0.75f, stiffness = 450f)),
+        color = Color(0xED393346),
+        border = BorderStroke(1.dp, Color(0xFF615574)),
+        shape = if (isCompact) CircleShape else RoundedCornerShape(28.dp),
+        shadowElevation = 20.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                horizontal = if (isCompact) 15.dp else 24.dp,
+                vertical = if (isCompact) 15.dp else 18.dp
+            ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = type,
+                tint = Color(0xFFDDC8FF),
+                modifier = Modifier.size(25.dp)
+            )
+            if (!isCompact) {
+                Text(
+                    text = valueText,
+                    color = Color(0xFFF6EFFF),
+                    fontSize = 29.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 29.sp
+                )
+                Box(
+                    modifier = Modifier
+                        .width(155.dp)
+                        .height(7.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF60556E))
+                ) {
+                    val animatedFill by animateFloatAsState(
+                        targetValue = fraction.coerceIn(0f, 1f),
+                        animationSpec = tween(durationMillis = 80, easing = LinearEasing),
+                        label = "meterFill"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(animatedFill)
+                            .clip(CircleShape)
+                            .background(Color(0xFFDDC8FF))
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Approved Next-Gen Playback Information Capsule (Read-Only Diagnostics)
+@Composable
+fun PlaybackInfoCapsule(
+    playback: PlaybackController,
+    video: VideoItem,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(true) }
+    val vInfo = playback.runtimeVideoFormat
+    val dec = playback.runtimeVideoDecoder
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val codecLabel = inspectionVideoCodec(vInfo?.mime) ?: vInfo?.mime?.substringAfterLast("/")?.uppercase() ?: "HEVC"
+    val resLabel = if ((vInfo?.height ?: video.height) >= 2160) "4K" else if ((vInfo?.height ?: video.height) >= 1080) "1080p" else "${vInfo?.height ?: video.height}p"
+    val hdrLabel = if (playback.isHdr) (playback.hdrFlavor ?: "HDR10") else "SDR"
+    val summaryPillText = "$codecLabel · $resLabel · $hdrLabel"
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .clickable(onClick = onDismiss),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Surface(
+            modifier = Modifier
+                .safeDrawingPadding()
+                .padding(top = 70.dp, start = 16.dp, end = 16.dp)
+                .widthIn(min = 320.dp, max = 460.dp)
+                .clickable(enabled = false) {}
+                .animateContentSize(spring(dampingRatio = 0.8f, stiffness = 400f)),
+            color = Color(0xF524232E),
+            border = BorderStroke(1.dp, Color(0xFF454050)),
+            shape = RoundedCornerShape(22.dp),
+            shadowElevation = 24.dp
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                // Header with Pill Toggle Button (.cc-pill)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text("Playback Diagnostics", color = Color(0xFFF5F1FB), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("User-invoked · Read-only metrics", color = Color(0xFFACA5B7), fontSize = 11.sp)
+                    }
+                    Surface(
+                        onClick = { expanded = !expanded },
+                        shape = CircleShape,
+                        color = if (expanded) Color(0xFFDDC8FF) else Color(0xFF40364C),
+                        contentColor = if (expanded) Color(0xFF241A31) else Color(0xFFE9DCFA),
+                        modifier = Modifier.height(38.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                "ⓘ $summaryPillText",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Icon(
+                                if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                                null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (expanded) {
+                    Spacer(Modifier.height(14.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color(0xFF1E1D26),
+                        border = BorderStroke(1.dp, Color(0xFF393543)),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Video / Decoder / Output", color = Color(0xFFDDC8FF), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Surface(
+                                    color = Color(0xFF35303E),
+                                    shape = CircleShape
+                                ) {
+                                    Text(
+                                        "READ-ONLY",
+                                        color = Color(0xFFD8C4F7),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+
+                            // Key-Value Rows (.cc-kv)
+                            PlaybackKvRow("Source video codec", codecLabel)
+                            PlaybackKvRow("Source resolution", "${vInfo?.width ?: video.width} × ${vInfo?.height ?: video.height}")
+                            val xfer = when (vInfo?.colorTransfer) {
+                                6 -> "SMPTE ST 2084 (PQ)"
+                                7 -> "ARIB STD-B67 (HLG)"
+                                3 -> "BT.709 / SDR"
+                                else -> if (playback.isHdr) "SMPTE ST 2084 (PQ)" else "SDR (Standard)"
+                            }
+                            PlaybackKvRow("Source transfer", xfer)
+                            val declaredHdr = if (playback.isHdr) (playback.hdrFlavor ?: "HDR10") else "SDR (Standard)"
+                            PlaybackKvRow("Declared HDR metadata", declaredHdr)
+
+                            val decType = if (dec?.hardware == DecoderHardware.HARDWARE) "Hardware" else if (dec?.hardware == DecoderHardware.SOFTWARE) "Software (FFmpeg)" else "Native MediaCodec"
+                            PlaybackKvRow("Actual decoder", "${dec?.name ?: "c2.android.video"} ($decType)")
+
+                            val actualHdrOutput = if (playback.isHdr && HdrCodecSelector.isHdr10Supported(context)) {
+                                "Native HDR (Wide Gamut 10-bit)"
+                            } else if (playback.isHdr) {
+                                "SDR Tone-mapped"
+                            } else {
+                                "Standard SDR"
+                            }
+                            PlaybackKvRow("Actual HDR output", actualHdrOutput)
+
+                            val dropped = playback.droppedFrames.takeIf { it >= 0 }?.toString() ?: "0 (Smooth)"
+                            PlaybackKvRow("Dropped frames", dropped, isLast = true)
+                        }
+                    }
+
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "Values observed from active Media3 Android decoder pipeline. Strictly read-only.",
+                        color = Color(0xFFACA5B7),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaybackKvRow(label: String, value: String, isLast: Boolean = false) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 7.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(label, color = Color(0xFFB3ABBF), fontSize = 12.sp)
+            Text(value, color = Color(0xFFF5F1FB), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
+        }
+        if (!isLast) {
+            HorizontalDivider(color = Color(0xFF393543), thickness = 1.dp)
         }
     }
 }
