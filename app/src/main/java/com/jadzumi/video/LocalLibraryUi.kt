@@ -1212,7 +1212,9 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                     }
 
                     if (category == "TV Shows") {
-                        if (filteredSeries.isEmpty()) {
+                        if (state.busy && filteredSeries.isEmpty()) {
+                            item { ExpressiveLibrarySkeleton() }
+                        } else if (filteredSeries.isEmpty()) {
                             item {
                                 LocalPanel {
                                     Icon(Icons.Rounded.Tv, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
@@ -1339,7 +1341,9 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                             }
                         }
                     } else if (category == "Movies") {
-                        if (movieList.isEmpty()) {
+                        if (state.busy && movieList.isEmpty()) {
+                            item { ExpressiveLibrarySkeleton() }
+                        } else if (movieList.isEmpty()) {
                             item {
                                 LocalPanel {
                                     Icon(Icons.Rounded.Movie, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
@@ -1493,25 +1497,38 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                     } else {
                         if (videos.isEmpty()) {
                             item {
-                                LocalPanel {
-                                    Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
-                                    Text(
-                                        if (allVideos.isEmpty()) "Make room for your stories" else "No matching videos",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        if (state.folders.isEmpty()) "Connect a folder using Android's file picker to populate your library."
-                                        else "Pull down to refresh or tap another category.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    if (state.folders.isEmpty()) {
-                                        Spacer(Modifier.height(4.dp))
-                                        Button(onClick = add, shape = RoundedCornerShape(20.dp)) {
-                                            Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
-                                            Spacer(Modifier.width(8.dp))
-                                            Text("Add your first folder")
+                                if (state.busy) {
+                                    ExpressiveLibrarySkeleton()
+                                } else {
+                                    LocalPanel {
+                                        Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                        Text(
+                                            text = when {
+                                                state.folders.isEmpty() -> "Make room for your stories"
+                                                isSearching -> "No matching videos"
+                                                category != "All videos" && category != "Home" -> "No videos in $category"
+                                                else -> "Your library is quiet"
+                                            },
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = when {
+                                                state.folders.isEmpty() -> "Connect a folder using Android's file picker to populate your library."
+                                                isSearching -> "No videos matched \"$query\". Check your spelling or clear filters."
+                                                category != "All videos" && category != "Home" -> "Try selecting All videos or adding media to this category."
+                                                else -> "Pull down to refresh or check folder permissions."
+                                            },
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        if (state.folders.isEmpty()) {
+                                            Spacer(Modifier.height(4.dp))
+                                            Button(onClick = add, shape = RoundedCornerShape(20.dp)) {
+                                                Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
+                                                Spacer(Modifier.width(8.dp))
+                                                Text("Add your first folder")
+                                            }
                                         }
                                     }
                                 }
@@ -3196,6 +3213,49 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
             Image(frame.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         } else {
             ShimmerPlaceholder(Modifier.fillMaxSize())
+        }
+    }
+}
+
+@Composable
+private fun ExpressiveLibrarySkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            repeat(4) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(2f / 3f)
+                        .clip(RoundedCornerShape(16.dp))
+                ) {
+                    ShimmerPlaceholder(Modifier.fillMaxSize())
+                }
+            }
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(14.dp),
+                strokeWidth = 2.dp,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = "Scanning your local library…",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

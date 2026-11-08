@@ -288,12 +288,33 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 
                     // Status Message
                     if (updater.message.isNotBlank()) {
-                        Text(
-                            text = updater.message,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
-                        )
+                        val isError = updater.message.contains("could not be verified", ignoreCase = true) ||
+                                updater.message.contains("failed", ignoreCase = true) ||
+                                updater.message.contains("HTTP", ignoreCase = true)
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = updater.message,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium
+                            )
+                            if (isError && !updater.busy) {
+                                val openUrl = release.htmlUrl.ifBlank { release.apk }
+                                Text(
+                                    text = "Open download in browser ↗",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier
+                                        .clickable {
+                                            try {
+                                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(openUrl)))
+                                            } catch (_: Exception) {}
+                                        }
+                                        .padding(vertical = 2.dp)
+                                )
+                            }
+                        }
                     }
 
                     // Action Buttons (Update Studio Style)

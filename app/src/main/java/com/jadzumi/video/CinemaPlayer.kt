@@ -210,7 +210,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 coroutineScope.launch {
                     playerEnterProgress.animateTo(
                         targetValue = 0f,
-                        animationSpec = tween(360, easing = CubicBezierEasing(0.32f, 0.0f, 0.67f, 0.0f))
+                        animationSpec = tween(480, easing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f))
                     )
                     playback.close()
                 }
@@ -233,8 +233,18 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
         }
     }
 
-    LaunchedEffect(controls, playback.playing, interaction, playback.locked, quickMenuSection, scrub != null) {
-        if (controls && playback.playing && quickMenuSection == null && scrub == null) {
+    val isInteracting = quickMenuSection != null ||
+            toolsSection != null ||
+            showDiagnosticsCapsule ||
+            hudSide != null ||
+            scrub != null ||
+            isFastForwarding ||
+            seekBackAccumulator > 0 ||
+            seekFwdAccumulator > 0 ||
+            playback.locked
+
+    LaunchedEffect(controls, playback.playing, interaction, isInteracting) {
+        if (controls && playback.playing && !isInteracting) {
             delay(3500)
             controls = false
         }

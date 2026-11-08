@@ -901,89 +901,98 @@ fun GeminiGlowingJadzumiLogo(
     size: Dp = 32.dp,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "geminiLogoGlow")
+    val theme = LocalThemeName.current
+    val isAmoled = theme == "AMOLED"
+    val infiniteTransition = rememberInfiniteTransition(label = "livingEmblemGlow")
 
-    // Breathing glow intensity pulse (alive and glooming)
+    // Approved Living Emblem 5-second gentle idle breathing animation (0.42f to 0.73f)
     val glowPulse by infiniteTransition.animateFloat(
-        initialValue = 0.45f,
-        targetValue = 0.95f,
+        initialValue = 0.42f,
+        targetValue = 0.73f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
+            animation = tween(durationMillis = 5000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "geminiPulse"
+        label = "emblemBreathe"
     )
 
-    // Dynamic shimmer offset for the icon's glowing perimeter
-    val shimmerOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
+    // Specular light sweep offset (0f to 1f)
+    val sweepProgress by infiniteTransition.animateFloat(
+        initialValue = -0.3f,
+        targetValue = 1.3f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3200, easing = LinearEasing),
+            animation = tween(durationMillis = 3600, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
-        label = "geminiShimmer"
-    )
-
-    // Breathing micro-scale for the inner play glyph
-    val symbolScale by infiniteTransition.animateFloat(
-        initialValue = 1.0f,
-        targetValue = 1.06f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "geminiSymbolScale"
+        label = "emblemSweep"
     )
 
     val cornerRadius = size * 0.28f
 
-    // Strictly Non-Clickable container — original icon itself glows without any outer floating donut ring
+    // Non-clickable container — three distinct visual layers preserving original asset
     Box(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // 1. Diffuse Ambient Backlight (soft rounded bloom radiating directly behind the squircle tile)
+        // Layer 1 (behind): Living Emblem Halo (soft lavender radial glow)
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .scale(1.10f)
-                .clip(RoundedCornerShape(cornerRadius * 1.12f))
+                .scale(1.35f)
+                .clip(CircleShape)
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF38BDF8).copy(alpha = glowPulse * 0.60f),
-                            Color(0xFF818CF8).copy(alpha = glowPulse * 0.30f),
-                            Color.Transparent
+                        colorStops = arrayOf(
+                            0.0f to Color(0xFFB78BF9).copy(alpha = glowPulse * 0.55f),
+                            0.38f to Color(0xFF8E5FCA).copy(alpha = glowPulse * 0.20f),
+                            0.72f to Color.Transparent
                         )
                     )
                 )
         )
 
-        // 2. Crisp Frosted Glass Tile with luminous breathing border (Non-Clickable)
+        // Layer 2 (middle): Clean surface tile with untouched original Jadzumi symbol
         Surface(
             modifier = Modifier.size(size),
             shape = RoundedCornerShape(cornerRadius),
-            color = if (darkSurface) Color(0xFF0F1B2D) else Color(0xFFF0F6FF),
+            color = when {
+                isAmoled -> Color.Black
+                darkSurface -> Color(0xFF191A22)
+                else -> Color(0xFFF6F1FA)
+            },
             border = BorderStroke(
-                1.25.dp,
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFF64DCFF).copy(alpha = (0.50f + 0.45f * glowPulse).coerceIn(0f, 1f)),
-                        Color(0xFF9B51E0).copy(alpha = (0.40f + 0.40f * glowPulse).coerceIn(0f, 1f)),
-                        Color(0xFF64DCFF).copy(alpha = 0.50f)
-                    ),
-                    start = Offset(shimmerOffset * 80f, 0f),
-                    end = Offset((shimmerOffset + 1f) * 80f, 80f)
-                )
+                1.dp,
+                when {
+                    isAmoled -> Color(0xFF39323D)
+                    darkSurface -> Color(0xFF4D435A).copy(alpha = 0.6f + 0.3f * glowPulse)
+                    else -> Color(0xFFDCC8FF)
+                }
             ),
-            shadowElevation = 6.dp
+            shadowElevation = if (isAmoled) 0.dp else 4.dp
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                // Untouched original vector symbol — NO resizing distortion or whole-logo scaling
                 JadzumiPlaySymbol(
-                    Modifier
-                        .size(size * 0.66f)
-                        .scale(symbolScale)
+                    Modifier.size(size * 0.66f)
+                )
+
+                // Layer 3 (above): Living Emblem Specular Light Sweep overlay
+                val sweepOffset = size.value * sweepProgress
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(cornerRadius))
+                        .background(
+                            Brush.linearGradient(
+                                colorStops = arrayOf(
+                                    0.0f to Color.Transparent,
+                                    0.5f to Color(0x33F5E4FF),
+                                    1.0f to Color.Transparent
+                                ),
+                                start = Offset(sweepOffset - 40f, 0f),
+                                end = Offset(sweepOffset + 40f, size.value)
+                            )
+                        )
                 )
             }
         }

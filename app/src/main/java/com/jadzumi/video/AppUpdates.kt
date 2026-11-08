@@ -16,7 +16,14 @@ import java.io.File
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
-data class AppRelease(val tag: String, val notes: String, val apk: String, val size: Long)
+data class AppRelease(
+    val tag: String,
+    val notes: String,
+    val apk: String,
+    val size: Long,
+    val apiUrl: String = "",
+    val htmlUrl: String = ""
+)
 
 /** Explicit update consent is separate from metadata consent. No scheduler or background service. */
 class AppUpdates(app: Application) : AndroidViewModel(app) {
@@ -54,8 +61,10 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
                         require(candidates.size == 1) { "Release must contain exactly one production APK." }
                         val asset = candidates.single()
                         val link = asset.getString("browser_download_url")
+                        val assetApiUrl = asset.optString("url")
+                        val htmlUrl = json.optString("html_url")
                         require(link.startsWith("https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/download/"))
-                        AppRelease(tag, json.optString("body").take(6000), link, asset.getLong("size"))
+                        AppRelease(tag, json.optString("body").take(6000), link, asset.getLong("size"), assetApiUrl, htmlUrl)
                     }
                 }
                 if (found != null && (manual || found.tag != prefs.getString("skipped", null))) {
@@ -85,23 +94,48 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
                     val partial = File(apk.parentFile, "update.part")
                     try {
                         currentCoroutineContext().ensureActive()
-                        connection(target.apk).let { c ->
-                            try {
-                                c.inputStream.use { input -> partial.outputStream().use { output ->
-                                    val buffer = ByteArray(65536); var total = 0L
-                                    while (true) {
-                                        currentCoroutineContext().ensureActive()
-                                        val n = input.read(buffer); if (n < 0) break
-                                        total += n; require(total <= target.size) { "Unexpected APK size." }
-                                        output.write(buffer, 0, n)
-                                        withContext(Dispatchers.Main) { progress = total.toFloat() / target.size }
-                                    }
-                                    require(total == target.size) { "Incomplete APK download." }
-                                } }
-                            } finally { c.disconnect() }
+                        val downloadCandidates = buildList {
+                            if (target.apiUrl.isNotBlank()) {
+                                add(target.apiUrl to "application/octet-stream")
+                            }
+                            add(target.apk to null)
                         }
-                        verify(partial, target.tag)
-                        apk.delete(); require(partial.renameTo(apk))
+                        var downloadSuccess = false
+                        var lastError: Exception? = null
+
+                        for ((url, acceptHeader) in downloadCandidates) {
+                            try {
+                                partial.delete()
+                                currentCoroutineContext().ensureActive()
+                                connection(url, acceptHeader).let { c ->
+                                    try {
+                                        c.inputStream.use { input -> partial.outputStream().use { output ->
+                                            val buffer = ByteArray(65536); var total = 0L
+                                            while (true) {
+                                                currentCoroutineContext().ensureActive()
+                                                val n = input.read(buffer); if (n < 0) break
+                                                total += n; require(total <= target.size) { "Unexpected APK size." }
+                                                output.write(buffer, 0, n)
+                                                withContext(Dispatchers.Main) { progress = total.toFloat() / target.size }
+                                            }
+                                            require(total == target.size) { "Incomplete APK download." }
+                                        } }
+                                    } finally { c.disconnect() }
+                                }
+                                verify(partial, target.tag)
+                                apk.delete(); require(partial.renameTo(apk))
+                                downloadSuccess = true
+                                break
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                lastError = e
+                            }
+                        }
+
+                        if (!downloadSuccess) {
+                            throw lastError ?: IllegalStateException("Download failed")
+                        }
                     } finally { partial.delete() }
                 }
                 downloaded = true; message = "APK verified. Ready to install."
@@ -153,20 +187,56 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
             out.toByteArray()
         } } finally { c.disconnect() }
     }
-    private fun connection(address: String): HttpsURLConnection {
-        var next = address
-        repeat(6) {
+    private fun connection(address: String, accept: String? = null): HttpsURLConnection {
+        var lastException: Exception? = null
+        val maxAttempts = 3
+        for (attempt in 1..maxAttempts) {
+            try {
+                return openConnectionChain(address, accept)
+            } catch (e: Exception) {
+                lastException = e
+                val msg = e.message.orEmpty()
+                val isTransient = msg.contains("502") || msg.contains("503") || msg.contains("504") ||
+                        e is java.net.SocketTimeoutException || e is java.io.InterruptedIOException
+                if (isTransient && attempt < maxAttempts) {
+                    Thread.sleep(1500L * attempt)
+                    continue
+                }
+                throw e
+            }
+        }
+        throw lastException ?: IllegalStateException("Connection failed.")
+    }
+
+    private fun openConnectionChain(initialAddress: String, accept: String?): HttpsURLConnection {
+        var next = initialAddress
+        repeat(8) {
             val url = URL(next)
-            require(url.protocol == "https" && url.host in setOf("api.github.com", "github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com"))
+            val host = url.host.lowercase()
+            val isAllowedHost = host == "api.github.com" ||
+                    host == "github.com" ||
+                    host.endsWith(".github.com") ||
+                    host.endsWith(".githubusercontent.com") ||
+                    host.endsWith(".amazonaws.com") ||
+                    host.endsWith(".blob.core.windows.net")
+            require(url.protocol == "https" && isAllowedHost) { "Untrusted redirect host: $host" }
             val c = url.openConnection() as HttpsURLConnection
-            c.instanceFollowRedirects = false; c.connectTimeout = 15_000; c.readTimeout = 20_000
+            c.instanceFollowRedirects = false
+            c.connectTimeout = 15_000
+            c.readTimeout = 25_000
             c.setRequestProperty("User-Agent", OnlineMetadataFetcher.USER_AGENT)
+            if (accept != null) {
+                c.setRequestProperty("Accept", accept)
+            }
             val status = try { c.responseCode } catch (e: Exception) { c.disconnect(); throw e }
             if (status in 300..399) {
                 val location = c.getHeaderField("Location"); c.disconnect()
-                next = URL(url, requireNotNull(location)).toString()
+                next = URL(url, requireNotNull(location) { "Missing redirect location." }).toString()
             } else {
-                if (status != 200) { c.disconnect(); error("Server returned HTTP $status.") }
+                if (status != 200 && status != 206) {
+                    c.disconnect()
+                    error("Server returned HTTP $status.")
+                }
                 return c
             }
         }
