@@ -3,6 +3,7 @@ package com.jadzumi.video
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.os.Build
+import android.util.LruCache
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,25 +30,37 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 
-private val previewPermit = Semaphore(1)
+private val previewPermit = Semaphore(2)
+private val previewCache = LruCache<String, Bitmap>(36)
 
 /** Panel 3: Rounded thumbnail card with crisp white border and timestamp overlaid at bottom-center */
 @Composable fun ScrubPreview(video: LocalVideo, position: Long) {
     val context = LocalContext.current.applicationContext
     val target = (position / 2000) * 2000
-    val frame by produceState<Bitmap?>(null, video.identity, target) {
-        value = null
-        delay(150)
-        value = withContext(Dispatchers.IO) {
+    val cacheKey = "${video.identity}_$target"
+
+    val frame by produceState<Bitmap?>(initialValue = previewCache.get(cacheKey), video.identity, target) {
+        val cached = previewCache.get(cacheKey)
+        if (cached != null) {
+            value = cached
+            return@produceState
+        }
+        delay(120)
+        val loaded = withContext(Dispatchers.IO) {
             previewPermit.withPermit {
-                if (Build.VERSION.SDK_INT < 27) null else {
+                previewCache.get(cacheKey) ?: if (Build.VERSION.SDK_INT < 27) null else {
                     val retriever = MediaMetadataRetriever()
                     try {
                         retriever.setDataSource(context, video.uri.toUri())
-                        retriever.getScaledFrameAtTime(target * 1000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 256, 144)
+                        retriever.getScaledFrameAtTime(target * 1000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 256, 144)?.also {
+                            previewCache.put(cacheKey, it)
+                        }
                     } catch (_: Exception) { null } finally { runCatching { retriever.release() } }
                 }
             }
+        }
+        if (loaded != null) {
+            value = loaded
         }
     }
 

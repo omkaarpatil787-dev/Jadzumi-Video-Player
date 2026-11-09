@@ -288,33 +288,56 @@ import androidx.lifecycle.compose.LifecycleEventEffect
                         }
                     }
 
-                    // Status Message
+                    // Status Message & Browser Fallback
                     if (updater.message.isNotBlank()) {
                         val isError = updater.message.contains("could not be verified", ignoreCase = true) ||
                                 updater.message.contains("failed", ignoreCase = true) ||
-                                updater.message.contains("HTTP", ignoreCase = true)
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                updater.message.contains("HTTP", ignoreCase = true) ||
+                                updater.message.contains("timed out", ignoreCase = true) ||
+                                updater.message.contains("unavailable", ignoreCase = true)
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text(
                                 text = updater.message,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                lineHeight = 16.sp
                             )
                             if (isError && !updater.busy) {
                                 val openUrl = release.htmlUrl.ifBlank { release.apk }
-                                Text(
-                                    text = "Open download in browser ↗",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier
-                                        .clickable {
-                                            try {
-                                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(openUrl)))
-                                            } catch (_: Exception) {}
-                                        }
-                                        .padding(vertical = 2.dp)
-                                )
+                                Surface(
+                                    onClick = {
+                                        try {
+                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(openUrl)))
+                                        } catch (_: Exception) {}
+                                    },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                    modifier = Modifier.fillMaxWidth().touchMotion()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.OpenInBrowser,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            text = "Download directly via browser ↗",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

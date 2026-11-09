@@ -131,8 +131,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
     var seekFwdJob by remember(video.identity) { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     val seekDeltaMs = playback.seekIncrementSeconds * 1000L
     val totalSec = (effectiveDuration / 1000).coerceAtLeast(0)
-    val elapsedSec = (playback.position / 1000).coerceAtLeast(0)
-    val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
     val showAnyHud = playback.showPlayerClock || playback.showBatteryPercentage || playback.showRemainingTime
 
     var showDiagnosticsCapsule by remember(video.identity) { mutableStateOf(false) }
@@ -210,7 +208,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                 coroutineScope.launch {
                     playerEnterProgress.animateTo(
                         targetValue = 0f,
-                        animationSpec = tween(480, easing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f))
+                        animationSpec = tween(JadzumiMotion.PlayerDismissDurationMs, easing = JadzumiMotion.PhysicalGeometryEasing)
                     )
                     playback.close()
                 }
@@ -660,7 +658,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                         showClock = playback.showPlayerClock,
                         showBattery = playback.showBatteryPercentage,
                         showRemainingTime = playback.showRemainingTime,
-                        remainingSec = remSec,
+                        remainingSecProvider = { ((effectiveDuration - playback.position) / 1000).coerceAtLeast(0) },
                         hdrBadge = playback.hdrFlavor,
                         bgColor = dynamicFrostedCircleBg,
                         rimColor = dynamicFrostedCircleRim,
@@ -780,7 +778,7 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         showClock = playback.showPlayerClock,
                                         showBattery = playback.showBatteryPercentage,
                                         showRemainingTime = playback.showRemainingTime,
-                                        remainingSec = remSec,
+                                        remainingSecProvider = { ((effectiveDuration - playback.position) / 1000).coerceAtLeast(0) },
                                         hdrBadge = playback.hdrFlavor,
                                         bgColor = dynamicFrostedCircleBg,
                                         rimColor = dynamicFrostedCircleRim,
@@ -3076,6 +3074,7 @@ private fun PlayerStatusPill(
     showBattery: Boolean,
     showRemainingTime: Boolean = false,
     remainingSec: Long? = null,
+    remainingSecProvider: (() -> Long)? = null,
     hdrBadge: String? = null,
     bgColor: Color = Color(0x990A0E17),
     rimColor: Color = Color.White.copy(alpha = 0.22f),
@@ -3106,8 +3105,9 @@ private fun PlayerStatusPill(
         }
     }
 
-    val hasRemaining = showRemainingTime && remainingSec != null && remainingSec > 0
-    val remainingText = if (hasRemaining) "−${compactTimecode(remainingSec!!)}" else ""
+    val actualRemSec = remainingSecProvider?.invoke() ?: remainingSec
+    val hasRemaining = showRemainingTime && actualRemSec != null && actualRemSec > 0
+    val remainingText = if (hasRemaining) "−${compactTimecode(actualRemSec!!)}" else ""
 
     Surface(
         shape = RoundedCornerShape(999.dp),

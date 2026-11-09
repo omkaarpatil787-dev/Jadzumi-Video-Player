@@ -95,10 +95,11 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
                     try {
                         currentCoroutineContext().ensureActive()
                         val downloadCandidates = buildList {
+                            // Prioritize direct CDN browser_download_url first; fallback to GitHub API asset endpoint
+                            add(target.apk to null)
                             if (target.apiUrl.isNotBlank()) {
                                 add(target.apiUrl to "application/octet-stream")
                             }
-                            add(target.apk to null)
                         }
                         var downloadSuccess = false
                         var lastError: Exception? = null
@@ -140,7 +141,15 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
                 }
                 downloaded = true; message = "APK verified. Ready to install."
             } catch (e: CancellationException) { message = "Download canceled."; throw e }
-            catch (e: Exception) { apk.delete(); message = "Update could not be verified or downloaded. ${e.message.orEmpty().take(180)}" }
+            catch (e: Exception) {
+                apk.delete()
+                val err = e.message.orEmpty()
+                message = when {
+                    err.contains("504") -> "Download server timed out (HTTP 504). GitHub is experiencing high traffic. Retry or open in browser."
+                    err.contains("502") || err.contains("503") -> "Download server temporarily unavailable (${err.take(30)}). Retry in a moment."
+                    else -> "Update could not be verified or downloaded. ${err.take(160)}"
+                }
+            }
             finally { busy = false }
         }
     }
@@ -189,7 +198,7 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
     }
     private fun connection(address: String, accept: String? = null): HttpsURLConnection {
         var lastException: Exception? = null
-        val maxAttempts = 3
+        val maxAttempts = 4
         for (attempt in 1..maxAttempts) {
             try {
                 return openConnectionChain(address, accept)
@@ -222,10 +231,10 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
             require(url.protocol == "https" && isAllowedHost) { "Untrusted redirect host: $host" }
             val c = url.openConnection() as HttpsURLConnection
             c.instanceFollowRedirects = false
-            c.connectTimeout = 15_000
-            c.readTimeout = 25_000
+            c.connectTimeout = 20_000
+            c.readTimeout = 45_000
             c.setRequestProperty("User-Agent", OnlineMetadataFetcher.USER_AGENT)
-            if (accept != null) {
+            if (accept != null && (host == "api.github.com" || host.endsWith(".github.com"))) {
                 c.setRequestProperty("Accept", accept)
             }
             val status = try { c.responseCode } catch (e: Exception) { c.disconnect(); throw e }

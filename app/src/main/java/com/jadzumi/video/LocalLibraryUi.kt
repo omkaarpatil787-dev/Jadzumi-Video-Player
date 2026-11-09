@@ -1646,7 +1646,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
 
                             if (isGridView) {
                                 val colCount = if (isPhone) 2 else if (screenMaxWidth >= 900.dp) 4 else 3
-                                items(displayVideos.chunked(colCount), key = { chunk -> chunk.joinToString { it.uri } }) { chunk ->
+                                items(displayVideos.chunked(colCount), key = { chunk -> chunk.firstOrNull()?.uri ?: "" }) { chunk ->
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1851,7 +1851,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                         }
                     }
                     if (isFolderGridView) {
-                        items(state.folders.chunked(2), key = { chunk -> chunk.joinToString { it.uri } }) { chunk ->
+                        items(state.folders.chunked(2), key = { chunk -> chunk.firstOrNull()?.uri ?: "" }) { chunk ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1877,7 +1877,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
                     Text("${videos.size} indexed videos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
                 if (isFolderGridView) {
-                    items(videos.chunked(2), key = { chunk -> chunk.joinToString { it.uri } }) { chunk ->
+                    items(videos.chunked(2), key = { chunk -> chunk.firstOrNull()?.uri ?: "" }) { chunk ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -3071,8 +3071,9 @@ private fun LocalPosterGridCard(
 }
 
 internal object ThumbnailMemory {
-    val cache = object : LruCache<String, Bitmap>(12 * 1024 * 1024) { override fun sizeOf(key: String, value: Bitmap) = value.byteCount }
-    val permits = Semaphore(2)
+    private val maxCacheBytes = ((Runtime.getRuntime().maxMemory() / 7L).coerceIn(32L * 1024 * 1024, 96L * 1024 * 1024)).toInt()
+    val cache = object : LruCache<String, Bitmap>(maxCacheBytes) { override fun sizeOf(key: String, value: Bitmap) = value.byteCount }
+    val permits = Semaphore(4)
 }
 
 fun clearThumbnailMemoryCache() {

@@ -1,3 +1,25 @@
+# Jadzumi v2.0.3 (Performance & Polish Evolution) — "High-Framerate Motion & Resilient Updater" 🌌🎬⚡
+
+A comprehensive performance engineering, UI/UX polish, and stability release delivering silky-smooth 90 Hz / 120 Hz library scrolling, eliminated playback recomposition bottlenecks, cached zero-flash timeline scrubbing, and resilient multi-stage update delivery.
+
+### ⚡ 1. Performance Engineering & Recomposition Isolation
+- **Root Timeline Decoupling**: Completely isolated high-frequency playback position updates (100–250ms) to leaf composables in `CinemaPlayer`. Eliminated redundant full-screen recompositions of HUD controls, gesture detectors, and overlays during active video playback.
+- **Zero-Flash Scrubbing Previews**: Introduced in-memory LRU thumbnail caching (`previewCache`) and smooth frame retention during scrubbing in `ScrubPreview`, eliminating black flashes and disk I/O lag when seeking across timelines.
+- **Dynamic Thumbnail Memory Cache**: Dynamically scaled `ThumbnailMemory.cache` to allocate 1/7th of available heap (32 MB to 96 MB) with 4 concurrent decoding permits, providing stutter-free poster grid scrolling on 90 Hz and 120 Hz displays.
+- **Optimized Lazy List Keys**: Replaced O(N) string concatenation keys in chunked grid rows with O(1) stable identifiers and memoized row allocations (`remember(displayVideos, colCount)`).
+- **Background Halo Overdraw Prevention**: Suspended ambient `PortalHaloBackdrop` drift animations during fullscreen video playback, conserving GPU cycles and extending battery life.
+
+### 🌐 2. Resilient Update Downloader & CDN Fallback
+- **Direct CDN Asset Delivery**: Prioritized direct CDN download paths with multi-hop redirect handling, preventing rate-limiting on unauthenticated GitHub REST API endpoints.
+- **HTTP 504 Gateway Timeout Resilience**: Added intelligent exponential backoff retry handling (up to 4 attempts) for transient CDN edge timeouts.
+- **1-Tap Browser Fallback**: Prominently integrated a direct "Download directly via browser ↗" surface pill inside the update dialog whenever an edge timeout or network error occurs.
+
+### 🎭 3. Cohesive Motion System Polish
+- **Standardized Motion Tokens (`JadzumiMotion`)**: Coordinated timing tokens across the entire interface (Touch feedback 120ms, Tab navigation 210ms, Dialogs/Panels 280ms, Poster morph 500ms, and Player dismissal 420ms).
+- **Physical Geometry Morph**: Polished player dismissal transition with `CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f)` physics, supporting seamless interruption and respecting system reduced-motion accessibility settings.
+
+---
+
 # Jadzumi v2.0.2 (Hotfix & UI Evolution) — "Immersive Now Playing & HDR Master Pipeline" 🌌🎬✨
 
 A precision hotfix and interface refinement release implementing the approved Jadzumi Player v2.0 UI specification, eliminating Picture-in-Picture (PiP) judder, decluttering player settings, perfecting the 10-bit HDR/SDR pipeline, and introducing real-time read-only playback diagnostics.

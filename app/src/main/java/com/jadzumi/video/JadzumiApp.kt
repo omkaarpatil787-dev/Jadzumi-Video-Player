@@ -233,7 +233,7 @@ private val destinations = listOf(
                     PortalHaloBackdrop(
                         theme = effectiveTheme,
                         palette = HaloPalette.fromName(haloPaletteName),
-                        enabled = haloEnabled,
+                        enabled = haloEnabled && (playback.video == null || playback.isDocked || playback.inPip),
                         intensity = haloIntensity,
                         spread = haloSpread,
                         reducedMotion = reducedMotion || !motionStyle.enabled

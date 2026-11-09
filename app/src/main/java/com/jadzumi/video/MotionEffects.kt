@@ -24,6 +24,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/** Cohesive premium motion system specification tokens */
+object JadzumiMotion {
+    val PhysicalGeometryEasing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f)
+    const val TouchFeedbackDurationMs = 120
+    const val TabNavDurationMs = 210
+    const val PanelDurationMs = 280
+    const val PosterMorphDurationMs = 500
+    const val PlayerDismissDurationMs = 420
+}
+
 internal data class MotionStyle(val enabled: Boolean = false, val expressive: Boolean = false, val light: Boolean = true) {
     val damping get() = if (expressive) 0.60f else 0.78f
 }
