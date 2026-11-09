@@ -583,13 +583,23 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                     }
                 }
 
-                // Next-Gen Cinematic Gesture Capsule (Approved Cinema Controls 2.0 Specification)
+                val isSeekFwd = seekGestureIsForward
+                val isLeftSide = hudSide == "Brightness" || (hudSide == "Seek" && !isSeekFwd)
+                val hudAlignment = if (isLeftSide) Alignment.CenterStart else Alignment.CenterEnd
+                val hudEnterAnim = fadeIn(tween(200, easing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f))) +
+                        slideInHorizontally(tween(240, easing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f))) { if (isLeftSide) -it / 2 else it / 2 }
+                val hudExitAnim = fadeOut(tween(180)) +
+                        slideOutHorizontally(tween(200)) { if (isLeftSide) -it / 3 else it / 3 }
+
+                // Non-intrusive Minimal Side-Docked Gesture Pills (Left: Brightness/Rewind, Right: Volume/Forward)
                 AnimatedVisibility(
                     visible = hudSide != null,
-                    enter = fadeIn(tween(260, easing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f))) +
-                            scaleIn(spring(dampingRatio = 0.72f, stiffness = 420f), initialScale = 0.86f),
-                    exit = fadeOut(tween(220)) + scaleOut(targetScale = 0.90f),
-                    modifier = Modifier.align(Alignment.Center)
+                    enter = hudEnterAnim,
+                    exit = hudExitAnim,
+                    modifier = Modifier
+                        .align(hudAlignment)
+                        .safeDrawingPadding()
+                        .padding(start = if (isLeftSide) 28.dp else 0.dp, end = if (!isLeftSide) 28.dp else 0.dp)
                 ) {
                     hudSide?.let { side ->
                         val isBright = side == "Brightness"
@@ -816,7 +826,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     seekGestureIsForward = false
                                     seekGestureDeltaText = "−${seekBackAccumulator}s"
                                     seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
-                                    hudSide = "Seek"
                                     seekBackJob?.cancel()
                                     seekBackJob = coroutineScope.launch {
                                         kotlinx.coroutines.delay(950)
@@ -871,7 +880,6 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     seekGestureIsForward = true
                                     seekGestureDeltaText = "+${seekFwdAccumulator}s"
                                     seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
-                                    hudSide = "Seek"
                                     seekFwdJob?.cancel()
                                     seekFwdJob = coroutineScope.launch {
                                         kotlinx.coroutines.delay(950)
@@ -2508,44 +2516,34 @@ fun FluidGestureCapsule(
     valueText: String,
     fraction: Float,
     icon: ImageVector,
-    modifier: Modifier = Modifier,
-    isCompact: Boolean = false
+    modifier: Modifier = Modifier
 ) {
+    val isSeek = type == "Seek"
     Surface(
         modifier = modifier
-            .widthIn(min = if (isCompact) 58.dp else 140.dp)
+            .wrapContentSize()
             .animateContentSize(spring(dampingRatio = 0.75f, stiffness = 450f)),
-        color = Color(0xED393346),
-        border = BorderStroke(1.dp, Color(0xFF615574)),
-        shape = if (isCompact) CircleShape else RoundedCornerShape(28.dp),
-        shadowElevation = 20.dp
+        color = Color(0xE6262232),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
+        shape = RoundedCornerShape(999.dp),
+        shadowElevation = 14.dp
     ) {
-        Column(
-            modifier = Modifier.padding(
-                horizontal = if (isCompact) 15.dp else 24.dp,
-                vertical = if (isCompact) 15.dp else 18.dp
-            ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = type,
                 tint = Color(0xFFDDC8FF),
-                modifier = Modifier.size(25.dp)
+                modifier = Modifier.size(19.dp)
             )
-            if (!isCompact) {
-                Text(
-                    text = valueText,
-                    color = Color(0xFFF6EFFF),
-                    fontSize = 29.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 29.sp
-                )
+            if (!isSeek) {
                 Box(
                     modifier = Modifier
-                        .width(155.dp)
-                        .height(7.dp)
+                        .width(76.dp)
+                        .height(5.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF60556E))
                 ) {
@@ -2563,6 +2561,12 @@ fun FluidGestureCapsule(
                     )
                 }
             }
+            Text(
+                text = valueText,
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -2581,7 +2585,15 @@ fun PlaybackInfoCapsule(
     val context = androidx.compose.ui.platform.LocalContext.current
 
     val codecLabel = inspectionVideoCodec(vInfo?.mime) ?: vInfo?.mime?.substringAfterLast("/")?.uppercase() ?: "HEVC"
-    val resLabel = if ((vInfo?.height ?: video.height) >= 2160) "4K" else if ((vInfo?.height ?: video.height) >= 1080) "1080p" else "${vInfo?.height ?: video.height}p"
+    val vW = vInfo?.width ?: video.width
+    val vH = vInfo?.height ?: video.height
+    val resLabel = when {
+        vW >= 3800 || vH >= 2000 -> "4K"
+        vW >= 1800 || vH >= 800 -> "1080p"
+        vW >= 1200 || vH >= 600 -> "720p"
+        vH > 0 -> "${vH}p"
+        else -> "1080p"
+    }
     val hdrLabel = if (playback.isHdr) (playback.hdrFlavor ?: "HDR10") else "SDR"
     val summaryPillText = "$codecLabel · $resLabel · $hdrLabel"
 

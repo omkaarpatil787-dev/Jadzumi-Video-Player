@@ -1,3 +1,24 @@
+# Jadzumi v2.0.4 (Hotfix & Interaction Evolution) — "Precision Resolution, Side-Docked HUD & Strict HDR" 🌌🎬✨
+
+A precision hotfix and interaction refinement release perfecting 1080p scope resolution parsing, eliminating false HDR10+ badge claims on standard releases, and replacing intrusive center gesture overlays with non-intrusive minimal horizontal pills docked to their respective screen sides.
+
+### 🎯 1. Precision 1080p / 4K Resolution Classification
+- **Physical Dimension Priority**: Native track resolution (e.g. 1920x800 or 1920x1080 for 2.40:1 scope cinematic releases) now takes absolute precedence over filename tokens, correctly identifying 1080p full HD films.
+- **Word-Boundary Token Matching (`isMedia4K`)**: Eliminated false 4K detections caused by uploader and site tags (such as `4kHdHub`) using strict word-boundary regular expressions (`\b(2160p|4k|uhd)\b`), preventing regular 1080p files from incorrectly displaying 4K badges.
+
+### 🌈 2. Strict HDR & Dolby Vision Hybrid Pipeline
+- **Media-Driven HDR Detection**: Corrected `detectHdrFlavor` so it strictly checks video stream color metadata rather than the tablet's screen capabilities. The app no longer falsely claims `HDR10+ (DV Hybrid)` simply because the device display supports HDR10+.
+- **SDR Integrity Preservation**: Standard dynamic range files (BT.709 transfer or explicit SDR) are never misclassified as HDR from file naming artifacts.
+
+### 🧭 3. Non-Intrusive Side-Docked Gesture Capsules
+- **Minimal Horizontal Side Pills**: Replaced the large centered gesture overlay with sleek, compact horizontal pills docked to their respective sides:
+  - **Left Side**: Minimal Brightness pill with icon, micro progress bar, and percentage.
+  - **Right Side**: Minimal Volume pill with icon, micro progress bar, and percentage.
+  - **Respective Side Double-Tap Seeking**: Backward double-tap seeking docks cleanly on the left (`−10s`), while forward double-tap seeking docks cleanly on the right (`+10s`).
+- **100% Unobscured Center Viewport**: The center of the screen, Play/Pause controls, dialogue, and subtitles remain completely clear and visible during volume, brightness, or seeking interactions.
+
+---
+
 # Jadzumi v2.0.3 (Performance & Polish Evolution) — "High-Framerate Motion & Resilient Updater" 🌌🎬⚡
 
 A comprehensive performance engineering, UI/UX polish, and stability release delivering silky-smooth 90 Hz / 120 Hz library scrolling, eliminated playback recomposition bottlenecks, cached zero-flash timeline scrubbing, and resilient multi-stage update delivery.

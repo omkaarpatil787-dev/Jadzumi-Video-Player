@@ -910,7 +910,7 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
             "In Progress" -> videos.filter { playback.isInProgress(it) }
             "Unwatched" -> videos.filter { playback.savedPosition(it) == 0L && !playback.isWatched(it) }
             "Watched" -> videos.filter { playback.isWatched(it) }
-            "4K UHD" -> videos.filter { it.width >= 3840 || it.height >= 2160 || it.name.contains("2160", true) || it.name.contains("4k", true) || it.name.contains("uhd", true) }
+            "4K UHD" -> videos.filter { isMedia4K(it.width, it.height, it.name) }
             "Recently Added" -> videos.sortedByDescending { it.modified }
             else -> videos
         }
@@ -2832,7 +2832,7 @@ private fun LocalPosterGridCard(
     val isWatched = savedPos >= dur * 0.9f
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progress = (savedPos.toDouble() / dur).toFloat().coerceIn(0f, 1f)
-    val is4k = video.width >= 3840 || video.height >= 2160 || video.name.contains("2160", true) || video.name.contains("4k", true) || video.name.contains("uhd", true)
+    val is4k = isMedia4K(video.width, video.height, video.name)
 
     Surface(
         shape = RoundedCornerShape(20.dp),

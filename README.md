@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.2-2563eb?style=flat-square" alt="Version 2.0.2"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.4-2563eb?style=flat-square" alt="Version 2.0.4"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -51,13 +51,14 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 <sub>Tablet screenshots from v1.3.1. Some labels and version details differ from the current release.</sub>
 
 
-<details>
-<summary><strong>What’s new · v1.8.0 🎬✨</strong></summary>
+<details open>
+<summary><strong>What’s new · v2.0.4 🎬✨</strong></summary>
 
-- **Fix Match & Artwork Matcher**: Disambiguate films and TV series against Cinemeta and IMDb streaming catalogs, or choose custom artwork directly from your device's photo gallery.
-- **Universal 500ms Shared-Element Morph**: Screen and card transitions smoothly stretch physical geometry over a calibrated 0.5s spring curve (`cubic-bezier(0.19, 1.0, 0.22, 1.0)`).
-- **YouTube-Style Cascading Seek Chevrons**: Sleek, compact chevron indicators (`‹‹‹ 10s` and `10s ›››`) with staggered animated alphas replace oversized circular overlays.
-- **Ambient Cinema Horizon**: Diffused atmospheric glow behind hero banners in dark themes and feather-soft porcelain horizon washes in light theme.
+- **Precision 1080p Scope Resolution Mapping**: Direct physical resolution detection prevents widescreen scope 1080p movies (e.g. 1920x800) from being misclassified as 4K.
+- **Strict Word-Boundary Token Matching (`isMedia4K`)**: Release group and uploader website names (such as `4kHdHub`) no longer trigger false 4K flags.
+- **Strict Media3 HDR/SDR Pipeline**: Stream color metadata drives HDR categorization; standard dynamic range files are preserved as clean SDR, and false `HDR10+ (DV Hybrid)` display overrides are eliminated.
+- **Non-Intrusive Side-Docked Gesture Capsules**: Replaced the centered HUD with minimal horizontal pills docked on the left (Brightness & Rewind seeking) and right (Volume & Forward seeking), keeping the screen center and Play/Pause controls completely unobstructed.
+- **High-Framerate 90/120Hz Library Performance**: Dynamic thumbnail LRU caching (32MB–96MB) and recomposition decoupling across timeline and player HUDs.
 
 See [release notes](RELEASE_NOTES.md) for full details.
 

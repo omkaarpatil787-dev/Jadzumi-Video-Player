@@ -88,6 +88,12 @@ fun compactTimecode(seconds: Long): String {
 
 data class CleanPlayerHeading(val primaryTitle: String, val secondaryMeta: String?)
 
+fun isMedia4K(width: Int, height: Int, name: String): Boolean {
+    if (width >= 3800 || height >= 2000) return true
+    if (width >= 1800 || height >= 800) return false
+    return Regex("""\b(2160p|4k|uhd)\b""", RegexOption.IGNORE_CASE).containsMatchIn(name)
+}
+
 private val epRegexSxxExx = Regex("(?i)(?:^|[ ._\\-])s(\\d{1,2})e(\\d{1,3})(?=$|[^0-9])")
 private val epRegexNxNN = Regex("(?i)(?:^|[ ._\\-])(\\d{1,2})x(\\d{1,3})(?=$|[^0-9])")
 private val yearRegex = Regex("(?:^|[ ._\\-(])(19\\d{2}|20\\d{2})(?=$|[ ._\\-)])")
@@ -108,9 +114,15 @@ fun formatCleanPlayerTitle(
     val runtime = formatCompactRuntime(durationMs)
 
     val resLabel = when {
-        width >= 3840 || height >= 2160 || base.contains("2160p", true) || base.contains("4k", true) -> "4K"
-        width >= 1920 || height >= 1080 || base.contains("1080p", true) -> "1080p"
-        width >= 1280 || height >= 720 || base.contains("720p", true) -> "720p"
+        // Priority 1: Physical video dimensions (accounting for 2.40:1 scope e.g. 1920x800)
+        width >= 3800 || height >= 2000 -> "4K"
+        width >= 1800 || height >= 800 -> "1080p"
+        width >= 1200 || height >= 600 -> "720p"
+        width > 0 && height > 0 -> "${height}p"
+        // Priority 2: Safe regex with word boundaries (avoids website names like 4kHdHub)
+        Regex("""\b(2160p|4k|uhd)\b""", RegexOption.IGNORE_CASE).containsMatchIn(base) -> "4K"
+        Regex("""\b(1080p|fhd)\b""", RegexOption.IGNORE_CASE).containsMatchIn(base) -> "1080p"
+        Regex("""\b(720p|hd)\b""", RegexOption.IGNORE_CASE).containsMatchIn(base) -> "720p"
         else -> null
     }
 

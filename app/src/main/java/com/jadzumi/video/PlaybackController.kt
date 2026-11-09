@@ -1091,16 +1091,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     if (format != null) {
                         runtimeVideoFormat = inspectedVideo(format)
                         val colorInfo = format.colorInfo
-                        val isExplicitSdr = colorInfo != null && colorInfo.colorTransfer == C.COLOR_TRANSFER_SDR
                         val formatIsHdr = isHdrFormat(format)
-                        val nameHdr = if (isExplicitSdr) false else (video?.name?.let {
-                            it.contains("hdr10", ignoreCase = true) ||
-                            it.contains("dovi", ignoreCase = true) ||
-                            it.contains("dolby vision", ignoreCase = true) ||
-                            it.contains("hlg", ignoreCase = true) ||
-                            Regex("""\b(hdr|dv)\b""", RegexOption.IGNORE_CASE).containsMatchIn(it)
-                        } ?: false)
-                        val newHdr = if (isExplicitSdr) false else (formatIsHdr || nameHdr)
+                        val isExplicitSdr = (colorInfo != null && colorInfo.colorTransfer == C.COLOR_TRANSFER_SDR) ||
+                                (colorInfo != null && colorInfo.colorSpace == C.COLOR_SPACE_BT709 && !formatIsHdr)
+                        val newHdr = if (isExplicitSdr) false else formatIsHdr
                         hdrFlavor = if (newHdr) detectHdrFlavor(format, video?.name) else null
                         if (isHdr != newHdr) {
                             isHdr = newHdr
@@ -1279,7 +1273,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         }
         val colorInfo = format?.colorInfo
         val transfer = colorInfo?.colorTransfer ?: -1
-        if (colorInfo != null && transfer == C.COLOR_TRANSFER_SDR) return null
+        val colorSpace = colorInfo?.colorSpace ?: -1
+
+        // Strict SDR rejection: If stream declares SDR transfer or BT.709 with non-HDR transfer, it is strictly SDR!
+        if (transfer == C.COLOR_TRANSFER_SDR || (colorSpace == C.COLOR_SPACE_BT709 && transfer != C.COLOR_TRANSFER_ST2084 && transfer != C.COLOR_TRANSFER_HLG)) {
+            return null
+        }
+        if (format != null && !isHdrFormat(format)) {
+            return null
+        }
 
         val name = videoName?.lowercase(Locale.US) ?: ""
         val mime = format?.sampleMimeType ?: ""
@@ -1296,14 +1298,14 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         if (isDv) {
             val app = getApplication<Application>()
             val dvSupported = HdrCodecSelector.isDolbyVisionDisplaySupported(app)
-            val hdr10PlusSupported = HdrCodecSelector.isHdr10PlusSupported(app)
-            return if (dvSupported) "Dolby Vision" else if (hdr10PlusSupported || isHdr10Plus) "HDR10+ (DV Hybrid)" else "HDR10 (DV Hybrid)"
+            // DO NOT claim HDR10+ simply because the display supports HDR10+! Only claim HDR10+ if the media is actually HDR10+!
+            return if (dvSupported) "Dolby Vision" else if (isHdr10Plus) "HDR10+ (DV Hybrid)" else "HDR10 (DV Hybrid)"
         }
 
         if (isHdr10Plus) return "HDR10+"
-        if (transfer == C.COLOR_TRANSFER_ST2084 || name.contains("hdr10") || Regex("""\bhdr\b""", RegexOption.IGNORE_CASE).containsMatchIn(name)) return "HDR10"
+        if (transfer == C.COLOR_TRANSFER_ST2084 || name.contains("hdr10") || Regex("""\bhdr10\b""", RegexOption.IGNORE_CASE).containsMatchIn(name)) return "HDR10"
         if (transfer == C.COLOR_TRANSFER_HLG || name.contains("hlg")) return "HLG"
-        if (colorInfo?.colorSpace == C.COLOR_SPACE_BT2020) return "HDR"
+        if (colorInfo?.colorSpace == C.COLOR_SPACE_BT2020 && transfer != C.COLOR_TRANSFER_SDR) return "HDR"
         return null
     }
 
