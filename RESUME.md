@@ -2,7 +2,7 @@
 <p align="center">An overview of the app, its architecture, and release progress.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.4-2563eb?style=flat-square" alt="Version 2.0.4"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.5-2563eb?style=flat-square" alt="Version 2.0.5"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -18,6 +18,7 @@ FFmpeg decoder fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
+| **v2.0.5 · build 47** | Android 8.0+ · ARM64 | **Jadzumi Pure Overhaul ("Less interface. More cinema.")**: Strictly 3 Tabs on Floating Dock (`Home`, `Library`, `Settings`), Zero Logo on Dock, Clean Matte Emblem (Purged Glowing Halos & Specular Light Sweeps), Pure Yellow (`#FFD600`) Flagship Cinema Accent & AMOLED True Black Surfaces, Pristine Halo-Free Backgrounds |
 | **v2.0.4 · build 46** | Android 8.0+ · ARM64 | Precision 1080p Scope vs 4K Resolution Mapping (`isMedia4K`), Word-Boundary Uploader Tag Disambiguation (`4kHdHub`), Strict Media3 Stream-Driven HDR/SDR Pipeline, Side-Docked Minimal Horizontal Gesture Pills (Left: Brightness/Rewind, Right: Volume/Forward) |
 | **v2.0.3 · build 45** | Android 8.0+ · ARM64 | High-Framerate 90/120Hz Library Performance, Recomposition Decoupling in Leaf Timeline HUD, LRU Cached Scrubbing Previews (`previewCache`), Dynamic Thumbnail Memory (32MB–96MB), Multi-Stage Resilient Updater with 1-Tap Browser Fallback |
 | **v2.0.2 · build 44** | Android 8.0+ · ARM64 | Immersive Now Playing UI (HTML Spec), Adaptive Density & Living Cards, Smooth PiP Transitions, 10-bit SDR/HDR Pipeline Audit, Read-Only Playback Diagnostics, Decluttered Quick Menu |

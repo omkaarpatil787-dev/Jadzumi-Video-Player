@@ -339,7 +339,10 @@ fun MovieDetailsPage(
                                         modifier = Modifier.height(46.dp),
                                         shape = CircleShape,
                                         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.onPrimary
+                                        )
                                     ) {
                                         Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
                                         Spacer(Modifier.width(6.dp))
@@ -402,7 +405,10 @@ fun MovieDetailsPage(
                                         },
                                         modifier = Modifier.fillMaxWidth().height(46.dp),
                                         shape = CircleShape,
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.onPrimary
+                                        )
                                     ) {
                                         Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
                                         Spacer(Modifier.width(8.dp))

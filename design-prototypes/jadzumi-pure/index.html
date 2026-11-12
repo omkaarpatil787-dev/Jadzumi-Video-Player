@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="yellow" data-surface="amoled">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Jadzumi Pure — Complete Interactive Cinema Prototype</title>
+  <style>
+    /* ==========================================================================
+       JADZUMI PURE CINEMA SYSTEM — 100% SELF-CONTAINED CSS
+       ========================================================================== */
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+      /* Pure Yellow Theme (Approved Concept Default) */
+      --accent: #FFD600;
+      --accent-hover: #FFE24A;
+      --accent-contrast: #000000;
+      --accent-subtle: rgba(255, 214, 0, 0.14);
+      --accent-glow: rgba(255, 214, 0, 0.28);
+      --accent-border: rgba(255, 214, 0, 0.40);
+
+      /* AMOLED True Black Surfaces */
+      --bg-app: #000000;
+      --bg-surface: #0E0E0E;
+      --bg-surface-elevated: #161616;
+      --bg-surface-card: #121212;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+
+      /* Text Colors */
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255, 255, 255, 0.72);
+      --text-muted: rgba(255, 255, 255, 0.45);
+      --text-faint: rgba(255, 255, 255, 0.25);
+
+      /* Motion */
+      --ease-cinema: cubic-bezier(0.19, 1, 0.22, 1);
+      --duration-spatial: 420ms;
+      --duration-fast: 180ms;
+
+      /* Metrics */
+      --rail-width: 72px;
+      --bottom-bar-height: 64px;
+      --radius-pill: 9999px;
+      --radius-card: 14px;
+      --radius-surface: 20px;
+    }
+
+    [data-theme="lavender"] {
+      --accent: #BB86FC;
+      --accent-hover: #D7B4FF;
+      --accent-contrast: #130032;
+      --accent-subtle: rgba(187, 134, 252, 0.16);
+      --accent-glow: rgba(187, 134, 252, 0.32);
+      --accent-border: rgba(187, 134, 252, 0.45);
+      --bg-app: #08070D;
+      --bg-surface: #100E1C;
+      --bg-surface-elevated: #18152B;
+      --bg-surface-card: #131024;
+      --border-subtle: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(187, 134, 252, 0.25);
+    }
+
+    [data-surface="charcoal"] {
+      --bg-app: #0D1117;
+      --bg-surface: #161B22;
+      --bg-surface-elevated: #21262D;
+      --bg-surface-card: #181E26;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #050505;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Overall Layout: Top Toolbar + Workspace */
+    .proto-layout {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Control Bar */
+    .proto-toolbar {
+      flex-shrink: 0;
+      background: #0E0E0E;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      z-index: 1000;
+      font-size: 13px;
+    }
+
+    .proto-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .proto-badge {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-weight: 800;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .proto-title {
+      font-weight: 700;
+      color: #FFF;
+      font-size: 14px;
+    }
+
+    .proto-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 3px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .proto-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-right: 2px;
+    }
+
+    .proto-btn {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all var(--duration-fast) ease;
+    }
+
+    .proto-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFF;
+    }
+
+    .proto-btn.active {
+      background: rgba(255, 255, 255, 0.16);
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+
+    .proto-select {
+      background: #181818;
+      color: #FFF;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Workspace */
+    .proto-workspace {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      background: radial-gradient(circle at 50% 30%, #151515 0%, #030303 100%);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Device Frame Container */
+    .device-viewport-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-width: 100%;
+      max-height: 100%;
+      transition: all var(--duration-spatial) var(--ease-cinema);
+    }
+
+    .device-frame {
+      background: #000000;
+      border: 10px solid #222222;
+      border-radius: 32px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      transition: width var(--duration-spatial) var(--ease-cinema), 
+                  height var(--duration-spatial) var(--ease-cinema),
+                  border-radius var(--duration-spatial) var(--ease-cinema);
+    }
+
+    /* Device Formats */
+    .device-frame[data-device="tablet-landscape"] {
+      width: 1080px;
+      height: 675px; /* 16:10 Xiaomi Pad 5 ratio */
+      max-width: 94vw;
+      max-height: 86vh;
+    }
+
+    .device-frame[data-device="tablet-portrait"] {
+      width: 620px;
+      height: 840px;
+      max-width: 94vw;
+      max-height: 86vh;
+    }
+
+    .device-frame[data-device="phone-portrait"] {
+      width: 380px;
+      height: 760px;
+      border-radius: 44px;
+      border-width: 10px;
+      max-width: 94vw;
+      max-height: 86vh;
+    }
+
+    .device-frame[data-device="fullscreen"] {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* Inner App Shell */
+    .app-root {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-app);
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Left Rail (Tablet) */
+    .nav-rail {
+      width: var(--rail-width);
+      height: 100%;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 0;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .emblem-tile {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      margin-bottom: 24px;
+      transition: transform var(--duration-fast) var(--ease-cinema);
+    }
+
+    .emblem-tile:hover {
+      transform: scale(1.05);
+    }
+
+    .rail-items {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .rail-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: all var(--duration-fast) var(--ease-cinema);
+    }
+
+    .rail-btn svg {
+      width: 22px;
+      height: 22px;
+      transition: transform var(--duration-fast) ease;
+    }
+
+    .rail-btn:hover {
+      color: #FFF;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .rail-btn.active {
+      color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .rail-btn.active::before {
+      content: '';
+      position: absolute;
+      left: -10px;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: var(--accent);
+    }
+
+    /* Phone Bottom Bar */
+    .phone-bar {
+      display: none;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--bottom-bar-height);
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      z-index: 50;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 4px;
+    }
+
+    .phone-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 10px;
+    }
+
+    .phone-tab svg { width: 20px; height: 20px; }
+    .phone-tab.active { color: var(--accent); }
+
+    /* App Content */
+    .app-main {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .app-header {
+      height: 56px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-app);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .app-title-group h2 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .app-title-group p {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--duration-fast) ease;
+    }
+
+    .icon-btn:hover {
+      color: #FFF;
+      background: var(--bg-surface-elevated);
+      border-color: var(--border-strong);
+      transform: scale(1.05);
+    }
+
+    /* Screen Viewport */
+    .view-container {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .view-panel {
+      display: none;
+      padding: 24px;
+      min-height: 100%;
+      animation: viewSlideUp 260ms var(--ease-cinema);
+    }
+
+    .view-panel.active {
+      display: block;
+    }
+
+    @keyframes viewSlideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Editorial Hero Card */
+    .hero-banner {
+      width: 100%;
+      height: 300px;
+      border-radius: var(--radius-card);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: flex-end;
+      background: #080808;
+      transition: transform var(--duration-spatial) var(--ease-cinema), box-shadow var(--duration-spatial) ease;
+    }
+
+    .hero-banner:hover {
+      transform: scale(1.008);
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--accent-border);
+    }
+
+    .hero-art-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.85;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.45) 50%, rgba(0, 0, 0, 0.15) 100%),
+                  linear-gradient(90deg, rgba(0, 0, 0, 0.85) 0%, transparent 60%);
+      z-index: 1;
+    }
+
+    .hero-info {
+      position: relative;
+      z-index: 2;
+      padding: 28px;
+      max-width: 600px;
+    }
+
+    .hero-tag {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero-tag::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .hero-headline {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .hero-sub {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 18px;
+      font-weight: 500;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+    }
+
+    .hero-timeline {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      z-index: 3;
+    }
+
+    .hero-timeline-fill {
+      height: 100%;
+      background: var(--accent);
+    }
+
+    /* Buttons */
+    .btn-pill-primary {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-size: 14px;
+      font-weight: 800;
+      padding: 9px 20px;
+      border-radius: var(--radius-pill);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 16px var(--accent-glow);
+      transition: all var(--duration-fast) var(--ease-cinema);
+    }
+
+    .btn-pill-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-pill-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFF;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 9px 18px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--duration-fast) ease;
+    }
+
+    .btn-pill-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--border-strong);
+    }
+
+    /* Section Titles */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .section-head h3 {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .section-head span {
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .section-head span:hover {
+      color: var(--accent);
+    }
+
+    /* Poster Row */
+    .poster-scroll {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+
+    .movie-card {
+      flex-shrink: 0;
+      width: 170px;
+      cursor: pointer;
+      transition: transform var(--duration-fast) var(--ease-cinema);
+    }
+
+    .movie-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .movie-thumb-wrap {
+      width: 170px;
+      height: 240px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg-surface-elevated);
+      position: relative;
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 8px;
+    }
+
+    .movie-thumb-wrap svg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .movie-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      font-size: 9px;
+      font-weight: 800;
+      padding: 3px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .movie-title {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .movie-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Movie Details View */
+    .details-hero-box {
+      width: 100%;
+      height: 350px;
+      border-radius: var(--radius-surface);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px;
+      background: #080808;
+      margin-bottom: 24px;
+    }
+
+    .details-nav-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .details-body {
+      position: relative;
+      z-index: 2;
+      max-width: 680px;
+    }
+
+    .details-h1 {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .details-meta-line {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 18px;
+    }
+
+    .synopsis-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      max-width: 780px;
+      margin-bottom: 24px;
+    }
+
+    /* Spec Pill Grid */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .spec-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .spec-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+
+    .spec-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    /* Immersive Cinema Player View */
+    .cinema-viewport {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .cinema-viewport.active {
+      display: flex;
+      animation: playerFade 320ms var(--ease-cinema);
+    }
+
+    @keyframes playerFade {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .player-bg-art {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.9;
+    }
+
+    .player-hud {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 24px;
+      background: radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+      transition: opacity 280ms ease;
+    }
+
+    .player-hud.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .player-top-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .player-title-box h4 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .player-meta-badges {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .p-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: var(--radius-pill);
+      background: rgba(255, 255, 255, 0.12);
+      color: #FFF;
+    }
+
+    .p-badge.hdr {
+      background: rgba(255, 152, 0, 0.25);
+      color: #FFB74D;
+      border: 1px solid rgba(255, 152, 0, 0.4);
+    }
+
+    /* Player Center Controls */
+    .player-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      z-index: 5;
+    }
+
+    .p-circle-skip {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform var(--duration-fast) ease;
+    }
+
+    .p-circle-skip:hover {
+      transform: scale(1.1);
+      color: var(--accent);
+    }
+
+    .p-circle-play {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 24px var(--accent-glow);
+      transition: transform var(--duration-fast) var(--ease-cinema);
+    }
+
+    .p-circle-play:hover {
+      transform: scale(1.08);
+    }
+
+    /* Edge Gestures (Left Brightness, Right Volume) */
+    .edge-gesture-pill {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 38px;
+      padding: 0 14px;
+      border-radius: var(--radius-pill);
+      background: rgba(16, 16, 16, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+    }
+
+    .edge-gesture-pill.visible {
+      opacity: 1;
+    }
+
+    .edge-gesture-left { left: 24px; }
+    .edge-gesture-right { right: 24px; }
+
+    .gesture-bar-track {
+      width: 60px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+    }
+
+    .gesture-bar-fill {
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .gesture-pct-text {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      min-width: 30px;
+    }
+
+    /* Player Bottom Bar */
+    .player-bottom-strip {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .scrub-timeline {
+      width: 100%;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .scrub-bg {
+      width: 100%;
+      height: 5px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+      transition: height 160ms ease;
+    }
+
+    .scrub-timeline:hover .scrub-bg { height: 8px; }
+
+    .scrub-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 57%;
+      background: var(--accent);
+    }
+
+    .scrub-thumb {
+      position: absolute;
+      top: 50%;
+      left: 57%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #FFF;
+      opacity: 0;
+      transition: opacity 160ms ease;
+    }
+
+    .scrub-timeline:hover .scrub-thumb { opacity: 1; }
+
+    .time-readout {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+
+    .player-footer-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .p-action-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .p-btn-text {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .p-btn-text:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #FFF;
+    }
+
+    /* Modal / Sheets */
+    .sheet-scrim {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .sheet-scrim.active {
+      display: flex;
+    }
+
+    .sheet-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-surface);
+      width: 100%;
+      max-width: 480px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: sheetPop 240ms var(--ease-cinema);
+    }
+
+    @keyframes sheetPop {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sheet-header h4 { font-size: 18px; font-weight: 800; }
+
+    .sheet-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+    }
+
+    .sheet-item:hover { border-color: var(--accent); }
+    .sheet-item.selected { border-color: var(--accent); background: var(--accent-subtle); }
+
+    /* Switch */
+    .switch-ui {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch-ui input { opacity: 0; width: 0; height: 0; }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: rgba(255, 255, 255, 0.2);
+      transition: .25s;
+      border-radius: 24px;
+    }
+
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+    }
+
+    input:checked + .switch-slider { background-color: var(--accent); }
+    input:checked + .switch-slider:before {
+      transform: translateX(20px);
+      background-color: var(--accent-contrast);
+    }
+
+    /* Sliders */
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slider-row-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .range-input {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.15);
+      outline: none;
+    }
+
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    /* Phone Overrides */
+    .device-frame[data-device="phone-portrait"] .nav-rail { display: none; }
+    .device-frame[data-device="phone-portrait"] .phone-bar { display: flex; }
+    .device-frame[data-device="phone-portrait"] .view-panel {
+      padding: 16px;
+      padding-bottom: calc(var(--bottom-bar-height) + 16px);
+    }
+    .device-frame[data-device="phone-portrait"] .hero-banner { height: 240px; }
+    .device-frame[data-device="phone-portrait"] .hero-headline { font-size: 26px; }
+    .device-frame[data-device="phone-portrait"] .details-hero-box { height: 280px; padding: 16px; }
+    .device-frame[data-device="phone-portrait"] .details-h1 { font-size: 28px; }
+  </style>
+</head>
+<body>
+
+  <div class="proto-layout">
+    <!-- Top Tester Bar -->
+    <header class="proto-toolbar">
+      <div class="proto-brand">
+        <span class="proto-badge">Prototype</span>
+        <span class="proto-title">Jadzumi Pure Edition</span>
+      </div>
+
+      <!-- Screen Selector -->
+      <div class="proto-group">
+        <span class="proto-label">Screen:</span>
+        <select id="screenSelect" class="proto-select" onchange="jumpScreen(this.value)">
+          <option value="home">1. Home Screen (Editorial Hero)</option>
+          <option value="details">2. Movie Details ("The Silent Horizon")</option>
+          <option value="player">3. Immersive Cinema Player</option>
+          <option value="library-grid">4. Library (Grid View)</option>
+          <option value="library-list">5. Library (List View)</option>
+          <option value="folders">6. Folder Browser</option>
+          <option value="series-details">7. TV Series & Episode Browser</option>
+          <option value="search">8. Universal Search (Live)</option>
+          <option value="audio-studio">9. Audio Studio (Clarity Booster)</option>
+          <option value="video-enhancer">10. Color Studio / Video Enhancer</option>
+          <option value="modal-audio">11. Audio Track Selector Modal</option>
+          <option value="modal-sub">12. Subtitle & Dual-Sub Modal</option>
+          <option value="modal-speed">13. Playback Speed Selector</option>
+          <option value="modal-storage">14. Storage Cleaner / Analyzer</option>
+          <option value="settings-appearance">15. Settings: Appearance & Accent</option>
+          <option value="settings-playback">16. Settings: Playback & AFR</option>
+          <option value="settings-about">17. Settings: Privacy & About</option>
+          <option value="empty-state">18. Empty Library State</option>
+          <option value="splash">19. Living Splash & Emblem</option>
+        </select>
+      </div>
+
+      <!-- Device Viewport Switcher -->
+      <div class="proto-group">
+        <span class="proto-label">Device:</span>
+        <button class="proto-btn active" data-dev="tablet-landscape" onclick="setDevice('tablet-landscape')">Xiaomi Pad 5 (16:10)</button>
+        <button class="proto-btn" data-dev="tablet-portrait" onclick="setDevice('tablet-portrait')">Pad 5 Portrait</button>
+        <button class="proto-btn" data-dev="phone-portrait" onclick="setDevice('phone-portrait')">Phone Portrait</button>
+        <button class="proto-btn" data-dev="fullscreen" onclick="setDevice('fullscreen')">Responsive</button>
+      </div>
+
+      <!-- Accent Color Explorer -->
+      <div class="proto-group">
+        <span class="proto-label">Accent:</span>
+        <button class="proto-btn active" data-acc="yellow" onclick="setAccent('yellow')">
+          <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#FFD600;margin-right:2px;"></span>
+          Pure Yellow
+        </button>
+        <button class="proto-btn" data-acc="lavender" onclick="setAccent('lavender')">
+          <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#BB86FC;margin-right:2px;"></span>
+          Pure Lavender
+        </button>
+      </div>
+
+      <!-- Surface Mode -->
+      <div class="proto-group">
+        <span class="proto-label">Surface:</span>
+        <button class="proto-btn active" data-surf="amoled" onclick="setSurface('amoled')">AMOLED</button>
+        <button class="proto-btn" data-surf="charcoal" onclick="setSurface('charcoal')">Charcoal</button>
+      </div>
+
+      <!-- Spatial Nav Toggle -->
+      <div class="proto-group">
+        <span class="proto-label">Spatial:</span>
+        <button id="spatialBtn" class="proto-btn active" onclick="toggleSpatial()">✨ Active (420ms)</button>
+      </div>
+    </header>
+
+    <!-- Workspace -->
+    <main class="proto-workspace">
+      <div class="device-viewport-wrapper">
+        <div id="deviceFrame" class="device-frame" data-device="tablet-landscape">
+          <div class="app-root">
+
+            <!-- Tablet Left Rail (Clean Dock: Home, Library, Settings Only - Zero Logo, Zero Bloat) -->
+            <aside class="nav-rail" id="tabletRail">
+              <nav class="rail-items" style="padding-top: 16px; gap: 20px;">
+                <button class="rail-btn active" data-tab="home" onclick="openScreen('home')" title="Homepage">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                </button>
+                <button class="rail-btn" data-tab="library-grid" onclick="openScreen('library-grid')" title="Library">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/></svg>
+                </button>
+                <button class="rail-btn" data-tab="settings-appearance" onclick="openScreen('settings-appearance')" title="Settings">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                </button>
+              </nav>
+            </aside>
+
+            <!-- Phone Bottom Bar (Clean Dock: Homepage, Library, Settings Only) -->
+            <nav class="phone-bar" id="phoneBar">
+              <button class="phone-tab active" data-tab="home" onclick="openScreen('home')">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span>Home</span>
+              </button>
+              <button class="phone-tab" data-tab="library-grid" onclick="openScreen('library-grid')">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/></svg>
+                <span>Library</span>
+              </button>
+              <button class="phone-tab" data-tab="settings-appearance" onclick="openScreen('settings-appearance')">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                <span>Settings</span>
+              </button>
+            </nav>
+
+            <!-- Main App Content -->
+            <div class="app-main">
+              <!-- Top Context Bar -->
+              <header class="app-header">
+                <div class="app-title-group">
+                  <h2>Jadzumi</h2>
+                  <p>Your personal cinema</p>
+                </div>
+                <div class="header-actions">
+                  <button class="icon-btn" onclick="openScreen('search')" title="Search">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  </button>
+                  <button class="icon-btn" onclick="simulateScan()" title="Rescan">
+                    <svg id="scanSvg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  </button>
+                  <button class="icon-btn" onclick="openSheet('modal-video')" title="Color Studio">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20Z"/></svg>
+                  </button>
+                </div>
+              </header>
+
+              <!-- Inner Viewport -->
+              <div class="view-container" id="scrollContainer">
+
+                <!-- 1. HOME SCREEN -->
+                <section id="panel-home" class="view-panel active">
+                  <!-- Continue Watching Hero Banner -->
+                  <div class="hero-banner" onclick="startSpatialJourney()">
+                    <!-- Monochrome Vector Cinematic Artwork -->
+                    <svg class="hero-art-svg" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+                      <defs>
+                        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stop-color="#020202"/><stop offset="100%" stop-color="#181818"/>
+                        </linearGradient>
+                      </defs>
+                      <rect width="1200" height="400" fill="url(#skyGrad)"/>
+                      <!-- Dune Ridges -->
+                      <path d="M0 320 Q300 240 600 290 T1200 260 L1200 400 L0 400 Z" fill="#0C0C0C"/>
+                      <path d="M0 350 Q450 300 800 340 T1200 320 L1200 400 L0 400 Z" fill="#141414"/>
+                      <!-- Lone Astronaut Silhouette -->
+                      <circle cx="820" cy="270" r="16" fill="#E0E0E0"/>
+                      <path d="M808 286 L832 286 L836 330 L804 330 Z" fill="#C0C0C0"/>
+                      <path d="M810 330 L812 370 L828 370 L830 330 Z" fill="#999"/>
+                    </svg>
+                    <div class="hero-overlay"></div>
+                    <div class="hero-info">
+                      <div class="hero-tag">Continue Watching</div>
+                      <h1 class="hero-headline">The Silent Horizon</h1>
+                      <div class="hero-sub">2h 14m · 57% watched · 4K HEVC</div>
+                      <div class="hero-btns">
+                        <button class="btn-pill-primary" onclick="event.stopPropagation(); launchPlayer();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                          Resume
+                        </button>
+                        <button class="btn-pill-secondary" onclick="event.stopPropagation(); openScreen('details');">
+                          Details
+                        </button>
+                      </div>
+                    </div>
+                    <div class="hero-timeline">
+                      <div class="hero-timeline-fill" style="width: 57%;"></div>
+                    </div>
+                  </div>
+
+                  <!-- Your Library Section -->
+                  <div class="section-head">
+                    <h3 onclick="openScreen('library-grid')">Your Library &gt;</h3>
+                    <span onclick="openScreen('library-grid')">View All (42)</span>
+                  </div>
+
+                  <div class="poster-scroll">
+                    <!-- Movie 1 -->
+                    <div class="movie-card" onclick="openDetails('The Silent Horizon', '2026 · 2h 14m · Science Fiction')">
+                      <div class="movie-thumb-wrap">
+                        <svg viewBox="0 0 200 280"><rect width="200" height="280" fill="#161616"/><circle cx="100" cy="110" r="40" fill="#333"/><path d="M40 240 Q100 180 160 240 Z" fill="#222"/></svg>
+                        <span class="movie-badge">4K HEVC</span>
+                      </div>
+                      <div class="movie-title">The Silent Horizon</div>
+                      <div class="movie-meta">2026 · Sci-Fi</div>
+                    </div>
+                    <!-- Movie 2 -->
+                    <div class="movie-card" onclick="openDetails('After the Rain', '2025 · 1h 48m · Drama')">
+                      <div class="movie-thumb-wrap">
+                        <svg viewBox="0 0 200 280"><rect width="200" height="280" fill="#121820"/><path d="M0 160 Q100 120 200 180 L200 280 L0 280 Z" fill="#1B2430"/></svg>
+                        <span class="movie-badge">1080p</span>
+                      </div>
+                      <div class="movie-title">After the Rain</div>
+                      <div class="movie-meta">2025 · Drama</div>
+                    </div>
+                    <!-- Movie 3 -->
+                    <div class="movie-card" onclick="openDetails('Into the Wild', '2024 · 2h 05m · Adventure')">
+                      <div class="movie-thumb-wrap">
+                        <svg viewBox="0 0 200 280"><rect width="200" height="280" fill="#1A1C16"/><polygon points="20,260 100,80 180,260" fill="#2D3325"/></svg>
+                        <span class="movie-badge">HDR10</span>
+                      </div>
+                      <div class="movie-title">Into the Wild</div>
+                      <div class="movie-meta">2024 · Adventure</div>
+                    </div>
+                    <!-- Movie 4 -->
+                    <div class="movie-card" onclick="openDetails('Nocturne', '2025 · 1h 39m · Thriller')">
+                      <div class="movie-thumb-wrap">
+                        <svg viewBox="0 0 200 280"><rect width="200" height="280" fill="#1C1422"/><circle cx="100" cy="140" r="55" fill="#2D1F38"/></svg>
+                        <span class="movie-badge">4K DV</span>
+                      </div>
+                      <div class="movie-title">Nocturne</div>
+                      <div class="movie-meta">2025 · Thriller</div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 2. MOVIE DETAILS SCREEN -->
+                <section id="panel-details" class="view-panel">
+                  <div class="details-hero-box" id="detailsHero">
+                    <!-- Vector Backdrop -->
+                    <svg class="hero-art-svg" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+                      <rect width="1200" height="400" fill="#0A0A0A"/>
+                      <path d="M0 300 Q400 220 800 280 T1200 260 L1200 400 L0 400 Z" fill="#141414"/>
+                      <circle cx="850" cy="260" r="22" fill="#EEE"/>
+                      <path d="M834 282 L866 282 L870 330 L830 330 Z" fill="#BBB"/>
+                    </svg>
+                    <div class="hero-overlay"></div>
+
+                    <div class="details-nav-row">
+                      <button class="icon-btn" onclick="backFromDetails()" title="Back to Library (Preserves Scroll)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+                      </button>
+                      <button class="icon-btn" onclick="alert('Fix Match TMDB Dialog')" title="Fix Match">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                      </button>
+                    </div>
+
+                    <div class="details-body">
+                      <h1 class="details-h1" id="detTitle">The Silent Horizon</h1>
+                      <div class="details-meta-line" id="detMeta">2026 · 2h 14m · Science Fiction</div>
+                      <div class="hero-btns">
+                        <button class="btn-pill-primary" onclick="launchPlayer()">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                          Play
+                        </button>
+                        <button class="btn-pill-secondary" onclick="launchPlayer(true)">Resume (57%)</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p class="synopsis-text">
+                    A quiet expedition across an unfamiliar world becomes a search for what it means to find home. Caught between vast silent dunes and unmapped starways, the crew must decide whether survival is enough.
+                  </p>
+
+                  <div class="specs-grid">
+                    <div class="spec-card"><span class="spec-label">Video</span><span class="spec-val">4K · HEVC (10-bit)</span></div>
+                    <div class="spec-card"><span class="spec-label">Audio</span><span class="spec-val">DD+ 5.1 (E-AC-3)</span></div>
+                    <div class="spec-card"><span class="spec-label">Subtitles</span><span class="spec-val">3 Tracks (SRT/ASS)</span></div>
+                    <div class="spec-card"><span class="spec-label">File Size</span><span class="spec-val">18.4 GB MKV</span></div>
+                  </div>
+                </section>
+
+                <!-- 4. LIBRARY (GRID VIEW) -->
+                <section id="panel-library-grid" class="view-panel">
+                  <div class="section-head">
+                    <div style="display:flex;gap:6px;">
+                      <button class="btn-pill-primary" style="padding:4px 12px;font-size:12px;">All (42)</button>
+                      <button class="btn-pill-secondary" style="padding:4px 12px;font-size:12px;">Movies (28)</button>
+                      <button class="btn-pill-secondary" style="padding:4px 12px;font-size:12px;">TV Shows (14)</button>
+                    </div>
+                    <button class="icon-btn" onclick="openScreen('library-list')" title="Switch to List View">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 14h4v-4H4v4zm0 5h4v-4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z"/></svg>
+                    </button>
+                  </div>
+
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));gap:16px;">
+                    <div class="movie-card" onclick="openDetails('The Silent Horizon', '2026 · 2h 14m · Sci-Fi')">
+                      <div class="movie-thumb-wrap"><svg viewBox="0 0 200 280"><rect width="200" height="280" fill="#181818"/><circle cx="100" cy="110" r="40" fill="#333"/></svg><span class="movie-badge">4K</span></div>
+                      <div class="movie-title">The Silent Horizon</div>
+                    </div>
+                    <div class="movie-card" onclick="openDetails('After the Rain', '2025 · 1h 48m · Drama')">
+                      <div class="movie-thumb-wrap"><svg viewBox="0 0 200 280"><rect width="200" height="280" fill="#121820"/><path d="M0 160 Q100 120 200 180 L200 280 L0 280 Z" fill="#1B2430"/></svg><span class="movie-badge">1080p</span></div>
+                      <div class="movie-title">After the Rain</div>
+                    </div>
+                    <div class="movie-card" onclick="openDetails('Into the Wild', '2024 · 2h 05m · Adventure')">
+                      <div class="movie-thumb-wrap"><svg viewBox="0 0 200 280"><rect width="200" height="280" fill="#1A1C16"/><polygon points="20,260 100,80 180,260" fill="#2D3325"/></svg><span class="movie-badge">HDR10</span></div>
+                      <div class="movie-title">Into the Wild</div>
+                    </div>
+                    <div class="movie-card" onclick="openDetails('Nocturne', '2025 · 1h 39m · Thriller')">
+                      <div class="movie-thumb-wrap"><svg viewBox="0 0 200 280"><rect width="200" height="280" fill="#1C1422"/><circle cx="100" cy="140" r="55" fill="#2D1F38"/></svg><span class="movie-badge">4K DV</span></div>
+                      <div class="movie-title">Nocturne</div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 5. LIBRARY (LIST VIEW) -->
+                <section id="panel-library-list" class="view-panel">
+                  <div class="section-head">
+                    <h3>Library (List View)</h3>
+                    <button class="icon-btn" onclick="openScreen('library-grid')" title="Switch to Grid View">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/></svg>
+                    </button>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div class="sheet-item" onclick="openDetails('The Silent Horizon', '2026 · 2h 14m · Sci-Fi')">
+                      <div>
+                        <div style="font-weight:700;">The Silent Horizon</div>
+                        <div style="font-size:12px;color:var(--text-muted);">2026 · 2h 14m · 4K HEVC</div>
+                      </div>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                    <div class="sheet-item" onclick="openDetails('After the Rain', '2025 · 1h 48m · Drama')">
+                      <div>
+                        <div style="font-weight:700;">After the Rain</div>
+                        <div style="font-size:12px;color:var(--text-muted);">2025 · 1h 48m · 1080p AVC</div>
+                      </div>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 6. FOLDER BROWSER -->
+                <section id="panel-folders" class="view-panel">
+                  <div class="section-head"><h3>Folders</h3></div>
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div class="sheet-item" onclick="openScreen('library-grid')">
+                      <div>
+                        <div style="font-weight:700;">📁 Movies</div>
+                        <div style="font-size:12px;color:var(--text-muted);">28 items · /storage/emulated/0/Movies</div>
+                      </div>
+                      <span>&gt;</span>
+                    </div>
+                    <div class="sheet-item" onclick="openScreen('series-details')">
+                      <div>
+                        <div style="font-weight:700;">📁 Series & TV</div>
+                        <div style="font-size:12px;color:var(--text-muted);">14 items · /storage/emulated/0/Series</div>
+                      </div>
+                      <span>&gt;</span>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 7. TV SERIES DETAILS -->
+                <section id="panel-series-details" class="view-panel">
+                  <div class="details-hero-box">
+                    <svg class="hero-art-svg" viewBox="0 0 1200 400"><rect width="1200" height="400" fill="#121820"/><circle cx="600" cy="200" r="90" fill="#1F2A38"/></svg>
+                    <div class="hero-overlay"></div>
+                    <div class="details-nav-row"><button class="icon-btn" onclick="openScreen('home')">&lt;</button></div>
+                    <div class="details-body">
+                      <h1 class="details-h1">Solaris Station</h1>
+                      <div class="details-meta-line">Season 1 · 8 Episodes · 1080p</div>
+                      <button class="btn-pill-primary" onclick="launchPlayer()">Play S1:E1</button>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 8. UNIVERSAL SEARCH -->
+                <section id="panel-search" class="view-panel">
+                  <div style="display:flex;align-items:center;gap:10px;background:var(--bg-surface);padding:10px 16px;border-radius:var(--radius-pill);border:1px solid var(--border-subtle);margin-bottom:20px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" placeholder="Search titles, actors, genres..." style="flex:1;background:transparent;border:none;outline:none;color:#FFF;font-size:14px;">
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div class="sheet-item" onclick="openDetails('The Silent Horizon', '2026 · Sci-Fi')">
+                      <div><div style="font-weight:700;">The Silent Horizon</div><div style="font-size:12px;color:var(--text-muted);">2026 · 4K HEVC</div></div>
+                      <span>Open</span>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 9. AUDIO STUDIO -->
+                <section id="panel-audio-studio" class="view-panel">
+                  <div class="section-head"><h3>Audio Studio</h3></div>
+                  <div style="display:flex;flex-direction:column;gap:14px;max-width:580px;">
+                    <div class="spec-card">
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div><div style="font-weight:700;">Dialogue Clarity Booster</div><div style="font-size:12px;color:var(--text-muted);">Bandpass speech enhancer</div></div>
+                        <label class="switch-ui"><input type="checkbox" checked><span class="switch-slider"></span></label>
+                      </div>
+                      <div class="slider-row" style="margin-top:10px;">
+                        <div class="slider-row-labels"><span>Boost Level</span><span>+4.0 dB</span></div>
+                        <input type="range" class="range-input" min="0" max="10" value="4">
+                      </div>
+                    </div>
+
+                    <div class="spec-card">
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div><div style="font-weight:700;">Night Mode (DRC)</div><div style="font-size:12px;color:var(--text-muted);">Compress loud dynamics</div></div>
+                        <label class="switch-ui"><input type="checkbox"><span class="switch-slider"></span></label>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 15. SETTINGS: APPEARANCE -->
+                <section id="panel-settings-appearance" class="view-panel">
+                  <div class="section-head"><h3>Appearance &amp; Theme</h3></div>
+                  <div style="display:flex;flex-direction:column;gap:14px;max-width:580px;">
+                    <div class="spec-card">
+                      <div style="font-weight:700;margin-bottom:8px;">Accent Exploration</div>
+                      <div style="display:flex;gap:10px;">
+                        <button class="btn-pill-primary" onclick="setAccent('yellow')">🟡 Pure Yellow</button>
+                        <button class="btn-pill-secondary" onclick="setAccent('lavender')">🟣 Pure Lavender</button>
+                      </div>
+                    </div>
+                    <div class="spec-card">
+                      <div style="font-weight:700;margin-bottom:8px;">Surface Treatment</div>
+                      <div style="display:flex;gap:10px;">
+                        <button class="btn-pill-secondary" onclick="setSurface('amoled')">AMOLED Black</button>
+                        <button class="btn-pill-secondary" onclick="setSurface('charcoal')">Charcoal Cinema</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 16. SETTINGS: PLAYBACK -->
+                <section id="panel-settings-playback" class="view-panel">
+                  <div class="section-head"><h3>Playback Settings</h3></div>
+                  <div style="display:flex;flex-direction:column;gap:14px;max-width:580px;">
+                    <div class="spec-card">
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div><div style="font-weight:700;">Auto Frame Rate (AFR)</div><div style="font-size:12px;color:var(--text-muted);">Xiaomi Pad 5 120Hz/60Hz matching</div></div>
+                        <label class="switch-ui"><input type="checkbox" checked><span class="switch-slider"></span></label>
+                      </div>
+                    </div>
+                    <div class="spec-card">
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div><div style="font-weight:700;">Stream-Driven HDR Pipeline</div><div style="font-size:12px;color:var(--text-muted);">Strict container inspection</div></div>
+                        <label class="switch-ui"><input type="checkbox" checked><span class="switch-slider"></span></label>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 17. SETTINGS: PRIVACY & ABOUT -->
+                <section id="panel-settings-about" class="view-panel">
+                  <div class="section-head"><h3>Privacy &amp; About</h3></div>
+                  <div class="spec-card" style="max-width:580px;">
+                    <div style="font-weight:800;font-size:16px;">Jadzumi Player · Pure Edition</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin:4px 0 10px 0;">Version 2.0.4 (Build 46)</div>
+                    <p style="font-size:13px;line-height:1.6;color:var(--text-secondary);">
+                      100% Offline-First. No network telemetry. Your library metadata and viewing history remain exclusively on your device.
+                    </p>
+                  </div>
+                </section>
+
+                <!-- 18. EMPTY STATE -->
+                <section id="panel-empty-state" class="view-panel">
+                  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;text-align:center;gap:12px;">
+                    <div style="width:64px;height:64px;border-radius:50%;background:var(--accent-subtle);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;">📁</div>
+                    <h3 style="font-size:20px;font-weight:800;">Your Library is Empty</h3>
+                    <p style="color:var(--text-muted);font-size:13px;max-width:320px;">Choose a directory to scan local videos into your personal cinema.</p>
+                    <button class="btn-pill-primary" onclick="openScreen('folders')">Add Folder</button>
+                  </div>
+                </section>
+
+                <!-- 19. SPLASH SCREEN -->
+                <section id="panel-splash" class="view-panel">
+                  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;gap:18px;">
+                    <div class="emblem-tile" style="width:90px;height:90px;border-radius:24px;">
+                      <svg width="54" height="54" viewBox="0 0 120 120" fill="none">
+                        <path d="M41 18 Q41 12 49 16 L103 48 Q111 53 111 62 L111 93 Q111 102 102 98 L41 64 Z" fill="url(#railWing)"/>
+                        <path d="M20 40 Q20 30 30 36 L76 62 Q86 68 76 75 L30 104 Q20 110 20 99 Z" fill="#FFFFFF"/>
+                      </svg>
+                    </div>
+                    <h2 style="font-size:26px;font-weight:800;">Jadzumi Player</h2>
+                    <p style="font-size:12px;color:var(--accent);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;">Pure Edition</p>
+                    <button class="btn-pill-primary" onclick="openScreen('home')">Enter Cinema</button>
+                  </div>
+                </section>
+
+              </div><!-- /view-container -->
+            </div><!-- /app-main -->
+
+            <!-- IMMERSIVE CINEMA PLAYER (16:10 / 16:9 Canvas) -->
+            <div id="playerScreen" class="cinema-viewport">
+              <svg class="player-bg-art" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+                <rect width="1600" height="900" fill="#000"/>
+                <path d="M0 650 Q400 500 900 600 T1600 540 L1600 900 L0 900 Z" fill="#111"/>
+                <circle cx="1050" cy="560" r="30" fill="#DDD"/>
+                <path d="M1028 590 L1072 590 L1076 670 L1024 670 Z" fill="#888"/>
+              </svg>
+
+              <div class="player-hud" id="playerHud" onclick="toggleHud()">
+                <!-- Top Strip -->
+                <div class="player-top-strip" onclick="event.stopPropagation()">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="icon-btn" onclick="backFromPlayer()" title="Back to Details">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <div class="player-title-box">
+                      <h4 id="playerMovieTitle">The Silent Horizon</h4>
+                      <div class="player-meta-badges">
+                        <span class="p-badge">4K · 2160p</span>
+                        <span class="p-badge hdr">HDR10 (DV Hybrid)</span>
+                        <span class="p-badge">E-AC-3 5.1</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:8px;">
+                    <button class="icon-btn" onclick="openSheet('modal-sub')">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>
+                    </button>
+                    <button class="icon-btn" onclick="openSheet('modal-audio')">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                    </button>
+                    <button class="icon-btn" onclick="openSheet('modal-video')">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Center Controls -->
+                <div class="player-center" onclick="event.stopPropagation()">
+                  <button class="p-circle-skip" onclick="seekRelative(-10)" title="Rewind 10s">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 19l-9-7 9-7v14zM22 19l-9-7 9-7v14z"/></svg>
+                  </button>
+                  <button class="p-circle-play" id="playBtnSvg" onclick="togglePlayState()" title="Play / Pause">
+                    <svg id="pPlayIcon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                  </button>
+                  <button class="p-circle-skip" onclick="seekRelative(10)" title="Forward 10s">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5l9 7-9 7V5zM2 5l9 7-9 7V5z"/></svg>
+                  </button>
+                </div>
+
+                <!-- Side Edge Gesture Pills (Left: Brightness, Right: Volume) -->
+                <div id="edgeBrightPill" class="edge-gesture-pill edge-gesture-left">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                  <div class="gesture-bar-track"><div id="brightFill" class="gesture-bar-fill" style="width:78%;"></div></div>
+                  <span id="brightText" class="gesture-pct-text">78%</span>
+                </div>
+
+                <div id="edgeVolPill" class="edge-gesture-pill edge-gesture-right">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                  <div class="gesture-bar-track"><div id="volFill" class="gesture-bar-fill" style="width:65%;"></div></div>
+                  <span id="volText" class="gesture-pct-text">65%</span>
+                </div>
+
+                <!-- Bottom Strip -->
+                <div class="player-bottom-strip" onclick="event.stopPropagation()">
+                  <div class="scrub-timeline" id="scrubBar" onclick="scrubTimeline(event)">
+                    <div class="scrub-bg"><div class="scrub-fill" id="scrubProgress" style="width:57%;"></div></div>
+                    <div class="scrub-thumb" id="scrubThumb" style="left:57%;"></div>
+                  </div>
+                  <div class="time-readout">
+                    <span id="pTimeNow">57:18</span>
+                    <span>2:14:00</span>
+                  </div>
+
+                  <div class="player-footer-actions">
+                    <div class="p-action-group">
+                      <button class="p-btn-text" onclick="cycleAspect()"><span id="aspectText">2.40:1 Scope</span></button>
+                      <button class="p-btn-text" onclick="openSheet('modal-speed')"><span id="speedText">1.0× Speed</span></button>
+                    </div>
+                    <div class="p-action-group">
+                      <button class="p-btn-text" onclick="pulseGesture('bright')">Brightness</button>
+                      <button class="p-btn-text" onclick="pulseGesture('vol')">Volume</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div><!-- /cinema-viewport -->
+
+          </div><!-- /app-root -->
+        </div><!-- /device-frame -->
+      </div><!-- /device-viewport-wrapper -->
+    </main>
+
+    <!-- Modal Sheets -->
+    <div id="modal-audio" class="sheet-scrim" onclick="closeSheet()">
+      <div class="sheet-card" onclick="event.stopPropagation()">
+        <div class="sheet-header"><h4>Audio Tracks</h4><button class="icon-btn" onclick="closeSheet()">✕</button></div>
+        <div class="sheet-item selected"><div><div style="font-weight:700;">1. English [Original]</div><div style="font-size:12px;color:var(--text-muted);">Dolby Digital Plus 5.1 · 640 kbps</div></div><span class="proto-badge">Active</span></div>
+        <div class="sheet-item"><div><div style="font-weight:700;">2. Hindi Dubbed</div><div style="font-size:12px;color:var(--text-muted);">Dolby Digital Plus 5.1</div></div></div>
+      </div>
+    </div>
+
+    <div id="modal-sub" class="sheet-scrim" onclick="closeSheet()">
+      <div class="sheet-card" onclick="event.stopPropagation()">
+        <div class="sheet-header"><h4>Subtitles</h4><button class="icon-btn" onclick="closeSheet()">✕</button></div>
+        <div class="sheet-item selected"><div><div style="font-weight:700;">English [SDH]</div><div style="font-size:12px;color:var(--text-muted);">Embedded SRT</div></div><span class="proto-badge">Active</span></div>
+        <div class="sheet-item"><div><div style="font-weight:700;">Spanish</div><div style="font-size:12px;color:var(--text-muted);">ASS Track</div></div></div>
+        <div class="sheet-item"><div><div style="font-weight:700;">Off</div><div style="font-size:12px;color:var(--text-muted);">No subtitles</div></div></div>
+      </div>
+    </div>
+
+    <div id="modal-speed" class="sheet-scrim" onclick="closeSheet()">
+      <div class="sheet-card" onclick="event.stopPropagation()">
+        <div class="sheet-header"><h4>Playback Speed</h4><button class="icon-btn" onclick="closeSheet()">✕</button></div>
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
+          <button class="btn-pill-secondary" onclick="setSpeed('0.75×')">0.75×</button>
+          <button class="btn-pill-primary" onclick="setSpeed('1.0×')">1.0× Normal</button>
+          <button class="btn-pill-secondary" onclick="setSpeed('1.25×')">1.25×</button>
+          <button class="btn-pill-secondary" onclick="setSpeed('1.5×')">1.5×</button>
+          <button class="btn-pill-secondary" onclick="setSpeed('2.0×')">2.0×</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-storage" class="sheet-scrim" onclick="closeSheet()">
+      <div class="sheet-card" onclick="event.stopPropagation()">
+        <div class="sheet-header"><h4>Storage Cleaner</h4><button class="icon-btn" onclick="closeSheet()">✕</button></div>
+        <div class="spec-card">
+          <div style="font-weight:700;">Video Storage Used</div>
+          <div style="font-size:24px;font-weight:800;color:var(--accent);margin:4px 0;">64.2 GB</div>
+          <div style="font-size:12px;color:var(--text-muted);">42 video files across 3 directories</div>
+        </div>
+        <button class="btn-pill-primary" onclick="alert('Watched media cleaned!'); closeSheet();">Clean 14.2 GB Watched Files</button>
+      </div>
+    </div>
+
+    <div id="modal-video" class="sheet-scrim" onclick="closeSheet()">
+      <div class="sheet-card" onclick="event.stopPropagation()">
+        <div class="sheet-header"><h4>Color Studio · Video Enhancer</h4><button class="icon-btn" onclick="closeSheet()">✕</button></div>
+        <div class="slider-row">
+          <div class="slider-row-labels"><span>Contrast</span><span>1.05×</span></div>
+          <input type="range" class="range-input" min="0.8" max="1.4" step="0.05" value="1.05">
+        </div>
+        <div class="slider-row">
+          <div class="slider-row-labels"><span>Saturation</span><span>1.10×</span></div>
+          <input type="range" class="range-input" min="0.7" max="1.5" step="0.05" value="1.10">
+        </div>
+        <button class="btn-pill-primary" onclick="closeSheet()">Apply Enhancer</button>
+      </div>
+    </div>
+  </div><!-- /proto-layout -->
+
+  <!-- ========================================================================
+       INLINE JS ENGINE (100% Reliable Offline Execution)
+       ======================================================================== -->
+  <script>
+    const appState = {
+      view: 'home',
+      prevView: 'home',
+      libraryScroll: 0,
+      isPlaying: true,
+      seconds: 3438,
+      totalSeconds: 8040,
+      aspect: '2.40:1 Scope',
+      speed: '1.0×',
+      bright: 78,
+      vol: 65,
+      spatial: true,
+      hudTimer: null
+    };
+
+    function openScreen(viewId) {
+      const scrollEl = document.getElementById('scrollContainer');
+      if (appState.view === 'home' || appState.view.startsWith('library')) {
+        appState.libraryScroll = scrollEl.scrollTop;
+      }
+
+      document.getElementById('playerScreen').classList.remove('active');
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+
+      const target = document.getElementById(`panel-${viewId}`);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.rail-btn, .phone-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === viewId);
+      });
+
+      appState.prevView = appState.view;
+      appState.view = viewId;
+
+      if (viewId === 'home' || viewId.startsWith('library')) {
+        setTimeout(() => { scrollEl.scrollTop = appState.libraryScroll; }, 40);
+      }
+
+      const sel = document.getElementById('screenSelect');
+      if (sel) sel.value = viewId;
+    }
+
+    function jumpScreen(val) {
+      if (val === 'player') {
+        launchPlayer();
+      } else if (val.startsWith('modal-')) {
+        openSheet(val);
+      } else {
+        closeSheet();
+        openScreen(val);
+      }
+    }
+
+    function startSpatialJourney() {
+      openDetails('The Silent Horizon', '2026 · 2h 14m · Science Fiction');
+    }
+
+    function openDetails(title, meta) {
+      document.getElementById('detTitle').textContent = title;
+      document.getElementById('detMeta').textContent = meta;
+
+      const hero = document.getElementById('detailsHero');
+      if (appState.spatial) {
+        hero.style.transition = 'transform 420ms cubic-bezier(0.19, 1, 0.22, 1), opacity 420ms ease';
+        hero.style.transform = 'scale(0.96)';
+        openScreen('details');
+        requestAnimationFrame(() => { hero.style.transform = 'scale(1)'; });
+      } else {
+        openScreen('details');
+      }
+    }
+
+    function backFromDetails() {
+      openScreen(appState.prevView || 'home');
+    }
+
+    function launchPlayer(isResume = false) {
+      const p = document.getElementById('playerScreen');
+      if (appState.spatial) {
+        p.style.transition = 'transform 420ms cubic-bezier(0.19, 1, 0.22, 1), opacity 420ms ease';
+        p.style.transform = 'scale(1.05)';
+        p.classList.add('active');
+        requestAnimationFrame(() => { p.style.transform = 'scale(1)'; });
+      } else {
+        p.classList.add('active');
+      }
+      appState.view = 'player';
+      appState.isPlaying = true;
+      resetHudTimer();
+    }
+
+    function backFromPlayer() {
+      const p = document.getElementById('playerScreen');
+      p.classList.remove('active');
+      openScreen('details');
+    }
+
+    function togglePlayState() {
+      appState.isPlaying = !appState.isPlaying;
+      const icon = document.getElementById('pPlayIcon');
+      if (appState.isPlaying) {
+        icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+      } else {
+        icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+      }
+      resetHudTimer();
+    }
+
+    function seekRelative(delta) {
+      appState.seconds = Math.max(0, Math.min(appState.totalSeconds, appState.seconds + delta));
+      updateScrubUI();
+      resetHudTimer();
+      pulseGesture(delta < 0 ? 'bright' : 'vol');
+    }
+
+    function scrubTimeline(e) {
+      const bar = document.getElementById('scrubBar');
+      const rect = bar.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      appState.seconds = Math.floor(pct * appState.totalSeconds);
+      updateScrubUI();
+      resetHudTimer();
+    }
+
+    function updateScrubUI() {
+      const ratio = appState.seconds / appState.totalSeconds;
+      const pct = (ratio * 100).toFixed(1) + '%';
+      document.getElementById('scrubProgress').style.width = pct;
+      document.getElementById('scrubThumb').style.left = pct;
+
+      const m = Math.floor(appState.seconds / 60);
+      const s = appState.seconds % 60;
+      document.getElementById('pTimeNow').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function pulseGesture(type) {
+      if (type === 'bright') {
+        appState.bright = (appState.bright + 5) > 100 ? 40 : appState.bright + 5;
+        const pill = document.getElementById('edgeBrightPill');
+        document.getElementById('brightFill').style.width = appState.bright + '%';
+        document.getElementById('brightText').textContent = appState.bright + '%';
+        pill.classList.add('visible');
+        clearTimeout(pill._timer);
+        pill._timer = setTimeout(() => pill.classList.remove('visible'), 1600);
+      } else {
+        appState.vol = (appState.vol + 5) > 100 ? 30 : appState.vol + 5;
+        const pill = document.getElementById('edgeVolPill');
+        document.getElementById('volFill').style.width = appState.vol + '%';
+        document.getElementById('volText').textContent = appState.vol + '%';
+        pill.classList.add('visible');
+        clearTimeout(pill._timer);
+        pill._timer = setTimeout(() => pill.classList.remove('visible'), 1600);
+      }
+    }
+
+    function toggleHud() {
+      const hud = document.getElementById('playerHud');
+      hud.classList.toggle('hidden');
+    }
+
+    function resetHudTimer() {
+      clearTimeout(appState.hudTimer);
+      const hud = document.getElementById('playerHud');
+      hud.classList.remove('hidden');
+      appState.hudTimer = setTimeout(() => {
+        if (appState.isPlaying && appState.view === 'player') {
+          hud.classList.add('hidden');
+        }
+      }, 3200);
+    }
+
+    function cycleAspect() {
+      const modes = ['2.40:1 Scope', '16:9 Fit', 'Stretch', 'Original'];
+      const idx = (modes.indexOf(appState.aspect) + 1) % modes.length;
+      appState.aspect = modes[idx];
+      document.getElementById('aspectText').textContent = appState.aspect;
+    }
+
+    function setSpeed(sp) {
+      appState.speed = sp;
+      document.getElementById('speedText').textContent = sp + ' Speed';
+      closeSheet();
+    }
+
+    function setDevice(type) {
+      document.getElementById('deviceFrame').setAttribute('data-device', type);
+      document.querySelectorAll('[data-dev]').forEach(b => b.classList.toggle('active', b.dataset.dev === type));
+    }
+
+    function setAccent(color) {
+      document.documentElement.setAttribute('data-theme', color);
+      document.querySelectorAll('[data-acc]').forEach(b => b.classList.toggle('active', b.dataset.acc === color));
+    }
+
+    function setSurface(mode) {
+      document.documentElement.setAttribute('data-surface', mode);
+      document.querySelectorAll('[data-surf]').forEach(b => b.classList.toggle('active', b.dataset.surf === mode));
+    }
+
+    function toggleSpatial() {
+      appState.spatial = !appState.spatial;
+      const b = document.getElementById('spatialBtn');
+      b.classList.toggle('active', appState.spatial);
+      b.textContent = appState.spatial ? '✨ Active (420ms)' : '⚡ Reduced Motion';
+    }
+
+    function openSheet(id) {
+      closeSheet();
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+    }
+
+    function closeSheet() {
+      document.querySelectorAll('.sheet-scrim').forEach(s => s.classList.remove('active'));
+    }
+
+    function simulateScan() {
+      const svg = document.getElementById('scanSvg');
+      svg.style.transition = 'transform 1s linear';
+      svg.style.transform = 'rotate(720deg)';
+      setTimeout(() => {
+        svg.style.transition = 'none';
+        svg.style.transform = 'rotate(0deg)';
+        alert('Library Rescan Complete · 42 titles verified.');
+      }, 1000);
+    }
+
+    // Playback clock tick
+    setInterval(() => {
+      if (appState.isPlaying && appState.view === 'player') {
+        appState.seconds = (appState.seconds + 1) % appState.totalSeconds;
+        updateScrubUI();
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

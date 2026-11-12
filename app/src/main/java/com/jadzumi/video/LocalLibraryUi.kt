@@ -374,12 +374,15 @@ private fun HeroMoviePager(
                                     Button(
                                         onClick = item.onPlay,
                                         shape = CircleShape,
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.onPrimary
+                                        ),
                                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
                                     ) {
-                                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                        Icon(Icons.Rounded.PlayArrow, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp))
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        Text("Play", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                     }
                                     Surface(
                                         onClick = item.onPlay,

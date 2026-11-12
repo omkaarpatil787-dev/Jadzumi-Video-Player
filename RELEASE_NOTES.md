@@ -1,3 +1,21 @@
+# Jadzumi v2.0.5 (Pure UI/UX Overhaul) — "Less interface. More cinema." 🌌🎬⚡
+
+A milestone editorial overhaul redesigning Jadzumi Player with the approved **Jadzumi Pure** visual direction, strictly decluttering navigation chrome, eliminating glowing emblem artifacts, and adopting high-contrast Pure Yellow cinema styling.
+
+### 🖤 1. Navigation Dock Reductions & Logo Removal
+- **Strictly 3 Navigation Destinations**: The floating frosted dock has been streamlined down to **Home**, **Library**, and **Settings**, removing unnecessary clutter and distraction while retaining quick access to the entire movie and television catalog.
+- **Zero Logo on Dock**: The emblem and branding elements have been removed from the navigation dock, maximizing touch targets and presenting an unobstructed, content-first navigation experience.
+
+### 🌟 2. Glowing Artifact Purge & Crisp Matte Emblem
+- **Elimination of Glowing Halos & Specular Light Sweeps**: Removed continuous idle breathing glows, outer radial gradient boxes, and specular light sweeps from `GeminiGlowingJadzumiLogo`.
+- **Pure Matte Surface Identity**: Preserved the original vector geometry of `JadzumiPlaySymbol` inside a refined, static, matte tile that respects true AMOLED black backgrounds without visual distraction.
+
+### 🎨 3. Pure Yellow Cinema Palette & AMOLED True Black
+- **Signature Cinema Accent (`#FFD600`)**: Integrated Pure Yellow as the primary visual accent across player scrubbers, hero call-to-actions, seek progress indicators, and active badges.
+- **Pristine Dark Surfaces**: Backgrounds and surfaces default to True Black (`#000000`) and Obsidian (`#0E0E0E`), disabling distracting background ambient halos on AMOLED profiles for pure cinema immersion.
+
+---
+
 # Jadzumi v2.0.4 (Hotfix & Interaction Evolution) — "Precision Resolution, Side-Docked HUD & Strict HDR" 🌌🎬✨
 
 A precision hotfix and interaction refinement release perfecting 1080p scope resolution parsing, eliminating false HDR10+ badge claims on standard releases, and replacing intrusive center gesture overlays with non-intrusive minimal horizontal pills docked to their respective screen sides.
