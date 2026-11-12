@@ -1,3 +1,19 @@
+# Jadzumi v2.0.6 (UI/UX Rollback & Motion System Retention) — "Baseline Restored, Premium Motion Preserved" 🌌🎬✨
+
+A precision restoration release rolling back the UI/UX changes from the Pure overhaul to the verified baseline checkpoint (`11c8920`), while fully preserving the cohesive Apple/M3 fluid spring animations, continuous spatial transitions, and gesture responsiveness.
+
+### 🔄 1. UI/UX Baseline Restoration
+- **Restored 4 Navigation Destinations**: Restored the classic navigation destinations on the floating frosted dock: **Home**, **Movies**, **TV Shows**, and **Settings**.
+- **Living Emblem & Ambient Light Sweep**: Restored the approved 5-second gentle idle breathing glow pulse and specular light sweep on `GeminiGlowingJadzumiLogo`.
+- **Classic Cinema Palette**: Restored the signature Lavender (`#8B9DFF`), Glacier Blue, and AMOLED Dark themes, along with original button and timeline styling.
+
+### 🎭 2. Pure Motion System Retention
+- **Cohesive Spring Dynamics**: Preserved the damped organic Apple/M3 spring specifications across dock sizing, pill minimizing/expanding, icon scaling, and tab switching.
+- **Continuous Spatial Navigation**: Maintained the 500ms physical-geometry shared-element morphing (`CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f)`) between library items and detail screens, silky-smooth dismissals, and touch feedback.
+- **Leaf Recomposition Decoupling & LRU Scrub Previews**: Retained high-performance leaf-decoupled playback HUD and zero-flash thumbnail scrubbing.
+
+---
+
 # Jadzumi v2.0.5 (Pure UI/UX Overhaul) — "Less interface. More cinema." 🌌🎬⚡
 
 A milestone editorial overhaul redesigning Jadzumi Player with the approved **Jadzumi Pure** visual direction, strictly decluttering navigation chrome, eliminating glowing emblem artifacts, and adopting high-contrast Pure Yellow cinema styling.

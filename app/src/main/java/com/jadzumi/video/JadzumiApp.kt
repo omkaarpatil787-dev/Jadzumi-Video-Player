@@ -111,25 +111,11 @@ private val Dark = darkColorScheme(
     outlineVariant = Color(0xFF2E3C52)
 )
 
-// Jadzumi Pure Edition Flagship Theme (High-contrast Cinema Yellow & AMOLED True Black)
-private val PureYellow = Color(0xFFFFD600)
-private val PureYellowDark = darkColorScheme(
-    primary = PureYellow,
-    onPrimary = Color.Black,
-    primaryContainer = Color(0xFF2A2200),
-    onPrimaryContainer = Color(0xFFFFE043),
-    background = Color.Black,
-    surface = Color(0xFF0E0E0E),
-    surfaceVariant = Color(0xFF181818),
-    onSurface = Color(0xFFFFFFFF),
-    onSurfaceVariant = Color(0xFFB4B4B4),
-    outlineVariant = Color(0xFF262626)
-)
-
 private data class Destination(val name: String, val icon: ImageVector)
 private val destinations = listOf(
     Destination("Home", Icons.Rounded.Home),
-    Destination("Library", Icons.Rounded.VideoLibrary),
+    Destination("Movies", Icons.Rounded.Movie),
+    Destination("TV Shows", Icons.Rounded.Tv),
     Destination("Settings", Icons.Rounded.Settings)
 )
 
@@ -197,7 +183,7 @@ private val destinations = listOf(
     val colors = when (effectiveTheme) {
         "Light" -> Light
         "Dark" -> Dark
-        "AMOLED", "Pure Yellow" -> PureYellowDark
+        "AMOLED" -> Dark.copy(background = Color.Black, surface = Color(0xFF0A0A0C), surfaceVariant = Color(0xFF141418))
         else -> if (sysDark) Dark else Light
     }
 
@@ -247,7 +233,7 @@ private val destinations = listOf(
                     PortalHaloBackdrop(
                         theme = effectiveTheme,
                         palette = HaloPalette.fromName(haloPaletteName),
-                        enabled = haloEnabled && (effectiveTheme != "AMOLED" && effectiveTheme != "Pure Yellow") && (playback.video == null || playback.isDocked || playback.inPip),
+                        enabled = haloEnabled && (playback.video == null || playback.isDocked || playback.inPip),
                         intensity = haloIntensity,
                         spread = haloSpread,
                         reducedMotion = reducedMotion || !motionStyle.enabled
@@ -916,33 +902,95 @@ fun GeminiGlowingJadzumiLogo(
     modifier: Modifier = Modifier
 ) {
     val theme = LocalThemeName.current
-    val isAmoled = theme == "AMOLED" || theme == "Pure Yellow"
+    val isAmoled = theme == "AMOLED"
+    val infiniteTransition = rememberInfiniteTransition(label = "livingEmblemGlow")
+
+    // Approved Living Emblem 5-second gentle idle breathing animation (0.42f to 0.73f)
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.42f,
+        targetValue = 0.73f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 5000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "emblemBreathe"
+    )
+
+    // Specular light sweep offset (0f to 1f)
+    val sweepProgress by infiniteTransition.animateFloat(
+        initialValue = -0.3f,
+        targetValue = 1.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3600, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "emblemSweep"
+    )
+
     val cornerRadius = size * 0.28f
 
-    // Non-clickable container — clean matte surface tile with untouched original Jadzumi symbol
-    Surface(
+    // Non-clickable container — three distinct visual layers preserving original asset
+    Box(
         modifier = modifier.size(size),
-        shape = RoundedCornerShape(cornerRadius),
-        color = when {
-            isAmoled -> Color.Black
-            darkSurface -> Color(0xFF191A22)
-            else -> Color(0xFFF6F1FA)
-        },
-        border = BorderStroke(
-            1.dp,
-            when {
-                isAmoled -> Color(0xFF262626)
-                darkSurface -> Color(0xFF2E3440)
-                else -> Color(0xFFE5E7EB)
-            }
-        ),
-        shadowElevation = 0.dp
+        contentAlignment = Alignment.Center
     ) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            // Untouched original vector symbol — NO resizing distortion or whole-logo scaling
-            JadzumiPlaySymbol(
-                Modifier.size(size * 0.66f)
-            )
+        // Layer 1 (behind): Living Emblem Halo (soft lavender radial glow)
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .scale(1.35f)
+                .clip(CircleShape)
+                .background(
+                    Brush.radialGradient(
+                        0.0f to Color(0xFFB78BF9).copy(alpha = glowPulse * 0.55f),
+                        0.38f to Color(0xFF8E5FCA).copy(alpha = glowPulse * 0.20f),
+                        0.72f to Color.Transparent
+                    )
+                )
+        )
+
+        // Layer 2 (middle): Clean surface tile with untouched original Jadzumi symbol
+        Surface(
+            modifier = Modifier.size(size),
+            shape = RoundedCornerShape(cornerRadius),
+            color = when {
+                isAmoled -> Color.Black
+                darkSurface -> Color(0xFF191A22)
+                else -> Color(0xFFF6F1FA)
+            },
+            border = BorderStroke(
+                1.dp,
+                when {
+                    isAmoled -> Color(0xFF39323D)
+                    darkSurface -> Color(0xFF4D435A).copy(alpha = 0.6f + 0.3f * glowPulse)
+                    else -> Color(0xFFDCC8FF)
+                }
+            ),
+            shadowElevation = if (isAmoled) 0.dp else 4.dp
+        ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                // Untouched original vector symbol — NO resizing distortion or whole-logo scaling
+                JadzumiPlaySymbol(
+                    Modifier.size(size * 0.66f)
+                )
+
+                // Layer 3 (above): Living Emblem Specular Light Sweep overlay
+                val sweepOffset = size.value * sweepProgress
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(cornerRadius))
+                        .background(
+                            Brush.linearGradient(
+                                0.0f to Color.Transparent,
+                                0.5f to Color(0x33F5E4FF),
+                                1.0f to Color.Transparent,
+                                start = Offset(sweepOffset - 40f, 0f),
+                                end = Offset(sweepOffset + 40f, size.value)
+                            )
+                        )
+                )
+            }
         }
     }
 }
@@ -961,13 +1009,14 @@ fun GeminiGlowingJadzumiLogo(
     val navDestinations = remember {
         listOf(
             Destination("Home", Icons.Rounded.Home),
-            Destination("Library", Icons.Rounded.VideoLibrary),
+            Destination("Movies", Icons.Rounded.Movie),
+            Destination("TV Shows", Icons.Rounded.Tv),
             Destination("Settings", Icons.Rounded.Settings)
         )
     }
 
     val isIconsOnly = bottomBarStyle == "Icons only"
-    val activeDestination = navDestinations.firstOrNull { it.name == route || (it.name == "Home" && (route == "Movies" || route == "TV Shows" || route == "Videos")) }
+    val activeDestination = navDestinations.firstOrNull { it.name == route || (it.name == "Home" && route == "Library") }
         ?: navDestinations.first()
 
     // Organic Apple/M3 Fluid Spring Specification (Damped, natural settling - no harsh snaps)
@@ -989,8 +1038,8 @@ fun GeminiGlowingJadzumiLogo(
     val dockWidth by animateDpAsState(
         targetValue = when {
             isMinimized -> if (isTablet) 56.dp else 48.dp
-            isIconsOnly -> if (isTablet) 300.dp else 240.dp
-            else -> if (isTablet) 380.dp else 290.dp
+            isIconsOnly -> if (isTablet) 360.dp else 320.dp
+            else -> if (isTablet) 500.dp else 390.dp
         },
         animationSpec = dockSpringDp,
         label = "dockWidth"
@@ -1077,7 +1126,7 @@ fun GeminiGlowingJadzumiLogo(
                 ) {
                     // Navigation Destinations
                     navDestinations.forEach { d ->
-                        val isSelected = route == d.name || (d.name == "Library" && (route == "Movies" || route == "TV Shows" || route == "Videos"))
+                        val isSelected = route == d.name || (d.name == "Home" && route == "Library")
                         val activeColor = MaterialTheme.colorScheme.primary
                         val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
 
