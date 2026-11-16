@@ -621,8 +621,7 @@ private val destinations = listOf(
                                                     )
                                                 }
                                             }
-                                        } else if (video != null) DetailPage(video)
-                                        else when (current) {
+                                        } else when (current) {
                                             "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
@@ -2771,107 +2770,8 @@ private val settingsCategories = listOf(
     }
 }
 
-@Composable private fun LibraryPage(query: String, demo: Boolean, onDemo: (Boolean)->Unit, onSelect: (String)->Unit) {
-    var category by rememberSaveable { mutableStateOf("Movies") }
-    val filtered = filterVideos(if (demo) previewVideos else emptyList(), query, category)
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        item {
-            Column {
-                Text("Your cinema,\nat home.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                Text("A quiet space for the stories you keep.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
-            }
-        }
-        item {
-            Panel {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Design preview", fontWeight = FontWeight.SemiBold)
-                        Text("Sample titles only · no videos imported", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Switch(demo, onDemo, modifier = Modifier.semantics { contentDescription = "Show sample titles" })
-                }
-            }
-        }
-        item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(listOf("Movies", "TV & Anime")) { c ->
-                    FilterChip(selected = category == c, onClick = { category = c }, label = { Text(c, maxLines = 1, softWrap = false) })
-                }
-            }
-        }
-        if (filtered.isEmpty()) {
-            item { EmptyPage(Icons.Rounded.VideoLibrary, if (demo) "No matching titles" else "Make room for your stories", "Try another title or category.") }
-        }
-        if (filtered.isNotEmpty()) {
-            item { Hero(filtered.first(), onSelect) }
-            item { Text("Continue watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
-            items(filtered, key = { it.id }) { video -> VideoRow(video) { onSelect(video.id) } }
-        }
-    }
-}
-
-@Composable private fun Art(video: PreviewVideo, modifier: Modifier = Modifier) {
-    val id = when (video.artwork) { "anime" -> R.drawable.anime; "cosmos" -> R.drawable.cosmos; else -> R.drawable.hero }
-    Image(painterResource(id), contentDescription = null, modifier = modifier, contentScale = ContentScale.Crop)
-}
-
-@Composable private fun Hero(video: PreviewVideo, onSelect: (String)->Unit) {
-    Card(onClick = { onSelect(video.id) }, shape = RoundedCornerShape(28.dp)) {
-        Box(Modifier.fillMaxWidth().heightIn(min = 240.dp)) {
-            Art(video, Modifier.matchParentSize())
-            Box(Modifier.matchParentSize().background(Brush.horizontalGradient(listOf(Color(0xF0102034), Color(0x550F2038)))))
-            Column(Modifier.padding(24.dp).widthIn(max = 580.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("FEATURED · SAMPLE ${video.category.uppercase()}", color = Color(0xFFADC7FF), style = MaterialTheme.typography.labelMedium)
-                Text(video.title, color = Color.White, fontSize = 28.sp, lineHeight = 34.sp, fontWeight = FontWeight.Bold)
-                Text("Pick up where the story left off.", color = Color.White.copy(alpha = 0.85f))
-                Button(onClick = { onSelect(video.id) }) { Icon(Icons.Rounded.Movie, null); Spacer(Modifier.width(8.dp)); Text("Explore details") }
-            }
-        }
-    }
-}
-
-@Composable private fun VideoRow(video: PreviewVideo, onSelect: ()->Unit) {
-    Card(onClick = onSelect, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(22.dp)) {
-        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Art(video, Modifier.size(96.dp, 72.dp).clip(RoundedCornerShape(14.dp)))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(video.title, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text("${timecode(video.positionSeconds)} / ${timecode(video.durationSeconds)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                LinearProgressIndicator(progress = { video.progress }, modifier = Modifier.fillMaxWidth().height(4.dp))
-            }
-            Icon(Icons.Rounded.ChevronRight, "View details")
-        }
-    }
-}
-
-@Composable private fun DetailPage(video: PreviewVideo) {
-    var favorite by rememberSaveable(video.id) { mutableStateOf(false) }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        item {
-            Box(Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(28.dp))) {
-                Art(video, Modifier.fillMaxSize())
-                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xD9101C30)))))
-                Text(video.title, Modifier.align(Alignment.BottomStart).padding(24.dp), color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-        item {
-            Panel {
-                Text("SAMPLE ${video.category.uppercase()}", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
-                Text("A story waiting to be rediscovered in your personal cinema.", modifier = Modifier.padding(vertical = 12.dp))
-                Text("${timecode(video.remainingSeconds)} remaining · ${(video.progress * 100).toInt()}% watched (sample)")
-                LinearProgressIndicator(progress = { video.progress }, modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(onClick = {}, enabled = false) { Text("Sample preview only") }
-                    IconToggleButton(checked = favorite, onCheckedChange = { favorite = it }) {
-                        Icon(if (favorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder, "Favorite")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable private fun Panel(content: @Composable ColumnScope.()->Unit) {
+@Composable
+private fun Panel(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),

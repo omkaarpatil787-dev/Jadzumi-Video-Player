@@ -1,3 +1,21 @@
+# Jadzumi v2.2.1 — Direct Stream Resolution & Clutter-Free HUD 🌌🎬✨
+
+A precision fix and refinement update resolving Direct Stream network playback and eliminating non-functional gimmicks and clutter from the Cinema HUD playback experience.
+
+### 🌐 1. Direct Stream Native Network Playback Fixed
+- **Root Cause Resolved**: Replaced strict `ContentDataSource` with `DefaultDataSource.Factory` backed by `DefaultHttpDataSource` with cross-protocol redirect support. Direct Stream now reliably streams HTTP/HTTPS network URLs (HLS `.m3u8`, MPEG-DASH `.mpd`, progressive MP4/MKV) instead of failing with `ERROR_CODE_IO_FILE_NOT_FOUND`.
+- **HLS & DASH Native Decoders**: Integrated `media3-exoplayer-hls` and `media3-exoplayer-dash` for seamless adaptive bitrate streaming.
+- **Cleartext Traffic Support**: Enabled `android:usesCleartextTraffic="true"` to support non-SSL/LAN streams (e.g. home servers and local IPTV streams).
+
+### 🎬 2. Gimmick & Clutter Removal from Cinema HUD
+- **Cast Gimmick Removed**: Removed the dummy top-right Cast icon that only showed a placeholder message.
+- **Redundant Bottom Pills Removed**: Eliminated the cluttered bottom pill row (`Chapters`, `Audio`, `Subtitles`, `Speed`, `Aspect`, `Fullscreen`).
+- **Integrated Lock Control**: The `Lock` button is now seamlessly integrated into the timeline row, leaving the entire lower screen clean and 100% focused on video content.
+- **Top-Right Audio Settings**: Linked the top-right tool icon directly to the comprehensive Audio drawer (track selector, audio sync delay, audio boost).
+- **Codebase Cleanliness**: Removed obsolete prototype sample preview code from the codebase.
+
+---
+
 # Jadzumi v2.2.0 — Final Master Evolution: Cinema HUD 4.0 & Direct Stream 🌌🎬✨
 
 The definitive master release transforming Jadzumi Player with the pixel-perfect **Cinema HUD 4.0**, native **Jadzumi Direct Stream** engine, streamlined 3-tab library navigation, and unified Reactive Matte architecture.

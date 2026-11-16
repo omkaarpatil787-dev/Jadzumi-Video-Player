@@ -13,6 +13,7 @@
     <application
         android:name=".JadzumiApplication"
         android:allowBackup="false"
+        android:usesCleartextTraffic="true"
         android:icon="@drawable/ic_launcher"
         android:label="Jadzumi Player"
         android:roundIcon="@drawable/ic_launcher"

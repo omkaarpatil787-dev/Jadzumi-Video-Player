@@ -16,8 +16,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.ContentDataSource
 import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.mp4.Mp4Extractor
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -994,7 +995,13 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .setConstantBitrateSeekingAlwaysEnabled(true)
                 .setMp4ExtractorFlags(Mp4Extractor.FLAG_WORKAROUND_IGNORE_EDIT_LISTS)
 
-            val dataSourceFactory = DataSource.Factory { ContentDataSource(app) }
+            val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+                .setAllowCrossProtocolRedirects(true)
+                .setConnectTimeoutMs(15_000)
+                .setReadTimeoutMs(15_000)
+                .setUserAgent("JadzumiPlayer/2.2.1")
+
+            val dataSourceFactory = DefaultDataSource.Factory(app, httpDataSourceFactory)
             val source = DefaultMediaSourceFactory(dataSourceFactory, extractorsFactory)
 
             val instantLoadControl = DefaultLoadControl.Builder()
