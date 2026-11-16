@@ -747,7 +747,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                 }
                             }
 
-                            // Top-Right Icons: Cast, Audio, Subtitles, Equalizer, More Options (Matching Image 2)
+                            // Top-Right Icons: Cast, Equalizer, More Options (De-duplicated)
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 FrostedCircleButton(
                                     label = "Cast",
@@ -757,26 +757,6 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     rimColor = dynamicFrostedCircleRim
                                 ) {
                                     Icon(Icons.Rounded.Cast, "Cast", tint = playerContentColor, modifier = Modifier.size(19.dp))
-                                }
-
-                                FrostedCircleButton(
-                                    label = "Audio stream",
-                                    onClick = { quickMenuSection = "audio"; interaction++ },
-                                    size = 42.dp,
-                                    bgColor = dynamicFrostedCircleBg,
-                                    rimColor = dynamicFrostedCircleRim
-                                ) {
-                                    Icon(Icons.Rounded.Headphones, "Audio", tint = playerContentColor, modifier = Modifier.size(19.dp))
-                                }
-
-                                FrostedCircleButton(
-                                    label = "Subtitles",
-                                    onClick = { quickMenuSection = "subs"; interaction++ },
-                                    size = 42.dp,
-                                    bgColor = dynamicFrostedCircleBg,
-                                    rimColor = dynamicFrostedCircleRim
-                                ) {
-                                    Icon(Icons.Rounded.Subtitles, "Subtitles", tint = playerContentColor, modifier = Modifier.size(19.dp))
                                 }
 
                                 FrostedCircleButton(
@@ -826,38 +806,40 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     interaction++
                                 },
                                 size = 46.dp,
-                                bgColor = Color(0xD432303E),
-                                rimColor = Color.White.copy(alpha = 0.12f),
-                                contentColor = Color.White
+                                bgColor = Color(0xD42B2639),
+                                rimColor = Color.White.copy(alpha = 0.14f),
+                                contentColor = Color.White.copy(alpha = 0.95f)
                             )
 
-                            // Approved Primary Play/Pause in Moonlit Lavender with deep Obsidian icon
-                            Surface(
-                                onClick = { playback.toggle(); interaction++ },
-                                shape = CircleShape,
-                                color = LavenderAccent,
-                                contentColor = Obsidian,
-                                shadowElevation = 8.dp,
+                            // Approved Hybrid Primary Play/Pause with soft lavender gradient and tactile shadow
+                            Box(
                                 modifier = Modifier
-                                    .size(58.dp)
-                                    .touchMotion()
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    AnimatedContent(
-                                        targetState = playback.playRequested,
-                                        transitionSpec = {
-                                            (fadeIn(tween(160)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
-                                                .togetherWith(fadeOut(tween(120)) + scaleOut(targetScale = 0.72f))
-                                        },
-                                        label = "playPauseIcon"
-                                    ) { isPlaying ->
-                                        Icon(
-                                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                            contentDescription = if (isPlaying) "Pause" else "Play",
-                                            tint = Obsidian,
-                                            modifier = Modifier.size(32.dp)
+                                    .size(62.dp)
+                                    .shadow(elevation = 10.dp, shape = CircleShape, spotColor = LavenderAccent.copy(alpha = 0.55f))
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.verticalGradient(
+                                            listOf(Color(0xFFC0A2FB), Color(0xFF986FF5))
                                         )
-                                    }
+                                    )
+                                    .clickable { playback.toggle(); interaction++ }
+                                    .touchMotion(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AnimatedContent(
+                                    targetState = playback.playRequested,
+                                    transitionSpec = {
+                                        (fadeIn(tween(160)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
+                                            .togetherWith(fadeOut(tween(120)) + scaleOut(targetScale = 0.72f))
+                                    },
+                                    label = "playPauseIcon"
+                                ) { isPlaying ->
+                                    Icon(
+                                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                        contentDescription = if (isPlaying) "Pause" else "Play",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(34.dp)
+                                    )
                                 }
                             }
 
@@ -880,9 +862,9 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     interaction++
                                 },
                                 size = 46.dp,
-                                bgColor = Color(0xD432303E),
-                                rimColor = Color.White.copy(alpha = 0.12f),
-                                contentColor = Color.White
+                                bgColor = Color(0xD42B2639),
+                                rimColor = Color.White.copy(alpha = 0.14f),
+                                contentColor = Color.White.copy(alpha = 0.95f)
                             )
                         }
 
@@ -992,11 +974,12 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    // Chapters pill
+                                    // Chapters pill (Hybrid Neumorphic)
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
-                                        color = dynamicFrostedCircleBg,
-                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                        color = Color(0xD42B2639),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+                                        shadowElevation = 3.dp,
                                         onClick = { showChaptersDrawer = true; interaction++ }
                                     ) {
                                         Row(
@@ -1009,12 +992,13 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                         }
                                     }
 
-                                    // Subtitles pill (highlighted in lavender capsule when active)
+                                    // Subtitles pill (highlighted in lavender capsule when active, Hybrid Neumorphic)
                                     val hasSubs = playback.subtitleTracks.any { it.isSelected }
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
-                                        color = if (hasSubs) LavenderAccent else dynamicFrostedCircleBg,
-                                        border = BorderStroke(1.dp, if (hasSubs) LavenderAccent else dynamicFrostedCircleRim),
+                                        color = if (hasSubs) LavenderAccent else Color(0xD42B2639),
+                                        border = BorderStroke(1.dp, if (hasSubs) LavenderAccent else Color.White.copy(alpha = 0.12f)),
+                                        shadowElevation = if (hasSubs) 5.dp else 3.dp,
                                         onClick = { quickMenuSection = "subs"; interaction++ }
                                     ) {
                                         Row(
@@ -1037,11 +1021,12 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                         }
                                     }
 
-                                    // Audio pill
+                                    // Audio pill (Hybrid Neumorphic)
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
-                                        color = dynamicFrostedCircleBg,
-                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                        color = Color(0xD42B2639),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+                                        shadowElevation = 3.dp,
                                         onClick = { quickMenuSection = "audio"; interaction++ }
                                     ) {
                                         Row(
@@ -1055,13 +1040,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     }
                                 }
 
-                                // Center Expander Chevron Up
-                                IconButton(
-                                    onClick = { quickMenuSection = "main"; interaction++ },
-                                    modifier = Modifier.size(38.dp)
-                                ) {
-                                    Icon(Icons.Rounded.KeyboardArrowUp, "Expand", tint = playerContentColor, modifier = Modifier.size(26.dp))
-                                }
+                                Spacer(Modifier.weight(1f))
 
                                 // Right Controls: Speed, PiP, Fullscreen
                                 Row(
@@ -1475,45 +1454,45 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
     val palette = remember(theme) {
         if (isLight) {
             QuickMenuPalette(
-                bg = Color(0xF6F8FAFD),
-                rim = Color(0xFFD0D7DE),
-                primaryText = Color(0xFF183654),
-                secondaryText = Color(0xFF526B85),
-                iconTint = Color(0xFF334A62),
-                divider = Color(0x1F000000),
-                accent = Color(0xFF0061A4),
-                cardBg = Color(0xFFE8EEF6),
-                cardBorder = Color(0xFFCBD5E1),
-                btnBg = Color(0xFFE2EBF5),
-                btnRim = Color(0xFFCBD5E1)
+                bg = Color(0xF6F7F5FC),
+                rim = Color(0xFFE2DCED),
+                primaryText = Color(0xFF1C1A25),
+                secondaryText = Color(0xFF676175),
+                iconTint = Color(0xFF4A4456),
+                divider = Color(0x1F1C1A25),
+                accent = Color(0xFF704DB8),
+                cardBg = Color(0xFFEDE8F7),
+                cardBorder = Color(0xFFE2DCED),
+                btnBg = Color(0xFFE8DDFB),
+                btnRim = Color(0xFFD8CCE8)
             )
         } else if (isAmoled) {
             QuickMenuPalette(
                 bg = Color(0xFC000000),
                 rim = Color.White.copy(alpha = 0.18f),
-                primaryText = Color.White,
-                secondaryText = Color.White.copy(alpha = 0.75f),
+                primaryText = MoonlitPrimaryText,
+                secondaryText = MoonlitSecondaryText,
                 iconTint = Color.White.copy(alpha = 0.90f),
                 divider = Color.White.copy(alpha = 0.14f),
-                accent = TimelineAccent,
-                cardBg = Color(0xFF10141C),
+                accent = LavenderAccent,
+                cardBg = Obsidian,
                 cardBorder = Color.White.copy(alpha = 0.14f),
-                btnBg = Color(0xFF141923),
+                btnBg = Charcoal,
                 btnRim = Color.White.copy(alpha = 0.18f)
             )
         } else {
             QuickMenuPalette(
-                bg = Color(0xF00D1520),
-                rim = Color.White.copy(alpha = 0.14f),
-                primaryText = Color.White,
-                secondaryText = Color.White.copy(alpha = 0.72f),
-                iconTint = Color.White.copy(alpha = 0.85f),
-                divider = Color.White.copy(alpha = 0.12f),
-                accent = TimelineAccent,
-                cardBg = Color.White.copy(alpha = 0.06f),
-                cardBorder = Color.White.copy(alpha = 0.12f),
-                btnBg = FrostedCircleBg,
-                btnRim = FrostedCircleRim
+                bg = Color(0xF41C1A25),
+                rim = Color.White.copy(alpha = 0.12f),
+                primaryText = MoonlitPrimaryText,
+                secondaryText = MoonlitSecondaryText,
+                iconTint = Color.White.copy(alpha = 0.88f),
+                divider = Color.White.copy(alpha = 0.10f),
+                accent = LavenderAccent,
+                cardBg = MoonlitSurface,
+                cardBorder = Color.White.copy(alpha = 0.10f),
+                btnBg = Color(0xFF332D42),
+                btnRim = Color.White.copy(alpha = 0.12f)
             )
         }
     }

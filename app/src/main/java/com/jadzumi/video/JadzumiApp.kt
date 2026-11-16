@@ -1014,8 +1014,8 @@ fun JadzumiSegmentedNavCapsule(
             .height(38.dp)
             .width(190.dp),
         shape = RoundedCornerShape(19.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        color = Color(0xFF1E1A29).copy(alpha = 0.75f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
         shadowElevation = 2.dp
     ) {
         BoxWithConstraints(
@@ -1025,14 +1025,19 @@ fun JadzumiSegmentedNavCapsule(
         ) {
             val segmentWidth = maxWidth / 2
 
-            // Animated sliding selection capsule in Lavender Accent
+            // Animated sliding selection capsule in Hybrid Lavender Gradient
             Box(
                 modifier = Modifier
                     .offset(x = segmentWidth * sliderProgress)
                     .width(segmentWidth)
                     .fillMaxHeight()
+                    .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp), spotColor = LavenderAccent.copy(alpha = 0.45f))
                     .clip(RoundedCornerShape(16.dp))
-                    .background(LavenderAccent)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFFC0A2FB), Color(0xFF986FF5))
+                        )
+                    )
             )
 
             Row(modifier = Modifier.fillMaxSize()) {

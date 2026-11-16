@@ -22,6 +22,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -33,6 +34,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -48,6 +50,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -813,28 +816,40 @@ fun JadzumiCategoryPillsRow(
     ) {
         categories.forEach { cat ->
             val isSelected = cat == selectedCategory
-            val pillBg by animateColorAsState(
-                targetValue = if (isSelected) LavenderAccent else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+            val pillElevation by animateDpAsState(
+                targetValue = if (isSelected) 4.dp else 1.dp,
                 animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
-                label = "cat_pill_bg_$cat"
+                label = "cat_pill_elev_$cat"
             )
             val pillText by animateColorAsState(
-                targetValue = if (isSelected) Obsidian else MaterialTheme.colorScheme.onSurfaceVariant,
+                targetValue = if (isSelected) Obsidian else MoonlitSecondaryText,
                 animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
                 label = "cat_pill_txt_$cat"
             )
-            val pillElevation by animateDpAsState(
-                targetValue = if (isSelected) 3.dp else 1.dp,
-                label = "cat_pill_elev_$cat"
-            )
 
-            Surface(
-                onClick = { onCategorySelected(cat) },
-                shape = RoundedCornerShape(16.dp),
-                color = pillBg,
-                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f)),
-                shadowElevation = pillElevation,
-                modifier = Modifier.touchMotion()
+            Box(
+                modifier = Modifier
+                    .shadow(
+                        elevation = pillElevation,
+                        shape = RoundedCornerShape(16.dp),
+                        spotColor = if (isSelected) LavenderAccent.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.25f)
+                    )
+                    .clip(RoundedCornerShape(16.dp))
+                    .then(
+                        if (isSelected) {
+                            Modifier.background(
+                                Brush.verticalGradient(
+                                    listOf(Color(0xFFC0A2FB), Color(0xFF986FF5))
+                                )
+                            )
+                        } else {
+                            Modifier
+                                .background(Color(0xFF262234).copy(alpha = 0.65f))
+                                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+                        }
+                    )
+                    .clickable { onCategorySelected(cat) }
+                    .touchMotion()
             ) {
                 Text(
                     text = cat,
@@ -861,21 +876,33 @@ fun JadzumiCategoryPillsRow(
     onScrollActive: ((Boolean) -> Unit)? = null
 ) {
     val add = rememberFolderPicker(library)
-    val listState = rememberLazyListState()
-    val isHeroMinimized by remember(listState) {
+    val listStateAll = rememberLazyListState()
+    val listStateMovies = rememberLazyListState()
+    val listStateSeries = rememberLazyListState()
+    val listStateAnime = rememberLazyListState()
+    var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
+
+    fun getCategoryListState(cat: String): LazyListState = when (cat) {
+        "Movies" -> listStateMovies
+        "TV Shows" -> listStateSeries
+        "Anime" -> listStateAnime
+        else -> listStateAll
+    }
+
+    val currentActiveListState = getCategoryListState(category)
+    val isHeroMinimized by remember(currentActiveListState) {
         derivedStateOf {
-            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 60
+            currentActiveListState.firstVisibleItemIndex > 0 || currentActiveListState.firstVisibleItemScrollOffset > 60
         }
     }
-    val shouldMinimizeDock by remember(listState) {
+    val shouldMinimizeDock by remember(currentActiveListState) {
         derivedStateOf {
-            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 100
+            currentActiveListState.firstVisibleItemIndex > 0 || currentActiveListState.firstVisibleItemScrollOffset > 100
         }
     }
     LaunchedEffect(shouldMinimizeDock) {
         onScrollActive?.invoke(shouldMinimizeDock)
     }
-    var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
     val context = LocalContext.current
     val libraryPrefs = remember(context) { context.getSharedPreferences("appearance", Context.MODE_PRIVATE) }
     var isGridView by rememberSaveable { mutableStateOf(libraryPrefs.getBoolean("library_grid_view", false)) }
@@ -1039,7 +1066,6 @@ fun JadzumiCategoryPillsRow(
                 if (suggestions.none { it.id == movie.uri } && suggestions.size < 4) {
                     val pos = playback.savedPosition(movie)
                     val dur = movie.duration.takeIf { it > 0 } ?: 1000L
-                    val mMeta = extractMovieMetadata(movie, state.sidecars, context)
                     suggestions.add(
                         HeroItem(
                             id = movie.uri,
@@ -1047,7 +1073,7 @@ fun JadzumiCategoryPillsRow(
                             subtitle = "Resume from ${timecode(pos / 1000)} · ${timecode((dur - pos).coerceAtLeast(0) / 1000)} left",
                             badge = "⏱ RESUME WATCHING",
                             localVideo = movie,
-                            backdropUri = mMeta.backdropUri ?: mMeta.posterUri,
+                            backdropUri = null,
                             onPlay = {
                                 playback.open(movie)
                                 playback.fullscreen = true
@@ -1066,7 +1092,6 @@ fun JadzumiCategoryPillsRow(
                     val epInfo = EpisodePatterns.parse(video.name)
                     val durStr = if (video.duration > 0) timecode(video.duration / 1000) else "Feature Film"
                     val resStr = if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else "1080p FHD"
-                    val vMeta = extractMovieMetadata(video, state.sidecars, context)
                     suggestions.add(
                         HeroItem(
                             id = video.uri,
@@ -1074,7 +1099,7 @@ fun JadzumiCategoryPillsRow(
                             subtitle = "$durStr · $resStr · Dolby Audio",
                             badge = if (epInfo != null) "✨ TV SERIES SPOTLIGHT" else "★ RECOMMENDED CINEMA",
                             localVideo = video,
-                            backdropUri = vMeta.backdropUri ?: vMeta.posterUri,
+                            backdropUri = null,
                             onPlay = {
                                 playback.open(video)
                                 playback.fullscreen = true
@@ -1132,13 +1157,13 @@ fun JadzumiCategoryPillsRow(
                     val fromIdx = categories.indexOf(initialState).coerceAtLeast(0)
                     val toIdx = categories.indexOf(targetState).coerceAtLeast(0)
                     val isForward = toIdx >= fromIdx
-                    if (isForward) {
-                        (slideInHorizontally(tween(260, easing = FastOutSlowInEasing)) { it / 4 } + fadeIn(tween(180)))
-                            .togetherWith(slideOutHorizontally(tween(200, easing = FastOutSlowInEasing)) { -it / 4 } + fadeOut(tween(140)))
-                    } else {
-                        (slideInHorizontally(tween(260, easing = FastOutSlowInEasing)) { -it / 4 } + fadeIn(tween(180)))
-                            .togetherWith(slideOutHorizontally(tween(200, easing = FastOutSlowInEasing)) { it / 4 } + fadeOut(tween(140)))
-                    }
+
+                    (slideInHorizontally(animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow)) { if (isForward) (it * 0.05f).toInt() else (-it * 0.05f).toInt() } +
+                            fadeIn(animationSpec = tween(280, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))))
+                        .togetherWith(
+                            slideOutHorizontally(animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow)) { if (isForward) (-it * 0.05f).toInt() else (it * 0.05f).toInt() } +
+                                    fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
+                        )
                 },
                 modifier = Modifier.fillMaxSize().weight(1f),
                 label = "categoryContentAnimated"
@@ -1148,16 +1173,17 @@ fun JadzumiCategoryPillsRow(
                         LocalFoldersPage(state = state, library = library, wide = screenMaxWidth >= 640.dp, select = select)
                     }
                 } else {
+                    val catListState = getCategoryListState(currentCategory)
                     PullToRefreshBox(
                         isRefreshing = state.busy,
                         onRefresh = { library.rescan() },
                         modifier = Modifier.fillMaxSize()
                     ) {
                         LazyColumn(
-                            state = listState,
+                            state = catListState,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .animatedScrollBlendFade(listState),
+                                .animatedScrollBlendFade(catListState),
                             contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
                             verticalArrangement = Arrangement.spacedBy(22.dp)
                         ) {

@@ -19,11 +19,19 @@ A major visual and interaction design release introducing the approved **Moonlit
 - **Elimination of Erroneous Episode Tabs**: Standalone movies strictly show dedicated movie details without confusing "Episodes" capsules.
 - **De-Duplication of Rating Badges**: Removed duplicated rating badges from the header badge row, centering official ratings cleanly inside the Neumorphic Info Glance card (`Rating`, `Genre`, `Audio Stream`).
 
-### 🎮 4. Pixel-Aligned Cinema HUD 3.0
-- **Top Cinema Bar**: Back button, movie/episode title highlighted by a vertical lavender accent indicator, clean metadata info (`2024 · 4K HDR · Dolby Vision · E-AC-3 5.1`), and quick actions (`Cast`, `Audio`, `Subtitles`, `Equalizer`, `More`).
+### 🎮 4. Pixel-Aligned Cinema HUD 3.0 & De-Duplication
+- **De-Duplicated Playback Controls**: Removed duplicate Subtitles and Audio buttons from the top bar (keeping Top Bar focused on `Cast`, `Equalizer`, and `More Options`), and removed the redundant `^` Up Arrow from the bottom bar. Subtitles and Audio are exclusively accessed via their tactile bottom bar pills.
+- **Hybrid Neumorphic Controls**:
+  - Center Play/Pause button styled with a vibrant soft lavender vertical gradient, crisp white icon, and tactile elevation shadow.
+  - Secondary circular skip buttons with soft raised neumorphic depth.
+  - Bottom bar pills (`Chapters`, `Subtitles`, `Audio`, `Speed`, `PiP`, `Fullscreen`) with soft translucent recessed surfaces and glowing lavender activation.
+- **Top Cinema Bar**: Back button, movie/episode title highlighted by a vertical lavender accent indicator, clean metadata info (`2024 · 4K HDR · Dolby Vision · E-AC-3 5.1`), `Cast`, `Equalizer`, and `More Options`.
 - **Vertical Gesture Pills**: Minimal translucent vertical capsules on the left (Brightness with sun icon) and right (Volume with speaker icon) with smooth lavender fill.
-- **Prominent Center Transport**: Lavender Play/Pause pill with Obsidian icon flanked by 10s skip backward and forward buttons.
-- **Single-Row Bottom Bar**: Elapsed time (`1:12:36`), timeline scrubber with chapter dots, total duration (`2:46:14`), followed by Chapters, active Lavender Subtitles capsule, Audio, expander chevron, Speed (`1.0x`), PiP, and Fullscreen.
+
+### ⚡ 5. Silky-Smooth Tab Switching & Fluid Motion
+- **Isolated LazyListStates**: Implemented independent scroll states per category tab (`All`, `Movies`, `Series`, `Anime`), completely eliminating measurement conflicts, relayout hitching, and scroll jumps during animated transitions.
+- **Shared-Axis Directional Parallax**: Category switching now matches the exact physical feel of `Home` → `Settings` navigation with subtle 5% directional parallax shift (`it * 0.05f`), damped spring physics (`Spring.StiffnessLow`, `dampingRatio = 0.82f`), and cubic-bezier crossfade (`CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)`).
+- **Non-Blocking Background Thumbnails**: Pruned synchronous file extraction loops on the UI thread, ensuring zero-stutter 90/120Hz library navigation.
 
 ### 🔒 5. Pure Offline-First Cinema Experience
 - **Web Sources Pruning**: Completely removed web streaming and live TV experiments to keep Jadzumi 100% focused on offline-first, distraction-free local cinema playback.
