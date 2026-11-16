@@ -79,7 +79,7 @@ import kotlin.math.roundToInt
 private val QuickMenuBg = Color(0xFF151B26).copy(alpha = 0.90f)
 private val FrostedCircleBg = Color.White.copy(alpha = 0.16f)
 private val FrostedCircleRim = Color.White.copy(alpha = 0.30f)
-internal val TimelineAccent = Color(0xFF8B9DFF)
+internal val TimelineAccent = Color(0xFFB79AF7)
 
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -707,56 +707,38 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             Row(
                                 Modifier.weight(1f).padding(end = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 FrostedCircleButton(
                                     label = "Back to library",
                                     onClick = dismissPlayerWithFluidity,
-                                    size = 44.dp,
+                                    size = 42.dp,
                                     bgColor = dynamicFrostedCircleBg,
                                     rimColor = dynamicFrostedCircleRim
                                 ) {
                                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, Modifier.size(20.dp), tint = playerContentColor)
                                 }
-                                FrostedCircleButton(
-                                    label = "Dock player",
-                                    onClick = { playback.dock() },
-                                    size = 44.dp,
-                                    bgColor = dynamicFrostedCircleBg,
-                                    rimColor = dynamicFrostedCircleRim
-                                ) {
-                                    Icon(Icons.Rounded.KeyboardArrowDown, "Dock player", Modifier.size(24.dp), tint = playerContentColor)
-                                }
+                                Box(
+                                    modifier = Modifier
+                                        .width(3.dp)
+                                        .height(28.dp)
+                                        .clip(CircleShape)
+                                        .background(TimelineAccent)
+                                )
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Text(
-                                            heading.primaryTitle,
-                                            color = playerContentColor,
-                                            fontSize = 19.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        if (playback.isLive) {
-                                            Surface(
-                                                shape = RoundedCornerShape(4.dp),
-                                                color = Color(0xFFEF4444)
-                                            ) {
-                                                Text(
-                                                    "● LIVE",
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
-                                                    color = Color.White
-                                                )
-                                            }
-                                        }
-                                    }
+                                    Text(
+                                        heading.primaryTitle,
+                                        color = playerContentColor,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                     heading.secondaryMeta?.let { meta ->
                                         Text(
-                                            if (playback.isLive) "Live Stream Broadcast" else meta,
+                                            meta,
                                             color = playerSubtextColor,
-                                            fontSize = 13.sp,
+                                            fontSize = 12.5.sp,
                                             fontWeight = FontWeight.Normal,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -765,62 +747,56 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             }
 
-                            // Top-Right Icons: Clean, uncluttered glassy controls per HTML spec
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                if (!isMinimalHud) {
-                                    FrostedCircleButton(
-                                        label = "Subtitles",
-                                        onClick = { quickMenuSection = "subs"; interaction++ },
-                                        size = 44.dp,
-                                        bgColor = dynamicFrostedCircleBg,
-                                        rimColor = dynamicFrostedCircleRim
-                                    ) {
-                                        Icon(
-                                            Icons.Rounded.ClosedCaption,
-                                            contentDescription = "Subtitles",
-                                            tint = playerContentColor,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-
-                                    FrostedCircleButton(
-                                        label = "Playback Diagnostics",
-                                        onClick = { showDiagnosticsCapsule = !showDiagnosticsCapsule; interaction++ },
-                                        size = 44.dp,
-                                        bgColor = if (showDiagnosticsCapsule) Color(0xFFDDC8FF).copy(alpha = 0.22f) else dynamicFrostedCircleBg,
-                                        rimColor = if (showDiagnosticsCapsule) Color(0xFFDDC8FF) else dynamicFrostedCircleRim
-                                    ) {
-                                        Icon(
-                                            Icons.Rounded.Analytics,
-                                            contentDescription = "Diagnostics",
-                                            tint = if (showDiagnosticsCapsule) Color(0xFFDDC8FF) else playerContentColor,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
-
-                                if (showAnyHud) {
-                                    PlayerStatusPill(
-                                        showClock = playback.showPlayerClock,
-                                        showBattery = playback.showBatteryPercentage,
-                                        showRemainingTime = playback.showRemainingTime,
-                                        remainingSecProvider = { ((effectiveDuration - playback.position) / 1000).coerceAtLeast(0) },
-                                        hdrBadge = playback.hdrFlavor,
-                                        bgColor = dynamicFrostedCircleBg,
-                                        rimColor = dynamicFrostedCircleRim,
-                                        contentColor = playerContentColor,
-                                        accentColor = playerAccentColor
-                                    )
-                                }
-
+                            // Top-Right Icons: Cast, Audio, Subtitles, Equalizer, More Options (Matching Image 2)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 FrostedCircleButton(
-                                    label = "Cinema settings",
-                                    onClick = { quickMenuSection = "main"; interaction++ },
-                                    size = 44.dp,
+                                    label = "Cast",
+                                    onClick = { message = "Cast: Searching for display targets..."; interaction++ },
+                                    size = 42.dp,
                                     bgColor = dynamicFrostedCircleBg,
                                     rimColor = dynamicFrostedCircleRim
                                 ) {
-                                    Icon(Icons.Rounded.Tune, null, Modifier.size(22.dp), tint = playerContentColor)
+                                    Icon(Icons.Rounded.Cast, "Cast", tint = playerContentColor, modifier = Modifier.size(19.dp))
+                                }
+
+                                FrostedCircleButton(
+                                    label = "Audio stream",
+                                    onClick = { quickMenuSection = "audio"; interaction++ },
+                                    size = 42.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(Icons.Rounded.Headphones, "Audio", tint = playerContentColor, modifier = Modifier.size(19.dp))
+                                }
+
+                                FrostedCircleButton(
+                                    label = "Subtitles",
+                                    onClick = { quickMenuSection = "subs"; interaction++ },
+                                    size = 42.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(Icons.Rounded.Subtitles, "Subtitles", tint = playerContentColor, modifier = Modifier.size(19.dp))
+                                }
+
+                                FrostedCircleButton(
+                                    label = "Equalizer",
+                                    onClick = { toolsSection = "audio_studio"; interaction++ },
+                                    size = 42.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(Icons.Rounded.Tune, "Equalizer", tint = playerContentColor, modifier = Modifier.size(19.dp))
+                                }
+
+                                FrostedCircleButton(
+                                    label = "More options",
+                                    onClick = { quickMenuSection = "main"; interaction++ },
+                                    size = 42.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(Icons.Rounded.MoreVert, "More", tint = playerContentColor, modifier = Modifier.size(20.dp))
                                 }
                             }
                         }
@@ -855,15 +831,15 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 contentColor = Color.White
                             )
 
-                            // Approved Primary Play/Pause in Lavender #DDC8FF with deep ink #241A31 icon
+                            // Approved Primary Play/Pause in Moonlit Lavender with deep Obsidian icon
                             Surface(
                                 onClick = { playback.toggle(); interaction++ },
                                 shape = CircleShape,
-                                color = Color(0xFFDDC8FF),
-                                contentColor = Color(0xFF241A31),
+                                color = LavenderAccent,
+                                contentColor = Obsidian,
                                 shadowElevation = 8.dp,
                                 modifier = Modifier
-                                    .size(56.dp)
+                                    .size(58.dp)
                                     .touchMotion()
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
@@ -878,8 +854,8 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                         Icon(
                                             imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                                             contentDescription = if (isPlaying) "Pause" else "Play",
-                                            tint = Color(0xFF241A31),
-                                            modifier = Modifier.size(30.dp)
+                                            tint = Obsidian,
+                                            modifier = Modifier.size(32.dp)
                                         )
                                     }
                                 }
@@ -965,268 +941,181 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                 }
                             }
 
-                            // Inline Timeline Row
+                            // Inline Timeline Row (Framed by Elapsed and Total Duration per Image 2)
                             val activePosMs = scrub?.let { (it * playback.duration).toLong() } ?: playback.position
                             val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
                             val totalSec = (playback.duration / 1000).coerceAtLeast(0)
 
-                            CinemaTimelineBar(
-                                fraction = if (playback.isLive) 1f else currentFraction,
-                                bufferedFraction = if (playback.isLive) 1f else bufferedFraction,
-                                isScrubbing = scrub != null,
-                                enabled = playback.seekable && playback.duration > 0 && !playback.isLive,
-                                chapters = playback.chapters,
-                                onScrub = { scrub = it; interaction++ },
-                                onScrubFinished = {
-                                    scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
-                                    scrub = null
-                                }
-                            )
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    compactTimecode(elapsedSec),
+                                    color = playerContentColor,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
 
-                            // Bottom Controls: Clean Single Row in Minimalist HUD (or on landscape/tablet)
-                            if (isMinimalHud || !isPhonePortrait) {
+                                Box(Modifier.weight(1f)) {
+                                    CinemaTimelineBar(
+                                        fraction = currentFraction,
+                                        bufferedFraction = bufferedFraction,
+                                        isScrubbing = scrub != null,
+                                        enabled = playback.seekable && playback.duration > 0,
+                                        chapters = playback.chapters,
+                                        onScrub = { scrub = it; interaction++ },
+                                        onScrubFinished = {
+                                            scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
+                                            scrub = null
+                                        }
+                                    )
+                                }
+
+                                Text(
+                                    compactTimecode(totalSec),
+                                    color = playerContentColor,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+
+                            // Bottom Controls: Clean Single Row in Minimalist HUD (Matching Image 2)
+                            Row(
+                                Modifier.fillMaxWidth().padding(top = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // Left Pills: Chapters, Subtitles, Audio
                                 Row(
-                                    Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    // Glassy Time Capsule Pill
-                                    if (playback.isLive) {
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = dynamicFrostedCircleBg,
-                                            border = BorderStroke(1.dp, dynamicFrostedCircleRim),
-                                            onClick = { playback.returnToLive() }
-                                        ) {
-                                            Row(
-                                                Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Box(Modifier.size(8.dp).background(Color(0xFFEF4444), CircleShape))
-                                                Text(
-                                                    "LIVE BROADCAST",
-                                                    color = Color(0xFFEF4444),
-                                                    fontSize = 12.5.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Text(
-                                                    "• Tap to Sync",
-                                                    color = playerSubtextColor.copy(alpha = 0.85f),
-                                                    fontSize = 11.5.sp
-                                                )
-                                            }
-                                        }
-                                    } else {
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = dynamicFrostedCircleBg,
-                                            border = BorderStroke(1.dp, dynamicFrostedCircleRim)
-                                        ) {
-                                            Row(
-                                                Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Text(
-                                                    compactTimecode(elapsedSec),
-                                                    color = playerAccentColor,
-                                                    fontSize = 12.5.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Text("/", color = playerSubtextColor.copy(alpha = 0.5f), fontSize = 11.5.sp)
-                                                Text(
-                                                    compactTimecode(totalSec),
-                                                    color = playerContentColor,
-                                                    fontSize = 12.5.sp,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                                if (playback.showRemainingTime) {
-                                                    val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                                    Surface(
-                                                        shape = RoundedCornerShape(999.dp),
-                                                        color = if (isLight) Color(0xFF183654).copy(alpha = 0.08f) else Color.White.copy(alpha = 0.14f),
-                                                        border = BorderStroke(0.5.dp, dynamicFrostedCircleRim)
-                                                    ) {
-                                                        Text(
-                                                            "-${compactTimecode(remSec)}",
-                                                            Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                            color = playerContentColor.copy(alpha = 0.90f),
-                                                            fontSize = 10.sp,
-                                                            fontWeight = FontWeight.SemiBold
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // Glassy Actions Dock
-                                    Surface(
-                                        shape = RoundedCornerShape(999.dp),
-                                        color = dynamicFrostedCircleBg,
-                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
-                                    ) {
-                                        Row(
-                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(3.dp)
-                                        ) {
-                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
-                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
-                                            }
-                                            CinemaIcon("Rotate orientation", {
-                                                val current = activity.requestedOrientation
-                                                val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                                                } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_USER
-                                                } else {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                                }
-                                                activity.requestedOrientation = next
-                                                message = when (next) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
-                                                    else -> "Orientation: Auto (Sensor)"
-                                                }
-                                                interaction++
-                                            }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
-                                                Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
-                                            }
-                                            if (activity.supportsPip()) {
-                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
-                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
-                                                }
-                                            }
-                                            CinemaIcon("Close player", dismissPlayerWithFluidity, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
-                                                Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                Column(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    // Row 1: Glassy Time Capsule Pill
-                                    if (playback.isLive) {
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = dynamicFrostedCircleBg,
-                                            border = BorderStroke(1.dp, dynamicFrostedCircleRim),
-                                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                                            onClick = { playback.returnToLive() }
-                                        ) {
-                                            Row(
-                                                Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Box(Modifier.size(8.dp).background(Color(0xFFEF4444), CircleShape))
-                                                Text(
-                                                    "LIVE BROADCAST",
-                                                    color = Color(0xFFEF4444),
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Text(
-                                                    "• Tap to Sync",
-                                                    color = playerSubtextColor.copy(alpha = 0.85f),
-                                                    fontSize = 11.sp
-                                                )
-                                            }
-                                        }
-                                    } else {
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = dynamicFrostedCircleBg,
-                                            border = BorderStroke(1.dp, dynamicFrostedCircleRim),
-                                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                                        ) {
-                                            Row(
-                                                Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Text(
-                                                    compactTimecode(elapsedSec),
-                                                    color = playerAccentColor,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.SemiBold
-                                                )
-                                                Text("/", color = playerSubtextColor.copy(alpha = 0.5f), fontSize = 11.sp)
-                                                Text(
-                                                    compactTimecode(totalSec),
-                                                    color = playerContentColor,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                                if (playback.showRemainingTime) {
-                                                    val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                                    Surface(
-                                                        shape = RoundedCornerShape(999.dp),
-                                                        color = if (isLight) Color(0xFF183654).copy(alpha = 0.08f) else Color.White.copy(alpha = 0.14f),
-                                                        border = BorderStroke(0.5.dp, dynamicFrostedCircleRim)
-                                                    ) {
-                                                        Text(
-                                                            "-${compactTimecode(remSec)} remaining",
-                                                            Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
-                                                            color = playerContentColor.copy(alpha = 0.92f),
-                                                            fontSize = 10.sp,
-                                                            fontWeight = FontWeight.Medium
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // Row 2: Glassy Actions Dock
+                                    // Chapters pill
                                     Surface(
                                         shape = RoundedCornerShape(999.dp),
                                         color = dynamicFrostedCircleBg,
                                         border = BorderStroke(1.dp, dynamicFrostedCircleRim),
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                        onClick = { showChaptersDrawer = true; interaction++ }
                                     ) {
                                         Row(
-                                            Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
-                                            CinemaIcon("Rotate orientation", {
-                                                val current = activity.requestedOrientation
-                                                val next = if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                                                } else if (current == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || current == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_USER
-                                                } else {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                                }
-                                                activity.requestedOrientation = next
-                                                message = when (next) {
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> "Orientation: Landscape"
-                                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT -> "Orientation: Portrait"
-                                                    else -> "Orientation: Auto (Sensor)"
-                                                }
-                                                interaction++
-                                            }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
-                                                Icon(Icons.Rounded.ScreenRotation, "Rotate orientation", Modifier.size(19.dp))
-                                            }
-                                            CinemaIcon("Lock controls", { playback.locked = true; controls = false }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
-                                                Icon(Icons.Rounded.LockOpen, null, Modifier.size(19.dp))
-                                            }
-                                            if (activity.supportsPip()) {
-                                                CinemaIcon("Picture in picture", { if (!activity.enterCinemaPip()) message = "PiP unavailable" }, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
-                                                    Icon(Icons.Rounded.PictureInPictureAlt, null, Modifier.size(19.dp))
-                                                }
-                                            }
-                                            CinemaIcon("Close player", dismissPlayerWithFluidity, modifier = Modifier.size(36.dp), contentColor = playerContentColor) {
-                                                Icon(Icons.Rounded.Close, null, Modifier.size(20.dp))
-                                            }
+                                            Icon(Icons.Rounded.FormatListBulleted, null, Modifier.size(16.dp), tint = playerContentColor)
+                                            Text("Chapters", color = playerContentColor, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
                                         }
+                                    }
+
+                                    // Subtitles pill (highlighted in lavender capsule when active)
+                                    val hasSubs = playback.subtitleTracks.any { it.isSelected }
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = if (hasSubs) LavenderAccent else dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, if (hasSubs) LavenderAccent else dynamicFrostedCircleRim),
+                                        onClick = { quickMenuSection = "subs"; interaction++ }
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Rounded.Subtitles,
+                                                null,
+                                                Modifier.size(16.dp),
+                                                tint = if (hasSubs) Obsidian else playerContentColor
+                                            )
+                                            Text(
+                                                "Subtitles",
+                                                color = if (hasSubs) Obsidian else playerContentColor,
+                                                fontSize = 12.5.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                    }
+
+                                    // Audio pill
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                        onClick = { quickMenuSection = "audio"; interaction++ }
+                                    ) {
+                                        Row(
+                                            Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.Headphones, null, Modifier.size(16.dp), tint = playerContentColor)
+                                            Text("Audio", color = playerContentColor, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
+                                        }
+                                    }
+                                }
+
+                                // Center Expander Chevron Up
+                                IconButton(
+                                    onClick = { quickMenuSection = "main"; interaction++ },
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Icon(Icons.Rounded.KeyboardArrowUp, "Expand", tint = playerContentColor, modifier = Modifier.size(26.dp))
+                                }
+
+                                // Right Controls: Speed, PiP, Fullscreen
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    // Speed pill
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = dynamicFrostedCircleBg,
+                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                        onClick = {
+                                            val next = when (playback.speed) {
+                                                1.0f -> 1.25f
+                                                1.25f -> 1.5f
+                                                1.5f -> 2.0f
+                                                else -> 1.0f
+                                            }
+                                            playback.changeSpeed(next)
+                                            message = "${next}x Speed"
+                                            interaction++
+                                        }
+                                    ) {
+                                        Text(
+                                            "${playback.speed}x",
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                            color = playerContentColor,
+                                            fontSize = 12.5.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    if (activity.supportsPip()) {
+                                        IconButton(
+                                            onClick = { if (!activity.enterCinemaPip()) message = "PiP unavailable" },
+                                            modifier = Modifier.size(38.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(20.dp))
+                                        }
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            playback.fullscreen = !playback.fullscreen
+                                            interaction++
+                                        },
+                                        modifier = Modifier.size(38.dp)
+                                    ) {
+                                        Icon(
+                                            if (playback.fullscreen) Icons.Rounded.FullscreenExit else Icons.Rounded.Fullscreen,
+                                            "Fullscreen",
+                                            tint = playerContentColor,
+                                            modifier = Modifier.size(22.dp)
+                                        )
                                     }
                                 }
                             }
@@ -2582,7 +2471,7 @@ private fun <T> SlidingSegmentedControl(
     }
 }
 
-// Approved Next-Gen Cinematic Gesture Capsule (Cinema Controls 2.0 Specification)
+// Approved Next-Gen Cinematic Gesture Capsule (Matching Image 2 Specification)
 @Composable
 fun FluidGestureCapsule(
     type: String,
@@ -2592,54 +2481,79 @@ fun FluidGestureCapsule(
     modifier: Modifier = Modifier
 ) {
     val isSeek = type == "Seek"
-    Surface(
-        modifier = modifier
-            .wrapContentSize()
-            .animateContentSize(spring(dampingRatio = 0.75f, stiffness = 450f)),
-        color = Color(0xE6262232),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
-        shape = RoundedCornerShape(999.dp),
-        shadowElevation = 14.dp
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+    if (isSeek) {
+        Surface(
+            modifier = modifier.wrapContentSize(),
+            color = Color(0xE61C1A25),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
+            shape = RoundedCornerShape(999.dp),
+            shadowElevation = 14.dp
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = type,
-                tint = Color(0xFFDDC8FF),
-                modifier = Modifier.size(19.dp)
-            )
-            if (!isSeek) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = type,
+                    tint = TimelineAccent,
+                    modifier = Modifier.size(19.dp)
+                )
+                Text(
+                    text = valueText,
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    } else {
+        // Vertical capsule pill matching Image 2 (Left: Brightness, Right: Volume)
+        Surface(
+            modifier = modifier
+                .width(42.dp)
+                .height(130.dp),
+            color = Color(0xE61C1A25),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
+            shape = RoundedCornerShape(21.dp),
+            shadowElevation = 14.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = type,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
                 Box(
                     modifier = Modifier
-                        .width(76.dp)
-                        .height(5.dp)
+                        .width(6.dp)
+                        .weight(1f)
                         .clip(CircleShape)
-                        .background(Color(0xFF60556E))
+                        .background(Color.White.copy(alpha = 0.22f)),
+                    contentAlignment = Alignment.BottomCenter
                 ) {
                     val animatedFill by animateFloatAsState(
                         targetValue = fraction.coerceIn(0f, 1f),
                         animationSpec = tween(durationMillis = 80, easing = LinearEasing),
-                        label = "meterFill"
+                        label = "verticalMeterFill"
                     )
                     Box(
                         modifier = Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth(animatedFill)
+                            .fillMaxWidth()
+                            .fillMaxHeight(animatedFill)
                             .clip(CircleShape)
-                            .background(Color(0xFFDDC8FF))
+                            .background(TimelineAccent)
                     )
                 }
             }
-            Text(
-                text = valueText,
-                color = Color.White,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-            )
         }
     }
 }

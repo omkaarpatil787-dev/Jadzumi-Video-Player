@@ -34,8 +34,8 @@ android {
         applicationId = "com.jadzumi.video"
         minSdk = 26
         targetSdk = 35
-        versionCode = 51
-        versionName = "2.0.9"
+        versionCode = 52
+        versionName = "2.1"
         ndk { abiFilters += "arm64-v8a" }
     }
 
@@ -95,8 +95,6 @@ kotlin {
 
 dependencies {
     implementation("androidx.media3:media3-exoplayer:1.11.1")
-    implementation("androidx.media3:media3-exoplayer-hls:1.11.1")
-    implementation("androidx.media3:media3-exoplayer-dash:1.11.1")
     implementation("androidx.media3:media3-ui:1.11.1")
     implementation("androidx.media3:media3-session:1.11.1")
     implementation("androidx.media3:media3-effect:1.11.1")

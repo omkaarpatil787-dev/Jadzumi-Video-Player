@@ -1,3 +1,35 @@
+# Jadzumi v2.1 — Moonlit Lavender UI/UX & Cinema HUD 3.0 Refinement 🌌🎬✨
+
+A major visual and interaction design release introducing the approved **Moonlit Lavender** design system, artwork-driven library browsing, streamlined movie details, and pixel-aligned Cinema HUD 3.0 playback controls.
+
+### 🎨 1. Moonlit Lavender Cinematic Design System
+- **Approved Palette Integration**: Replaced cold blues and harsh greys with the mature **Moonlit Lavender** palette:
+  - `Obsidian` (`#101016`) & `Charcoal` (`#1C1A25`) atmospheric deep canvas surfaces.
+  - `Surface` (`#292535`) elevated containers with soft neumorphic depth.
+  - `LavenderAccent` (`#B79AF7`) & `MoonlitHighlight` (`#E8DDFB`) for responsive interactive accents.
+  - `Primary Text` (`#F4F1FA`) & `Secondary Text` (`#A7A3B4`) for clean, effortless readability.
+- **Subtle Neumorphic Tactile Depth**: Restrained soft lighting and gentle borders on interactive buttons and controls without excessive blur or heavy glassmorphism.
+
+### 🖼️ 2. Artwork-First Featured Banner & Continue Watching
+- **Featured Hero Banner**: Replaced empty grey gradient backdrops with full cinematic poster/backdrop artwork and subtle dark gradient overlays for maximum contrast and legibility.
+- **Refined Continue Watching**: Thinner 2.5dp progress bars, zero empty grey dead space, 16:9 artwork-focused thumbnail cards, and clean typography.
+- **Compact Category Navigation**: Ergonomic Material 3 Expressive pills (`All`, `Movies`, `Series`, `Anime`, `Folders`) replacing oversized segmented bars with smooth horizontal scrolling.
+
+### 📽️ 3. Movie Details & Inconsistency Cleanup
+- **Elimination of Erroneous Episode Tabs**: Standalone movies strictly show dedicated movie details without confusing "Episodes" capsules.
+- **De-Duplication of Rating Badges**: Removed duplicated rating badges from the header badge row, centering official ratings cleanly inside the Neumorphic Info Glance card (`Rating`, `Genre`, `Audio Stream`).
+
+### 🎮 4. Pixel-Aligned Cinema HUD 3.0
+- **Top Cinema Bar**: Back button, movie/episode title highlighted by a vertical lavender accent indicator, clean metadata info (`2024 · 4K HDR · Dolby Vision · E-AC-3 5.1`), and quick actions (`Cast`, `Audio`, `Subtitles`, `Equalizer`, `More`).
+- **Vertical Gesture Pills**: Minimal translucent vertical capsules on the left (Brightness with sun icon) and right (Volume with speaker icon) with smooth lavender fill.
+- **Prominent Center Transport**: Lavender Play/Pause pill with Obsidian icon flanked by 10s skip backward and forward buttons.
+- **Single-Row Bottom Bar**: Elapsed time (`1:12:36`), timeline scrubber with chapter dots, total duration (`2:46:14`), followed by Chapters, active Lavender Subtitles capsule, Audio, expander chevron, Speed (`1.0x`), PiP, and Fullscreen.
+
+### 🔒 5. Pure Offline-First Cinema Experience
+- **Web Sources Pruning**: Completely removed web streaming and live TV experiments to keep Jadzumi 100% focused on offline-first, distraction-free local cinema playback.
+
+---
+
 # Jadzumi v2.0.6 (UI/UX Rollback & Motion System Retention) — "Baseline Restored, Premium Motion Preserved" 🌌🎬✨
 
 A precision restoration release rolling back the UI/UX changes from the Pure overhaul to the verified baseline checkpoint (`11c8920`), while fully preserving the cohesive Apple/M3 fluid spring animations, continuous spatial transitions, and gesture responsiveness.

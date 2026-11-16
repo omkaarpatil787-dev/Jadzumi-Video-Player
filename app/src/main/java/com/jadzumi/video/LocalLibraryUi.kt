@@ -28,6 +28,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -178,6 +180,7 @@ private data class HeroItem(
     val subtitle: String,
     val badge: String? = null,
     val localVideo: LocalVideo? = null,
+    val backdropUri: String? = null,
     val previewArtwork: String = "hero",
     val onPlay: () -> Unit,
     val onInfo: () -> Unit
@@ -288,14 +291,14 @@ private fun HeroMoviePager(
                         Surface(
                             onClick = currentItem.onPlay,
                             shape = CircleShape,
-                            color = Color(0xFF0B57D0),
+                            color = LavenderAccent,
                             modifier = Modifier.size(if (isPhone) 40.dp else 44.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Rounded.PlayArrow,
                                     contentDescription = "Play",
-                                    tint = Color.White,
+                                    tint = Obsidian,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -308,8 +311,10 @@ private fun HeroMoviePager(
                     ) { page ->
                         val item = items[page]
                         Box(Modifier.fillMaxSize()) {
-                            if (item.localVideo != null) {
-                                LocalThumbnail(item.localVideo, Modifier.fillMaxSize())
+                            if (item.backdropUri != null) {
+                                SidecarImage(item.backdropUri, item.localVideo, Modifier.fillMaxSize())
+                            } else if (item.localVideo != null) {
+                                SidecarImage(null, item.localVideo, Modifier.fillMaxSize())
                             } else {
                                 val res = when (item.previewArtwork) {
                                     "anime" -> R.drawable.anime
@@ -323,13 +328,14 @@ private fun HeroMoviePager(
                                     contentScale = ContentScale.Crop
                                 )
                             }
+                            // Subtle dark overlay for readability
                             Box(
                                 Modifier.fillMaxSize().background(
                                     Brush.verticalGradient(
                                         colors = listOf(
-                                            Color.Black.copy(alpha = 0.2f),
-                                            Color.Black.copy(alpha = 0.55f),
-                                            Color.Black.copy(alpha = 0.94f)
+                                            Color.Transparent,
+                                            Color.Black.copy(alpha = 0.35f),
+                                            Obsidian.copy(alpha = 0.90f)
                                         )
                                     )
                                 )
@@ -341,7 +347,7 @@ private fun HeroMoviePager(
                                 if (item.badge != null) {
                                     Surface(
                                         shape = CircleShape,
-                                        color = Color(0xFF0B57D0).copy(alpha = 0.85f),
+                                        color = LavenderAccent.copy(alpha = 0.90f),
                                         modifier = Modifier.padding(bottom = 6.dp)
                                     ) {
                                         Text(
@@ -349,7 +355,7 @@ private fun HeroMoviePager(
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color.White
+                                            color = Obsidian
                                         )
                                     }
                                 }
@@ -376,12 +382,12 @@ private fun HeroMoviePager(
                                     Button(
                                         onClick = item.onPlay,
                                         shape = CircleShape,
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B57D0)),
+                                        colors = ButtonDefaults.buttonColors(containerColor = LavenderAccent),
                                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
                                     ) {
-                                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                        Icon(Icons.Rounded.PlayArrow, null, tint = Obsidian, modifier = Modifier.size(20.dp))
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        Text("Play", color = Obsidian, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                     }
                                     Surface(
                                         onClick = item.onPlay,
@@ -451,100 +457,104 @@ private fun ContinueWatchingCard(
 ) {
     Surface(
         onClick = onClick,
-        modifier = Modifier.width(250.dp).touchMotion(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface
+        modifier = Modifier
+            .width(240.dp)
+            .height(135.dp)
+            .touchMotion(),
+        shape = RoundedCornerShape(18.dp),
+        color = Charcoal,
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+        shadowElevation = 3.dp
     ) {
-        Column {
-            Box(Modifier.fillMaxWidth().height(130.dp)) {
-                if (video != null) {
-                    LocalThumbnail(video, Modifier.fillMaxSize())
-                } else {
-                    val res = when (previewFallback?.artwork) {
-                        "anime" -> R.drawable.anime
-                        "cosmos" -> R.drawable.cosmos
-                        else -> R.drawable.hero
-                    }
-                    Image(
-                        painter = painterResource(res),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+        Box(Modifier.fillMaxSize()) {
+            if (video != null) {
+                LocalThumbnail(video, Modifier.fillMaxSize())
+            } else {
+                val res = when (previewFallback?.artwork) {
+                    "anime" -> R.drawable.anime
+                    "cosmos" -> R.drawable.cosmos
+                    else -> R.drawable.hero
                 }
-                Box(
-                    Modifier.fillMaxSize().background(
-                        Brush.verticalGradient(
-                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))
+                Image(
+                    painter = painterResource(res),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            // Subtle dark overlay for readability
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.35f),
+                            Color.Black.copy(alpha = 0.88f)
                         )
                     )
                 )
-                Surface(
-                    shape = CircleShape,
-                    color = Color.Black.copy(alpha = 0.55f),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
-                    modifier = Modifier.align(Alignment.Center).size(38.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(22.dp))
-                    }
-                }
+            )
 
-                // Remaining time pill
-                val remMs = (durationMs - savedPos).coerceAtLeast(0)
-                val remMins = (remMs / 60_000L).coerceAtLeast(1)
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Color.Black.copy(alpha = 0.70f),
-                    modifier = Modifier.padding(8.dp).align(Alignment.BottomEnd)
-                ) {
-                    Text(
-                        "${remMins}m left",
-                        color = Color.White,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                    )
+            // Centered Play Button
+            Surface(
+                shape = CircleShape,
+                color = Color.Black.copy(alpha = 0.50f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                modifier = Modifier.align(Alignment.Center).size(36.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
             }
-            Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp)) {
+
+            // Bottom Info Overlay: Title on left, percentage / episode on right, and thin progress bar
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
                 val title = video?.title ?: previewFallback?.title ?: "Video"
-                Text(
-                    title,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(Modifier.height(8.dp))
                 val durSafe = if (durationMs > 0) durationMs else 1L
                 val progress = (savedPos.toDouble() / durSafe).toFloat().coerceIn(0f, 1f)
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
-                    color = TimelineAccent,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
-                Spacer(Modifier.height(6.dp))
+                val percent = (progress * 100).toInt().coerceIn(1, 99)
+                val subText = video?.episode?.let { "S${it.season} · E${it.episode}" } ?: "$percent%"
+
                 Row(
-                    Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val posSec = savedPos / 1000
-                    val durSec = durationMs / 1000
                     Text(
-                        "${timecode(posSec)} / ${timecode(durSec)}",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        title,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
-                    Icon(
-                        Icons.Rounded.ChevronRight,
-                        null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        subText,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = LavenderAccent
                     )
                 }
+
+                Spacer(Modifier.height(5.dp))
+
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.5.dp)
+                        .clip(CircleShape),
+                    color = LavenderAccent,
+                    trackColor = Color.White.copy(alpha = 0.25f)
+                )
             }
         }
     }
@@ -794,69 +804,46 @@ fun JadzumiCategoryPillsRow(
     modifier: Modifier = Modifier
 ) {
     val categories = remember { listOf("All", "Movies", "Series", "Anime", "Folders") }
-    val selectedIndex = remember(selectedCategory) {
-        val idx = categories.indexOf(selectedCategory)
-        if (idx >= 0) idx else 0
-    }
 
-    val animatedProgress by animateFloatAsState(
-        targetValue = selectedIndex.toFloat(),
-        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
-        label = "categoryPillSliderProgress"
-    )
-
-    Surface(
+    Row(
         modifier = modifier
-            .fillMaxWidth()
-            .height(40.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-        shadowElevation = 2.dp
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(3.dp)
-        ) {
-            val segmentWidth = maxWidth / categories.size
-
-            // Continuous Sliding Selection Capsule
-            Box(
-                modifier = Modifier
-                    .offset(x = segmentWidth * animatedProgress)
-                    .width(segmentWidth)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(17.dp))
-                    .background(MaterialTheme.colorScheme.primary)
+        categories.forEach { cat ->
+            val isSelected = cat == selectedCategory
+            val pillBg by animateColorAsState(
+                targetValue = if (isSelected) LavenderAccent else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+                label = "cat_pill_bg_$cat"
+            )
+            val pillText by animateColorAsState(
+                targetValue = if (isSelected) Obsidian else MaterialTheme.colorScheme.onSurfaceVariant,
+                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+                label = "cat_pill_txt_$cat"
+            )
+            val pillElevation by animateDpAsState(
+                targetValue = if (isSelected) 3.dp else 1.dp,
+                label = "cat_pill_elev_$cat"
             )
 
-            Row(modifier = Modifier.fillMaxSize()) {
-                categories.forEachIndexed { index, cat ->
-                    val isSelected = index == selectedIndex
-                    val textColor by animateColorAsState(
-                        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        animationSpec = tween(160),
-                        label = "cat_text_color_$index"
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(17.dp))
-                            .clickable { onCategorySelected(cat) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = cat,
-                            fontSize = 12.5.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = textColor,
-                            maxLines = 1
-                        )
-                    }
-                }
+            Surface(
+                onClick = { onCategorySelected(cat) },
+                shape = RoundedCornerShape(16.dp),
+                color = pillBg,
+                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f)),
+                shadowElevation = pillElevation,
+                modifier = Modifier.touchMotion()
+            ) {
+                Text(
+                    text = cat,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                    fontSize = 12.5.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    color = pillText,
+                    maxLines = 1
+                )
             }
         }
     }
@@ -1034,6 +1021,7 @@ fun JadzumiCategoryPillsRow(
                             subtitle = "Up Next: S%02dE%02d · %s".format(sNum, eNum, epInfo?.episodeTitle ?: nextEp.title),
                             badge = "▶ UP NEXT · S%02dE%02d".format(sNum, eNum),
                             localVideo = nextEp,
+                            backdropUri = series.backdropUri ?: series.posterUri,
                             onPlay = {
                                 playback.open(nextEp)
                                 playback.fullscreen = true
@@ -1051,6 +1039,7 @@ fun JadzumiCategoryPillsRow(
                 if (suggestions.none { it.id == movie.uri } && suggestions.size < 4) {
                     val pos = playback.savedPosition(movie)
                     val dur = movie.duration.takeIf { it > 0 } ?: 1000L
+                    val mMeta = extractMovieMetadata(movie, state.sidecars, context)
                     suggestions.add(
                         HeroItem(
                             id = movie.uri,
@@ -1058,6 +1047,7 @@ fun JadzumiCategoryPillsRow(
                             subtitle = "Resume from ${timecode(pos / 1000)} · ${timecode((dur - pos).coerceAtLeast(0) / 1000)} left",
                             badge = "⏱ RESUME WATCHING",
                             localVideo = movie,
+                            backdropUri = mMeta.backdropUri ?: mMeta.posterUri,
                             onPlay = {
                                 playback.open(movie)
                                 playback.fullscreen = true
@@ -1076,6 +1066,7 @@ fun JadzumiCategoryPillsRow(
                     val epInfo = EpisodePatterns.parse(video.name)
                     val durStr = if (video.duration > 0) timecode(video.duration / 1000) else "Feature Film"
                     val resStr = if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else "1080p FHD"
+                    val vMeta = extractMovieMetadata(video, state.sidecars, context)
                     suggestions.add(
                         HeroItem(
                             id = video.uri,
@@ -1083,6 +1074,7 @@ fun JadzumiCategoryPillsRow(
                             subtitle = "$durStr · $resStr · Dolby Audio",
                             badge = if (epInfo != null) "✨ TV SERIES SPOTLIGHT" else "★ RECOMMENDED CINEMA",
                             localVideo = video,
+                            backdropUri = vMeta.backdropUri ?: vMeta.posterUri,
                             onPlay = {
                                 playback.open(video)
                                 playback.fullscreen = true

@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.9-2563eb?style=flat-square" alt="Version 2.0.9"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.1-7c3aed?style=flat-square" alt="Version 2.1"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -52,13 +52,14 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details open>
-<summary><strong>What’s new · v2.0.9 — Jadzumi Web Sources & Live TV Native Playback Engine 📡✨</strong></summary>
+<summary><strong>What’s new · v2.1 — Moonlit Lavender UI/UX & Cinema HUD 3.0 Refinement 🎬✨</strong></summary>
 
-- **Native Media3/ExoPlayer Streaming**: Support for direct HLS (`.m3u8`), MPEG-DASH (`.mpd`), and progressive video streams with adaptive bitrate switching directly inside Cinema HUD 3.0.
-- **Cinema HUD 3.0 Live Stream Experience**: Dynamic `● LIVE` badge, `LIVE BROADCAST` time capsule pill with 1-tap live-edge synchronization (`playback.returnToLive()`), and lock-free adaptive buffer management.
-- **M3U / M3U8 IPTV Playlist Parser**: Import local or remote IPTV playlists with full channel metadata parsing (`tvg-logo`, `group-title`, stream URLs).
-- **Approved Web Directory Discovery**: Discover and browse stream directories (e.g. Global Free TV) with automated stream detection and 1-tap handoff to the native player.
-- **Zero Local Media Interference**: Web sources and live streams remain completely isolated from the offline-first local media database.
+- **Moonlit Lavender Palette**: Neutral atmospheric surfaces (`Obsidian #101016`, `Charcoal #1C1A25`, `Surface #292535`), expressive lavender interactive controls (`Lavender #B79AF7`, `Highlight #E8DDFB`), crisp readable typography (`Primary #F4F1FA`, `Secondary #A7A3B4`), and subtle neumorphic depth.
+- **Featured Banner & Continue Watching Polish**: Rich cinematic artwork backdrop replacing grey gradients, thinner 2.5dp progress bars, zero empty grey space, and artwork-first 16:9 continue watching cards.
+- **Compact Category Navigation**: Fluid softly rounded Material 3 Expressive pills (`All`, `Movies`, `Series`, `Anime`, `Folders`) with responsive horizontal scrolling.
+- **Movie Details Cleanup**: Eliminated duplicate rating badges, removed erroneous episode tabs for standalone films, streamlined Info Glance cards (`Rating`, `Genre`, `Audio Stream`).
+- **Cinema HUD 3.0 Pixel-Alignment**: Exact match with approved visual concept — top bar with vertical lavender accent indicator, clean metadata, side gesture vertical capsule pills for Volume/Brightness, central Lavender Play/Pause + 10s skip controls, and single-row bottom control bar with active Lavender Subtitles capsule, Chapters, Audio, Speed, and PiP.
+- **Offline-First Cinema Commitment**: Pruned experimental web streaming components to maintain a distraction-free, 100% offline-first local media player.
 
 See [release notes](RELEASE_NOTES.md) for full details.
 

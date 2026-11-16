@@ -135,6 +135,10 @@ fun MovieDetailsPage(
             )
         }
 
+        val hasRelated = remember(state.videos, video) {
+            state.videos.any { it.uri != video.uri }
+        }
+
         LazyColumn(
             state = scrollState,
             modifier = Modifier
@@ -479,48 +483,51 @@ fun MovieDetailsPage(
                 }
             }
 
-            // Subtabs: [ Details | Episodes | Related ]
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    listOf("Details", "Episodes", "Related").forEach { tab ->
-                        val isSelected = tab == detailsSubtab
-                        val tabBg by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                            label = "tab_bg"
-                        )
-                        val tabContent by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                            label = "tab_txt"
-                        )
-
-                        Surface(
-                            onClick = { detailsSubtab = tab },
-                            shape = RoundedCornerShape(18.dp),
-                            color = tabBg,
-                            border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
-                        ) {
-                            Text(
-                                text = tab,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = tabContent
+            // Subtabs: [ Details | Related ] (Episodes capsule removed for movies)
+            if (hasRelated) {
+                item {
+                    val movieSubtabs = remember { listOf("Details", "Related") }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        movieSubtabs.forEach { tab ->
+                            val isSelected = tab == detailsSubtab
+                            val tabBg by animateColorAsState(
+                                targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                label = "tab_bg"
                             )
+                            val tabContent by animateColorAsState(
+                                targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                label = "tab_txt"
+                            )
+
+                            Surface(
+                                onClick = { detailsSubtab = tab },
+                                shape = RoundedCornerShape(18.dp),
+                                color = tabBg,
+                                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                            ) {
+                                Text(
+                                    text = tab,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = tabContent
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // Info Glance Cards (Neumorphic Style: Rating / Release, Genre, Audio Stream)
+            // Info Glance Cards (Neumorphic Style: Rating, Genre, Audio Stream)
             item {
-                val ratingOrYearLabel = if (effectiveMetadata.rating != null) "RATING" else "RELEASE"
-                val ratingOrYearVal = effectiveMetadata.rating?.let { "★ $it / 10" } ?: (effectiveMetadata.year ?: "Cinema Feature")
+                val card1Label = "RATING"
+                val card1Val = effectiveMetadata.rating?.let { "★ $it / 10" } ?: effectiveMetadata.year ?: "Cinema Feature"
                 val genreText = effectiveMetadata.genres.takeIf { it.isNotEmpty() }?.joinToString(" · ") ?: "Feature Film"
                 val audioText = if (video.mime.contains("mp4", true)) "AAC 5.1 / Stereo" else "E-AC-3 5.1 (Surround)"
 
@@ -536,7 +543,7 @@ fun MovieDetailsPage(
                     ) {
                         Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
                             Text(
-                                ratingOrYearLabel,
+                                card1Label,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                 fontWeight = FontWeight.Bold,
@@ -544,7 +551,7 @@ fun MovieDetailsPage(
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                ratingOrYearVal,
+                                card1Val,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -608,58 +615,7 @@ fun MovieDetailsPage(
                 }
             }
 
-            if (detailsSubtab == "Episodes") {
-                val folderEpisodes = state.videos.filter { it.folder == video.folder && it.uri != video.uri }
-                if (folderEpisodes.isEmpty()) {
-                    item {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                        ) {
-                            Text(
-                                "No additional episodes or video parts found in this folder.",
-                                modifier = Modifier.padding(20.dp),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                } else {
-                    items(folderEpisodes, key = { it.uri }) { ep ->
-                        Surface(
-                            onClick = {
-                                playback.open(ep)
-                                playback.fullscreen = true
-                            },
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(Icons.Rounded.PlayArrow, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                                    }
-                                }
-                                Column(Modifier.weight(1f)) {
-                                    Text(ep.title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    Text(if (ep.duration > 0) timecode(ep.duration / 1000) else "Video Part", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                Text("Play", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            }
-                        }
-                    }
-                }
-            } else if (detailsSubtab == "Related") {
+            if (detailsSubtab == "Related") {
                 val relatedVideos = state.videos.filter { it.uri != video.uri }.take(6)
                 if (relatedVideos.isEmpty()) {
                     item {
@@ -881,24 +837,6 @@ private fun MovieBadgesFlow(metadata: MovieMetadata, video: LocalVideo) {
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-        }
-
-        // Star Rating Pill
-        metadata.rating?.let { rating ->
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(Icons.Rounded.Star, null, Modifier.size(13.dp), tint = Color(0xFFF9AB00))
-                    Text(rating, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
             }
         }
 

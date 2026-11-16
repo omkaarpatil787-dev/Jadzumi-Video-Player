@@ -18,8 +18,6 @@ import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.ContentDataSource
 import androidx.media3.datasource.DataSource
-import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.mp4.Mp4Extractor
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -88,11 +86,6 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
     var locked by mutableStateOf(false)
     var seekable by mutableStateOf(false); private set
-    var isLive by mutableStateOf(false); private set
-
-    fun returnToLive() {
-        player?.seekToDefaultPosition()
-    }
 
     var audioTracks by mutableStateOf<List<AudioTrackInfo>>(emptyList()); private set
     var subtitleTracks by mutableStateOf<List<SubtitleTrackInfo>>(emptyList()); private set
@@ -946,9 +939,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             }
         }
         hdrFlavor = if (isHdr) detectHdrFlavor(null, v.name) else null
-        val isHttp = v.uri.startsWith("http://", ignoreCase = true) || v.uri.startsWith("https://", ignoreCase = true)
-        isLive = isHttp && v.duration <= 0
-        position = if (isHttp) 0L else persistedPosition(v); suspendedPosition = position; duration = if (v.duration > 0) v.duration else 0L
+        position = persistedPosition(v); suspendedPosition = position; duration = v.duration
         prepare(autoplay = true)
     }
 
@@ -1003,17 +994,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .setConstantBitrateSeekingAlwaysEnabled(true)
                 .setMp4ExtractorFlags(Mp4Extractor.FLAG_WORKAROUND_IGNORE_EDIT_LISTS)
 
-            val dataSourceFactory: DataSource.Factory = if (isHttp) {
-                val httpFactory = DefaultHttpDataSource.Factory()
-                    .setUserAgent("JadzumiPlayer/2.0.9 (Android; Media3)")
-                    .setAllowCrossProtocolRedirects(true)
-                    .setConnectTimeoutMs(12_000)
-                    .setReadTimeoutMs(15_000)
-                DefaultDataSource.Factory(app, httpFactory)
-            } else {
-                DataSource.Factory { ContentDataSource(app) }
-            }
-
+            val dataSourceFactory = DataSource.Factory { ContentDataSource(app) }
             val source = DefaultMediaSourceFactory(dataSourceFactory, extractorsFactory)
 
             val instantLoadControl = DefaultLoadControl.Builder()
@@ -1099,9 +1080,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                         player.playerError == null)
                     speed = player.playbackParameters.speed
                     if (player.isPlaying) { completed = false; endedHandledFor = null }
-                    val liveDetected = player.isCurrentMediaItemLive || player.isCurrentMediaItemDynamic || (v.uri.startsWith("http") && (player.duration <= 0 || player.duration == C.TIME_UNSET))
-                    isLive = liveDetected
-                    seekable = !liveDetected && (player.isCurrentMediaItemSeekable || duration > 0)
+                    seekable = player.isCurrentMediaItemSeekable || duration > 0
 
                     val size = player.videoSize
                     if (size.width > 0 && size.height > 0) {
