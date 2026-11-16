@@ -1492,92 +1492,116 @@ private val settingsCategories = listOf(
                         }
 
                         "Audio" -> {
+                            // BENTO CARD 1: AUDIO OUTPUT & SPATIAL 3D
                             item {
                                 Panel {
-                                    Text("Audio Output & Surround", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("NextLib Media3 FFmpeg decoder for Dolby Atmos / 5.1 / 7.1 surround tracks.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Audio Decoder", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Bundled FFmpeg: EAC-3, AC-3, TrueHD, DTS-HD, FLAC, AAC", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("⚡ Audio Output & Spatial 3D", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = Color(0xFF1E8E3E).copy(alpha = 0.15f),
+                                            border = BorderStroke(1.dp, Color(0xFF1E8E3E).copy(alpha = 0.4f))
+                                        ) {
+                                            Text(
+                                                "● NextLib FFmpeg Active",
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF34D399)
+                                            )
                                         }
-                                        Text("Auto (NextLib FFmpeg) ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                                     }
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Bundled FFmpeg: EAC-3, AC-3, TrueHD, DTS-HD, FLAC, and AAC with zero stutter.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+
+                                    // Spatial Cinema 3D
+                                    Text("Spatial Cinema 3D Virtualizer", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, modifier = Modifier.padding(top = 6.dp, bottom = 6.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Spatial3DMode.entries.forEach { mode ->
+                                            val isSelected = playback.spatial3DMode == mode
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = { playback.setSpatial3D(mode) },
+                                                label = { Text(mode.displayName.substringBefore(" (")) }
+                                            )
+                                        }
+                                    }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Downmix to Stereo", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Downmix to Stereo", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
                                             Text(DeviceHardwareInspector.getStereoDownmixDescription(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = true, onCheckedChange = {})
                                     }
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                }
+                            }
+
+                            // BENTO CARD 2: PLAYBACK AUDIO FEATURES
+                            item {
+                                Panel {
+                                    Text("🌙 Playback Audio Enhancements", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Smart dialogue tuning and background audio for uninterrupted listening.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Screen-Off Background Audio", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Continue playback when turning off screen or locking device", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
-                                    }
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Night Mode & Dialogue Voice Boost", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                            Text("Night Mode & Dialogue Voice Boost", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
                                             Text("Dynamic Range Compression & speech clarity boost for late-night watching", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Switch(checked = playback.nightModeVoiceBoost, onCheckedChange = { playback.updateNightMode(it) })
                                     }
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-                                        Text("Spatial Cinema 3D Virtualizer", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                        Text("Binaural acoustic room modeling for stereo headphones and speakers", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
-                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            Spatial3DMode.entries.forEach { mode ->
-                                                FilterChip(
-                                                    selected = playback.spatial3DMode == mode,
-                                                    onClick = { playback.setSpatial3D(mode) },
-                                                    label = { Text(mode.displayName.substringBefore(" (")) }
-                                                )
-                                            }
+
+                                    HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                                            Text("Screen-Off Background Audio", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
+                                            Text("Continue playback when turning off screen or locking device", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
-                                    }
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-                                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                            Column(Modifier.weight(1f)) {
-                                                Text("Bluetooth Audio Delay Compensation", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                                Text("Calibrate audio lip-sync delay for Bluetooth earbuds & wireless speakers", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            }
-                                            Text("${playback.audioDelayMs} ms", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
-                                        }
-                                        Spacer(Modifier.height(8.dp))
-                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            OutlinedButton(onClick = { playback.updateAudioDelay(playback.audioDelayMs - 50) }) { Text("-50ms", fontSize = 12.sp) }
-                                            OutlinedButton(onClick = { playback.updateAudioDelay(playback.audioDelayMs + 50) }) { Text("+50ms", fontSize = 12.sp) }
-                                            if (playback.audioDelayMs != 0L) {
-                                                TextButton(onClick = { playback.resetAudioDelay() }) { Text("Reset", fontSize = 12.sp) }
-                                            }
-                                        }
+                                        Switch(checked = playback.backgroundAudioEnabled, onCheckedChange = { playback.setBackgroundAudio(it) })
                                     }
                                 }
                             }
+
+                            // BENTO CARD 3: WIRELESS AUDIO LIP-SYNC CALIBRATION
                             item {
                                 Panel {
-                                    Text("Active Stream Format", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Spacer(Modifier.height(8.dp))
-                                    val currentTrack = playback.audioTracks.firstOrNull()
-                                    val audioLabel = if (currentTrack != null) {
-                                        "${currentTrack.codec} · ${currentTrack.channels}"
-                                    } else "Dolby Atmos / 5.1 / 7.1 / AAC Decoder Ready"
-                                    Surface(
-                                        shape = RoundedCornerShape(14.dp),
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-                                    ) {
-                                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                            Icon(Icons.Rounded.Headphones, null, tint = MaterialTheme.colorScheme.primary)
-                                            Text(audioLabel, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("🎧 Wireless Lip-Sync Calibration", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                        ) {
+                                            Text(
+                                                "${playback.audioDelayMs} ms",
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+                                    Text("Calibrate audio delay for Bluetooth earbuds, headphones, and wireless soundbars.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+
+                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        OutlinedButton(
+                                            onClick = { playback.updateAudioDelay(playback.audioDelayMs - 50) },
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) { Text("-50 ms", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                                        OutlinedButton(
+                                            onClick = { playback.updateAudioDelay(playback.audioDelayMs + 50) },
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) { Text("+50 ms", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                                        if (playback.audioDelayMs != 0L) {
+                                            TextButton(onClick = { playback.resetAudioDelay() }) {
+                                                Text("Reset (0 ms)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                                            }
                                         }
                                     }
                                 }
@@ -1595,199 +1619,209 @@ private val settingsCategories = listOf(
                                 var subEdge by remember { mutableStateOf(SubtitlePreferences.getEdge(context)) }
                                 var subMargin by remember { mutableFloatStateOf(SubtitlePreferences.getBottomMargin(context)) }
 
-                                Panel {
-                                    Text("Subtitle Appearance", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("Typography, 3D edges, colors, and live rendering for SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+                                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    // BENTO CARD 1: LIVE PREVIEW & TYPOGRAPHY
+                                    Panel {
+                                        Text("📝 Subtitle Live Studio & Typography", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("Typography, font weight, and real-time rendering for SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
 
-                                    // Live Subtitle Preview Card
-                                    Card(
-                                        modifier = Modifier.fillMaxWidth().height(145.dp),
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1017))
-                                    ) {
-                                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                                            Box(
-                                                Modifier.fillMaxSize().background(
-                                                    Brush.verticalGradient(listOf(Color(0xFF161F2E), Color(0xFF080B0F)))
+                                        // Live Subtitle Preview Card
+                                        Card(
+                                            modifier = Modifier.fillMaxWidth().height(145.dp),
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1017))
+                                        ) {
+                                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                                                Box(
+                                                    Modifier.fillMaxSize().background(
+                                                        Brush.verticalGradient(listOf(Color(0xFF161F2E), Color(0xFF080B0F)))
+                                                    )
                                                 )
-                                            )
-                                            val previewTextColor = Color(SubtitlePreferences.getColorInt(subColor))
-                                            val previewBgColor = Color(SubtitlePreferences.getBackgroundInt(subBg))
-                                            val previewFontFamily = when (subFont) {
-                                                "Cinema Serif" -> androidx.compose.ui.text.font.FontFamily.Serif
-                                                "Heavy Sans" -> androidx.compose.ui.text.font.FontFamily.SansSerif
-                                                "Roboto Condensed" -> androidx.compose.ui.text.font.FontFamily.SansSerif
-                                                "Roboto Monospace" -> androidx.compose.ui.text.font.FontFamily.Monospace
-                                                "System Default" -> androidx.compose.ui.text.font.FontFamily.Default
-                                                else -> androidx.compose.ui.text.font.FontFamily.SansSerif
-                                            }
-                                            val previewFontWeight = when {
-                                                subFont == "Heavy Sans" || subFontStyle.contains("Bold") -> FontWeight.ExtraBold
-                                                else -> FontWeight.SemiBold
-                                            }
-                                            val previewFontStyle = if (subFontStyle.contains("Italic")) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal
-                                            val previewFontSize = (15.sp * subSize)
+                                                val previewTextColor = Color(SubtitlePreferences.getColorInt(subColor))
+                                                val previewBgColor = Color(SubtitlePreferences.getBackgroundInt(subBg))
+                                                val previewFontFamily = when (subFont) {
+                                                    "Cinema Serif" -> androidx.compose.ui.text.font.FontFamily.Serif
+                                                    "Heavy Sans" -> androidx.compose.ui.text.font.FontFamily.SansSerif
+                                                    "Roboto Condensed" -> androidx.compose.ui.text.font.FontFamily.SansSerif
+                                                    "Roboto Monospace" -> androidx.compose.ui.text.font.FontFamily.Monospace
+                                                    "System Default" -> androidx.compose.ui.text.font.FontFamily.Default
+                                                    else -> androidx.compose.ui.text.font.FontFamily.SansSerif
+                                                }
+                                                val previewFontWeight = when {
+                                                    subFont == "Heavy Sans" || subFontStyle.contains("Bold") -> FontWeight.ExtraBold
+                                                    else -> FontWeight.SemiBold
+                                                }
+                                                val previewFontStyle = if (subFontStyle.contains("Italic")) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal
+                                                val previewFontSize = (15.sp * subSize)
 
+                                                Surface(
+                                                    modifier = Modifier.padding(bottom = (12.dp + (subMargin * 50).dp), start = 16.dp, end = 16.dp),
+                                                    color = previewBgColor,
+                                                    shape = RoundedCornerShape(if (subBg == "Rounded Pill Box") 8.dp else 4.dp),
+                                                    border = if (subEdge == "Soft Glow") BorderStroke(1.dp, Color(0xFF8B9DFF).copy(alpha = 0.5f)) else null
+                                                ) {
+                                                    Text(
+                                                        "We must reach beyond our own horizon.",
+                                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                        color = previewTextColor,
+                                                        fontSize = previewFontSize,
+                                                        fontFamily = previewFontFamily,
+                                                        fontWeight = previewFontWeight,
+                                                        fontStyle = previewFontStyle,
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(14.dp))
+                                        Text("Font Family", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, modifier = Modifier.padding(bottom = 6.dp))
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            SubtitlePreferences.fontOptions.forEach { font ->
+                                                FilterChip(
+                                                    selected = subFont == font,
+                                                    onClick = {
+                                                        subFont = font
+                                                        SubtitlePreferences.setFont(context, font)
+                                                    },
+                                                    label = { Text(font, maxLines = 1, softWrap = false) }
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(10.dp))
+                                        Text("Font Style & Weight", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, modifier = Modifier.padding(bottom = 6.dp))
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            SubtitlePreferences.fontStyleOptions.forEach { style ->
+                                                FilterChip(
+                                                    selected = subFontStyle == style,
+                                                    onClick = {
+                                                        subFontStyle = style
+                                                        SubtitlePreferences.setFontStyle(context, style)
+                                                    },
+                                                    label = { Text(style, maxLines = 1, softWrap = false) }
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(10.dp))
+                                        Text("Text Size", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, modifier = Modifier.padding(bottom = 6.dp))
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            SubtitlePreferences.sizeOptions.forEach { (sz, label) ->
+                                                FilterChip(
+                                                    selected = subSize == sz,
+                                                    onClick = {
+                                                        subSize = sz
+                                                        SubtitlePreferences.setSize(context, sz)
+                                                    },
+                                                    label = { Text(label, maxLines = 1, softWrap = false) }
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // BENTO CARD 2: COLORS & 3D EDGE EFFECTS
+                                    Panel {
+                                        Text("🎨 Colors, Shading & Background Style", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("Customize text contrast, background pill geometry, and glowing drop shadows.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+
+                                        Text("Text Color", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, modifier = Modifier.padding(bottom = 6.dp))
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            SubtitlePreferences.colorOptions.forEach { colorName ->
+                                                val dotColor = Color(SubtitlePreferences.getColorInt(colorName))
+                                                FilterChip(
+                                                    selected = subColor == colorName,
+                                                    onClick = {
+                                                        subColor = colorName
+                                                        SubtitlePreferences.setColor(context, colorName)
+                                                    },
+                                                    leadingIcon = {
+                                                        Box(Modifier.size(12.dp).clip(CircleShape).background(dotColor))
+                                                    },
+                                                    label = { Text(colorName, maxLines = 1, softWrap = false) }
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(10.dp))
+                                        Text("Edge, 3D & Glow Effect", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, modifier = Modifier.padding(bottom = 6.dp))
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            SubtitlePreferences.edgeOptions.forEach { edgeName ->
+                                                FilterChip(
+                                                    selected = subEdge == edgeName,
+                                                    onClick = {
+                                                        subEdge = edgeName
+                                                        SubtitlePreferences.setEdge(context, edgeName)
+                                                    },
+                                                    label = { Text(edgeName, maxLines = 1, softWrap = false) }
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(10.dp))
+                                        Text("Background Box Style", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, modifier = Modifier.padding(bottom = 6.dp))
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            SubtitlePreferences.backgroundOptions.forEach { bgName ->
+                                                FilterChip(
+                                                    selected = subBg == bgName,
+                                                    onClick = {
+                                                        subBg = bgName
+                                                        SubtitlePreferences.setBackground(context, bgName)
+                                                    },
+                                                    label = { Text(bgName, maxLines = 1, softWrap = false) }
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(10.dp))
+                                        Text("Vertical Margin & Position", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, modifier = Modifier.padding(bottom = 6.dp))
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            SubtitlePreferences.bottomMarginOptions.forEach { (margin, label) ->
+                                                FilterChip(
+                                                    selected = (subMargin - margin) in -0.01f..0.01f,
+                                                    onClick = {
+                                                        subMargin = margin
+                                                        SubtitlePreferences.setBottomMargin(context, margin)
+                                                    },
+                                                    label = { Text(label, maxLines = 1, softWrap = false) }
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // BENTO CARD 3: SUBTITLE TIMING & SYNC
+                                    Panel {
+                                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text("⏱ Subtitle Sync Offset Calibration", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                             Surface(
-                                                modifier = Modifier.padding(bottom = (12.dp + (subMargin * 50).dp), start = 16.dp, end = 16.dp),
-                                                color = previewBgColor,
-                                                shape = RoundedCornerShape(if (subBg == "Rounded Pill Box") 8.dp else 4.dp),
-                                                border = if (subEdge == "Soft Glow") BorderStroke(1.dp, Color(0xFF8B9DFF).copy(alpha = 0.5f)) else null
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
                                             ) {
                                                 Text(
-                                                    "We must reach beyond our own horizon.",
-                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                                    color = previewTextColor,
-                                                    fontSize = previewFontSize,
-                                                    fontFamily = previewFontFamily,
-                                                    fontWeight = previewFontWeight,
-                                                    fontStyle = previewFontStyle,
-                                                    textAlign = TextAlign.Center
+                                                    "${playback.subtitleDelayMs} ms",
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    fontSize = 12.sp
                                                 )
                                             }
                                         }
-                                    }
+                                        Text("Fine-tune subtitle timing synchronization for out-of-sync SRT/ASS tracks.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
 
-                                    Spacer(Modifier.height(16.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Text("Font Family", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
-                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        SubtitlePreferences.fontOptions.forEach { font ->
-                                            FilterChip(
-                                                selected = subFont == font,
-                                                onClick = {
-                                                    subFont = font
-                                                    SubtitlePreferences.setFont(context, font)
-                                                },
-                                                label = { Text(font, maxLines = 1, softWrap = false) }
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(12.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Text("Font Style & Weight", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
-                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        SubtitlePreferences.fontStyleOptions.forEach { style ->
-                                            FilterChip(
-                                                selected = subFontStyle == style,
-                                                onClick = {
-                                                    subFontStyle = style
-                                                    SubtitlePreferences.setFontStyle(context, style)
-                                                },
-                                                label = { Text(style, maxLines = 1, softWrap = false) }
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(12.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Text("Text Size", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
-                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        SubtitlePreferences.sizeOptions.forEach { (sz, label) ->
-                                            FilterChip(
-                                                selected = subSize == sz,
-                                                onClick = {
-                                                    subSize = sz
-                                                    SubtitlePreferences.setSize(context, sz)
-                                                },
-                                                label = { Text(label, maxLines = 1, softWrap = false) }
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(12.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Text("Text Color", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
-                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        SubtitlePreferences.colorOptions.forEach { colorName ->
-                                            val dotColor = Color(SubtitlePreferences.getColorInt(colorName))
-                                            FilterChip(
-                                                selected = subColor == colorName,
-                                                onClick = {
-                                                    subColor = colorName
-                                                    SubtitlePreferences.setColor(context, colorName)
-                                                },
-                                                leadingIcon = {
-                                                    Box(Modifier.size(12.dp).clip(CircleShape).background(dotColor))
-                                                },
-                                                label = { Text(colorName, maxLines = 1, softWrap = false) }
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(12.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Text("Edge, 3D & Glow Effect", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
-                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        SubtitlePreferences.edgeOptions.forEach { edgeName ->
-                                            FilterChip(
-                                                selected = subEdge == edgeName,
-                                                onClick = {
-                                                    subEdge = edgeName
-                                                    SubtitlePreferences.setEdge(context, edgeName)
-                                                },
-                                                label = { Text(edgeName, maxLines = 1, softWrap = false) }
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(12.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Text("Background Box Style", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
-                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        SubtitlePreferences.backgroundOptions.forEach { bgName ->
-                                            FilterChip(
-                                                selected = subBg == bgName,
-                                                onClick = {
-                                                    subBg = bgName
-                                                    SubtitlePreferences.setBackground(context, bgName)
-                                                },
-                                                label = { Text(bgName, maxLines = 1, softWrap = false) }
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(12.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Text("Vertical Margin & Position", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
-                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        SubtitlePreferences.bottomMarginOptions.forEach { (margin, label) ->
-                                            FilterChip(
-                                                selected = (subMargin - margin) in -0.01f..0.01f,
-                                                onClick = {
-                                                    subMargin = margin
-                                                    SubtitlePreferences.setBottomMargin(context, margin)
-                                                },
-                                                label = { Text(label, maxLines = 1, softWrap = false) }
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.height(12.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-                                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                            Column(Modifier.weight(1f)) {
-                                                Text("Subtitle Sync Offset Calibration", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                                Text("Fine-tune subtitle timing synchronization for out-of-sync SRT/ASS tracks", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            }
-                                            Text("${playback.subtitleDelayMs} ms", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
-                                        }
-                                        Spacer(Modifier.height(8.dp))
-                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            OutlinedButton(onClick = { playback.updateSubtitleDelay(playback.subtitleDelayMs - 100) }) { Text("-100ms", fontSize = 12.sp) }
-                                            OutlinedButton(onClick = { playback.updateSubtitleDelay(playback.subtitleDelayMs + 100) }) { Text("+100ms", fontSize = 12.sp) }
+                                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            OutlinedButton(
+                                                onClick = { playback.updateSubtitleDelay(playback.subtitleDelayMs - 100) },
+                                                shape = RoundedCornerShape(12.dp)
+                                            ) { Text("-100 ms", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                                            OutlinedButton(
+                                                onClick = { playback.updateSubtitleDelay(playback.subtitleDelayMs + 100) },
+                                                shape = RoundedCornerShape(12.dp)
+                                            ) { Text("+100 ms", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
                                             if (playback.subtitleDelayMs != 0L) {
-                                                TextButton(onClick = { playback.resetSubtitleDelay() }) { Text("Reset", fontSize = 12.sp) }
+                                                TextButton(onClick = { playback.resetSubtitleDelay() }) {
+                                                    Text("Reset (0 ms)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                                                }
                                             }
                                         }
                                     }
@@ -1845,90 +1879,7 @@ private val settingsCategories = listOf(
                                 )
                             }
 
-                            // 3. Cinematic Hybrid Design Engine (Bento UI, Soft Neumorphism & M3 Expressive)
-                            item {
-                                Panel {
-                                    Text("Cinematic Hybrid Architecture", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("Unified design synthesizing Bento UI organization, soft tactile neumorphic surfaces, and Material 3 Expressive motion.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
-
-                                    // Bento UI Layout
-                                    Surface(
-                                        shape = RoundedCornerShape(16.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
-                                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
-                                    ) {
-                                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            Surface(
-                                                shape = RoundedCornerShape(12.dp),
-                                                color = LavenderAccent.copy(alpha = 0.18f),
-                                                modifier = Modifier.size(42.dp)
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center) {
-                                                    Icon(Icons.Rounded.Dashboard, null, tint = LavenderAccent, modifier = Modifier.size(22.dp))
-                                                }
-                                            }
-                                            Spacer(Modifier.width(14.dp))
-                                            Column(Modifier.weight(1f)) {
-                                                Text("Bento UI — Layout & Organization", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
-                                                Text("Asymmetrical rounded panels for Featured, Continue Watching, details, and settings; efficient grids for poster collections.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 16.sp)
-                                            }
-                                        }
-                                    }
-
-                                    // Soft Neumorphism Tactile Surfaces
-                                    Surface(
-                                        shape = RoundedCornerShape(16.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
-                                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
-                                    ) {
-                                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            Surface(
-                                                shape = RoundedCornerShape(12.dp),
-                                                color = LavenderAccent.copy(alpha = 0.18f),
-                                                modifier = Modifier.size(42.dp)
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center) {
-                                                    Icon(Icons.Rounded.Layers, null, tint = LavenderAccent, modifier = Modifier.size(22.dp))
-                                                }
-                                            }
-                                            Spacer(Modifier.width(14.dp))
-                                            Column(Modifier.weight(1f)) {
-                                                Text("Soft Neumorphism — Tactile Surfaces", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
-                                                Text("Gentle elevation and soft rims on Play/Pause, switches, and sliders. No heavy shadows, glare, or recessed text.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 16.sp)
-                                            }
-                                        }
-                                    }
-
-                                    // Material 3 Expressive Motion
-                                    Surface(
-                                        shape = RoundedCornerShape(16.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            Surface(
-                                                shape = RoundedCornerShape(12.dp),
-                                                color = LavenderAccent.copy(alpha = 0.18f),
-                                                modifier = Modifier.size(42.dp)
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center) {
-                                                    Icon(Icons.Rounded.AutoAwesome, null, tint = LavenderAccent, modifier = Modifier.size(22.dp))
-                                                }
-                                            }
-                                            Spacer(Modifier.width(14.dp))
-                                            Column(Modifier.weight(1f)) {
-                                                Text("Material 3 Expressive — Motion & Interaction", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
-                                                Text("Physics-based spring curves, morphing selection capsules, responsive touch feedback, and shared-axis transitions.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 16.sp)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            // 4. Motion Physics & Touch Dynamics
+                            // 3. Motion Physics & Touch Dynamics
                             item {
                                 Panel {
                                     Text("Motion Physics & Transitions", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)

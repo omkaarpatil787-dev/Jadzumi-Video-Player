@@ -46,7 +46,7 @@ fun MovieDetailsPage(
     val library = remember { LocalLibrary.get(context) }
     var confirmDelete by remember { mutableStateOf(false) }
     var synopsisExpanded by rememberSaveable { mutableStateOf(false) }
-    var detailsSubtab by rememberSaveable { mutableStateOf("Details") }
+    var detailsSubtab by rememberSaveable { mutableStateOf("Overview") }
 
     val metadata = remember(video, state.sidecars) {
         extractMovieMetadata(video, state.sidecars, context)
@@ -467,10 +467,10 @@ fun MovieDetailsPage(
                 }
             }
 
-            // Subtabs: [ Details | Related ] (Episodes capsule removed for movies)
+            // Subtabs: [ Overview | Related ]
             if (hasRelated) {
                 item {
-                    val movieSubtabs = remember { listOf("Details", "Related") }
+                    val movieSubtabs = remember { listOf("Overview", "Related") }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -503,97 +503,6 @@ fun MovieDetailsPage(
                                     color = tabContent
                                 )
                             }
-                        }
-                    }
-                }
-            }
-
-            // Info Glance Cards (Neumorphic Style: Rating, Genre, Audio Stream)
-            item {
-                val card1Label = "RATING"
-                val card1Val = effectiveMetadata.rating?.let { "★ $it / 10" } ?: effectiveMetadata.year ?: "Cinema Feature"
-                val genreText = effectiveMetadata.genres.takeIf { it.isNotEmpty() }?.joinToString(" · ") ?: "Feature Film"
-                val audioText = if (video.mime.contains("mp4", true)) "AAC 5.1 / Stereo" else "E-AC-3 5.1 (Surround)"
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-                    ) {
-                        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                            Text(
-                                card1Label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                card1Val,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-                    ) {
-                        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                            Text(
-                                "GENRE",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                genreText,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-                    ) {
-                        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                            Text(
-                                "AUDIO STREAM",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                audioText,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
                         }
                     }
                 }
@@ -651,7 +560,7 @@ fun MovieDetailsPage(
                     }
                 }
             } else {
-                // 3. Two-Column Tablet Ergonomics Layout: File Specs & Playback Status (Left) + Technical Inspector (Right)
+                // Unified Media Inspector 2.0 (Strict Zero Duplication)
                 item {
                     if (isTablet) {
                         Row(
@@ -659,29 +568,22 @@ fun MovieDetailsPage(
                             horizontalArrangement = Arrangement.spacedBy(22.dp),
                             verticalAlignment = Alignment.Top
                         ) {
-                            // Left Column: File Details & Resume History (Weight 1.6)
                             Column(
                                 modifier = Modifier.weight(1.6f),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                MovieFileOverviewCard(video, state, context)
-                                InspectedTracksCard(video, playback)
+                                UnifiedMediaInspectorCard(video, state, playback)
                             }
-
-                            // Right Column: Technical Inspector & Offline Badge (Weight 1.0)
                             Column(
                                 modifier = Modifier.weight(1.0f),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                TechnicalInspectorCard(sampleVideo = video, playback = playback)
                                 OfflineVerificationCard()
                             }
                         }
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            MovieFileOverviewCard(video, state, context)
-                            InspectedTracksCard(video, playback)
-                            TechnicalInspectorCard(sampleVideo = video, playback = playback)
+                            UnifiedMediaInspectorCard(video, state, playback)
                             OfflineVerificationCard()
                         }
                     }
@@ -731,88 +633,6 @@ fun MovieDetailsPage(
             },
             onDismiss = { showFixMatch = false }
         )
-    }
-}
-
-@Composable
-private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, context: Context) {
-    val theme = LocalThemeName.current
-    val isLight = theme == "Light"
-    val cardBg = if (isLight) Color(0xFFFBF8FD) else Color(0xFF1B1826)
-    val cardBorder = if (isLight) Color(0xFFE4DCF0) else Color.White.copy(alpha = 0.08f)
-
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(Icons.Rounded.Analytics, null, tint = LavenderAccent, modifier = Modifier.size(20.dp))
-            Text("Media Inspector 2.0", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-
-        // 2-Card Bento Grid for Video & Container Overview
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(16.dp),
-                color = cardBg,
-                border = BorderStroke(1.dp, cardBorder)
-            ) {
-                Column(Modifier.padding(14.dp)) {
-                    Text("VIDEO STREAM", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                    Spacer(Modifier.height(4.dp))
-                    val quality = when {
-                        video.width >= 3840 -> "4K UHD"
-                        video.width >= 1920 -> "1080p FHD"
-                        else -> "HD 720p"
-                    }
-                    Text(quality, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    Text(if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else "Standard", fontSize = 11.sp, color = LavenderAccent)
-                }
-            }
-
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(16.dp),
-                color = cardBg,
-                border = BorderStroke(1.dp, cardBorder)
-            ) {
-                Column(Modifier.padding(14.dp)) {
-                    Text("FILE CONTAINER", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                    Spacer(Modifier.height(4.dp))
-                    val sizeStr = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "N/A"
-                    Text(sizeStr, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    val mimeShort = when {
-                        video.name.endsWith(".mkv", true) || video.mime.contains("matroska") -> "MKV Video"
-                        video.name.endsWith(".mp4", true) || video.mime.contains("mp4") -> "MP4 Video"
-                        else -> video.mime.ifEmpty { "Video File" }
-                    }
-                    Text(mimeShort, fontSize = 11.sp, color = LavenderAccent)
-                }
-            }
-        }
-
-        // Clean Container & Storage Details Card
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            color = cardBg,
-            border = BorderStroke(1.dp, cardBorder)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("Container & File Details", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-                TechRow("Filename", video.name)
-                TechRow("Folder", state.folders.firstOrNull { it.uri == video.folder }?.name ?: "Local Storage")
-                TechRow("Duration", if (video.duration > 0) timecode(video.duration / 1000) else "Unavailable")
-            }
-        }
     }
 }
 

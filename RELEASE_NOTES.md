@@ -1,3 +1,38 @@
+# Jadzumi v2.3.1 — Universal Media Inspector 2.0 & Full App Unification 🌌🎬✨
+
+The comprehensive architectural unification release ensuring complete visual cohesion, single-source-of-truth data presentation, and zero duplication across all Movie and TV Show details pages and Settings.
+
+### 🔍 1. Universal Media Inspector 2.0 (Strict Zero Duplication)
+- **Universal Shared Bento Component**: Created `UnifiedMediaInspectorCard` shared identically across both Movie Details and TV Show Details screens.
+- **Dedicated 4-Card Bento Grid**:
+  - **1. Video Engine & Codec**: Resolution (`1916 × 808`), Quality badge (`1080p FHD`), Codec (`HEVC / H.265`), and Hardware GPU Acceleration status.
+  - **2. Audio Engine & Channels**: Audio stream format (`E-AC-3 Surround`), Channel configuration (`5.1 / 6CH`), Sample rate, and active tracks.
+  - **3. Subtitle Studio**: Active tracks, AndroidX Media3 TextRenderer engine, and Dual Subtitle Studio status.
+  - **4. Storage & Container**: Container format (`MKV / MP4`), File size (`4.48 GB`), Folder location, and exact filename.
+- **Strict Single-Source-of-Truth**: Each data point lives in exactly one card:
+  - Genre is kept strictly in the Hero subtitle (duplicate `GENRE` glance card eliminated).
+  - Rating is kept strictly in the Hero badge chips (duplicate `RATING` glance card eliminated).
+  - Duration is kept strictly in the Hero badge chips (removed from file overview).
+  - Redundant floating audio/subtitle pills in TV Shows eliminated; all media streams unified into the Bento Inspector.
+
+### 🏛️ 2. Subtab Architecture & Feature Parity
+- **Movies**: Unified subtabs `[ Overview | Related ]`.
+- **TV Shows**: Unified subtabs `[ Episodes | Media Inspector | Related ]`.
+- **TV Shows Fix Match Added**: Added `[ Fix Match ]` action button to the TV Show Details top bar, allowing users to search online databases (TVMaze / AniList) and immediately apply official poster artwork and metadata corrections.
+
+### ⚙️ 3. Settings Bento Polish & Developer Clutter Removal
+- **Developer Documentation Removed**: Removed static architecture explainer cards (*Bento UI Layout*, *Soft Neumorphism*, *M3 Expressive*) from Display & Appearance, keeping settings strictly focused on user-actionable controls.
+- **Audio Settings Bento Overhaul**: Reorganized legacy monolithic 8-divider list into 3 elevated Bento panels:
+  - *⚡ Audio Output & Spatial 3D* (NextLib FFmpeg status, Stereo Downmix, Spatial Cinema 3D chips).
+  - *🌙 Playback Audio Enhancements* (Screen-off background audio, Night mode voice boost).
+  - *🎧 Wireless Lip-Sync Calibration* (Bluetooth delay compensation with tactile `[-50 ms]`, `[+50 ms]`, `[Reset]` chips).
+- **Subtitle Settings Grouped**: Segmented into *Live Studio & Typography*, *Colors & Shading*, and *Subtitle Timing Offset* Bento panels.
+
+### 🎛️ 4. In-Player HUD Toast Alignment
+- Unified aspect ratio toggle feedback toast messages with Settings naming: `Fit (Original)` and `Crop / Fill (Zoom)`.
+
+---
+
 # Jadzumi v2.3.0 — Master UI/UX Overhaul, Subtle Acrylic & FLOW LOOP 🌌🎬✨
 
 The definitive master release transforming Jadzumi with the unified Single-Row Cinema Bar, space-optimized Above-the-Fold Library, Bento Settings 2.0, zero-duplication Details architecture, Cinema Ambilight with full 4-theme adaptability, and the new **FLOW LOOP** official app icon.

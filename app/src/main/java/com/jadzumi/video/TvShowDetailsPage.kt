@@ -5,6 +5,9 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.text.format.Formatter
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
@@ -40,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import android.util.LruCache
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
@@ -51,6 +55,7 @@ fun TvShowDetailsPage(
     playback: PlaybackController,
     onBack: () -> Unit
 ) {
+    val state by library.state.collectAsState()
     val context = LocalContext.current
     var onlineShow by remember(series.id, series.title) {
         mutableStateOf(OnlineMetadataFetcher.getCachedTvShow(context, series.title))
@@ -87,6 +92,9 @@ fun TvShowDetailsPage(
     }
 
     var showBingeDialog by rememberSaveable { mutableStateOf(false) }
+    var showFixMatch by rememberSaveable { mutableStateOf(false) }
+    var tvSubtab by rememberSaveable { mutableStateOf("Episodes") }
+    val tvSubtabs = remember { listOf("Episodes", "Media Inspector", "Related") }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         val isTablet = maxWidth >= 840.dp
@@ -134,31 +142,53 @@ fun TvShowDetailsPage(
                         )
                     }
 
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                        modifier = Modifier.wrapContentWidth()
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                            modifier = Modifier.wrapContentWidth()
                         ) {
-                            Icon(
-                                if (onlineShow != null) Icons.Rounded.CloudDone else Icons.Rounded.Storage,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                if (onlineShow != null) (if (isTablet) "Online artwork & metadata" else "Online Art")
-                                else if (series.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
-                                else if (isTablet) "Hardware Offline Analysis" else "Offline",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Icon(
+                                    if (onlineShow != null) Icons.Rounded.CloudDone else Icons.Rounded.Storage,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    if (onlineShow != null) (if (isTablet) "Online artwork & metadata" else "Online Art")
+                                    else if (series.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
+                                    else if (isTablet) "Hardware Offline Analysis" else "Offline",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        // Fix Match button (Online poster & title corrections)
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                            modifier = Modifier.clip(CircleShape).clickable { showFixMatch = true }
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Icon(Icons.Rounded.AutoFixHigh, "Fix Match", Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                                Text("Fix Match", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
@@ -189,169 +219,231 @@ fun TvShowDetailsPage(
                 )
             }
 
-            // 3. Season Tabs Row & Audio/Subtitles Info Pills
+            // 3. Subtabs Capsule: [ Episodes | Media Inspector | Related ]
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    // Season tabs
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        items(sortedSeasonNumbers) { s ->
-                            val epList = series.seasons[s] ?: emptyList()
-                            val watchedCount = epList.count { ep ->
-                                val pos = playback.savedPosition(ep)
-                                val dur = ep.duration.takeIf { it > 0 } ?: 1000L
-                                pos >= dur * 0.9f
-                            }
-                            val isCompleted = watchedCount == epList.size && epList.isNotEmpty()
-                            val isSelected = s == selectedSeason
-                            val seasonLabel = when (s) {
-                                0 -> "OVAs & Specials"
-                                else -> "Season $s"
-                            }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    tvSubtabs.forEach { tab ->
+                        val isSelected = tab == tvSubtab
+                        val tabBg by animateColorAsState(
+                            targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                            label = "tv_tab_bg"
+                        )
+                        val tabContent by animateColorAsState(
+                            targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                            label = "tv_tab_txt"
+                        )
 
-                            SeasonTabPill(
-                                label = seasonLabel,
-                                badgeText = if (isCompleted) "${epList.size}/${epList.size} Completed" else "$watchedCount/${epList.size} Watched",
-                                isSelected = isSelected,
-                                isCompleted = isCompleted,
-                                onClick = { selectedSeason = s }
+                        Surface(
+                            onClick = { tvSubtab = tab },
+                            shape = RoundedCornerShape(18.dp),
+                            color = tabBg,
+                            border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                        ) {
+                            Text(
+                                text = tab,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = tabContent
                             )
                         }
                     }
 
-                    // Default Audio & Subtitle detected chips: Adaptive FlowRow for phone portrait & tablet
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    Spacer(Modifier.weight(1f))
+
+                    // Binge Automation pill
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                        modifier = Modifier.clip(CircleShape).clickable { showBingeDialog = true }
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(Icons.Rounded.Audiotrack, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text("Default Audio:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("Multichannel 5.1 / EAC3", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
-                            }
-                        }
-
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text("Default Subs:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("English [Styled ASS / SRT]", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
-                            }
-                        }
-
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
-                            modifier = Modifier.clickable { showBingeDialog = true }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(Icons.Rounded.FastForward, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text("Binge Automation", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            }
+                            Icon(Icons.Rounded.FastForward, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary)
+                            Text("Binge Auto", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
             }
 
-            // 4. Two-Column Tablet Layout: Episode List (Left) + Technical Inspector (Right)
-            item {
-                if (isTablet) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(22.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        // Left Column: Episodes (Weight 1.7)
-                        Column(
-                            modifier = Modifier.weight(1.7f),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            EpisodesHeader(
-                                count = currentSeasonEpisodes.size,
-                                sortAscending = sortAscending,
-                                onToggleSort = { sortAscending = !sortAscending }
-                            )
+            val sampleVideo = currentSeasonEpisodes.firstOrNull { it.uri == playback.video?.uri }
+                ?: nextUnwatched ?: currentSeasonEpisodes.firstOrNull()
 
-                            currentSeasonEpisodes.forEach { video ->
-                                val info = EpisodePatterns.parse(video.name)
-                                val isNext = nextUnwatched?.identity == video.identity
-                                EpisodeCard(
-                                    video = video,
-                                    info = info,
-                                    isNext = isNext,
-                                    playback = playback,
-                                    onClick = {
-                                        playback.open(video, currentSeasonEpisodes)
-                                        playback.fullscreen = true
+            when (tvSubtab) {
+                "Media Inspector" -> {
+                    item {
+                        if (sampleVideo != null) {
+                            UnifiedMediaInspectorCard(sampleVideo, state, playback)
+                        } else {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                            ) {
+                                Text("No episodes available to inspect.", modifier = Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                    item {
+                        OfflineVerificationCard()
+                    }
+                }
+                "Related" -> {
+                    val otherSeries = state.tvSeries.filter { it.id != series.id }.take(6)
+                    if (otherSeries.isEmpty()) {
+                        item {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                            ) {
+                                Text("No related series indexed in your library.", modifier = Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    } else {
+                        items(otherSeries, key = { it.id }) { rel ->
+                            Surface(
+                                onClick = { onBack() },
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    Modifier.padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.secondaryContainer,
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Rounded.Tv, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
+                                        }
                                     }
+                                    Column(Modifier.weight(1f)) {
+                                        Text(rel.title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text("${rel.seasonCount} Seasons · ${rel.totalEpisodes} Episodes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    // "Episodes" tab
+                    item {
+                        // Season tabs
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            items(sortedSeasonNumbers) { s ->
+                                val epList = series.seasons[s] ?: emptyList()
+                                val watchedCount = epList.count { ep ->
+                                    val pos = playback.savedPosition(ep)
+                                    val dur = ep.duration.takeIf { it > 0 } ?: 1000L
+                                    pos >= dur * 0.9f
+                                }
+                                val isCompleted = watchedCount == epList.size && epList.isNotEmpty()
+                                val isSelected = s == selectedSeason
+                                val seasonLabel = when (s) {
+                                    0 -> "OVAs & Specials"
+                                    else -> "Season $s"
+                                }
+
+                                SeasonTabPill(
+                                    label = seasonLabel,
+                                    badgeText = if (isCompleted) "${epList.size}/${epList.size} Completed" else "$watchedCount/${epList.size} Watched",
+                                    isSelected = isSelected,
+                                    isCompleted = isCompleted,
+                                    onClick = { selectedSeason = s }
                                 )
                             }
                         }
-
-                        // Right Column: Technical Inspector & Offline Verification (Weight 1.0)
-                        Column(
-                            modifier = Modifier.weight(1.0f),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            TechnicalInspectorCard(
-                                sampleVideo = currentSeasonEpisodes.firstOrNull { it.uri == playback.video?.uri } ?: currentSeasonEpisodes.firstOrNull(),
-                                playback = playback
-                            )
-                            OfflineVerificationCard()
-                        }
                     }
-                } else {
-                    // Mobile / Narrow Layout: Stacked
-                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        EpisodesHeader(
-                            count = currentSeasonEpisodes.size,
-                            sortAscending = sortAscending,
-                            onToggleSort = { sortAscending = !sortAscending }
-                        )
 
-                        currentSeasonEpisodes.forEach { video ->
-                            val info = EpisodePatterns.parse(video.name)
-                            val isNext = nextUnwatched?.identity == video.identity
-                            EpisodeCard(
-                                video = video,
-                                info = info,
-                                isNext = isNext,
-                                playback = playback,
-                                onClick = {
-                                    playback.open(video, currentSeasonEpisodes)
-                                    playback.fullscreen = true
+                    item {
+                        if (isTablet) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(22.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                // Left Column: Episodes
+                                Column(
+                                    modifier = Modifier.weight(1.7f),
+                                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                                ) {
+                                    EpisodesHeader(
+                                        count = currentSeasonEpisodes.size,
+                                        sortAscending = sortAscending,
+                                        onToggleSort = { sortAscending = !sortAscending }
+                                    )
+
+                                    currentSeasonEpisodes.forEach { video ->
+                                        val info = EpisodePatterns.parse(video.name)
+                                        val isNext = nextUnwatched?.identity == video.identity
+                                        EpisodeCard(
+                                            video = video,
+                                            info = info,
+                                            isNext = isNext,
+                                            playback = playback,
+                                            onClick = {
+                                                playback.open(video, currentSeasonEpisodes)
+                                                playback.fullscreen = true
+                                            }
+                                        )
+                                    }
                                 }
-                            )
-                        }
 
-                        Spacer(Modifier.height(8.dp))
-                        TechnicalInspectorCard(sampleVideo = currentSeasonEpisodes.firstOrNull { it.uri == playback.video?.uri } ?: currentSeasonEpisodes.firstOrNull(), playback = playback)
-                        OfflineVerificationCard()
+                                // Right Column: Unified Media Inspector & Offline Verification
+                                Column(
+                                    modifier = Modifier.weight(1.0f),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    if (sampleVideo != null) {
+                                        UnifiedMediaInspectorCard(sampleVideo, state, playback)
+                                    }
+                                    OfflineVerificationCard()
+                                }
+                            }
+                        } else {
+                            // Mobile / Narrow Layout: Stacked
+                            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                EpisodesHeader(
+                                    count = currentSeasonEpisodes.size,
+                                    sortAscending = sortAscending,
+                                    onToggleSort = { sortAscending = !sortAscending }
+                                )
+
+                                currentSeasonEpisodes.forEach { video ->
+                                    val info = EpisodePatterns.parse(video.name)
+                                    val isNext = nextUnwatched?.identity == video.identity
+                                    EpisodeCard(
+                                        video = video,
+                                        info = info,
+                                        isNext = isNext,
+                                        playback = playback,
+                                        onClick = {
+                                            playback.open(video, currentSeasonEpisodes)
+                                            playback.fullscreen = true
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -361,6 +453,56 @@ fun TvShowDetailsPage(
             BingeSettingsDialog(
                 seriesName = series.title,
                 onDismiss = { showBingeDialog = false }
+            )
+        }
+
+        if (showFixMatch) {
+            val scope = rememberCoroutineScope()
+            var query by remember { mutableStateOf(series.title) }
+            var isSearching by remember { mutableStateOf(false) }
+
+            AlertDialog(
+                onDismissRequest = { showFixMatch = false },
+                icon = { Icon(Icons.Rounded.AutoFixHigh, null, tint = MaterialTheme.colorScheme.primary) },
+                title = { Text("Fix Series Match & Artwork") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("Search online databases for official series metadata and posters.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        OutlinedTextField(
+                            value = query,
+                            onValueChange = { query = it },
+                            label = { Text("Series Title") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (isSearching) {
+                            LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp))
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            isSearching = true
+                            scope.launch {
+                                val res = OnlineMetadataFetcher.fetchTvShowMetadata(context, query)
+                                if (res != null) {
+                                    onlineShow = res
+                                }
+                                isSearching = false
+                                showFixMatch = false
+                            }
+                        },
+                        enabled = !isSearching && query.isNotBlank()
+                    ) {
+                        Text("Search & Apply")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { showFixMatch = false }) {
+                        Text("Cancel")
+                    }
+                }
             )
         }
     }

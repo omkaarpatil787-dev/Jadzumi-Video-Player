@@ -505,7 +505,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             val nextMode = if (playback.aspectMode == AspectRatioMode.FIT) AspectRatioMode.ZOOM else AspectRatioMode.FIT
                                             playback.setAspectRatioMode(nextMode)
-                                            message = if (nextMode == AspectRatioMode.ZOOM) "Filled screen (Cropped)" else "Original aspect (Fit)"
+                                            message = if (nextMode == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
                                             interaction++
                                         }
                                     }
@@ -1151,7 +1151,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                                 onClick = {
                                                     val next = if (playback.aspectMode == AspectRatioMode.FIT) AspectRatioMode.ZOOM else AspectRatioMode.FIT
                                                     playback.setAspectRatioMode(next)
-                                                    message = if (next == AspectRatioMode.ZOOM) "Filled (Cropped)" else "Original (Fit)"
+                                                    message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
                                                     interaction++
                                                 }
                                             ) {
