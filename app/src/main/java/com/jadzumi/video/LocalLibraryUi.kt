@@ -17,7 +17,9 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -791,40 +793,70 @@ fun JadzumiCategoryPillsRow(
     onCategorySelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val categories = listOf("All", "Movies", "Series", "Anime", "Folders")
-    LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 2.dp, vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        items(categories) { cat ->
-            val isSelected = cat == selectedCategory
-            val bgColor by animateColorAsState(
-                targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                label = "pill_bg"
-            )
-            val contentColor by animateColorAsState(
-                targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                label = "pill_txt"
-            )
-            val borderStroke = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+    val categories = remember { listOf("All", "Movies", "Series", "Anime", "Folders") }
+    val selectedIndex = remember(selectedCategory) {
+        val idx = categories.indexOf(selectedCategory)
+        if (idx >= 0) idx else 0
+    }
 
-            Surface(
-                onClick = { onCategorySelected(cat) },
-                shape = RoundedCornerShape(20.dp),
-                color = bgColor,
-                border = borderStroke
-            ) {
-                Text(
-                    text = cat,
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 7.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = contentColor
-                )
+    val animatedProgress by animateFloatAsState(
+        targetValue = selectedIndex.toFloat(),
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+        label = "categoryPillSliderProgress"
+    )
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(40.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+        shadowElevation = 2.dp
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(3.dp)
+        ) {
+            val segmentWidth = maxWidth / categories.size
+
+            // Continuous Sliding Selection Capsule
+            Box(
+                modifier = Modifier
+                    .offset(x = segmentWidth * animatedProgress)
+                    .width(segmentWidth)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(17.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+
+            Row(modifier = Modifier.fillMaxSize()) {
+                categories.forEachIndexed { index, cat ->
+                    val isSelected = index == selectedIndex
+                    val textColor by animateColorAsState(
+                        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        animationSpec = tween(160),
+                        label = "cat_text_color_$index"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(17.dp))
+                            .clickable { onCategorySelected(cat) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = cat,
+                            fontSize = 12.5.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = textColor,
+                            maxLines = 1
+                        )
+                    }
+                }
             }
         }
     }
@@ -1076,7 +1108,7 @@ fun JadzumiCategoryPillsRow(
         val screenMaxWidth = maxWidth
         val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
         val isPhone = maxWidth < 600.dp
-        val bottomPad = if (isPhone) 88.dp else 96.dp
+        val bottomPad = if (isPhone) 24.dp else 28.dp
 
         Column(Modifier.fillMaxSize()) {
             JadzumiCategoryPillsRow(
@@ -1101,24 +1133,42 @@ fun JadzumiCategoryPillsRow(
                 modifier = Modifier.padding(horizontal = pad, vertical = 6.dp)
             )
 
-            if (category == "Folders") {
-                Box(Modifier.fillMaxSize().weight(1f)) {
-                    LocalFoldersPage(state = state, library = library, wide = screenMaxWidth >= 640.dp, select = select)
-                }
-            } else {
-                PullToRefreshBox(
-                    isRefreshing = state.busy,
-                    onRefresh = { library.rescan() },
-                    modifier = Modifier.fillMaxSize().weight(1f)
-                ) {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .animatedScrollBlendFade(listState),
-                        contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
-                        verticalArrangement = Arrangement.spacedBy(22.dp)
+            AnimatedContent(
+                targetState = category,
+                transitionSpec = {
+                    val categories = listOf("All videos", "Movies", "TV Shows", "Anime", "Folders")
+                    val fromIdx = categories.indexOf(initialState).coerceAtLeast(0)
+                    val toIdx = categories.indexOf(targetState).coerceAtLeast(0)
+                    val isForward = toIdx >= fromIdx
+                    if (isForward) {
+                        (slideInHorizontally(tween(260, easing = FastOutSlowInEasing)) { it / 4 } + fadeIn(tween(180)))
+                            .togetherWith(slideOutHorizontally(tween(200, easing = FastOutSlowInEasing)) { -it / 4 } + fadeOut(tween(140)))
+                    } else {
+                        (slideInHorizontally(tween(260, easing = FastOutSlowInEasing)) { -it / 4 } + fadeIn(tween(180)))
+                            .togetherWith(slideOutHorizontally(tween(200, easing = FastOutSlowInEasing)) { it / 4 } + fadeOut(tween(140)))
+                    }
+                },
+                modifier = Modifier.fillMaxSize().weight(1f),
+                label = "categoryContentAnimated"
+            ) { currentCategory ->
+                if (currentCategory == "Folders") {
+                    Box(Modifier.fillMaxSize()) {
+                        LocalFoldersPage(state = state, library = library, wide = screenMaxWidth >= 640.dp, select = select)
+                    }
+                } else {
+                    PullToRefreshBox(
+                        isRefreshing = state.busy,
+                        onRefresh = { library.rescan() },
+                        modifier = Modifier.fillMaxSize()
                     ) {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .animatedScrollBlendFade(listState),
+                            contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
+                            verticalArrangement = Arrangement.spacedBy(22.dp)
+                        ) {
                 if (isSearching) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1786,6 +1836,7 @@ fun JadzumiCategoryPillsRow(
             }
         }
     }
+}
 }
 }
 }

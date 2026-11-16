@@ -2,7 +2,7 @@
 <p align="center">An overview of the app, its architecture, and release progress.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.7-2563eb?style=flat-square" alt="Version 2.0.7"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.8-2563eb?style=flat-square" alt="Version 2.0.8"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -18,6 +18,7 @@ FFmpeg decoder fallbacks, subtitles, and on-device viewing progress.
 
 | Release | Platform | Approach |
 | --- | --- | --- |
+| **v2.0.8 · build 50** | Android 8.0+ · ARM64 | **Continuous Motion Flow & Floating Dock Removal**: Continuous Sliding Selection Capsule across Categories (`All`, `Movies`, `Series`, `Anime`, `Folders`) matching Home/Settings physics, Shared-Axis Directional Horizontal Content Transitions on Category Change, Complete Removal of Floating Navigation Dock & Associated Obsolete Components, Expanded Screen Real Estate |
 | **v2.0.7 · build 49** | Android 8.0+ · ARM64 | **Jadzumi Pure — Cinematic Hybrid Experience Overhaul**: Connected Top Segmented Navigation Capsule (`[ Home \| Settings ]`) with Fluid Spring Sliding Selection Indicator, Instant Category Filter Pills (`All`, `Movies`, `Series`, `Anime`, `Folders`), Cinema Editorial Details Screen with Subtabs (`Details`, `Episodes`, `Related`) and Neumorphic Info Glance Cards (`Rating/Release`, `Genre`, `Audio Stream`), Verified Cinema HUD 3.0 Alignment with Side Gesture Pills and Lavender Primary Center Controls |
 | **v2.0.6 · build 48** | Android 8.0+ · ARM64 | **Rollback of UI/UX Overhaul to Baseline Checkpoint (`11c8920`) with Pure Motion Preservation**: Restored 4-Tab Floating Dock (`Home`, `Movies`, `TV Shows`, `Settings`), Living Emblem Ambient Glow & Specular Light Sweep, Signature Lavender & Glacier Blue Palette, Preserved Full Fluid Spring M3 Transitions & Spatial Morph System |
 | **v2.0.5 · build 47** | Android 8.0+ · ARM64 | Jadzumi Pure Overhaul ("Less interface. More cinema."): Strictly 3 Tabs on Floating Dock (`Home`, `Library`, `Settings`), Zero Logo on Dock, Clean Matte Emblem, Pure Yellow (`#FFD600`) Flagship Cinema Accent |
