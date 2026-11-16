@@ -27,7 +27,13 @@ data class LocalVideo(
 ) {
     val identity: String get() {
         val parsed = uri.toUri()
-        return "${parsed.authority}:${Docs.getDocumentId(parsed)}"
+        return if (parsed.scheme == "http" || parsed.scheme == "https") {
+            uri
+        } else try {
+            "${parsed.authority}:${Docs.getDocumentId(parsed)}"
+        } catch (_: Exception) {
+            uri
+        }
     }
     val episode: EpisodeHint? by lazy { parseEpisode(name) }
     val title: String by lazy { name.substringBeforeLast('.', name).replace('_', ' ') }

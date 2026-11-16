@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.8-2563eb?style=flat-square" alt="Version 2.0.8"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.0.9-2563eb?style=flat-square" alt="Version 2.0.9"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -52,13 +52,13 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details open>
-<summary><strong>What’s new · v2.0.4 🎬✨</strong></summary>
+<summary><strong>What’s new · v2.0.9 — Jadzumi Web Sources & Live TV Native Playback Engine 📡✨</strong></summary>
 
-- **Precision 1080p Scope Resolution Mapping**: Direct physical resolution detection prevents widescreen scope 1080p movies (e.g. 1920x800) from being misclassified as 4K.
-- **Strict Word-Boundary Token Matching (`isMedia4K`)**: Release group and uploader website names (such as `4kHdHub`) no longer trigger false 4K flags.
-- **Strict Media3 HDR/SDR Pipeline**: Stream color metadata drives HDR categorization; standard dynamic range files are preserved as clean SDR, and false `HDR10+ (DV Hybrid)` display overrides are eliminated.
-- **Non-Intrusive Side-Docked Gesture Capsules**: Replaced the centered HUD with minimal horizontal pills docked on the left (Brightness & Rewind seeking) and right (Volume & Forward seeking), keeping the screen center and Play/Pause controls completely unobstructed.
-- **High-Framerate 90/120Hz Library Performance**: Dynamic thumbnail LRU caching (32MB–96MB) and recomposition decoupling across timeline and player HUDs.
+- **Native Media3/ExoPlayer Streaming**: Support for direct HLS (`.m3u8`), MPEG-DASH (`.mpd`), and progressive video streams with adaptive bitrate switching directly inside Cinema HUD 3.0.
+- **Cinema HUD 3.0 Live Stream Experience**: Dynamic `● LIVE` badge, `LIVE BROADCAST` time capsule pill with 1-tap live-edge synchronization (`playback.returnToLive()`), and lock-free adaptive buffer management.
+- **M3U / M3U8 IPTV Playlist Parser**: Import local or remote IPTV playlists with full channel metadata parsing (`tvg-logo`, `group-title`, stream URLs).
+- **Approved Web Directory Discovery**: Discover and browse stream directories (e.g. Global Free TV) with automated stream detection and 1-tap handoff to the native player.
+- **Zero Local Media Interference**: Web sources and live streams remain completely isolated from the offline-first local media database.
 
 See [release notes](RELEASE_NOTES.md) for full details.
 

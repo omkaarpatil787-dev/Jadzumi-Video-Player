@@ -150,6 +150,7 @@ private val destinations = listOf(
     var demo by rememberSaveable { mutableStateOf(false) }
     val library = remember { LocalLibrary.get(context) }
     val localState by library.state.collectAsState()
+    val webSourcesManager = remember { WebSourcesManager(context) }
 
     var query by rememberSaveable { mutableStateOf("") }
     var cornerStyle by rememberSaveable { mutableStateOf(prefs.getString("cornerStyle", "Rounded") ?: "Rounded") }
@@ -282,7 +283,7 @@ private val destinations = listOf(
                                                     }
 
                                                     JadzumiSegmentedNavCapsule(
-                                                        currentRoute = if (route == "Settings") "Settings" else "Home",
+                                                        currentRoute = route,
                                                         onNavigate = { newRoute ->
                                                             route = newRoute
                                                             selectedId = null
@@ -407,7 +408,7 @@ private val destinations = listOf(
                                                 Spacer(Modifier.weight(1f))
 
                                                 JadzumiSegmentedNavCapsule(
-                                                    currentRoute = if (route == "Settings") "Settings" else "Home",
+                                                    currentRoute = route,
                                                     onNavigate = { newRoute ->
                                                         route = newRoute
                                                         selectedId = null
@@ -598,6 +599,12 @@ private val destinations = listOf(
                                         } else if (video != null) DetailPage(video)
                                         else when (current) {
                                             "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "Web Sources" -> WebSourcesPage(
+                                                manager = webSourcesManager,
+                                                playback = playback,
+                                                effectiveTheme = effectiveTheme,
+                                                isTablet = isTablet
+                                            )
                                             "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "Folders" -> UnifiedSettingsAndPrivacyScreen(
@@ -987,9 +994,13 @@ fun JadzumiSegmentedNavCapsule(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isSettings = currentRoute == "Settings"
+    val targetIndex = when (currentRoute) {
+        "Web Sources" -> 1f
+        "Settings" -> 2f
+        else -> 0f
+    }
     val sliderProgress by animateFloatAsState(
-        targetValue = if (isSettings) 1f else 0f,
+        targetValue = targetIndex,
         animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
         label = "capsuleSliderProgress"
     )
@@ -997,7 +1008,7 @@ fun JadzumiSegmentedNavCapsule(
     Surface(
         modifier = modifier
             .height(38.dp)
-            .width(190.dp),
+            .width(280.dp),
         shape = RoundedCornerShape(19.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
@@ -1008,7 +1019,7 @@ fun JadzumiSegmentedNavCapsule(
                 .fillMaxSize()
                 .padding(3.dp)
         ) {
-            val segmentWidth = maxWidth / 2
+            val segmentWidth = maxWidth / 3
 
             // Animated sliding selection capsule
             Box(
@@ -1021,6 +1032,10 @@ fun JadzumiSegmentedNavCapsule(
             )
 
             Row(modifier = Modifier.fillMaxSize()) {
+                val isHome = currentRoute == "Home" || currentRoute == "Library"
+                val isWeb = currentRoute == "Web Sources"
+                val isSettings = currentRoute == "Settings"
+
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -1031,9 +1046,25 @@ fun JadzumiSegmentedNavCapsule(
                 ) {
                     Text(
                         "Home",
-                        fontSize = 13.sp,
-                        fontWeight = if (!isSettings) FontWeight.Bold else FontWeight.Medium,
-                        color = if (!isSettings) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        fontSize = 12.5.sp,
+                        fontWeight = if (isHome) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isHome) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { onNavigate("Web Sources") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Live & Web",
+                        fontSize = 12.sp,
+                        fontWeight = if (isWeb) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isWeb) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -1047,7 +1078,7 @@ fun JadzumiSegmentedNavCapsule(
                 ) {
                     Text(
                         "Settings",
-                        fontSize = 13.sp,
+                        fontSize = 12.5.sp,
                         fontWeight = if (isSettings) FontWeight.Bold else FontWeight.Medium,
                         color = if (isSettings) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     )

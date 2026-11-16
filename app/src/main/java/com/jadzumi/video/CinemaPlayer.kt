@@ -728,17 +728,33 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     Icon(Icons.Rounded.KeyboardArrowDown, "Dock player", Modifier.size(24.dp), tint = playerContentColor)
                                 }
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        heading.primaryTitle,
-                                        color = playerContentColor,
-                                        fontSize = 19.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Text(
+                                            heading.primaryTitle,
+                                            color = playerContentColor,
+                                            fontSize = 19.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        if (playback.isLive) {
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = Color(0xFFEF4444)
+                                            ) {
+                                                Text(
+                                                    "● LIVE",
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = Color.White
+                                                )
+                                            }
+                                        }
+                                    }
                                     heading.secondaryMeta?.let { meta ->
                                         Text(
-                                            meta,
+                                            if (playback.isLive) "Live Stream Broadcast" else meta,
                                             color = playerSubtextColor,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Normal,
@@ -955,10 +971,10 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                             val totalSec = (playback.duration / 1000).coerceAtLeast(0)
 
                             CinemaTimelineBar(
-                                fraction = currentFraction,
-                                bufferedFraction = bufferedFraction,
+                                fraction = if (playback.isLive) 1f else currentFraction,
+                                bufferedFraction = if (playback.isLive) 1f else bufferedFraction,
                                 isScrubbing = scrub != null,
-                                enabled = playback.seekable && playback.duration > 0,
+                                enabled = playback.seekable && playback.duration > 0 && !playback.isLive,
                                 chapters = playback.chapters,
                                 onScrub = { scrub = it; interaction++ },
                                 onScrubFinished = {
@@ -975,43 +991,71 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     // Glassy Time Capsule Pill
-                                    Surface(
-                                        shape = RoundedCornerShape(999.dp),
-                                        color = dynamicFrostedCircleBg,
-                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
-                                    ) {
-                                        Row(
-                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    if (playback.isLive) {
+                                        Surface(
+                                            shape = RoundedCornerShape(999.dp),
+                                            color = dynamicFrostedCircleBg,
+                                            border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                            onClick = { playback.returnToLive() }
                                         ) {
-                                            Text(
-                                                compactTimecode(elapsedSec),
-                                                color = playerAccentColor,
-                                                fontSize = 12.5.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text("/", color = playerSubtextColor.copy(alpha = 0.5f), fontSize = 11.5.sp)
-                                            Text(
-                                                compactTimecode(totalSec),
-                                                color = playerContentColor,
-                                                fontSize = 12.5.sp,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                            if (playback.showRemainingTime) {
-                                                val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                                Surface(
-                                                    shape = RoundedCornerShape(999.dp),
-                                                    color = if (isLight) Color(0xFF183654).copy(alpha = 0.08f) else Color.White.copy(alpha = 0.14f),
-                                                    border = BorderStroke(0.5.dp, dynamicFrostedCircleRim)
-                                                ) {
-                                                    Text(
-                                                        "-${compactTimecode(remSec)}",
-                                                        Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                        color = playerContentColor.copy(alpha = 0.90f),
-                                                        fontSize = 10.sp,
-                                                        fontWeight = FontWeight.SemiBold
-                                                    )
+                                            Row(
+                                                Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Box(Modifier.size(8.dp).background(Color(0xFFEF4444), CircleShape))
+                                                Text(
+                                                    "LIVE BROADCAST",
+                                                    color = Color(0xFFEF4444),
+                                                    fontSize = 12.5.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    "• Tap to Sync",
+                                                    color = playerSubtextColor.copy(alpha = 0.85f),
+                                                    fontSize = 11.5.sp
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Surface(
+                                            shape = RoundedCornerShape(999.dp),
+                                            color = dynamicFrostedCircleBg,
+                                            border = BorderStroke(1.dp, dynamicFrostedCircleRim)
+                                        ) {
+                                            Row(
+                                                Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Text(
+                                                    compactTimecode(elapsedSec),
+                                                    color = playerAccentColor,
+                                                    fontSize = 12.5.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text("/", color = playerSubtextColor.copy(alpha = 0.5f), fontSize = 11.5.sp)
+                                                Text(
+                                                    compactTimecode(totalSec),
+                                                    color = playerContentColor,
+                                                    fontSize = 12.5.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                                if (playback.showRemainingTime) {
+                                                    val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                                    Surface(
+                                                        shape = RoundedCornerShape(999.dp),
+                                                        color = if (isLight) Color(0xFF183654).copy(alpha = 0.08f) else Color.White.copy(alpha = 0.14f),
+                                                        border = BorderStroke(0.5.dp, dynamicFrostedCircleRim)
+                                                    ) {
+                                                        Text(
+                                                            "-${compactTimecode(remSec)}",
+                                                            Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                            color = playerContentColor.copy(alpha = 0.90f),
+                                                            fontSize = 10.sp,
+                                                            fontWeight = FontWeight.SemiBold
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -1068,44 +1112,73 @@ internal val TimelineAccent = Color(0xFF8B9DFF)
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     // Row 1: Glassy Time Capsule Pill
-                                    Surface(
-                                        shape = RoundedCornerShape(999.dp),
-                                        color = dynamicFrostedCircleBg,
-                                        border = BorderStroke(1.dp, dynamicFrostedCircleRim),
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                                    ) {
-                                        Row(
-                                            Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    if (playback.isLive) {
+                                        Surface(
+                                            shape = RoundedCornerShape(999.dp),
+                                            color = dynamicFrostedCircleBg,
+                                            border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                                            onClick = { playback.returnToLive() }
                                         ) {
-                                            Text(
-                                                compactTimecode(elapsedSec),
-                                                color = playerAccentColor,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                            Text("/", color = playerSubtextColor.copy(alpha = 0.5f), fontSize = 11.sp)
-                                            Text(
-                                                compactTimecode(totalSec),
-                                                color = playerContentColor,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                            if (playback.showRemainingTime) {
-                                                val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                                Surface(
-                                                    shape = RoundedCornerShape(999.dp),
-                                                    color = if (isLight) Color(0xFF183654).copy(alpha = 0.08f) else Color.White.copy(alpha = 0.14f),
-                                                    border = BorderStroke(0.5.dp, dynamicFrostedCircleRim)
-                                                ) {
-                                                    Text(
-                                                        "-${compactTimecode(remSec)} remaining",
-                                                        Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
-                                                        color = playerContentColor.copy(alpha = 0.92f),
-                                                        fontSize = 10.sp,
-                                                        fontWeight = FontWeight.Medium
-                                                    )
+                                            Row(
+                                                Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Box(Modifier.size(8.dp).background(Color(0xFFEF4444), CircleShape))
+                                                Text(
+                                                    "LIVE BROADCAST",
+                                                    color = Color(0xFFEF4444),
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    "• Tap to Sync",
+                                                    color = playerSubtextColor.copy(alpha = 0.85f),
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Surface(
+                                            shape = RoundedCornerShape(999.dp),
+                                            color = dynamicFrostedCircleBg,
+                                            border = BorderStroke(1.dp, dynamicFrostedCircleRim),
+                                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                                        ) {
+                                            Row(
+                                                Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Text(
+                                                    compactTimecode(elapsedSec),
+                                                    color = playerAccentColor,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                                Text("/", color = playerSubtextColor.copy(alpha = 0.5f), fontSize = 11.sp)
+                                                Text(
+                                                    compactTimecode(totalSec),
+                                                    color = playerContentColor,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                                if (playback.showRemainingTime) {
+                                                    val remSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                                    Surface(
+                                                        shape = RoundedCornerShape(999.dp),
+                                                        color = if (isLight) Color(0xFF183654).copy(alpha = 0.08f) else Color.White.copy(alpha = 0.14f),
+                                                        border = BorderStroke(0.5.dp, dynamicFrostedCircleRim)
+                                                    ) {
+                                                        Text(
+                                                            "-${compactTimecode(remSec)} remaining",
+                                                            Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                                                            color = playerContentColor.copy(alpha = 0.92f),
+                                                            fontSize = 10.sp,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
