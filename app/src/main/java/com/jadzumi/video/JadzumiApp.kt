@@ -159,6 +159,7 @@ private val destinations = listOf(
     var firstLaunchCardShown by rememberSaveable { mutableStateOf(prefs.getBoolean("pad5_welcome_done", false)) }
 
     var showStorageSheet by remember { mutableStateOf(false) }
+    var showDirectStreamDialog by remember { mutableStateOf(false) }
 
     var route by rememberSaveable { mutableStateOf("Home") }
     var activeLibraryCategory by rememberSaveable { mutableStateOf("Movies") }
@@ -306,6 +307,12 @@ private val destinations = listOf(
                                                     )
 
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        IconButton(
+                                                            onClick = { showDirectStreamDialog = true },
+                                                            modifier = Modifier.size(34.dp)
+                                                        ) {
+                                                            Icon(Icons.Rounded.Language, "Direct Stream", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
+                                                        }
                                                         IconButton(
                                                             onClick = { showStorageSheet = true },
                                                             modifier = Modifier.size(34.dp)
@@ -506,6 +513,9 @@ private val destinations = listOf(
                                             }
 
                                             Row(verticalAlignment = Alignment.CenterVertically) {
+                                                IconButton(onClick = { showDirectStreamDialog = true }) {
+                                                    Icon(Icons.Rounded.Language, "Direct Stream", tint = MaterialTheme.colorScheme.primary)
+                                                }
                                                 IconButton(onClick = { showStorageSheet = true }) {
                                                     Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary)
                                                 }
@@ -768,6 +778,33 @@ private val destinations = listOf(
             }
 
             UpdateHost()
+
+            if (showDirectStreamDialog) {
+                DirectStreamDialog(
+                    onDismiss = { showDirectStreamDialog = false },
+                    onPlayStream = { url, title ->
+                        val streamVideo = LocalVideo(
+                            uri = url,
+                            folder = "Network Stream",
+                            name = title,
+                            mime = when {
+                                url.contains(".m3u8", ignoreCase = true) -> "application/x-mpegURL"
+                                url.contains(".mpd", ignoreCase = true) -> "application/dash+xml"
+                                url.contains(".mkv", ignoreCase = true) -> "video/x-matroska"
+                                url.contains(".webm", ignoreCase = true) -> "video/webm"
+                                else -> "video/mp4"
+                            },
+                            bytes = 0L,
+                            modified = System.currentTimeMillis(),
+                            duration = 0L,
+                            width = 0,
+                            height = 0
+                        )
+                        playback.open(streamVideo)
+                        playback.fullscreen = true
+                    }
+                )
+            }
 
             if (showStorageSheet) {
                 ModalBottomSheet(

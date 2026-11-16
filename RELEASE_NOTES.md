@@ -1,3 +1,27 @@
+# Jadzumi v2.2.0 — Final Master Evolution: Cinema HUD 4.0 & Direct Stream 🌌🎬✨
+
+The definitive master release transforming Jadzumi Player with the pixel-perfect **Cinema HUD 4.0**, native **Jadzumi Direct Stream** engine, streamlined 3-tab library navigation, and unified Reactive Matte architecture.
+
+### 🎬 1. Cinema HUD 4.0 — Pixel-Aligned Playback Experience
+- **Aligned with Approved Visual Design**: Matches the reference specification with pixel precision.
+- **Top Bar**: Minimal floating toolbar with Back navigation, video title with vertical lavender accent indicator, metadata info pills (`2024 · PG-13 · 2h 46m`, `4K HDR`, `Dolby Vision`, `Dolby Atmos`), `Cast`, `Subtitles/PiP`, `Equalizer`, and `More Options`.
+- **Center Controls**: Soft circular `↺ 10s` and `↻ 10s` tactile seek buttons flanking the morphing circular Play/Pause button with soft specular lavender rim and glow.
+- **Vertical Gesture Pills**: Left Brightness capsule (Sun icon) and right Volume capsule (Speaker icon) with smooth reactive lavender fill.
+- **Floating Bottom Capsule**:
+  - Ultra-thin scrubbable timeline with chapter ticks and thumbnail scrubber tooltip.
+  - Tactile action pills: `[🔒 Lock]` `[|◄ Chapters]` `[((·)) Audio]` `[💬 Subtitles]` `[▶ Speed 1.0x]` `[🔲 Aspect]` `[⛶ Fullscreen]`.
+- **Cinema Focus Mode**: Graceful control timeout leaving the video 100% unobstructed.
+
+### 🌐 2. Jadzumi Direct Stream (Native Media3 Engine)
+- **Direct Network Stream Input**: Discreet toolbar button in the Home bar allowing instant playback of direct HTTP/HTTPS URLs (HLS `.m3u8`, MPEG-DASH `.mpd`, Progressive MP4/MKV) inside Cinema HUD 4.0.
+- **Local History & Privacy**: Includes clipboard 1-tap paste, stream validation, and local recent stream history with zero telemetry.
+
+### 🗂️ 3. Streamlined 3-Tab Library Navigation
+- Category pills on Home now strictly feature **`Movies`**, **`Series`**, and **`Anime`** (with "Folders" tab cleanly removed from the home bar and managed via toolbar sync and Settings).
+- State-hoisted category persistence guarantees you remain on your selected category when navigating into details and pressing Back.
+
+---
+
 # Jadzumi v2.1.1 — Bento UI, Soft Neumorphic Surfaces & Category Persistence 🌌🎬✨
 
 A refinement release delivering category persistence across detail navigation, complete removal of the legacy "All" tab, and synthesis of Bento UI, Soft Neumorphism, and Material 3 Expressive motion.

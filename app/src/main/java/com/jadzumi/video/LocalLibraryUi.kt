@@ -806,7 +806,7 @@ fun JadzumiCategoryPillsRow(
     onCategorySelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val categories = remember { listOf("Movies", "Series", "Anime", "Folders") }
+    val categories = remember { listOf("Movies", "Series", "Anime") }
 
     Row(
         modifier = modifier
@@ -1132,7 +1132,6 @@ fun JadzumiCategoryPillsRow(
                     "Movies" -> "Movies"
                     "TV Shows" -> "Series"
                     "Anime" -> "Anime"
-                    "Folders" -> "Folders"
                     else -> "Movies"
                 },
                 onCategorySelected = { cat ->
@@ -1140,7 +1139,6 @@ fun JadzumiCategoryPillsRow(
                         "Movies" -> "Movies"
                         "Series" -> "TV Shows"
                         "Anime" -> "Anime"
-                        "Folders" -> "Folders"
                         else -> "Movies"
                     }
                     category = newCat
@@ -1152,7 +1150,7 @@ fun JadzumiCategoryPillsRow(
             AnimatedContent(
                 targetState = category,
                 transitionSpec = {
-                    val categories = listOf("Movies", "TV Shows", "Anime", "Folders")
+                    val categories = listOf("Movies", "TV Shows", "Anime")
                     val fromIdx = categories.indexOf(initialState).coerceAtLeast(0)
                     val toIdx = categories.indexOf(targetState).coerceAtLeast(0)
                     val isForward = toIdx >= fromIdx
