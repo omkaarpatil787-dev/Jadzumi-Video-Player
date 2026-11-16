@@ -1,3 +1,25 @@
+# Jadzumi v2.2.2 — Refined Cinema HUD Capsule, Editorial Bento & Gestures 🌌🎬✨
+
+A comprehensive polish update introducing the unified Cinema HUD floating capsule, floating modal bottom sheets for audio and subtitles, modern gesture controls, editorial movie details styling, and complete removal of Direct Stream.
+
+### 🎬 1. Unified Cinema HUD Floating Bottom Capsule
+- **Integrated Floating Dock**: Combines the precision timeline scrubber, time elapsed / total, and tactile essential action pills (`[🔒 Lock]`, `[💬 Subtitles]`, `[🎧 Audio]`, `[▶ 1.0x Speed]`, `[⛶ Aspect]`) into a single, elegant floating capsule with soft specular lavender depth (`Color(0xD91C1A25)`).
+- **Floating Modal Sheets**: Subtitles and Audio now open as focused floating bottom cards hovering gracefully above the player controls rather than covering a third of the screen with a heavy side drawer.
+- **Top Bar Polish**: Simplified the top-right toolbar to Picture-in-Picture (`PiP`) and More Options (`...`), eliminating redundant audio/subtitle icons.
+
+### 👆 2. Modern Gesture Controls & Double-Tap Aspect Toggle
+- **Double-Tap Aspect Toggle**: Double-tapping the center 30% of the screen instantly toggles between `Fit` (original aspect ratio) and `Zoom / Fill` (fills ultrawide/tablet displays without black bars), mirroring YouTube and modern media players.
+- **Double-Tap Seeking**: Double-tapping the left 35% seeks backward; double-tapping the right 35% seeks forward.
+
+### 🎨 3. Movie Details Page Bento Refinement
+- **Color Consistency**: Removed the yellow horizon gradient and blue buttons. Replaced with the approved **Moonlit Lavender** design system (`LavenderAccent #B79AF7`, `Obsidian #101016`).
+- **Clean Editorial Layout**: Play Movie buttons now prominently feature Moonlit Lavender with obsidian text. Removed all trace of the "Episodes" tab on standalone movies.
+
+### 🧹 4. Complete Removal of Direct Stream
+- Completely removed all direct stream network inputs, dialogs, and dependencies to preserve Jadzumi's focused identity as an elite local cinema player.
+
+---
+
 # Jadzumi v2.2.1 — Direct Stream Resolution & Clutter-Free HUD 🌌🎬✨
 
 A precision fix and refinement update resolving Direct Stream network playback and eliminating non-functional gimmicks and clutter from the Cinema HUD playback experience.

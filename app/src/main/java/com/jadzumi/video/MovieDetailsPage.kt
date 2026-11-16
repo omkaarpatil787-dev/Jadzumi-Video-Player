@@ -102,38 +102,20 @@ fun MovieDetailsPage(
         val scrollState = rememberLazyListState()
 
         // Ambient Horizon / Cinema Glow Layer
-        if (isLight) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(260.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color(0xFFFEF3C7).copy(alpha = 0.55f),
-                                Color(0xFFFEF08A).copy(alpha = 0.18f),
-                                Color.Transparent
-                            )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            LavenderAccent.copy(alpha = if (isLight) 0.12f else 0.18f),
+                            MoonlitSurface.copy(alpha = 0.05f),
+                            Color.Transparent
                         )
                     )
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(320.dp)
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                TimelineAccent.copy(alpha = 0.22f),
-                                Color(0xFF0F172A).copy(alpha = 0.08f),
-                                Color.Transparent
-                            ),
-                            radius = 650f
-                        )
-                    )
-            )
-        }
+                )
+        )
 
         val hasRelated = remember(state.videos, video) {
             state.videos.any { it.uri != video.uri }
@@ -348,14 +330,15 @@ fun MovieDetailsPage(
                                         modifier = Modifier.height(46.dp),
                                         shape = CircleShape,
                                         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                        colors = ButtonDefaults.buttonColors(containerColor = LavenderAccent, contentColor = Obsidian)
                                     ) {
-                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
+                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp), tint = Obsidian)
                                         Spacer(Modifier.width(6.dp))
                                         Text(
                                             if (inProgress) "Resume from ${timecode(savedPos / 1000)}" else "Play Movie",
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 13.sp
+                                            fontSize = 13.sp,
+                                            color = Obsidian
                                         )
                                     }
 
@@ -411,14 +394,15 @@ fun MovieDetailsPage(
                                         },
                                         modifier = Modifier.fillMaxWidth().height(46.dp),
                                         shape = CircleShape,
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                        colors = ButtonDefaults.buttonColors(containerColor = LavenderAccent, contentColor = Obsidian)
                                     ) {
-                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
+                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp), tint = Obsidian)
                                         Spacer(Modifier.width(8.dp))
                                         Text(
                                             if (inProgress) "Resume from ${timecode(savedPos / 1000)}" else "Play Movie",
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp
+                                            fontSize = 14.sp,
+                                            color = Obsidian
                                         )
                                     }
 

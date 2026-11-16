@@ -450,25 +450,35 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                 },
                                 onDoubleTap = { offset ->
                                     if (!isFastForwarding && !playback.locked) {
-                                        val isLeft = offset.x < size.width / 2
-                                        val targetSide = if (isLeft) "left" else "right"
-                                        lastActiveSide = targetSide
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        if (rippleSide == targetSide) {
-                                            rippleCount++
+                                        val isLeft = offset.x < size.width * 0.35f
+                                        val isRight = offset.x > size.width * 0.65f
+                                        if (isLeft || isRight) {
+                                            val targetSide = if (isLeft) "left" else "right"
+                                            lastActiveSide = targetSide
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            if (rippleSide == targetSide) {
+                                                rippleCount++
+                                            } else {
+                                                rippleSide = targetSide
+                                                rippleCount = 1
+                                            }
+                                            playback.skip(if (isLeft) -seekDeltaMs else seekDeltaMs)
+                                            val seekSec = playback.seekIncrementSeconds * rippleCount
+                                            val seekTxt = if (isLeft) "−${seekSec}s" else "+${seekSec}s"
+                                            message = seekTxt
+                                            seekGestureIsForward = !isLeft
+                                            seekGestureDeltaText = seekTxt
+                                            seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
+                                            hudSide = "Seek"
+                                            interaction++
                                         } else {
-                                            rippleSide = targetSide
-                                            rippleCount = 1
+                                            // Center Double-Tap: Quick toggle Fit vs Zoom (Fill Screen)
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            val nextMode = if (playback.aspectMode == AspectRatioMode.FIT) AspectRatioMode.ZOOM else AspectRatioMode.FIT
+                                            playback.setAspectRatioMode(nextMode)
+                                            message = if (nextMode == AspectRatioMode.ZOOM) "Filled screen (Cropped)" else "Original aspect (Fit)"
+                                            interaction++
                                         }
-                                        playback.skip(if (isLeft) -seekDeltaMs else seekDeltaMs)
-                                        val seekSec = playback.seekIncrementSeconds * rippleCount
-                                        val seekTxt = if (isLeft) "−${seekSec}s" else "+${seekSec}s"
-                                        message = seekTxt
-                                        seekGestureIsForward = !isLeft
-                                        seekGestureDeltaText = seekTxt
-                                        seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
-                                        hudSide = "Seek"
-                                        interaction++
                                     }
                                 }
                             )
@@ -783,26 +793,16 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                 }
                             }
 
-                            // Top-Right Icons: Subtitles/Captions, Audio Settings, More Options
+                            // Top-Right Icons: PiP & More Options
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 FrostedCircleButton(
-                                    label = "Subtitles",
-                                    onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ },
+                                    label = "Picture-in-Picture",
+                                    onClick = { activity.enterCinemaPip(); interaction++ },
                                     size = 42.dp,
                                     bgColor = dynamicFrostedCircleBg,
                                     rimColor = dynamicFrostedCircleRim
                                 ) {
-                                    Icon(Icons.Rounded.ClosedCaption, "Subtitles", tint = playerContentColor, modifier = Modifier.size(19.dp))
-                                }
-
-                                FrostedCircleButton(
-                                    label = "Audio Settings",
-                                    onClick = { quickMenuSection = if (quickMenuSection == "audio") null else "audio"; interaction++ },
-                                    size = 42.dp,
-                                    bgColor = dynamicFrostedCircleBg,
-                                    rimColor = dynamicFrostedCircleRim
-                                ) {
-                                    Icon(Icons.Rounded.Tune, "Audio Settings", tint = playerContentColor, modifier = Modifier.size(19.dp))
+                                    Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(19.dp))
                                 }
 
                                 FrostedCircleButton(
@@ -964,51 +964,170 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                             val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
                             val totalSec = (playback.duration / 1000).coerceAtLeast(0)
 
-                            Row(
-                                Modifier.fillMaxWidth().padding(horizontal = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            // CINEMA HUD FLOATING BOTTOM CAPSULE (Material 3 Expressive + Subtle Neumorphism)
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(26.dp),
+                                color = Color(0xD91C1A25),
+                                border = BorderStroke(1.dp, Color(0xFFB79AF7).copy(alpha = 0.22f)),
+                                shadowElevation = 8.dp
                             ) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = Color(0xD42B2639),
-                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
-                                    shadowElevation = 3.dp,
-                                    onClick = { playback.locked = true; interaction++ }
+                                Column(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Box(Modifier.padding(7.dp), contentAlignment = Alignment.Center) {
-                                        Icon(Icons.Rounded.Lock, "Lock controls", Modifier.size(15.dp), tint = playerContentColor)
+                                    // Row 1: Timeline Scrubber + Elapsed / Total Duration
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Text(
+                                            compactTimecode(elapsedSec),
+                                            color = playerContentColor,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+
+                                        Box(Modifier.weight(1f)) {
+                                            CinemaTimelineBar(
+                                                fraction = currentFraction,
+                                                bufferedFraction = bufferedFraction,
+                                                isScrubbing = scrub != null,
+                                                enabled = playback.seekable && playback.duration > 0,
+                                                chapters = playback.chapters,
+                                                onScrub = { scrub = it; interaction++ },
+                                                onScrubFinished = {
+                                                    scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
+                                                    scrub = null
+                                                }
+                                            )
+                                        }
+
+                                        Text(
+                                            compactTimecode(totalSec),
+                                            color = playerContentColor,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+
+                                    // Row 2: Unified Essential Action Pills
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        // 1. Lock Pill
+                                        Surface(
+                                            shape = RoundedCornerShape(999.dp),
+                                            color = Color(0xFF292535),
+                                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.10f)),
+                                            onClick = { playback.locked = true; interaction++ }
+                                        ) {
+                                            Row(
+                                                Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                            ) {
+                                                Icon(Icons.Rounded.Lock, "Lock", Modifier.size(14.dp), tint = playerContentColor)
+                                                Text("Lock", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                            }
+                                        }
+
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // 2. Subtitles Pill
+                                            val hasSubs = playback.subtitleTracks.any { it.isSelected } || quickMenuSection == "subs"
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = if (hasSubs) LavenderAccent else Color(0xFF292535),
+                                                border = BorderStroke(1.dp, if (hasSubs) LavenderAccent else Color.White.copy(alpha = 0.10f)),
+                                                onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ }
+                                            ) {
+                                                Row(
+                                                    Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                                ) {
+                                                    Icon(Icons.Rounded.ClosedCaption, "Subtitles", Modifier.size(15.dp), tint = if (hasSubs) Obsidian else playerContentColor)
+                                                    Text("Subtitles", color = if (hasSubs) Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                }
+                                            }
+
+                                            // 3. Audio Pill
+                                            val isAudioActive = quickMenuSection == "audio"
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = if (isAudioActive) LavenderAccent else Color(0xFF292535),
+                                                border = BorderStroke(1.dp, if (isAudioActive) LavenderAccent else Color.White.copy(alpha = 0.10f)),
+                                                onClick = { quickMenuSection = if (isAudioActive) null else "audio"; interaction++ }
+                                            ) {
+                                                Row(
+                                                    Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                                ) {
+                                                    Icon(Icons.Rounded.GraphicEq, "Audio", Modifier.size(15.dp), tint = if (isAudioActive) Obsidian else playerContentColor)
+                                                    Text("Audio", color = if (isAudioActive) Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                }
+                                            }
+
+                                            // 4. Speed Pill
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = Color(0xFF292535),
+                                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.10f)),
+                                                onClick = {
+                                                    val next = when (playback.speed) {
+                                                        1.0f -> 1.25f
+                                                        1.25f -> 1.5f
+                                                        1.5f -> 2.0f
+                                                        else -> 1.0f
+                                                    }
+                                                    playback.changeSpeed(next)
+                                                    message = "${next}x Speed"
+                                                    interaction++
+                                                }
+                                            ) {
+                                                Row(
+                                                    Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                ) {
+                                                    Icon(Icons.Rounded.PlayArrow, null, Modifier.size(14.dp), tint = playerContentColor)
+                                                    Text("${playback.speed}x", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                }
+                                            }
+
+                                            // 5. Aspect Ratio Pill (Fit / Zoom)
+                                            Surface(
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = Color(0xFF292535),
+                                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.10f)),
+                                                onClick = {
+                                                    val next = if (playback.aspectMode == AspectRatioMode.FIT) AspectRatioMode.ZOOM else AspectRatioMode.FIT
+                                                    playback.setAspectRatioMode(next)
+                                                    message = if (next == AspectRatioMode.ZOOM) "Filled (Cropped)" else "Original (Fit)"
+                                                    interaction++
+                                                }
+                                            ) {
+                                                Row(
+                                                    Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                ) {
+                                                    Icon(Icons.Rounded.AspectRatio, null, Modifier.size(14.dp), tint = playerContentColor)
+                                                    Text(if (playback.aspectMode == AspectRatioMode.ZOOM) "Zoom" else "Fit", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-
-                                Text(
-                                    compactTimecode(elapsedSec),
-                                    color = playerContentColor,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-
-                                Box(Modifier.weight(1f)) {
-                                    CinemaTimelineBar(
-                                        fraction = currentFraction,
-                                        bufferedFraction = bufferedFraction,
-                                        isScrubbing = scrub != null,
-                                        enabled = playback.seekable && playback.duration > 0,
-                                        chapters = playback.chapters,
-                                        onScrub = { scrub = it; interaction++ },
-                                        onScrubFinished = {
-                                            scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
-                                            scrub = null
-                                        }
-                                    )
-                                }
-
-                                Text(
-                                    compactTimecode(totalSec),
-                                    color = playerContentColor,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
                             }
                         }
                     }
@@ -1412,12 +1531,14 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
     CompositionLocalProvider(LocalQuickMenuPalette provides palette) {
         BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = if (isLight) 0.18f else 0.25f)).clickable(onClick = onDismiss)) {
             val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
+            val isFloatingBottom = section == "subs" || section == "audio" || isPhonePortrait
             Surface(
-                modifier = if (isPhonePortrait) {
+                modifier = if (isFloatingBottom) {
                     Modifier
                         .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
+                        .safeDrawingPadding()
+                        .padding(horizontal = 20.dp, vertical = if (isPhonePortrait) 0.dp else 24.dp)
+                        .widthIn(max = 520.dp)
                         .clickable(enabled = false) {}
                 } else {
                     Modifier
@@ -1427,9 +1548,9 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                         .widthIn(min = 320.dp, max = 380.dp)
                         .clickable(enabled = false) {}
                 },
-                color = if (isLight) palette.bg else if (isPhonePortrait) Color(0xF5302C3A) else Color(0xF52B2835),
-                border = BorderStroke(1.dp, if (isLight) palette.rim else Color(0xFF51475D)),
-                shape = if (isPhonePortrait) RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp) else RoundedCornerShape(24.dp),
+                color = if (isLight) palette.bg else if (isPhonePortrait) Color(0xF5302C3A) else Color(0xF51C1A25),
+                border = BorderStroke(1.dp, if (isLight) palette.rim else Color(0xFFB79AF7).copy(alpha = 0.28f)),
+                shape = if (isPhonePortrait && !isFloatingBottom) RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp) else RoundedCornerShape(26.dp),
                 shadowElevation = if (isLight) 8.dp else 24.dp
             ) {
                 Column {
