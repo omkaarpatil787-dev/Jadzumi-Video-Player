@@ -3,11 +3,15 @@ package com.jadzumi.video
 import android.content.Context
 import android.text.format.Formatter
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,6 +46,7 @@ fun MovieDetailsPage(
     val library = remember { LocalLibrary.get(context) }
     var confirmDelete by remember { mutableStateOf(false) }
     var synopsisExpanded by rememberSaveable { mutableStateOf(false) }
+    var detailsSubtab by rememberSaveable { mutableStateOf("Details") }
 
     val metadata = remember(video, state.sidecars) {
         extractMovieMetadata(video, state.sidecars, context)
@@ -474,38 +479,271 @@ fun MovieDetailsPage(
                 }
             }
 
-            // 3. Two-Column Tablet Ergonomics Layout: File Specs & Playback Status (Left) + Technical Inspector (Right)
+            // Subtabs: [ Details | Episodes | Related ]
             item {
-                if (isTablet) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(22.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        // Left Column: File Details & Resume History (Weight 1.6)
-                        Column(
-                            modifier = Modifier.weight(1.6f),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            MovieFileOverviewCard(video, state, context)
-                            InspectedTracksCard(video, playback)
-                        }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    listOf("Details", "Episodes", "Related").forEach { tab ->
+                        val isSelected = tab == detailsSubtab
+                        val tabBg by animateColorAsState(
+                            targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                            label = "tab_bg"
+                        )
+                        val tabContent by animateColorAsState(
+                            targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                            label = "tab_txt"
+                        )
 
-                        // Right Column: Technical Inspector & Offline Badge (Weight 1.0)
-                        Column(
-                            modifier = Modifier.weight(1.0f),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        Surface(
+                            onClick = { detailsSubtab = tab },
+                            shape = RoundedCornerShape(18.dp),
+                            color = tabBg,
+                            border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
                         ) {
-                            TechnicalInspectorCard(sampleVideo = video, playback = playback)
-                            OfflineVerificationCard()
+                            Text(
+                                text = tab,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = tabContent
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Info Glance Cards (Neumorphic Style: Rating / Release, Genre, Audio Stream)
+            item {
+                val ratingOrYearLabel = if (effectiveMetadata.rating != null) "RATING" else "RELEASE"
+                val ratingOrYearVal = effectiveMetadata.rating?.let { "★ $it / 10" } ?: (effectiveMetadata.year ?: "Cinema Feature")
+                val genreText = effectiveMetadata.genres.takeIf { it.isNotEmpty() }?.joinToString(" · ") ?: "Feature Film"
+                val audioText = if (video.mime.contains("mp4", true)) "AAC 5.1 / Stereo" else "E-AC-3 5.1 (Surround)"
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    ) {
+                        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                            Text(
+                                ratingOrYearLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                ratingOrYearVal,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    ) {
+                        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                            Text(
+                                "GENRE",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                genreText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    ) {
+                        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                            Text(
+                                "AUDIO STREAM",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                audioText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (detailsSubtab == "Episodes") {
+                val folderEpisodes = state.videos.filter { it.folder == video.folder && it.uri != video.uri }
+                if (folderEpisodes.isEmpty()) {
+                    item {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                        ) {
+                            Text(
+                                "No additional episodes or video parts found in this folder.",
+                                modifier = Modifier.padding(20.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        MovieFileOverviewCard(video, state, context)
-                        InspectedTracksCard(video, playback)
-                        TechnicalInspectorCard(sampleVideo = video, playback = playback)
-                        OfflineVerificationCard()
+                    items(folderEpisodes, key = { it.uri }) { ep ->
+                        Surface(
+                            onClick = {
+                                playback.open(ep)
+                                playback.fullscreen = true
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Rounded.PlayArrow, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                    }
+                                }
+                                Column(Modifier.weight(1f)) {
+                                    Text(ep.title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text(if (ep.duration > 0) timecode(ep.duration / 1000) else "Video Part", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Text("Play", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+                }
+            } else if (detailsSubtab == "Related") {
+                val relatedVideos = state.videos.filter { it.uri != video.uri }.take(6)
+                if (relatedVideos.isEmpty()) {
+                    item {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                        ) {
+                            Text(
+                                "No related titles indexed in your library.",
+                                modifier = Modifier.padding(20.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    items(relatedVideos, key = { it.uri }) { rel ->
+                        Surface(
+                            onClick = {
+                                playback.open(rel)
+                                playback.fullscreen = true
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Rounded.Movie, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                                Column(Modifier.weight(1f)) {
+                                    Text(rel.title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text(if (rel.duration > 0) timecode(rel.duration / 1000) else "Movie", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Text("Watch", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+                }
+            } else {
+                // 3. Two-Column Tablet Ergonomics Layout: File Specs & Playback Status (Left) + Technical Inspector (Right)
+                item {
+                    if (isTablet) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(22.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            // Left Column: File Details & Resume History (Weight 1.6)
+                            Column(
+                                modifier = Modifier.weight(1.6f),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                MovieFileOverviewCard(video, state, context)
+                                InspectedTracksCard(video, playback)
+                            }
+
+                            // Right Column: Technical Inspector & Offline Badge (Weight 1.0)
+                            Column(
+                                modifier = Modifier.weight(1.0f),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                TechnicalInspectorCard(sampleVideo = video, playback = playback)
+                                OfflineVerificationCard()
+                            }
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            MovieFileOverviewCard(video, state, context)
+                            InspectedTracksCard(video, playback)
+                            TechnicalInspectorCard(sampleVideo = video, playback = playback)
+                            OfflineVerificationCard()
+                        }
                     }
                 }
             }

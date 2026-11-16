@@ -785,6 +785,51 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
     return queryTokens.all { token -> normalizedTarget.contains(token) }
 }
 
+@Composable
+fun JadzumiCategoryPillsRow(
+    selectedCategory: String,
+    onCategorySelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val categories = listOf("All", "Movies", "Series", "Anime", "Folders")
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 2.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        items(categories) { cat ->
+            val isSelected = cat == selectedCategory
+            val bgColor by animateColorAsState(
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                label = "pill_bg"
+            )
+            val contentColor by animateColorAsState(
+                targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                label = "pill_txt"
+            )
+            val borderStroke = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+
+            Surface(
+                onClick = { onCategorySelected(cat) },
+                shape = RoundedCornerShape(20.dp),
+                color = bgColor,
+                border = borderStroke
+            ) {
+                Text(
+                    text = cat,
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 7.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    color = contentColor
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable fun LocalLibraryPage(
     state: LocalLibraryState,
@@ -1032,19 +1077,48 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
         val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
         val isPhone = maxWidth < 600.dp
         val bottomPad = if (isPhone) 88.dp else 96.dp
-        PullToRefreshBox(
-            isRefreshing = state.busy,
-            onRefresh = { library.rescan() },
-            modifier = Modifier.fillMaxSize()
-        ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .animatedScrollBlendFade(listState),
-                contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
-                verticalArrangement = Arrangement.spacedBy(22.dp)
-            ) {
+
+        Column(Modifier.fillMaxSize()) {
+            JadzumiCategoryPillsRow(
+                selectedCategory = when (category) {
+                    "All videos", "Home" -> "All"
+                    "Movies" -> "Movies"
+                    "TV Shows" -> "Series"
+                    "Anime" -> "Anime"
+                    "Folders" -> "Folders"
+                    else -> "All"
+                },
+                onCategorySelected = { cat ->
+                    category = when (cat) {
+                        "All" -> "All videos"
+                        "Movies" -> "Movies"
+                        "Series" -> "TV Shows"
+                        "Anime" -> "Anime"
+                        "Folders" -> "Folders"
+                        else -> "All videos"
+                    }
+                },
+                modifier = Modifier.padding(horizontal = pad, vertical = 6.dp)
+            )
+
+            if (category == "Folders") {
+                Box(Modifier.fillMaxSize().weight(1f)) {
+                    LocalFoldersPage(state = state, library = library, wide = screenMaxWidth >= 640.dp, select = select)
+                }
+            } else {
+                PullToRefreshBox(
+                    isRefreshing = state.busy,
+                    onRefresh = { library.rescan() },
+                    modifier = Modifier.fillMaxSize().weight(1f)
+                ) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .animatedScrollBlendFade(listState),
+                        contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = bottomPad),
+                        verticalArrangement = Arrangement.spacedBy(22.dp)
+                    ) {
                 if (isSearching) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1712,6 +1786,8 @@ fun matchesQuery(query: String, vararg targets: String?): Boolean {
             }
         }
     }
+}
+}
 }
 
 @OptIn(ExperimentalLayoutApi::class)

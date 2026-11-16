@@ -268,23 +268,26 @@ private val destinations = listOf(
                                                     verticalAlignment = Alignment.CenterVertically,
                                                     horizontalArrangement = Arrangement.SpaceBetween
                                                 ) {
-                                                    if (route == "Home" || route == "Library") {
-                                                        InteractiveCinemaGreeting(
-                                                            localState = localState,
-                                                            playback = playback,
-                                                            isPhone = true,
-                                                            modifier = Modifier.weight(1f)
-                                                        )
-                                                    } else {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        GeminiGlowingJadzumiLogo(darkSurface = effectiveTheme != "Light", size = 28.dp)
                                                         Text(
-                                                            route,
-                                                            Modifier.weight(1f),
-                                                            style = MaterialTheme.typography.titleLarge,
-                                                            fontWeight = FontWeight.Bold,
-                                                            maxLines = 1,
-                                                            overflow = TextOverflow.Ellipsis
+                                                            "Jadzumi",
+                                                            style = MaterialTheme.typography.titleMedium,
+                                                            fontWeight = FontWeight.ExtraBold,
+                                                            color = MaterialTheme.colorScheme.onSurface
                                                         )
                                                     }
+
+                                                    JadzumiSegmentedNavCapsule(
+                                                        currentRoute = if (route == "Settings") "Settings" else "Home",
+                                                        onNavigate = { newRoute ->
+                                                            route = newRoute
+                                                            selectedId = null
+                                                        }
+                                                    )
 
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                                         IconButton(
@@ -387,22 +390,31 @@ private val destinations = listOf(
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis
                                                 )
-                                            } else if (route == "Home" || route == "Library") {
-                                                InteractiveCinemaGreeting(
-                                                    localState = localState,
-                                                    playback = playback,
-                                                    isPhone = false,
-                                                    modifier = Modifier.weight(1f)
-                                                )
                                             } else {
-                                                Text(
-                                                    route,
-                                                    Modifier.weight(1f),
-                                                    style = MaterialTheme.typography.headlineMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                ) {
+                                                    GeminiGlowingJadzumiLogo(darkSurface = effectiveTheme != "Light", size = 32.dp)
+                                                    Text(
+                                                        "Jadzumi",
+                                                        style = MaterialTheme.typography.titleLarge,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                }
+
+                                                Spacer(Modifier.weight(1f))
+
+                                                JadzumiSegmentedNavCapsule(
+                                                    currentRoute = if (route == "Settings") "Settings" else "Home",
+                                                    onNavigate = { newRoute ->
+                                                        route = newRoute
+                                                        selectedId = null
+                                                    }
                                                 )
+
+                                                Spacer(Modifier.weight(1f))
                                             }
 
                                             Surface(
@@ -990,6 +1002,82 @@ fun GeminiGlowingJadzumiLogo(
                             )
                         )
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun JadzumiSegmentedNavCapsule(
+    currentRoute: String,
+    onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isSettings = currentRoute == "Settings"
+    val sliderProgress by animateFloatAsState(
+        targetValue = if (isSettings) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+        label = "capsuleSliderProgress"
+    )
+
+    Surface(
+        modifier = modifier
+            .height(38.dp)
+            .width(190.dp),
+        shape = RoundedCornerShape(19.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        shadowElevation = 2.dp
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(3.dp)
+        ) {
+            val segmentWidth = maxWidth / 2
+
+            // Animated sliding selection capsule
+            Box(
+                modifier = Modifier
+                    .offset(x = segmentWidth * sliderProgress)
+                    .width(segmentWidth)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+
+            Row(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { onNavigate("Home") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Home",
+                        fontSize = 13.sp,
+                        fontWeight = if (!isSettings) FontWeight.Bold else FontWeight.Medium,
+                        color = if (!isSettings) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { onNavigate("Settings") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Settings",
+                        fontSize = 13.sp,
+                        fontWeight = if (isSettings) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isSettings) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
