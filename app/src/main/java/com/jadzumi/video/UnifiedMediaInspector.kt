@@ -142,9 +142,9 @@ internal fun UnifiedMediaInspectorCard(
                     Text("Codec: $codecText", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
 
                     val hwStatus = when (videoDecoder?.hardware) {
-                        DecoderHardware.HARDWARE -> "● Hardware (GPU)"
+                        DecoderHardware.HARDWARE -> "Hardware (GPU)"
                         DecoderHardware.SOFTWARE -> "Software Fallback"
-                        else -> "● Hardware Accelerated"
+                        else -> "Hardware Accelerated"
                     }
                     Text(hwStatus, fontSize = 10.5.sp, color = Color(0xFF34D399), fontWeight = FontWeight.SemiBold)
                 }

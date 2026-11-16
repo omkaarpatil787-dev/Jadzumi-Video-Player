@@ -57,12 +57,19 @@ enum class HaloPalette(
         subtitle = "Royal Violet & Aqua Teal",
         primaryColor = Color(0xFFAC9AFF),
         secondaryColor = Color(0xFF76CDDD)
+    ),
+    CinemaNoir(
+        title = "Cinema Noir",
+        subtitle = "Studio Shadow & Micro-Rim",
+        primaryColor = Color(0xFF2E2744),
+        secondaryColor = Color(0xFF1B1728)
     );
 
     companion object {
         fun fromName(name: String?): HaloPalette = when (name) {
             "Peach Dusk", "peach", "Peach" -> PeachDusk
             "Violet Cinema", "violet", "Violet" -> VioletCinema
+            "Cinema Noir", "noir", "Noir" -> CinemaNoir
             else -> GlacierBlue
         }
     }
@@ -136,12 +143,27 @@ fun PortalHaloBackdrop(
                 val center2 = Offset(w * 0.94f + driftX2, h * 0.96f + driftY2)
                 val radius2 = (w * (spread * 0.85f)).coerceAtLeast(100f)
 
-                // Radial gradient 1
+                // Theatrical Ambient Wash (Top center Horizon)
+                val topWashCenter = Offset(w * 0.5f, 0f)
+                val topWashRadius = (w * 0.95f).coerceAtLeast(150f)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        0.0f to primaryCol.copy(alpha = animatedGlow),
-                        0.50f to primaryCol.copy(alpha = animatedGlow * 0.45f),
-                        0.76f to Color.Transparent,
+                        0.0f to primaryCol.copy(alpha = animatedGlow * 0.55f),
+                        0.50f to primaryCol.copy(alpha = animatedGlow * 0.20f),
+                        0.95f to Color.Transparent,
+                        center = topWashCenter,
+                        radius = topWashRadius
+                    ),
+                    center = topWashCenter,
+                    radius = topWashRadius
+                )
+
+                // Atmospheric Node 1: Upper-left anchor with gentle unhurried float
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        0.0f to primaryCol.copy(alpha = animatedGlow * 0.85f),
+                        0.45f to primaryCol.copy(alpha = animatedGlow * 0.35f),
+                        0.85f to Color.Transparent,
                         center = center1,
                         radius = radius1
                     ),
@@ -149,12 +171,12 @@ fun PortalHaloBackdrop(
                     radius = radius1
                 )
 
-                // Radial gradient 2
+                // Atmospheric Node 2: Lower-right anchor
                 drawCircle(
                     brush = Brush.radialGradient(
-                        0.0f to secondaryCol.copy(alpha = animatedGlow * 0.95f),
-                        0.50f to secondaryCol.copy(alpha = animatedGlow * 0.40f),
-                        0.80f to Color.Transparent,
+                        0.0f to secondaryCol.copy(alpha = animatedGlow * 0.85f),
+                        0.45f to secondaryCol.copy(alpha = animatedGlow * 0.30f),
+                        0.85f to Color.Transparent,
                         center = center2,
                         radius = radius2
                     ),

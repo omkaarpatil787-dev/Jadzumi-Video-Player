@@ -826,14 +826,14 @@ private fun InteractiveCinemaGreeting(
 
     val cinemaFacts = remember {
         listOf(
-            "💡 Fun fact: Akira Kurosawa dyed rain with ink to film epic downpours.",
-            "🎬 Cinema trivia: The 24fps motion picture standard was born in 1927.",
-            "🍿 Pro tip: MediaCodec 10-bit HEVC decoding saves 60% battery life.",
-            "✨ Fun fact: 2001: A Space Odyssey used 0 CGI — 100% physical models.",
-            "🎧 Studio audio: NextLib FFmpeg powers true 5.1 & 7.1 discrete surround sound.",
-            "🎥 Trivia: The iconic Jurassic Park T-Rex roar was mixed from a baby elephant & alligator.",
-            "🎞️ Fun fact: The iconic green falling code in The Matrix is actually sushi recipes.",
-            "🛡️ Pure privacy: 100% offline cinema vault, zero telemetry."
+            "Fun fact: Akira Kurosawa dyed rain with ink to film epic downpours.",
+            "Cinema trivia: The 24fps motion picture standard was born in 1927.",
+            "Pro tip: MediaCodec 10-bit HEVC decoding saves 60% battery life.",
+            "Fun fact: 2001: A Space Odyssey used 0 CGI — 100% physical models.",
+            "Studio audio: NextLib FFmpeg powers true 5.1 & 7.1 discrete surround sound.",
+            "Trivia: The iconic Jurassic Park T-Rex roar was mixed from a baby elephant & alligator.",
+            "Fun fact: The iconic green falling code in The Matrix is actually sushi recipes.",
+            "Pure privacy: 100% offline cinema vault, zero telemetry."
         )
     }
 
@@ -886,8 +886,8 @@ private fun InteractiveCinemaGreeting(
         AnimatedContent(
             targetState = when {
                 factIndex > 0 -> currentFact
-                series != null && epInfo != null -> "Watching S%02dE%02d · Tap to cycle fun facts 🍿".format(epInfo.season, epInfo.episode)
-                inProgressMovie != null -> "Resume from ${timecode(playback.savedPosition(inProgressMovie) / 1000)} · Tap for cinema facts 🎬"
+                series != null && epInfo != null -> "Watching S%02dE%02d · Tap to cycle trivia".format(epInfo.season, epInfo.episode)
+                inProgressMovie != null -> "Resume from ${timecode(playback.savedPosition(inProgressMovie) / 1000)} · Tap for cinema trivia"
                 else -> currentFact
             },
             transitionSpec = {
@@ -1290,7 +1290,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text("⚡ Hardware Acceleration Engine", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("Hardware Acceleration Engine", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                         Surface(
                                             shape = RoundedCornerShape(8.dp),
                                             color = Color(0xFF1E8E3E).copy(alpha = 0.15f),
@@ -1345,7 +1345,7 @@ private val settingsCategories = listOf(
                             // BENTO CARD 2: DEFAULT VIDEO SCALING MODE (In-Card Tactile Chips)
                             item {
                                 Panel {
-                                    Text("⛶ Default Video Scaling Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Default Video Scaling Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("How videos fit your display upon playback start. Double-tap the center of the video during playback to toggle instantly.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
 
                                     Row(
@@ -1386,7 +1386,7 @@ private val settingsCategories = listOf(
                                     var ambilightEnabled by remember { mutableStateOf(appearancePrefs.getBoolean("cinema_ambilight", true)) }
                                     var heroBannerEnabled by remember { mutableStateOf(appearancePrefs.getBoolean("show_hero_banner", false)) }
 
-                                    Text("☀️ Luminance, Ambilight & Overlays", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Luminance, Ambilight & Overlays", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("Manage atmospheric lighting, HDR luminance boost, and persistent player telemetry.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
 
                                     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1500,7 +1500,7 @@ private val settingsCategories = listOf(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text("⚡ Audio Output & Spatial 3D", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("Audio Output & Spatial 3D", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                         Surface(
                                             shape = RoundedCornerShape(8.dp),
                                             color = Color(0xFF1E8E3E).copy(alpha = 0.15f),
@@ -1545,7 +1545,7 @@ private val settingsCategories = listOf(
                             // BENTO CARD 2: PLAYBACK AUDIO FEATURES
                             item {
                                 Panel {
-                                    Text("🌙 Playback Audio Enhancements", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Playback Audio Enhancements", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     Text("Smart dialogue tuning and background audio for uninterrupted listening.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
 
                                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1572,7 +1572,7 @@ private val settingsCategories = listOf(
                             item {
                                 Panel {
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("🎧 Wireless Lip-Sync Calibration", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("Wireless Lip-Sync Calibration", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                         Surface(
                                             shape = RoundedCornerShape(8.dp),
                                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
@@ -1622,7 +1622,7 @@ private val settingsCategories = listOf(
                                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                                     // BENTO CARD 1: LIVE PREVIEW & TYPOGRAPHY
                                     Panel {
-                                        Text("📝 Subtitle Live Studio & Typography", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("Subtitle Live Studio & Typography", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                         Text("Typography, font weight, and real-time rendering for SRT, VTT, and embedded SSA/ASS subtitles.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
 
                                         // Live Subtitle Preview Card
@@ -1722,7 +1722,7 @@ private val settingsCategories = listOf(
 
                                     // BENTO CARD 2: COLORS & 3D EDGE EFFECTS
                                     Panel {
-                                        Text("🎨 Colors, Shading & Background Style", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("Colors, Shading & Background Style", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                         Text("Customize text contrast, background pill geometry, and glowing drop shadows.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
 
                                         Text("Text Color", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, modifier = Modifier.padding(bottom = 6.dp))

@@ -1,4 +1,30 @@
-# Jadzumi v2.3.1 — Universal Media Inspector 2.0 & Full App Unification 🌌🎬✨
+# Jadzumi v2.3.2 — Floating Pill Bottom HUD, Continuous PiP Flow & Acrylic UI
+
+A landmark release refining the in-player experience with standalone floating pill controls, uninterrupted Picture-in-Picture playback, strict zero-emoji interface polish, and modern Acrylic glass styling.
+
+### 💊 1. Separated & Near Pill-Shaped Bottom HUD
+- **Standalone Scrubber Pill**: Replaced the bulky monolithic card with an independent floating capsule (`RoundedCornerShape(999.dp)`) housing the timeline scrubber, chapter markers, and precise timecodes.
+- **Separated & Near Action Dock**: Directly below the scrubber, floating pill capsules provide 1-tap tactile control:
+  - **Left Pill**: `[ Lock ]` screen protection.
+  - **Right Pill Cluster**: `[ Subtitles ]`, `[ Audio ]`, `[ Speed ]`, and `[ Aspect Ratio ]` pills with active accent glows.
+- **Lightweight Viewport**: Content breathes through between and around the floating pills, maximizing video visibility.
+
+### 🖼️ 2. Continuous Picture-in-Picture (Zero Playback Interruption)
+- **Lifecycle Protection**: Guarded `onStop()` lifecycle callback to prevent ExoPlayer instance destruction during background task switches and PiP transitions.
+- **Seamless Flow**: Ensured playback never stops or stutters when entering or expanding back to fullscreen from PiP mode.
+- **Stable Configuration**: Registered `keyboard|keyboardHidden|uiMode` configuration changes in `AndroidManifest.xml` to eliminate surface rebuilding on orientation and system flips.
+
+### 💎 3. Enhanced Acrylic UI & Theatrical Backdrop
+- **Dual-Specular Rims**: Border gradients with soft top-edge specular highlights catching scene light over frosted glass.
+- **Theme Adaptability**: High-diffusion frosted surfaces harmonized across Light, Dark, and AMOLED (pitch-black obsidian) modes.
+- **Atmospheric Horizon Wash**: Upgraded `PortalHalo` backdrop with top-down cinematic light wash and introduced the `Cinema Noir` palette for distraction-free pure OLED viewing.
+
+### 🚫 4. Strict Zero-Emoji UI System
+- Fully purged emoji prefixes across all Settings Bento headers, Media Inspector statuses, toasts, and trivia greetings in favor of clean Material 3 vector icons and polished typography.
+
+---
+
+# Jadzumi v2.3.1 — Universal Media Inspector 2.0 & Full App Unification
 
 The comprehensive architectural unification release ensuring complete visual cohesion, single-source-of-truth data presentation, and zero duplication across all Movie and TV Show details pages and Settings.
 

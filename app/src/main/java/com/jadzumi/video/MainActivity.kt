@@ -177,6 +177,10 @@ class MainActivity : ComponentActivity() {
         val entered = runCatching { enterPictureInPictureMode(pipParams()) }.getOrDefault(false)
         if (!entered) {
             playback.inPip = false
+        } else {
+            if (playback.playRequested && playback.player?.isPlaying == false) {
+                playback.player?.play()
+            }
         }
         return entered
     }
@@ -196,22 +200,34 @@ class MainActivity : ComponentActivity() {
         if (isInPictureInPictureMode) {
             playback.fullscreen = true
             playback.locked = false
+            if (playback.playRequested && playback.player?.isPlaying == false) {
+                playback.player?.play()
+            }
         } else {
             playback.fullscreen = true
             val controller = WindowCompat.getInsetsController(window, window.decorView)
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
+            if (playback.playRequested && playback.player?.isPlaying == false) {
+                playback.player?.play()
+            }
         }
         updatePip()
     }
 
     override fun onStart() {
         super.onStart()
-        if (::playback.isInitialized) playback.restoreVisible()
+        if (::playback.isInitialized) {
+            playback.restoreVisible()
+            if (playback.playRequested && playback.player?.isPlaying == false) {
+                playback.player?.play()
+            }
+        }
     }
 
     override fun onStop() {
-        if (!isChangingConfigurations && ::playback.isInitialized) {
+        val isPip = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) isInPictureInPictureMode else false
+        if (!isChangingConfigurations && ::playback.isInitialized && !isPip) {
             playback.pauseForBackground()
         }
         super.onStop()

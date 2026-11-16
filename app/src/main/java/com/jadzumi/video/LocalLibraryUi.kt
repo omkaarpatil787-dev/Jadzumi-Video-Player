@@ -1106,7 +1106,7 @@ fun JadzumiCategoryPillsRow(
                             id = video.uri,
                             title = epInfo?.seriesTitle ?: video.title,
                             subtitle = "$durStr · $resStr · Dolby Audio",
-                            badge = if (epInfo != null) "✨ TV SERIES SPOTLIGHT" else "★ RECOMMENDED CINEMA",
+                            badge = if (epInfo != null) "TV SERIES SPOTLIGHT" else "RECOMMENDED CINEMA",
                             localVideo = video,
                             backdropUri = null,
                             onPlay = {

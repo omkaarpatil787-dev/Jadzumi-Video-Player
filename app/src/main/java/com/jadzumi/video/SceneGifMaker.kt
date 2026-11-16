@@ -67,7 +67,7 @@ object SceneGifMaker {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "image/webp"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_TEXT, "🎬 $title · Scene Still from Jadzumi Player")
+            putExtra(Intent.EXTRA_TEXT, "$title · Scene Still from Jadzumi Player")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         context.startActivity(Intent.createChooser(intent, "Share Scene Clip"))
