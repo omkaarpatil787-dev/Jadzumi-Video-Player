@@ -1002,21 +1002,27 @@ fun JadzumiSegmentedNavCapsule(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalThemeName.current
+    val isLight = theme == "Light"
     val isSettings = currentRoute == "Settings"
     val sliderProgress by animateFloatAsState(
         targetValue = if (isSettings) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = 350f),
         label = "capsuleSliderProgress"
     )
+
+    val capsuleBg = if (isLight) Color(0xFFECE6F4) else Color(0xFF1E1A29).copy(alpha = 0.75f)
+    val capsuleBorder = if (isLight) Color(0xFFD4CBE5) else Color.White.copy(alpha = 0.08f)
+    val unselectedText = if (isLight) Color(0xFF5A526B) else MaterialTheme.colorScheme.onSurfaceVariant
 
     Surface(
         modifier = modifier
             .height(38.dp)
             .width(190.dp),
         shape = RoundedCornerShape(19.dp),
-        color = Color(0xFF1E1A29).copy(alpha = 0.75f),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
-        shadowElevation = 2.dp
+        color = capsuleBg,
+        border = BorderStroke(1.dp, capsuleBorder),
+        shadowElevation = if (isLight) 1.dp else 2.dp
     ) {
         BoxWithConstraints(
             modifier = Modifier
@@ -1053,7 +1059,7 @@ fun JadzumiSegmentedNavCapsule(
                         "Home",
                         fontSize = 13.sp,
                         fontWeight = if (!isSettings) FontWeight.Bold else FontWeight.Medium,
-                        color = if (!isSettings) Obsidian else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (!isSettings) Obsidian else unselectedText
                     )
                 }
 
@@ -1069,7 +1075,7 @@ fun JadzumiSegmentedNavCapsule(
                         "Settings",
                         fontSize = 13.sp,
                         fontWeight = if (isSettings) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSettings) Obsidian else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (isSettings) Obsidian else unselectedText
                     )
                 }
             }

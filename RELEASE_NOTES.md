@@ -1,3 +1,23 @@
+# Jadzumi v2.2.3 — Living Motion Physics & Appearance Adaptability 🌌🎬✨
+
+A major visual cohesion and motion release introducing the approved Jadzumi Living Motion animation system, fixing light-theme visual adaptivity, and ensuring permanent luminous high-contrast controls across Cinema HUD.
+
+### ⚡ 1. Jadzumi Living Motion Animation System
+- **Spring Physics & Timing Engine**: Implemented the twelve living motion rules and animation specifications:
+  - **Button Press & Release**: 120 ms press compression ($1.0 \to 0.96$) with spring release ($0.96 \to 1.0$, Damping `0.75`, Stiffness `650`).
+  - **Connected Sliding Navigation**: 380 ms target continuous spring physics (Damping `0.85`, Stiffness `350`).
+  - **Cinema HUD Transitions**: Expressive 220 ms entrance (`fadeIn` + 8 dp slide) and 180 ms exit (`fadeOut` + 4 dp slide).
+  - **Selectable Motion Presets**: Added **Subtle** (`1.00 / 600`), **Balanced** (Default `0.85 / 400`), and **Expressive** (`0.70 / 300`) presets with full support for Reduced Motion system override.
+
+### 🎨 2. Light Theme Appearance Adaptability Fixed
+- **Tonal Navigation & Category Surfaces**: In Light theme, `[Home | Settings]` and `[Movies | Series | Anime]` pills now dynamically adopt soft tonal lavender surfaces (`#ECE6F4`, `#EDE7F6`) and dark violet typography (`#5A526B`) instead of hardcoded dark charcoal containers.
+- **Harmonious M3 Expressive Integration**: Seamless visual blending across light, dark, and AMOLED themes without awkward dark ink-blotches.
+
+### 🎬 3. Permanent High-Contrast Luminous Cinema HUD
+- **Theme-Decoupled Playback Text**: Video title ("Chandramukhi"), technical metadata, elapsed/duration timecodes, and bottom capsule control buttons are permanently luminous white (`#FFFFFF` / `#B79AF7`), ensuring 100% legibility over any video scene regardless of system Light/Dark settings.
+
+---
+
 # Jadzumi v2.2.2 — Refined Cinema HUD Capsule, Editorial Bento & Gestures 🌌🎬✨
 
 A comprehensive polish update introducing the unified Cinema HUD floating capsule, floating modal bottom sheets for audio and subtitles, modern gesture controls, editorial movie details styling, and complete removal of Direct Stream.

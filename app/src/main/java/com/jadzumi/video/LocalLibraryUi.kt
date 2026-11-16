@@ -806,6 +806,8 @@ fun JadzumiCategoryPillsRow(
     onCategorySelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalThemeName.current
+    val isLight = theme == "Light"
     val categories = remember { listOf("Movies", "Series", "Anime") }
 
     Row(
@@ -818,12 +820,16 @@ fun JadzumiCategoryPillsRow(
             val isSelected = cat == selectedCategory
             val pillElevation by animateDpAsState(
                 targetValue = if (isSelected) 4.dp else 1.dp,
-                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+                animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
                 label = "cat_pill_elev_$cat"
             )
+            val unselectedTextColor = if (isLight) Color(0xFF5A526B) else MoonlitSecondaryText
+            val unselectedBgColor = if (isLight) Color(0xFFEDE7F6) else Color(0xFF262234).copy(alpha = 0.65f)
+            val unselectedBorderColor = if (isLight) Color(0xFFD7CCE8) else Color.White.copy(alpha = 0.08f)
+
             val pillText by animateColorAsState(
-                targetValue = if (isSelected) Obsidian else MoonlitSecondaryText,
-                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+                targetValue = if (isSelected) Obsidian else unselectedTextColor,
+                animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
                 label = "cat_pill_txt_$cat"
             )
 
@@ -832,7 +838,7 @@ fun JadzumiCategoryPillsRow(
                     .shadow(
                         elevation = pillElevation,
                         shape = RoundedCornerShape(16.dp),
-                        spotColor = if (isSelected) LavenderAccent.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.25f)
+                        spotColor = if (isSelected) LavenderAccent.copy(alpha = 0.45f) else Color.Black.copy(alpha = if (isLight) 0.06f else 0.25f)
                     )
                     .clip(RoundedCornerShape(16.dp))
                     .then(
@@ -844,8 +850,8 @@ fun JadzumiCategoryPillsRow(
                             )
                         } else {
                             Modifier
-                                .background(Color(0xFF262234).copy(alpha = 0.65f))
-                                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+                                .background(unselectedBgColor)
+                                .border(1.dp, unselectedBorderColor, RoundedCornerShape(16.dp))
                         }
                     )
                     .clickable { onCategorySelected(cat) }

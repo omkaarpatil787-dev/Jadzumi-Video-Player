@@ -97,9 +97,10 @@ internal val TimelineAccent = Color(0xFFB79AF7)
     val isOled = remember { DeviceHardwareInspector.isOledOrAmoledDisplay(activity) }
     val isLight = theme == "Light"
     val isAmoled = theme == "AMOLED" || (isOled && theme != "Light")
-    val playerContentColor = if (isLight) Color(0xFF183654) else Color.White
-    val playerSubtextColor = if (isLight) Color(0xFF526B85) else Color.White.copy(alpha = 0.75f)
-    val playerAccentColor = if (isLight) Color(0xFF0061A4) else TimelineAccent
+    // Cinema overlay controls are permanently luminous Moonlit White/Lavender to guarantee 100% legibility over any video content
+    val playerContentColor = Color.White
+    val playerSubtextColor = Color.White.copy(alpha = 0.72f)
+    val playerAccentColor = TimelineAccent
 
     val playerPrefs = remember(activity) { activity.getSharedPreferences("player_ui_prefs", Context.MODE_PRIVATE) }
     var isMinimalHud by remember(video.identity) { mutableStateOf(playerPrefs.getBoolean("player_hud_minimal", true)) }
@@ -688,8 +689,18 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                     )
                 }
 
-                val enterAnim = if (reducedMotion) EnterTransition.None else fadeIn(tween(360, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)))
-                val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(tween(260))
+                val enterAnim = if (reducedMotion) EnterTransition.None else fadeIn(
+                    animationSpec = tween(220, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                ) + slideInVertically(
+                    animationSpec = tween(220, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)),
+                    initialOffsetY = { 20 }
+                )
+                val exitAnim = if (reducedMotion) ExitTransition.None else fadeOut(
+                    animationSpec = tween(180, easing = CubicBezierEasing(0.4f, 0.0f, 1.0f, 1.0f))
+                ) + slideOutVertically(
+                    animationSpec = tween(180, easing = CubicBezierEasing(0.4f, 0.0f, 1.0f, 1.0f)),
+                    targetOffsetY = { 10 }
+                )
 
                 AnimatedVisibility(
                     visible = controls && !playback.locked && !playback.inPip,
