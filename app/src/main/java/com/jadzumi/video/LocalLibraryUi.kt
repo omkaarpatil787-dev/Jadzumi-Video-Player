@@ -806,7 +806,7 @@ fun JadzumiCategoryPillsRow(
     onCategorySelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val categories = remember { listOf("All", "Movies", "Series", "Anime", "Folders") }
+    val categories = remember { listOf("Movies", "Series", "Anime", "Folders") }
 
     Row(
         modifier = modifier
@@ -872,21 +872,20 @@ fun JadzumiCategoryPillsRow(
     query: String,
     select: (String) -> Unit,
     preview: () -> Unit = {},
-    defaultCategory: String = "All videos",
+    defaultCategory: String = "Movies",
+    onCategoryChanged: ((String) -> Unit)? = null,
     onScrollActive: ((Boolean) -> Unit)? = null
 ) {
     val add = rememberFolderPicker(library)
-    val listStateAll = rememberLazyListState()
     val listStateMovies = rememberLazyListState()
     val listStateSeries = rememberLazyListState()
     val listStateAnime = rememberLazyListState()
     var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
 
     fun getCategoryListState(cat: String): LazyListState = when (cat) {
-        "Movies" -> listStateMovies
         "TV Shows" -> listStateSeries
         "Anime" -> listStateAnime
-        else -> listStateAll
+        else -> listStateMovies
     }
 
     val currentActiveListState = getCategoryListState(category)
@@ -1024,7 +1023,7 @@ fun JadzumiCategoryPillsRow(
         candidateVideos.filter { playback.savedPosition(it) > 0 }
     }
 
-    val isHomeTab = category == "All videos" || category == "Home"
+    val isHomeTab = category == "Movies" || category == "Home"
     val heroItems = remember(candidateVideos, continueWatching, seriesList, category, playback.historyVersion) {
         if (!isHomeTab || candidateVideos.isEmpty()) {
             emptyList()
@@ -1130,22 +1129,22 @@ fun JadzumiCategoryPillsRow(
         Column(Modifier.fillMaxSize()) {
             JadzumiCategoryPillsRow(
                 selectedCategory = when (category) {
-                    "All videos", "Home" -> "All"
                     "Movies" -> "Movies"
                     "TV Shows" -> "Series"
                     "Anime" -> "Anime"
                     "Folders" -> "Folders"
-                    else -> "All"
+                    else -> "Movies"
                 },
                 onCategorySelected = { cat ->
-                    category = when (cat) {
-                        "All" -> "All videos"
+                    val newCat = when (cat) {
                         "Movies" -> "Movies"
                         "Series" -> "TV Shows"
                         "Anime" -> "Anime"
                         "Folders" -> "Folders"
-                        else -> "All videos"
+                        else -> "Movies"
                     }
+                    category = newCat
+                    onCategoryChanged?.invoke(newCat)
                 },
                 modifier = Modifier.padding(horizontal = pad, vertical = 6.dp)
             )
@@ -1153,7 +1152,7 @@ fun JadzumiCategoryPillsRow(
             AnimatedContent(
                 targetState = category,
                 transitionSpec = {
-                    val categories = listOf("All videos", "Movies", "TV Shows", "Anime", "Folders")
+                    val categories = listOf("Movies", "TV Shows", "Anime", "Folders")
                     val fromIdx = categories.indexOf(initialState).coerceAtLeast(0)
                     val toIdx = categories.indexOf(targetState).coerceAtLeast(0)
                     val isForward = toIdx >= fromIdx
@@ -1302,8 +1301,8 @@ fun JadzumiCategoryPillsRow(
                         }
                     }
 
-                    // 1. Hero Movie Banner Pager (only shown on Home tab and if real indexed videos exist)
-                    if (heroItems.isNotEmpty() && (category == "All videos" || category == "Home")) {
+                    // 1. Hero Movie Banner Pager (only shown on Home / Movies tab and if real indexed videos exist)
+                    if (heroItems.isNotEmpty() && (category == "Movies" || category == "Home")) {
                         item {
                             HeroMoviePager(
                                 items = heroItems,
@@ -1384,9 +1383,6 @@ fun JadzumiCategoryPillsRow(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        if (defaultCategory == "All videos") {
-                                            TextButton(onClick = { category = "All videos" }) { Text("Show all") }
-                                        }
                                         if (isGridView) {
                                             Surface(
                                                 shape = CircleShape,
@@ -1513,9 +1509,6 @@ fun JadzumiCategoryPillsRow(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        if (defaultCategory == "All videos") {
-                                            TextButton(onClick = { category = "All videos" }) { Text("Show all") }
-                                        }
                                         if (isGridView) {
                                             Surface(
                                                 shape = CircleShape,
@@ -1648,7 +1641,7 @@ fun JadzumiCategoryPillsRow(
                                             text = when {
                                                 state.folders.isEmpty() -> "Make room for your stories"
                                                 isSearching -> "No matching videos"
-                                                category != "All videos" && category != "Home" -> "No videos in $category"
+                                                category != "Movies" && category != "Home" -> "No videos in $category"
                                                 else -> "Your library is quiet"
                                             },
                                             style = MaterialTheme.typography.titleLarge,
@@ -1658,7 +1651,7 @@ fun JadzumiCategoryPillsRow(
                                             text = when {
                                                 state.folders.isEmpty() -> "Connect a folder using Android's file picker to populate your library."
                                                 isSearching -> "No videos matched \"$query\". Check your spelling or clear filters."
-                                                category != "All videos" && category != "Home" -> "Try selecting All videos or adding media to this category."
+                                                category != "Movies" && category != "Home" -> "Try selecting Movies or adding media to this category."
                                                 else -> "Pull down to refresh or check folder permissions."
                                             },
                                             style = MaterialTheme.typography.bodyMedium,
@@ -1749,7 +1742,7 @@ fun JadzumiCategoryPillsRow(
                                 }
                             }
 
-                        if (category != "All videos") {
+                        if (category != "Movies" && category != "TV Shows") {
                             // Filtered category section header with clean Grid / List toggle
                             item {
                                 Row(

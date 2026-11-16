@@ -161,6 +161,7 @@ private val destinations = listOf(
     var showStorageSheet by remember { mutableStateOf(false) }
 
     var route by rememberSaveable { mutableStateOf("Home") }
+    var activeLibraryCategory by rememberSaveable { mutableStateOf("Movies") }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var demo by rememberSaveable { mutableStateOf(false) }
     val library = remember { LocalLibrary.get(context) }
@@ -582,7 +583,7 @@ private val destinations = listOf(
                                                     onBack = { selectedId = null }
                                                 )
                                             } else {
-                                                LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows")
+                                                LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it })
                                             }
                                         } else if (localVideo != null) {
                                             if (localVideo.episode == null) {
@@ -612,9 +613,9 @@ private val destinations = listOf(
                                             }
                                         } else if (video != null) DetailPage(video)
                                         else when (current) {
-                                            "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
-                                            "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Movies", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
-                                            "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "TV Shows", onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
+                                            "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "Folders" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
                                                 effectiveTheme = effectiveTheme,
@@ -1741,98 +1742,83 @@ private val settingsCategories = listOf(
                                 )
                             }
 
-                            // 3. Frosted Glass Depth & Curves
+                            // 3. Cinematic Hybrid Design Engine (Bento UI, Soft Neumorphism & M3 Expressive)
                             item {
                                 Panel {
-                                    Text("Frosted Glass Depth & Curves", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("Tune frosted glass translucency and corner curvature across cards and player controls.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+                                    Text("Cinematic Hybrid Architecture", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Unified design synthesizing Bento UI organization, soft tactile neumorphic surfaces, and Material 3 Expressive motion.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
 
-                                    Column(Modifier.fillMaxWidth()) {
-                                        Row(
-                                            Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                                Text("Frosted Glass Blur (Glassify)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                                Text(
-                                                    if (twoPane) "Adjust frosted Gaussian blur depth, specular bevel, and diffused tint across cards, docks, and player controls"
-                                                    else "Adjust frosted blur depth and diffused surface tint",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
+                                    // Bento UI Layout
+                                    Surface(
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+                                    ) {
+                                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                                             Surface(
-                                                shape = RoundedCornerShape(999.dp),
-                                                color = MaterialTheme.colorScheme.primaryContainer,
-                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                                shape = RoundedCornerShape(12.dp),
+                                                color = LavenderAccent.copy(alpha = 0.18f),
+                                                modifier = Modifier.size(42.dp)
                                             ) {
-                                                Text(
-                                                    "${(glassIntensity * 100).toInt()}%",
-                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                                )
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Icon(Icons.Rounded.Dashboard, null, tint = LavenderAccent, modifier = Modifier.size(22.dp))
+                                                }
                                             }
-                                        }
-                                        Spacer(Modifier.height(8.dp))
-                                        Slider(
-                                            value = glassIntensity,
-                                            onValueChange = onGlassIntensity,
-                                            valueRange = 0.20f..1.0f,
-                                            steps = 15,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                        Row(
-                                            Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(
-                                                if (twoPane) "Solid Matte (20%)" else "Matte 20%",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Text(
-                                                if (twoPane) "Balanced Frosted Blur (65%)" else "Balanced 65%",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Text(
-                                                if (twoPane) "Deep Frosted Blur (100%)" else "Frosted 100%",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
+                                            Spacer(Modifier.width(14.dp))
+                                            Column(Modifier.weight(1f)) {
+                                                Text("Bento UI — Layout & Organization", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                                                Text("Asymmetrical rounded panels for Featured, Continue Watching, details, and settings; efficient grids for poster collections.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 16.sp)
+                                            }
                                         }
                                     }
 
-                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-
-                                    Text("Corner Style Presets", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                    Text("Curvature geometry applied to cards, sheets, and dialogs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Spacer(Modifier.height(10.dp))
-                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        listOf(
-                                            Triple("Rounded", "24dp curve", Icons.Rounded.Circle),
-                                            Triple("Compact", "14dp curve", Icons.Rounded.CropPortrait),
-                                            Triple("Sharp", "0dp crisp", Icons.Rounded.CropSquare)
-                                        ).forEach { (style, radiusText, icon) ->
-                                            val isSel = cornerStyle == style
+                                    // Soft Neumorphism Tactile Surfaces
+                                    Surface(
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+                                    ) {
+                                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                                             Surface(
-                                                modifier = Modifier.weight(1f).clickable { onCornerStyle(style) },
-                                                shape = RoundedCornerShape(14.dp),
-                                                color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                                border = if (isSel) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
+                                                shape = RoundedCornerShape(12.dp),
+                                                color = LavenderAccent.copy(alpha = 0.18f),
+                                                modifier = Modifier.size(42.dp)
                                             ) {
-                                                Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Icon(icon, null, tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
-                                                    Spacer(Modifier.height(4.dp))
-                                                    Text(style, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                                                    Text(radiusText, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Icon(Icons.Rounded.Layers, null, tint = LavenderAccent, modifier = Modifier.size(22.dp))
                                                 }
+                                            }
+                                            Spacer(Modifier.width(14.dp))
+                                            Column(Modifier.weight(1f)) {
+                                                Text("Soft Neumorphism — Tactile Surfaces", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                                                Text("Gentle elevation and soft rims on Play/Pause, switches, and sliders. No heavy shadows, glare, or recessed text.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 16.sp)
+                                            }
+                                        }
+                                    }
+
+                                    // Material 3 Expressive Motion
+                                    Surface(
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            Surface(
+                                                shape = RoundedCornerShape(12.dp),
+                                                color = LavenderAccent.copy(alpha = 0.18f),
+                                                modifier = Modifier.size(42.dp)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Icon(Icons.Rounded.AutoAwesome, null, tint = LavenderAccent, modifier = Modifier.size(22.dp))
+                                                }
+                                            }
+                                            Spacer(Modifier.width(14.dp))
+                                            Column(Modifier.weight(1f)) {
+                                                Text("Material 3 Expressive — Motion & Interaction", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                                                Text("Physics-based spring curves, morphing selection capsules, responsive touch feedback, and shared-axis transitions.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 16.sp)
                                             }
                                         }
                                     }
@@ -2749,7 +2735,7 @@ private val settingsCategories = listOf(
 }
 
 @Composable private fun LibraryPage(query: String, demo: Boolean, onDemo: (Boolean)->Unit, onSelect: (String)->Unit) {
-    var category by rememberSaveable { mutableStateOf("All videos") }
+    var category by rememberSaveable { mutableStateOf("Movies") }
     val filtered = filterVideos(if (demo) previewVideos else emptyList(), query, category)
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
@@ -2771,7 +2757,7 @@ private val settingsCategories = listOf(
         }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(listOf("All videos", "Movies", "TV & Anime")) { c ->
+                items(listOf("Movies", "TV & Anime")) { c ->
                     FilterChip(selected = category == c, onClick = { category = c }, label = { Text(c, maxLines = 1, softWrap = false) })
                 }
             }
