@@ -882,11 +882,15 @@ fun JadzumiCategoryPillsRow(
     onCategoryChanged: ((String) -> Unit)? = null,
     onScrollActive: ((Boolean) -> Unit)? = null
 ) {
+    val context = LocalContext.current
     val add = rememberFolderPicker(library)
     val listStateMovies = rememberLazyListState()
     val listStateSeries = rememberLazyListState()
     val listStateAnime = rememberLazyListState()
     var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
+    LaunchedEffect(defaultCategory) {
+        category = defaultCategory
+    }
 
     fun getCategoryListState(cat: String): LazyListState = when (cat) {
         "TV Shows" -> listStateSeries
@@ -908,8 +912,8 @@ fun JadzumiCategoryPillsRow(
     LaunchedEffect(shouldMinimizeDock) {
         onScrollActive?.invoke(shouldMinimizeDock)
     }
-    val context = LocalContext.current
     val libraryPrefs = remember(context) { context.getSharedPreferences("appearance", Context.MODE_PRIVATE) }
+    val showHeroBanner = remember(context) { libraryPrefs.getBoolean("show_hero_banner", false) }
     var isGridView by rememberSaveable { mutableStateOf(libraryPrefs.getBoolean("library_grid_view", false)) }
     var isPosterAspect by rememberSaveable { mutableStateOf(libraryPrefs.getBoolean("library_poster_aspect", true)) }
     var libraryDensity by rememberSaveable {
@@ -1133,26 +1137,6 @@ fun JadzumiCategoryPillsRow(
         val bottomPad = if (isPhone) 24.dp else 28.dp
 
         Column(Modifier.fillMaxSize()) {
-            JadzumiCategoryPillsRow(
-                selectedCategory = when (category) {
-                    "Movies" -> "Movies"
-                    "TV Shows" -> "Series"
-                    "Anime" -> "Anime"
-                    else -> "Movies"
-                },
-                onCategorySelected = { cat ->
-                    val newCat = when (cat) {
-                        "Movies" -> "Movies"
-                        "Series" -> "TV Shows"
-                        "Anime" -> "Anime"
-                        else -> "Movies"
-                    }
-                    category = newCat
-                    onCategoryChanged?.invoke(newCat)
-                },
-                modifier = Modifier.padding(horizontal = pad, vertical = 6.dp)
-            )
-
             AnimatedContent(
                 targetState = category,
                 transitionSpec = {
@@ -1305,8 +1289,8 @@ fun JadzumiCategoryPillsRow(
                         }
                     }
 
-                    // 1. Hero Movie Banner Pager (only shown on Home / Movies tab and if real indexed videos exist)
-                    if (heroItems.isNotEmpty() && (category == "Movies" || category == "Home")) {
+                    // 1. Hero Movie Banner Pager (Optionally enabled in Settings, defaulting to false for clean content-first view)
+                    if (showHeroBanner && heroItems.isNotEmpty() && (category == "Movies" || category == "Home")) {
                         item {
                             HeroMoviePager(
                                 items = heroItems,

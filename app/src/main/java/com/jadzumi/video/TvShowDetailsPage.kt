@@ -278,29 +278,6 @@ fun TvShowDetailsPage(
                 }
             }
 
-            // 3.5. Season Progress & Up Next Spotlight
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    val watchedInSeason = currentSeasonEpisodes.count { playback.isWatched(it) }
-                    SeasonCompletionBar(
-                        watchedCount = watchedInSeason,
-                        totalCount = currentSeasonEpisodes.size,
-                        seasonNumber = selectedSeason
-                    )
-
-                    if (nextUnwatched != null) {
-                        UpNextSpotlightCard(
-                            video = nextUnwatched,
-                            playback = playback,
-                            onPlay = {
-                                playback.open(nextUnwatched, currentSeasonEpisodes)
-                                playback.fullscreen = true
-                            }
-                        )
-                    }
-                }
-            }
-
             // 4. Two-Column Tablet Layout: Episode List (Left) + Technical Inspector (Right)
             item {
                 if (isTablet) {

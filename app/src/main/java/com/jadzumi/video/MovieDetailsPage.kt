@@ -736,33 +736,82 @@ fun MovieDetailsPage(
 
 @Composable
 private fun MovieFileOverviewCard(video: LocalVideo, state: LocalLibraryState, context: Context) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+    val theme = LocalThemeName.current
+    val isLight = theme == "Light"
+    val cardBg = if (isLight) Color(0xFFFBF8FD) else Color(0xFF1B1826)
+    val cardBorder = if (isLight) Color(0xFFE4DCF0) else Color.White.copy(alpha = 0.08f)
+
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Icon(Icons.Rounded.Analytics, null, tint = LavenderAccent, modifier = Modifier.size(20.dp))
+            Text("Media Inspector 2.0", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        }
+
+        // 2-Card Bento Grid for Video & Container Overview
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(16.dp),
+                color = cardBg,
+                border = BorderStroke(1.dp, cardBorder)
             ) {
-                Icon(Icons.Rounded.FolderOpen, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                Text("Local File Specs", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Column(Modifier.padding(14.dp)) {
+                    Text("VIDEO STREAM", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                    Spacer(Modifier.height(4.dp))
+                    val quality = when {
+                        video.width >= 3840 -> "4K UHD"
+                        video.width >= 1920 -> "1080p FHD"
+                        else -> "HD 720p"
+                    }
+                    Text(quality, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else "Standard", fontSize = 11.sp, color = LavenderAccent)
+                }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(16.dp),
+                color = cardBg,
+                border = BorderStroke(1.dp, cardBorder)
+            ) {
+                Column(Modifier.padding(14.dp)) {
+                    Text("FILE CONTAINER", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                    Spacer(Modifier.height(4.dp))
+                    val sizeStr = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "N/A"
+                    Text(sizeStr, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    val mimeShort = when {
+                        video.name.endsWith(".mkv", true) || video.mime.contains("matroska") -> "MKV Video"
+                        video.name.endsWith(".mp4", true) || video.mime.contains("mp4") -> "MP4 Video"
+                        else -> video.mime.ifEmpty { "Video File" }
+                    }
+                    Text(mimeShort, fontSize = 11.sp, color = LavenderAccent)
+                }
+            }
+        }
 
-            TechRow("Filename", video.name)
-            TechRow("Folder", state.folders.firstOrNull { it.uri == video.folder }?.name ?: "Local Storage")
-            TechRow("File Size", if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "Unavailable")
-            TechRow("Duration", if (video.duration > 0) timecode(video.duration / 1000) else "Unavailable")
-            TechRow("Resolution", if (video.width > 0 && video.height > 0) "${video.width} × ${video.height} pixels" else "Unavailable")
-            TechRow("Format / Mime", video.mime.ifEmpty { "Unavailable" })
+        // Clean Container & Storage Details Card
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            color = cardBg,
+            border = BorderStroke(1.dp, cardBorder)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("Container & File Details", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                TechRow("Filename", video.name)
+                TechRow("Folder", state.folders.firstOrNull { it.uri == video.folder }?.name ?: "Local Storage")
+                TechRow("Duration", if (video.duration > 0) timecode(video.duration / 1000) else "Unavailable")
+            }
         }
     }
 }

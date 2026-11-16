@@ -5,7 +5,7 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Soft Pale-Blue Squircle Background -->
+    <!-- Soft Tonal Squircle Background with Gentle Depth -->
     <path android:pathData="M24,6 L84,6 C93.94,6 102,14.06 102,24 L102,84 C102,93.94 93.94,102 84,102 L24,102 C14.06,102 6,93.94 6,84 L6,24 C6,14.06 14.06,6 24,6 Z">
         <aapt:attr name="android:fillColor">
             <gradient
@@ -14,48 +14,71 @@
                 android:endX="96"
                 android:endY="96"
                 android:type="linear">
-                <item android:offset="0.0" android:color="#FFF8FAFF" />
-                <item android:offset="0.6" android:color="#FFE6F0FE" />
-                <item android:offset="1.0" android:color="#FFD3E3FD" />
+                <item android:offset="0.0" android:color="#FFF5F7FF" />
+                <item android:offset="0.5" android:color="#FFE8EDFD" />
+                <item android:offset="1.0" android:color="#FFD6E2FC" />
             </gradient>
         </aapt:attr>
     </path>
 
-    <!-- Back Cobalt Folded Ribbon Wing -->
-    <path android:pathData="M43,24 C43,20.5 46.8,18.3 49.8,20.1 L82.5,39.5 C85.2,41.1 86.8,44.0 86.8,47.2 L86.8,74.5 C86.8,78.0 83.0,80.2 80.0,78.4 L47.3,59.0 C44.6,57.4 43,54.5 43,51.3 Z">
+    <!-- FLOW LOOP: Outer Fluid Möbius Ribbon (Lower / Left Sweep) -->
+    <path android:pathData="M32,28 C26,38 24,54 28,68 C31.5,80 43,86 56,84 C70,82 82,72 86,58 C89,47 85,34 76,28 C67,22 53,20 44,22 C38,23 34,25 32,28 Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="43"
-                android:startY="20"
-                android:endX="87"
-                android:endY="80"
+                android:startX="26"
+                android:startY="22"
+                android:endX="86"
+                android:endY="84"
                 android:type="linear">
-                <item android:offset="0.0" android:color="#FF2563EB" />
-                <item android:offset="0.55" android:color="#FF0B57D0" />
-                <item android:offset="1.0" android:color="#FF60A5FA" />
+                <item android:offset="0.0" android:color="#FF6366F1" />
+                <item android:offset="0.4" android:color="#FF3B82F6" />
+                <item android:offset="1.0" android:color="#FF0EA5E9" />
             </gradient>
         </aapt:attr>
     </path>
 
-    <!-- Inner Depth Shadow Fold -->
+    <!-- FLOW LOOP: Ribbon Shading & Inner Fold Depth -->
     <path
-        android:fillColor="#FF0842A0"
-        android:fillAlpha="0.85"
-        android:pathData="M43,30 L72,47 C74.5,48.5 76,51.2 76,54.2 L76,76 L47,59 C44.5,57.5 43,54.8 43,51.8 Z" />
+        android:fillColor="#FF1E3A8A"
+        android:fillAlpha="0.65"
+        android:pathData="M28,68 C35,76 46,78 56,76 C66,74 76,66 80,54 L72,48 C68,58 60,64 52,66 C44,68 36,66 31,61 Z" />
 
-    <!-- Front Frosted Pale-Blue Play Triangle -->
-    <path android:pathData="M28,33 C28,28.5 32.9,25.7 36.8,28.0 L67.5,46.2 C71.3,48.5 71.3,54.0 67.5,56.3 L36.8,74.5 C32.9,76.8 28,74.0 28,69.5 Z">
+    <!-- FLOW LOOP: Ribbon Upper Wrap & Specular Highlight -->
+    <path android:pathData="M44,22 C56,19 70,22 78,30 C86,38 88,52 82,64 C76,76 64,84 50,84 C40,84 32,80 28,72 C32,60 38,44 48,34 C54,28 62,25 70,26 L72,20 C62,18 52,19 44,22 Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="28"
-                android:startY="28"
-                android:endX="70"
-                android:endY="74"
+                android:startX="30"
+                android:startY="18"
+                android:endX="84"
+                android:endY="70"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF93C5FD" />
+                <item android:offset="0.5" android:color="#FF60A5FA" />
+                <item android:offset="1.0" android:color="#FF2563EB" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Center Soft Acrylic Play Core Triangle -->
+    <path android:pathData="M42,36 C42,32.5 45.8,30.3 48.8,32.1 L72.5,46.5 C75.5,48.3 75.5,52.7 72.5,54.5 L48.8,68.9 C45.8,70.7 42,68.5 42,65.0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="42"
+                android:startY="32"
+                android:endX="74"
+                android:endY="68"
                 android:type="linear">
                 <item android:offset="0.0" android:color="#FFFFFFFF" />
-                <item android:offset="0.7" android:color="#FFEFF6FF" />
-                <item android:offset="1.0" android:color="#FFBFDBFE" />
+                <item android:offset="0.65" android:color="#FFF1F5F9" />
+                <item android:offset="1.0" android:color="#FFE2E8F0" />
             </gradient>
         </aapt:attr>
     </path>
+
+    <!-- Inner Core Specular Edge Accent -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="0.75"
+        android:pathData="M43,36 L70,50 L43,64 Z" />
+
 </vector>

@@ -1,3 +1,40 @@
+# Jadzumi v2.3.0 — Master UI/UX Overhaul, Subtle Acrylic & FLOW LOOP 🌌🎬✨
+
+The definitive master release transforming Jadzumi with the unified Single-Row Cinema Bar, space-optimized Above-the-Fold Library, Bento Settings 2.0, zero-duplication Details architecture, Cinema Ambilight with full 4-theme adaptability, and the new **FLOW LOOP** official app icon.
+
+### 🏛️ 1. Unified Single-Row Cinema Bar
+- **Logo Replaced with Navigation**: Category pills `[Movies | Series | Anime]` moved directly into the top-left slot where "Jadzumi" was, flanked by the centered sliding `[Home | Settings]` capsule and floating Search + utilities.
+- **Row 2 Completely Eliminated**: Reclaims ~52 dp of vertical viewport height and eliminates the large blank gap across the screen.
+
+### 🎬 2. Space-Optimized Above-the-Fold Library
+- **Hero Banner Removed**: Eliminates the redundant 200 dp recommendation banner.
+- **Immediate Content Visibility**: **Continue Watching** moves directly under the top bar, with the full **Movie & TV Series Poster Grid (2 to 3 rows)** commanding the screen immediately upon launching without scrolling.
+- **Settings Toggle**: Optional preference `Show Featured Hero Banner (On / Off)` in Settings (defaulting to Off).
+
+### 🔍 3. Unified Details & Media Inspector 2.0 (Zero Duplication Policy)
+- **Zero Redundant Boxes**: In TV Series, "Up Next" is strictly the first, highlighted card in the episode list (no standalone duplicate mini-card).
+- **Consolidated Season Progress**: Season watch progress is embedded directly into the Season Selector Pill (`Season 1 · 2/5 Watched (40%)`), eliminating the separate progress card.
+- **Media Inspector 2.0 Bento Grid**: Replaces raw SQL database text dumps with clean, structured Bento cards (`Video Stream`, `Audio Stream`, `Container & Storage`, `Hardware Diagnostics`).
+
+### ⚙️ 4. Bento Settings Overhaul (Useful Details Only)
+- **1-Tap Tactile Chips**: Replaces clunky sub-dialogs with direct in-card tactile chips for Video Scaling (`[ Fit | Zoom / Fill | Stretch ]`) and Decoder Mode (`[ Auto | Hardware Only ]`).
+- **Zero Developer Jargon**: Stripped out raw device codenames (`Xiaomi nabu`, `SM8150`) and raw library names; replaced with clean glowing status badges (`● GPU Active (60/120 FPS)`).
+- **Elevated Bento Cards**: Groups settings into 3 focused cards (*Hardware Acceleration & Engine*, *Screen & Aspect Ratio*, *Luminance, Ambilight & Overlays*).
+
+### 🌌 5. Subtle Acrylic UI & Cinema Ambilight (4-Theme Adaptable)
+- **In-Player Cinema Ambilight**: For 2.39:1 widescreen films on 16:10 / 16:9 displays, upper and lower letterbox bars softly radiate a gentle, dynamic ambient glow (8–12% opacity) matching the active video scene.
+- **Full 4-Theme Adaptability**:
+  - **Dark (Default)**: Deep Obsidian base with 10% ambient color bleed.
+  - **AMOLED**: True `#000000` pitch-black preservation where pixels physically shut off to maximize battery.
+  - **Light**: Soft tonal lavender/cream surfaces (`#F8F6FB`, `#EDE7F6`) and dark violet typography.
+  - **System Default**: Automatically synchronizes with OS day/night mode transitions.
+- **Hardware Performance**: GPU-only radial shaders with 0% CPU consumption and locked 60/120 FPS.
+
+### 🎨 6. Official App Icon: FLOW LOOP
+- **Approved Icon Emblem**: Symmetrical continuous Möbius ribbon loop wrapping a central acrylic play core on an adaptive soft squircle container.
+
+---
+
 # Jadzumi v2.2.3 — Living Motion Physics & Appearance Adaptability 🌌🎬✨
 
 A major visual cohesion and motion release introducing the approved Jadzumi Living Motion animation system, fixing light-theme visual adaptivity, and ensuring permanent luminous high-contrast controls across Cinema HUD.

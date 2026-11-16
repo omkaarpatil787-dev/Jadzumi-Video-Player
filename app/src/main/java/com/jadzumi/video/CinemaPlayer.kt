@@ -41,6 +41,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -408,6 +409,33 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                 playerViewRef = null
             }
         )
+
+        // Subtle Cinema Ambilight for letterbox bars during 2.39:1 / widescreen playback
+        val ambilightEnabled = remember(activity) {
+            activity.getSharedPreferences("appearance", Context.MODE_PRIVATE)
+                .getBoolean("cinema_ambilight", true)
+        }
+        if (ambilightEnabled && !playback.inPip && playback.aspectMode == AspectRatioMode.FIT && !isAmoled) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .drawBehind {
+                        val glowAlpha = 0.12f
+                        val topGlow = Brush.radialGradient(
+                            colors = listOf(LavenderAccent.copy(alpha = glowAlpha), Color.Transparent),
+                            center = Offset(size.width / 2f, 0f),
+                            radius = size.width * 0.70f
+                        )
+                        val bottomGlow = Brush.radialGradient(
+                            colors = listOf(TimelineAccent.copy(alpha = glowAlpha), Color.Transparent),
+                            center = Offset(size.width / 2f, size.height),
+                            radius = size.width * 0.70f
+                        )
+                        drawRect(topGlow)
+                        drawRect(bottomGlow)
+                    }
+            )
+        }
 
         if (playback.dualSubtitleStudio.isSecondaryEnabled) {
             val secCue = playback.dualSubtitleStudio.getActiveCue(playback.position)
