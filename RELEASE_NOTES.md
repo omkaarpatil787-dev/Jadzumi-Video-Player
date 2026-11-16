@@ -1,3 +1,23 @@
+# Jadzumi v2.1.1 — Bento UI, Soft Neumorphic Surfaces & Category Persistence 🌌🎬✨
+
+A refinement release delivering category persistence across detail navigation, complete removal of the legacy "All" tab, and synthesis of Bento UI, Soft Neumorphism, and Material 3 Expressive motion.
+
+### 📌 1. Category Tab Persistence Fixed
+- **State Hoisting**: Fixed the issue where navigating into Movie or Series details and pressing Back jumped to the default tab. The active category is now hoisted as a persistent state in `JadzumiApp`, ensuring you stay on `Movies`, `Series`, `Anime`, or `Folders` when returning from any details screen.
+
+### 🗂️ 2. "All" Tab Completely Removed
+- Category navigation now features 4 clean, focused tabs: **`Movies`**, **`Series`**, **`Anime`**, and **`Folders`**.
+- The **Movies** tab serves as the primary Home showcase, featuring the Bento Hero banner, real-time Continue Watching carousel, and standalone movie collection.
+- Removed obsolete "Show all" buttons and unused category filters.
+
+### 🍱 3. Bento UI + Soft Neumorphism + M3 Expressive Architecture
+- **Bento UI Layout & Organization**: Asymmetrical, rounded content panels (`20.dp` curvature) for Featured Hero, Continue Watching, shortcuts, and Details cards; efficient grids for poster collections.
+- **Soft Neumorphic Tactile Surfaces**: Gentle elevation (`3.dp` to `6.dp`) and soft monochromatic rims (`BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))`) on interactive controls, Play/Pause, switches, and sliders. No heavy Gaussian blur, glossy glares, or recessed text.
+- **Material 3 Expressive Motion**: Physics-based spring curves (`Spring.StiffnessLow`, `dampingRatio = 0.82f`), morphing lavender selection capsules, responsive touch feedback (`.touchMotion()`), and smooth shared-axis directional transitions.
+- Replaced the obsolete "Frosted Glass Depth & Curves" panel in Settings with the unified **Cinematic Hybrid Architecture** panel.
+
+---
+
 # Jadzumi v2.1.0 — Moonlit Lavender UI/UX & Cinema HUD 3.0 Refinement 🌌🎬✨
 
 A major visual and interaction design release introducing the approved **Moonlit Lavender** design system, artwork-driven library browsing, streamlined movie details, and pixel-aligned Cinema HUD 3.0 playback controls.
