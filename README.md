@@ -2,7 +2,7 @@
 <p align="center"><strong>Your movies. Your space.</strong><br>A free, offline-first Android video player for phones, foldables, and tablets.</p>
 
 <p align="center">
-  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.1-7c3aed?style=flat-square" alt="Version 2.1"></a>
+  <a href="https://github.com/omkaarpatil787-dev/Jadzumi-Video-Player/releases/latest"><img src="https://img.shields.io/badge/version-2.1.0-7c3aed?style=flat-square" alt="Version 2.1.0"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-16a34a?style=flat-square" alt="Android 8.0 and later">
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7c3aed?style=flat-square" alt="Kotlin 2.2.10">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-0891b2?style=flat-square" alt="GPL-3.0 license"></a>
@@ -52,7 +52,7 @@ with NextLib FFmpeg software decoders alongside Android's platform decoders.
 
 
 <details open>
-<summary><strong>What’s new · v2.1 — Moonlit Lavender UI/UX & Cinema HUD 3.0 Refinement 🎬✨</strong></summary>
+<summary><strong>What’s new · v2.1.0 — Moonlit Lavender UI/UX & Cinema HUD 3.0 Refinement 🎬✨</strong></summary>
 
 - **Moonlit Lavender Palette**: Neutral atmospheric surfaces (`Obsidian #101016`, `Charcoal #1C1A25`, `Surface #292535`), expressive lavender interactive controls (`Lavender #B79AF7`, `Highlight #E8DDFB`), crisp readable typography (`Primary #F4F1FA`, `Secondary #A7A3B4`), and subtle neumorphic depth.
 - **Featured Banner & Continue Watching Polish**: Rich cinematic artwork backdrop replacing grey gradients, thinner 2.5dp progress bars, zero empty grey space, and artwork-first 16:9 continue watching cards.

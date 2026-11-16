@@ -1,4 +1,4 @@
-# Jadzumi v2.1 — Moonlit Lavender UI/UX & Cinema HUD 3.0 Refinement 🌌🎬✨
+# Jadzumi v2.1.0 — Moonlit Lavender UI/UX & Cinema HUD 3.0 Refinement 🌌🎬✨
 
 A major visual and interaction design release introducing the approved **Moonlit Lavender** design system, artwork-driven library browsing, streamlined movie details, and pixel-aligned Cinema HUD 3.0 playback controls.
 

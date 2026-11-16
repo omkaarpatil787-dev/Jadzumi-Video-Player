@@ -6,6 +6,8 @@ import org.junit.Test
 class UpdatePolicyTest {
     @Test fun stableOnlyAndOrderedNumerically() {
         assertTrue(newerStableRelease("v1.10.0", "1.9.9"))
+        assertTrue(newerStableRelease("v2.1.0", "2.0.9"))
+        assertTrue(newerStableRelease("v2.1", "2.0.9"))
         assertTrue(newerStableRelease("v1.4.0", "1.4.0-alpha.3"))
         assertFalse(newerStableRelease("v1.3.3", "1.4.0-alpha.3"))
         assertFalse(newerStableRelease("1.4.0", "1.4.0"))
