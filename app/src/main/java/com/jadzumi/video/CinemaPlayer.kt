@@ -26,6 +26,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -140,6 +141,10 @@ internal val TimelineAccent = Color(0xFFB79AF7)
     var seekGestureDeltaText by remember(video.identity) { mutableStateOf<String?>(null) }
     var seekGestureIsForward by remember(video.identity) { mutableStateOf(true) }
     var seekGestureProgress by remember(video.identity) { mutableFloatStateOf(0f) }
+    var zoomScale by remember(video.identity) { mutableFloatStateOf(1f) }
+    var panOffset by remember(video.identity) { mutableStateOf(Offset.Zero) }
+    var zoomToastText by remember(video.identity) { mutableStateOf<String?>(null) }
+    var zoomToastJob by remember(video.identity) { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     var subtitleSearchCues by remember(video.identity) { mutableStateOf<List<SubtitleSearchCue>?>(null) }
     var subtitleSearchBusy by remember(video.identity) { mutableStateOf(false) }
@@ -372,7 +377,15 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                     setKeepContentOnPlayerReset(true)
                 }.also { playerViewRef = it }
             },
-            modifier = Modifier.fillMaxSize().onGloballyPositioned {
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = zoomScale
+                    scaleY = zoomScale
+                    translationX = panOffset.x
+                    translationY = panOffset.y
+                }
+                .onGloballyPositioned {
                 if (!playback.inPip) {
                     val b = it.boundsInWindow()
                     val newRect = Rect(b.left.roundToInt(), b.top.roundToInt(), b.right.roundToInt(), b.bottom.roundToInt())
@@ -476,16 +489,50 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                             hudSide = "Seek"
                                             interaction++
                                         } else {
-                                            // Center Double-Tap: Quick toggle Fit vs Zoom (Fill Screen)
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            val nextMode = if (playback.aspectMode == AspectRatioMode.FIT) AspectRatioMode.ZOOM else AspectRatioMode.FIT
-                                            playback.setAspectRatioMode(nextMode)
-                                            message = if (nextMode == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
-                                            interaction++
+                                            if (zoomScale > 1.05f) {
+                                                zoomScale = 1.0f
+                                                panOffset = Offset.Zero
+                                                zoomToastText = "Zoom: 100% (Fit)"
+                                                zoomToastJob?.cancel()
+                                                zoomToastJob = coroutineScope.launch { delay(1200); zoomToastText = null }
+                                                interaction++
+                                            } else {
+                                                // Center Double-Tap: Quick toggle Fit vs Zoom (Fill Screen)
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                val nextMode = if (playback.aspectMode == AspectRatioMode.FIT) AspectRatioMode.ZOOM else AspectRatioMode.FIT
+                                                playback.setAspectRatioMode(nextMode)
+                                                message = if (nextMode == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
+                                                interaction++
+                                            }
                                         }
                                     }
                                 }
                             )
+                        }
+                        .pointerInput(video.identity, playback.locked) {
+                            detectTransformGestures { _, pan, zoom, _ ->
+                                if (!playback.locked && (zoom != 1f || pan != Offset.Zero)) {
+                                    val newScale = (zoomScale * zoom).coerceIn(1.0f, 5.0f)
+                                    zoomScale = newScale
+                                    if (newScale > 1.0f) {
+                                        val maxPanX = (size.width * (newScale - 1f)) / 2f
+                                        val maxPanY = (size.height * (newScale - 1f)) / 2f
+                                        panOffset = Offset(
+                                            x = (panOffset.x + pan.x * newScale).coerceIn(-maxPanX, maxPanX),
+                                            y = (panOffset.y + pan.y * newScale).coerceIn(-maxPanY, maxPanY)
+                                        )
+                                    } else {
+                                        panOffset = Offset.Zero
+                                    }
+                                    zoomToastText = "Zoom: ${(newScale * 100).roundToInt()}%"
+                                    zoomToastJob?.cancel()
+                                    zoomToastJob = coroutineScope.launch {
+                                        delay(1200)
+                                        zoomToastText = null
+                                    }
+                                    interaction++
+                                }
+                            }
                         }
                         .pointerInput(video.identity, playback.locked, playback.swipeGesturesEnabled) {
                             var left = false; var level = 0f; var isGestureValid = false
@@ -671,6 +718,34 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                     }
                 }
 
+                // Precision Zoom Float Pill
+                AnimatedVisibility(
+                    visible = zoomToastText != null,
+                    enter = fadeIn(tween(140)) + scaleIn(initialScale = 0.88f),
+                    exit = fadeOut(tween(220)) + scaleOut(targetScale = 0.94f),
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .safeDrawingPadding()
+                        .padding(top = 28.dp)
+                ) {
+                    zoomToastText?.let { txt ->
+                        Surface(
+                            shape = RoundedCornerShape(999.dp),
+                            color = QuickMenuBg,
+                            border = BorderStroke(1.dp, TimelineAccent.copy(alpha = 0.6f)),
+                            shadowElevation = 16.dp
+                        ) {
+                            Text(
+                                txt,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 18.dp, vertical = 9.dp)
+                            )
+                        }
+                    }
+                }
+
                 // Immersive Playback HUD Overlay: Clock, Battery %, Remaining Time
                 AnimatedVisibility(
                     visible = !controls && !playback.locked && showAnyHud && !playback.inPip,
@@ -756,61 +831,57 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     Text(
                                         heading.primaryTitle,
                                         color = playerContentColor,
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.Bold,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        heading.secondaryMeta?.let { meta ->
-                                            Text(
-                                                meta,
-                                                color = playerSubtextColor,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
+                                    val decName = playback.runtimeVideoDecoder?.name
+                                    val liveCodec: String = if (decName != null) {
+                                        when {
+                                            decName.contains("hevc", true) || decName.contains("h265", true) -> "HEVC Main 10"
+                                            decName.contains("avc", true) || decName.contains("h264", true) -> "H.264 High"
+                                            decName.contains("av01", true) || decName.contains("av1", true) -> "AV1 Main"
+                                            decName.contains("vp9", true) -> "VP9 Profile 0"
+                                            else -> playback.videoCodecBadge ?: "HEVC"
                                         }
-                                        if (playback.isHdr) {
-                                            Surface(
-                                                shape = RoundedCornerShape(999.dp),
-                                                color = SpatialGlass.pillBg(isAmoled),
-                                                border = SpatialGlass.pillBorder(1.dp)
-                                            ) {
-                                                Text(
-                                                    "4K HDR",
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Color.White
-                                                )
-                                            }
-                                        }
-                                        playback.hdrFlavor?.let { flavor ->
-                                            Surface(
-                                                shape = RoundedCornerShape(999.dp),
-                                                color = SpatialGlass.pillBg(isAmoled),
-                                                border = SpatialGlass.pillBorder(1.dp)
-                                            ) {
-                                                Text(
-                                                    flavor,
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = TimelineAccent
-                                                )
-                                            }
-                                        }
+                                    } else {
+                                        playback.videoCodecBadge ?: "HEVC"
                                     }
+
+                                    val fpsVal = playback.runtimeVideoFormat?.frameRate?.takeIf { it > 5.0 && it.isFinite() } ?: 24.0
+                                    val fpsText = String.format(java.util.Locale.US, "%.3f fps", fpsVal)
+                                    val hdrText = if (playback.isHdr) (playback.hdrFlavor ?: "HDR10+") else "BT.709 SDR"
+                                    val telemetryString = "$liveCodec · ${video.width}x${video.height} @ $fpsText · $hdrText"
+
+                                    Text(
+                                        telemetryString,
+                                        color = playerSubtextColor,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                             }
 
-                            // Top-Right Icons: PiP & More Options
+                            // Top-Right Icons: Decoder Badge, PiP & More Options
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                val isHw = playback.runtimeVideoDecoder?.hardware != DecoderHardware.SOFTWARE
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isHw) Color(0xFF10B981).copy(alpha = 0.20f) else TimelineAccent.copy(alpha = 0.20f),
+                                    border = BorderStroke(1.dp, if (isHw) Color(0xFF10B981).copy(alpha = 0.40f) else TimelineAccent.copy(alpha = 0.40f))
+                                ) {
+                                    Text(
+                                        if (isHw) "MediaCodec HW+" else "NextLib SW",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isHw) Color(0xFF34D399) else TimelineAccent
+                                    )
+                                }
+
                                 FrostedCircleButton(
                                     label = "Picture-in-Picture",
                                     onClick = { activity.enterCinemaPip(); interaction++ },
@@ -834,73 +905,90 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                         }
 
                         // PANEL 1: CENTRAL MINIMALIST GHOST SEEK & PLAY/PAUSE (Style C - Borderless Vector Minimalism)
-                        Surface(
+                        Row(
                             modifier = Modifier.align(Alignment.Center),
-                            shape = CircleShape,
-                            color = Color.Transparent,
-                            shadowElevation = 0.dp
+                            horizontalArrangement = Arrangement.spacedBy(24.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // Ghost Rewind: â†º 10s
                             Row(
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AnimatedSeekCircleButton(
-                                    isForward = false,
-                                    accumulator = seekBackAccumulator,
-                                    enabled = playback.seekable,
-                                    onClick = {
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .clickable(enabled = playback.seekable) {
                                         val stepSec = playback.seekIncrementSeconds
                                         playback.skip(-seekDeltaMs)
                                         seekBackAccumulator += stepSec
                                         seekGestureIsForward = false
-                                        seekGestureDeltaText = "−${seekBackAccumulator}s"
+                                        seekGestureDeltaText = "âˆ’${seekBackAccumulator}s"
                                         seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
                                         seekBackJob?.cancel()
                                         seekBackJob = coroutineScope.launch {
-                                            kotlinx.coroutines.delay(950)
+                                            delay(950)
                                             seekBackAccumulator = 0
                                         }
                                         interaction++
-                                    },
-                                    size = 46.dp,
-                                    bgColor = Color.Transparent,
-                                    rimColor = Color.Transparent,
-                                    contentColor = Color.White.copy(alpha = 0.92f)
-                                )
-
-                                // Style C Minimalist Outline Play/Pause Centerpiece
-                                Box(
-                                    modifier = Modifier
-                                        .size(54.dp)
-                                        .border(1.5.dp, Color.White.copy(alpha = 0.55f), CircleShape)
-                                        .background(Color.White.copy(alpha = 0.14f), CircleShape)
-                                        .clickable { playback.toggle(); interaction++ }
-                                        .touchMotion(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    AnimatedContent(
-                                        targetState = playback.playRequested,
-                                        transitionSpec = {
-                                            (fadeIn(tween(140)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
-                                                .togetherWith(fadeOut(tween(110)) + scaleOut(targetScale = 0.72f))
-                                        },
-                                        label = "playPauseIcon"
-                                    ) { isPlaying ->
-                                        Icon(
-                                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                            contentDescription = if (isPlaying) "Pause" else "Play",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(30.dp)
-                                        )
                                     }
-                                }
+                                    .touchMotion()
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(Icons.Rounded.Replay, contentDescription = "Rewind", tint = Color.White.copy(alpha = 0.90f), modifier = Modifier.size(20.dp))
+                                Text("${playback.seekIncrementSeconds}s", color = Color.White.copy(alpha = 0.90f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
 
-                                AnimatedSeekCircleButton(
-                                    isForward = true,
-                                    accumulator = seekFwdAccumulator,
-                                    enabled = playback.seekable,
-                                    onClick = {
+                            // Step Backward (Active when paused)
+                            if (!playback.playing) {
+                                IconButton(
+                                    onClick = { playback.stepFrameBackward(); message = "Frame Step -1"; interaction++ },
+                                    modifier = Modifier.size(36.dp).touchMotion()
+                                ) {
+                                    Icon(Icons.Rounded.SkipPrevious, "Step Backward", tint = Color.White.copy(alpha = 0.80f), modifier = Modifier.size(20.dp))
+                                }
+                            }
+
+                            // Style C Minimalist Outline Play/Pause Centerpiece (48dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .border(1.5.dp, Color.White.copy(alpha = 0.50f), CircleShape)
+                                    .background(Color.White.copy(alpha = 0.14f), CircleShape)
+                                    .clickable { playback.toggle(); interaction++ }
+                                    .touchMotion(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AnimatedContent(
+                                    targetState = playback.playRequested,
+                                    transitionSpec = {
+                                        (fadeIn(tween(140)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
+                                            .togetherWith(fadeOut(tween(110)) + scaleOut(targetScale = 0.72f))
+                                    },
+                                    label = "playPauseIcon"
+                                ) { isPlaying ->
+                                    Icon(
+                                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                        contentDescription = if (isPlaying) "Pause" else "Play",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(26.dp)
+                                    )
+                                }
+                            }
+
+                            // Step Forward (Active when paused)
+                            if (!playback.playing) {
+                                IconButton(
+                                    onClick = { playback.stepFrameForward(); message = "Frame Step +1"; interaction++ },
+                                    modifier = Modifier.size(36.dp).touchMotion()
+                                ) {
+                                    Icon(Icons.Rounded.SkipNext, "Step Forward", tint = Color.White.copy(alpha = 0.80f), modifier = Modifier.size(20.dp))
+                                }
+                            }
+
+                            // Ghost Forward: 10s â†»
+                            Row(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .clickable(enabled = playback.seekable) {
                                         val stepSec = playback.seekIncrementSeconds
                                         playback.skip(seekDeltaMs)
                                         seekFwdAccumulator += stepSec
@@ -909,23 +997,25 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                         seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
                                         seekFwdJob?.cancel()
                                         seekFwdJob = coroutineScope.launch {
-                                            kotlinx.coroutines.delay(950)
+                                            delay(950)
                                             seekFwdAccumulator = 0
                                         }
                                         interaction++
-                                    },
-                                    size = 46.dp,
-                                    bgColor = Color.Transparent,
-                                    rimColor = Color.Transparent,
-                                    contentColor = Color.White.copy(alpha = 0.92f)
-                                )
+                                    }
+                                    .touchMotion()
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text("${playback.seekIncrementSeconds}s", color = Color.White.copy(alpha = 0.90f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Rounded.Forward10, contentDescription = "Forward", tint = Color.White.copy(alpha = 0.90f), modifier = Modifier.size(20.dp))
                             }
                         }
 
-                        // PANEL 1 & 3: INLINE TIMELINE ROW + MINIMALIST BOTTOM CONTROLS
+                        // PANEL 3: PRECISION SPLIT CAPSULES (HUD 3 Cinephile Command Deck)
                         Column(
-                            Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             val currentFraction = scrub ?: if (playback.duration > 0) {
                                 (playback.position.toFloat() / playback.duration).coerceIn(0f, 1f)
@@ -935,7 +1025,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                 (bufferedPos.toFloat() / playback.duration).coerceIn(0f, 1f)
                             } else 0f
 
-                            // Edge-Clamped Scrubbing Thumbnail Preview (Panel 3)
+                            // Edge-Clamped Scrubbing Thumbnail Preview
                             BoxWithConstraints(Modifier.fillMaxWidth()) {
                                 val totalW = maxWidth
                                 scrub?.let { frac ->
@@ -948,7 +1038,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                 }
                             }
 
-                            // Skip Intro Pill Button (Accurate per-series timestamp)
+                            // Skip Intro Pill Button
                             val seriesBingeKey = remember(video.name) { BingeManager.resolveSeriesKey(video.name) }
                             val bingeSettings = remember(seriesBingeKey) { BingeManager.getSettings(activity, seriesBingeKey) }
                             val introLimitMs = bingeSettings.introSkipSeconds * 1000L
@@ -968,39 +1058,44 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                 }
                             }
 
-                            // Inline Timeline Row (Framed by Elapsed and Total Duration per Image 2)
                             val activePosMs = scrub?.let { (it * playback.duration).toLong() } ?: playback.position
                             val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
                             val totalSec = (playback.duration / 1000).coerceAtLeast(0)
+                            val pct = ((playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)) * 100).toInt().coerceIn(0, 100)
 
-                            // CINEMA HUD SEPARATED & NEAR PILL ARCHITECTURE (Spatial Glass UI + Tactile Micro-Optics)
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 6.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                // 1. Standalone Floating Scrubber Pill (Optical Lens)
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(999.dp),
-                                    color = SpatialGlass.pillBg(isAmoled),
-                                    border = SpatialGlass.pillBorder(1.dp),
-                                    shadowElevation = 8.dp
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                                val isLandscape = maxWidth > maxHeight && maxWidth > 560.dp
+
+                                val timelineCapsule = @Composable { mod: Modifier ->
+                                    Surface(
+                                        modifier = mod,
+                                        shape = RoundedCornerShape(20.dp),
+                                        color = SpatialGlass.pillBg(isAmoled),
+                                        border = SpatialGlass.pillBorder(1.dp),
+                                        shadowElevation = 10.dp
                                     ) {
-                                        Text(
-                                            compactTimecode(elapsedSec),
-                                            color = playerContentColor,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-
-                                        Box(Modifier.weight(1f)) {
+                                        Column(
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
+                                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    compactTimecode(elapsedSec),
+                                                    color = TimelineAccent,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    "${compactTimecode(totalSec)} ($pct%)",
+                                                    color = playerSubtextColor,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
                                             CinemaTimelineBar(
                                                 fraction = currentFraction,
                                                 bufferedFraction = bufferedFraction,
@@ -1014,93 +1109,104 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                                 }
                                             )
                                         }
-
-                                        Text(
-                                            compactTimecode(totalSec),
-                                            color = playerContentColor,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
                                     }
                                 }
 
-                                // 2. Action Pills Dock Row (Spatial Tactile Micro-Optics)
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    // Left: Lock Pill
-                                    SpatialTactilePill(
-                                        onClick = { playback.locked = true; interaction++ },
-                                        isOled = isAmoled
+                                val streamActionsCapsule = @Composable { mod: Modifier ->
+                                    Surface(
+                                        modifier = mod,
+                                        shape = RoundedCornerShape(20.dp),
+                                        color = SpatialGlass.pillBg(isAmoled),
+                                        border = SpatialGlass.pillBorder(1.dp),
+                                        shadowElevation = 10.dp
                                     ) {
-                                        Icon(Icons.Rounded.Lock, "Lock", Modifier.size(14.dp), tint = playerContentColor)
-                                        Text("Lock", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                    }
+                                        Row(
+                                            modifier = Modifier
+                                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                                .fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            val audioTrack = playback.audioTracks.firstOrNull { it.isSelected }
+                                            val audioText = audioTrack?.let { "${it.codec} ${it.channels}" } ?: "Audio"
+                                            SpatialTactilePill(
+                                                onClick = { quickMenuSection = if (quickMenuSection == "audio") null else "audio"; interaction++ },
+                                                isActive = quickMenuSection == "audio",
+                                                isOled = isAmoled
+                                            ) {
+                                                Icon(Icons.Rounded.GraphicEq, null, Modifier.size(13.dp), tint = TimelineAccent)
+                                                Text(audioText, color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                            }
 
-                                    // Right: Grouped Action Pills with horizontal scroll safety
+                                            val subTrack = playback.subtitleTracks.firstOrNull { it.isSelected }
+                                            val subText = subTrack?.label ?: "Subs Off"
+                                            SpatialTactilePill(
+                                                onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ },
+                                                isActive = quickMenuSection == "subs" || subTrack != null,
+                                                isOled = isAmoled
+                                            ) {
+                                                Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(13.dp), tint = playerContentColor)
+                                                Text(subText, color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                            }
+
+                                            SpatialTactilePill(
+                                                onClick = {
+                                                    val next = when (playback.speed) {
+                                                        1.0f -> 1.25f
+                                                        1.25f -> 1.5f
+                                                        2.0f -> 1.0f
+                                                        else -> 1.0f
+                                                    }
+                                                    playback.changeSpeed(next)
+                                                    message = "${next}x Speed"
+                                                    interaction++
+                                                },
+                                                isOled = isAmoled
+                                            ) {
+                                                Text("${playback.speed}x", color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            }
+
+                                            val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
+                                            SpatialTactilePill(
+                                                onClick = {
+                                                    val next = if (isZoomMode) AspectRatioMode.FIT else AspectRatioMode.ZOOM
+                                                    playback.setAspectRatioMode(next)
+                                                    message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
+                                                    interaction++
+                                                },
+                                                isActive = isZoomMode,
+                                                isOled = isAmoled
+                                            ) {
+                                                Icon(Icons.Rounded.AspectRatio, null, Modifier.size(13.dp), tint = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor)
+                                                Text(if (isZoomMode) "Zoom" else "Fit", color = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                            }
+
+                                            IconButton(
+                                                onClick = { playback.locked = true; interaction++ },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(Icons.Rounded.Lock, "Lock", Modifier.size(15.dp), tint = playerSubtextColor)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (isLandscape) {
                                     Row(
-                                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        // Subtitles Pill
-                                        val hasSubs = playback.subtitleTracks.any { it.isSelected } || quickMenuSection == "subs"
-                                        SpatialTactilePill(
-                                            onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ },
-                                            isActive = hasSubs,
-                                            isOled = isAmoled
-                                        ) {
-                                            Icon(Icons.Rounded.ClosedCaption, "Subtitles", Modifier.size(15.dp), tint = if (hasSubs) SpatialGlass.Obsidian else playerContentColor)
-                                            Text("Subtitles", color = if (hasSubs) SpatialGlass.Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                        }
-
-                                        // Audio Pill
-                                        val isAudioActive = quickMenuSection == "audio"
-                                        SpatialTactilePill(
-                                            onClick = { quickMenuSection = if (isAudioActive) null else "audio"; interaction++ },
-                                            isActive = isAudioActive,
-                                            isOled = isAmoled
-                                        ) {
-                                            Icon(Icons.Rounded.GraphicEq, "Audio", Modifier.size(15.dp), tint = if (isAudioActive) SpatialGlass.Obsidian else playerContentColor)
-                                            Text("Audio", color = if (isAudioActive) SpatialGlass.Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                        }
-
-                                        // Speed Pill
-                                        SpatialTactilePill(
-                                            onClick = {
-                                                val next = when (playback.speed) {
-                                                    1.0f -> 1.25f
-                                                    1.25f -> 1.5f
-                                                    1.5f -> 2.0f
-                                                    else -> 1.0f
-                                                }
-                                                playback.changeSpeed(next)
-                                                message = "${next}x Speed"
-                                                interaction++
-                                            },
-                                            isOled = isAmoled
-                                        ) {
-                                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(14.dp), tint = playerContentColor)
-                                            Text("${playback.speed}x", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                        }
-
-                                        // Aspect Ratio Pill (Fit / Zoom)
-                                        val isZoom = playback.aspectMode == AspectRatioMode.ZOOM
-                                        SpatialTactilePill(
-                                            onClick = {
-                                                val next = if (isZoom) AspectRatioMode.FIT else AspectRatioMode.ZOOM
-                                                playback.setAspectRatioMode(next)
-                                                message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
-                                                interaction++
-                                            },
-                                            isActive = isZoom,
-                                            isOled = isAmoled
-                                        ) {
-                                            Icon(Icons.Rounded.AspectRatio, null, Modifier.size(14.dp), tint = if (isZoom) SpatialGlass.Obsidian else playerContentColor)
-                                            Text(if (isZoom) "Zoom" else "Fit", color = if (isZoom) SpatialGlass.Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                        }
+                                        timelineCapsule(Modifier.weight(1.2f))
+                                        streamActionsCapsule(Modifier.weight(1.0f))
+                                    }
+                                } else {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        timelineCapsule(Modifier.fillMaxWidth())
+                                        streamActionsCapsule(Modifier.fillMaxWidth())
                                     }
                                 }
                             }

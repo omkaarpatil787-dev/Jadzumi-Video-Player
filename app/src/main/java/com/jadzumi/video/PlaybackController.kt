@@ -19,6 +19,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.okhttp.OkHttpDataSource
+import okhttp3.OkHttpClient
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.mp4.Mp4Extractor
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -779,6 +781,39 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun stepFrameForward() {
+        val p = player ?: return
+        val fps = runtimeVideoFormat?.frameRate?.takeIf { it > 5.0 && it.isFinite() } ?: 24.0
+        val frameMs = (1000.0 / fps).toLong().coerceIn(16L, 100L)
+        if (p.isPlaying) p.pause()
+        p.setSeekParameters(SeekParameters.EXACT)
+        val target = (p.currentPosition + frameMs).coerceAtMost(duration)
+        p.seekTo(target)
+        position = target
+    }
+
+    fun stepFrameBackward() {
+        val p = player ?: return
+        val fps = runtimeVideoFormat?.frameRate?.takeIf { it > 5.0 && it.isFinite() } ?: 24.0
+        val frameMs = (1000.0 / fps).toLong().coerceIn(16L, 100L)
+        if (p.isPlaying) p.pause()
+        p.setSeekParameters(SeekParameters.EXACT)
+        val target = (p.currentPosition - frameMs).coerceAtLeast(0L)
+        p.seekTo(target)
+        position = target
+    }
+
+    fun preloadNextEpisode(candidate: LocalVideo? = nextEpisode) {
+        val next = candidate ?: return
+        val p = player ?: return
+        if (p.mediaItemCount == 1) {
+            try {
+                val nextItem = androidx.media3.common.MediaItem.fromUri(next.uri)
+                p.addMediaItem(nextItem)
+            } catch (_: Exception) {}
+        }
+    }
+
     fun playNextEpisode() {
         val next = nextEpisode ?: return
         val current = video ?: return
@@ -893,6 +928,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         val next = nextEpisode ?: return
         val warning = episodeContinuationWarning(current.name, next.name)
         if (warning != null) return
+        preloadNextEpisode(next)
         nextCountdownJob = viewModelScope.launch {
             for (seconds in durationSec downTo 1) {
                 if (video?.identity != current.identity) return@launch
@@ -1015,11 +1051,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .setConstantBitrateSeekingAlwaysEnabled(true)
                 .setMp4ExtractorFlags(Mp4Extractor.FLAG_WORKAROUND_IGNORE_EDIT_LISTS)
 
-            val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-                .setAllowCrossProtocolRedirects(true)
-                .setConnectTimeoutMs(15_000)
-                .setReadTimeoutMs(15_000)
-                .setUserAgent("JadzumiPlayer/2.2.1")
+            val okHttpClient = OkHttpClient.Builder()
+                .followRedirects(true)
+                .followSslRedirects(true)
+                .connectTimeout(java.time.Duration.ofSeconds(15))
+                .readTimeout(java.time.Duration.ofSeconds(20))
+                .build()
+
+            val httpDataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
+                .setUserAgent("JadzumiPlayer/3.2.0")
 
             val dataSourceFactory = DefaultDataSource.Factory(app, httpDataSourceFactory)
             val source = DefaultMediaSourceFactory(dataSourceFactory, extractorsFactory)

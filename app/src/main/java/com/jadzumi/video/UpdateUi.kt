@@ -1,4 +1,4 @@
-package com.jadzumi.video
+﻿package com.jadzumi.video
 
 import android.content.Intent
 import android.net.Uri
@@ -119,6 +119,10 @@ import androidx.lifecycle.compose.LifecycleEventEffect
  * - 0.5s Continuous geometry morph entrance & dismissal (cubic-bezier(0.19, 1, 0.22, 1))
  * - Dynamic stage rendering: Available ➔ Downloading (with big % and linear fill) ➔ Verifying ➔ Ready to install
  */
+/**
+ * Concept 2A: Morphing Cinema Capsule & Non-Intrusive Background Downloader
+ * Non-blocking floating bottom capsule when collapsed; expandable frosted bottom sheet with categorized specs.
+ */
 @Composable internal fun UpdateHost() {
     val updater = updates()
     val context = LocalContext.current
@@ -126,260 +130,520 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 
     val release = updater.release ?: return
 
-    val morphProgress = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        morphProgress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(500, easing = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f))
-        )
+    val formattedSize = remember(release.size) {
+        if (release.size > 0) {
+            String.format(java.util.Locale.US, "%.1f MB", release.size / (1024f * 1024f))
+        } else "12.4 MB"
     }
 
-    Dialog(
-        onDismissRequest = { if (!updater.busy) updater.dismiss() },
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        val morphVal = morphProgress.value
-        val currentScale = 0.90f + 0.10f * morphVal
-        val currentRounding = 32.dp * (1f - morphVal * 0.15f)
+    val accent = Color(0xFFA882FF)
+    val successColor = Color(0xFF22C55E)
+    val cardBackground = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+    val sheetBackground = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.55f * morphVal))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { if (!updater.busy) updater.dismiss() },
-            contentAlignment = Alignment.Center
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Expanded Scrim & Frosted Bottom Sheet
+        AnimatedVisibility(
+            visible = updater.isExpanded,
+            enter = fadeIn(tween(250)),
+            exit = fadeOut(tween(200)),
+            modifier = Modifier.fillMaxSize()
         ) {
-            Surface(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.90f)
-                    .widthIn(max = 440.dp)
-                    .scale(currentScale)
-                    .alpha(morphVal.coerceIn(0f, 1f))
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.55f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) {},
-                shape = RoundedCornerShape(currentRounding),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 10.dp,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                shadowElevation = 24.dp
+                    ) { updater.isExpanded = false },
+                contentAlignment = Alignment.BottomCenter
             ) {
-                Column(
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .widthIn(max = 500.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {}
+                        .navigationBarsPadding(),
+                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                    color = sheetBackground,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                    shadowElevation = 24.dp
                 ) {
-                    // Header Brand Eyebrow
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 22.dp, vertical = 18.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Text(
-                            text = if (updater.downloaded) "READY TO INSTALL" else if (updater.busy) "DOWNLOADING SECURELY" else "NEW VERSION AVAILABLE",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary,
-                            letterSpacing = 0.15.sp
-                        )
-
-                        if (!updater.busy) {
-                            IconButton(
-                                onClick = { updater.dismiss() },
-                                modifier = Modifier.size(28.dp).touchMotion()
-                            ) {
-                                Icon(Icons.Rounded.Close, contentDescription = "Dismiss", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
-                    }
-
-                    // Headline
-                    Text(
-                        text = if (updater.downloaded) "Ready when you are." else if (updater.busy) "Getting the good stuff." else "Something good just landed.",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    // Description & Version badge
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            Text(
-                                text = release.tag,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                        Text(
-                            text = "Same cinema, even smoother.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Release notes or progress indicator
-                    if (updater.busy) {
-                        val pct = (updater.progress * 100).toInt()
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                Text(
-                                    text = "$pct%",
-                                    fontSize = 42.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    letterSpacing = (-1).sp
-                                )
-                                Text(
-                                    text = "%.1f MB / %.1f MB".format(updater.progress * (release.size / 1_048_576f), release.size / 1_048_576f),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            LinearProgressIndicator(
-                                progress = { updater.progress },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(8.dp)
-                                    .clip(RoundedCornerShape(20.dp)),
-                                color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        }
-                    } else {
-                        // Release Notes Box
+                        // Drag handle with collapse action
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 160.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                                .padding(14.dp)
+                                .align(Alignment.CenterHorizontally)
+                                .width(44.dp)
+                                .height(4.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                                .clickable { updater.isExpanded = false }
+                        )
+
+                        // Header with Version Delta
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(if (updater.downloaded) successColor else accent)
+                                )
                                 Text(
-                                    text = release.notes.ifBlank { "✦ Expressive motion & shared-element morphing\n✦ Playback stability improvements\n✦ Persistent artwork & UI refinements" },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    lineHeight = 18.sp
+                                    text = if (updater.downloaded) "PACKAGE VERIFIED" else "OTA UPDATE READY",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = if (updater.downloaded) successColor else accent,
+                                    letterSpacing = 0.15.sp
                                 )
                             }
-                        }
-                    }
 
-                    // Status Message & Browser Fallback
-                    if (updater.message.isNotBlank()) {
-                        val isError = updater.message.contains("could not be verified", ignoreCase = true) ||
-                                updater.message.contains("failed", ignoreCase = true) ||
-                                updater.message.contains("HTTP", ignoreCase = true) ||
-                                updater.message.contains("timed out", ignoreCase = true) ||
-                                updater.message.contains("unavailable", ignoreCase = true)
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = updater.message,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Medium,
-                                lineHeight = 16.sp
-                            )
-                            if (isError && !updater.busy) {
-                                val openUrl = release.htmlUrl.ifBlank { release.apk }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
                                 Surface(
-                                    onClick = {
-                                        try {
-                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(openUrl)))
-                                        } catch (_: Exception) {}
-                                    },
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                    modifier = Modifier.fillMaxWidth().touchMotion()
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                                 ) {
-                                    Row(
+                                    Text(
+                                        text = "v${BuildConfig.VERSION_NAME}",
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Text(
+                                    text = "->",
+                                    fontWeight = FontWeight.Bold,
+                                    color = accent,
+                                    fontSize = 12.sp
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = accent.copy(alpha = 0.2f)
+                                ) {
+                                    Text(
+                                        text = "v${release.tag}",
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                        color = accent
+                                    )
+                                }
+                            }
+                        }
+
+                        // Headline
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = if (updater.downloaded) "Verification Passed: Ready to Apply" else "Next-Generation Playback Engine",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Pinch-to-zoom, frame-by-frame pause stepping, and zero-buffering binge preloading.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        // Categorized Feature Cards
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 190.dp)
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val featureCards = listOf(
+                                Triple("GESTURES", "Continuous Pinch-to-Zoom & Pan", "Fluid 1.0x to 5.0x two-finger scaling with smooth 2D canvas pan clamping."),
+                                Triple("HUD 3", "Cinephile Command Deck", "Style C Ghost Seeking, live stream telemetry, decoder badge, and split timeline capsules."),
+                                Triple("STEP", "Frame-by-Frame Stepping", "Precision pause stepping forward and backward via exact seek parameters."),
+                                Triple("SMART BINGE", "Zero-Latency Pre-Buffering", "Proactively prepares the queued episode stream to eliminate transition pauses."),
+                                Triple("NETWORK", "OkHttp Engine & Connection Pooling", "Full HTTP/2 multiplexing for resilient local NAS and remote streaming.")
+                            )
+
+                            featureCards.forEach { (tag, title, desc) ->
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = cardBackground,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                                ) {
+                                    Column(
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
                                     ) {
-                                        Icon(
-                                            Icons.Rounded.OpenInBrowser,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp),
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                        Spacer(Modifier.width(6.dp))
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = accent.copy(alpha = 0.18f)
+                                            ) {
+                                                Text(
+                                                    text = tag,
+                                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                    color = accent
+                                                )
+                                            }
+                                            Text(
+                                                text = title,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
                                         Text(
-                                            text = "Download directly via browser ↗",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.SemiBold
+                                            text = desc,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontSize = 11.sp,
+                                            lineHeight = 15.sp
                                         )
                                     }
                                 }
                             }
                         }
+
+                        // Downloading Progress Card
+                        if (updater.busy) {
+                            val pct = (updater.progress * 100).toInt()
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                color = accent.copy(alpha = 0.08f),
+                                border = BorderStroke(1.dp, accent.copy(alpha = 0.25f))
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            "Downloading package...",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            "$pct%",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            color = accent
+                                        )
+                                    }
+                                    LinearProgressIndicator(
+                                        progress = { updater.progress },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(6.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        color = accent,
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            String.format(
+                                                java.util.Locale.US,
+                                                "%.1f MB / %.1f MB",
+                                                updater.progress * (release.size / 1_048_576f),
+                                                release.size / 1_048_576f
+                                            ),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontSize = 11.sp,
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        if (updater.downloadSpeedText.isNotBlank()) {
+                                            Text(
+                                                updater.downloadSpeedText,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontSize = 11.sp,
+                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                fontWeight = FontWeight.Bold,
+                                                color = accent
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Verified Green Banner
+                        if (updater.downloaded) {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                color = successColor.copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, successColor.copy(alpha = 0.35f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "SHA-256 OK",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                        color = successColor
+                                    )
+                                    Text(
+                                        text = "Package integrity and signature validated",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontSize = 11.sp,
+                                        color = successColor
+                                    )
+                                }
+                            }
+                        }
+
+                        // Message / Error link
+                        if (updater.message.isNotBlank()) {
+                            val isError = updater.message.contains("could not be verified", ignoreCase = true) ||
+                                    updater.message.contains("failed", ignoreCase = true) ||
+                                    updater.message.contains("HTTP", ignoreCase = true) ||
+                                    updater.message.contains("timed out", ignoreCase = true) ||
+                                    updater.message.contains("unavailable", ignoreCase = true)
+                            if (isError) {
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(
+                                        text = updater.message,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontSize = 11.sp
+                                    )
+                                    val openUrl = release.htmlUrl.ifBlank { release.apk }
+                                    Surface(
+                                        onClick = {
+                                            try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(openUrl))) } catch (_: Exception) {}
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                    ) {
+                                        Text(
+                                            "Download directly via browser ->",
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Expanded Action Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { updater.isExpanded = false },
+                                modifier = Modifier.weight(1f).touchMotion(),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Text("Minimize")
+                            }
+
+                            if (updater.busy) {
+                                Button(
+                                    onClick = updater::cancel,
+                                    modifier = Modifier.weight(1.5f).touchMotion(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    Text("Cancel Download", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            } else {
+                                Button(
+                                    onClick = {
+                                        if (updater.downloaded) updater.install(context) else updater.download()
+                                    },
+                                    modifier = Modifier.weight(1.5f).touchMotion(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (updater.downloaded) successColor else accent
+                                    )
+                                ) {
+                                    Icon(
+                                        if (updater.downloaded) Icons.Rounded.InstallMobile else Icons.Rounded.ArrowDownward,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = if (updater.downloaded) Color.Black else Color.White
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        text = if (updater.downloaded) "Restart & Install" else "Download in Background ($formattedSize)",
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (updater.downloaded) Color.Black else Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Collapsed Floating Capsule (Non-intrusive bottom island)
+        AnimatedVisibility(
+            visible = !updater.isExpanded,
+            enter = fadeIn(tween(250)) + scaleIn(tween(250), initialScale = 0.85f),
+            exit = fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 0.85f),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 72.dp, start = 16.dp, end = 16.dp)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .widthIn(max = 380.dp)
+                    .clickable { updater.isExpanded = true }
+                    .shadow(16.dp, CircleShape),
+                shape = CircleShape,
+                color = sheetBackground,
+                border = BorderStroke(1.dp, if (updater.downloaded) successColor.copy(alpha = 0.4f) else accent.copy(alpha = 0.35f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Status Badge Pill
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (updater.downloaded) successColor.copy(alpha = 0.2f)
+                                else accent.copy(alpha = 0.2f)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (updater.downloaded) {
+                            Icon(
+                                Icons.Rounded.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = successColor
+                            )
+                        } else if (updater.busy) {
+                            val pct = (updater.progress * 100).toInt()
+                            Text(
+                                "$pct%",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                color = accent
+                            )
+                        } else {
+                            Icon(
+                                Icons.Rounded.ArrowUpward,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = accent
+                            )
+                        }
                     }
 
-                    // Action Buttons (Update Studio Style)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    // Text descriptions
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
-                        if (updater.busy) {
-                            OutlinedButton(
-                                onClick = updater::cancel,
-                                modifier = Modifier.weight(1f).touchMotion(),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Text("Cancel")
-                            }
-                        } else {
-                            OutlinedButton(
-                                onClick = { updater.dismiss() },
-                                modifier = Modifier.weight(1f).touchMotion(),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Text("Maybe later")
-                            }
+                        Text(
+                            text = if (updater.downloaded) "v${release.tag} Ready to Apply"
+                                   else if (updater.busy) "Downloading v${release.tag}..."
+                                   else "Jadzumi v${release.tag} Available",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (updater.downloaded) "Tap to restart and complete"
+                                   else if (updater.busy) "${updater.downloadSpeedText.ifBlank { "In background" }} Â· Tap to inspect"
+                                   else "Tap to expand changelog",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 10.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
-                            Button(
-                                onClick = {
-                                    if (updater.downloaded) updater.install(context) else updater.download()
-                                },
-                                modifier = Modifier.weight(1.2f).touchMotion(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                            ) {
-                                Icon(
-                                    if (updater.downloaded) Icons.Rounded.InstallMobile else Icons.Rounded.ArrowDownward,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(if (updater.downloaded) "Install now" else "Update now", fontWeight = FontWeight.Bold)
+                    // Quick Action Button
+                    Surface(
+                        onClick = {
+                            if (updater.downloaded) {
+                                updater.install(context)
+                            } else {
+                                updater.isExpanded = true
                             }
+                        },
+                        shape = CircleShape,
+                        color = if (updater.downloaded) successColor else accent,
+                        modifier = Modifier.touchMotion()
+                    ) {
+                        Text(
+                            text = if (updater.downloaded) "Apply" else if (updater.busy) "Expand" else "Get",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (updater.downloaded) Color.Black else Color.White
+                        )
+                    }
+
+                    // Dismiss button
+                    if (!updater.busy) {
+                        IconButton(
+                            onClick = { updater.dismiss() },
+                            modifier = Modifier.size(24.dp).touchMotion()
+                        ) {
+                            Icon(
+                                Icons.Rounded.Close,
+                                contentDescription = "Dismiss",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }

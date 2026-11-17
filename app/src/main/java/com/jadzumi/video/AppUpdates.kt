@@ -34,6 +34,8 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
     var busy by mutableStateOf(false); private set
     var progress by mutableFloatStateOf(0f); private set
     var downloaded by mutableStateOf(false); private set
+    var isExpanded by mutableStateOf(false)
+    var downloadSpeedText by mutableStateOf("")
     private var job: Job? = null
     private var automaticRequest = false
     private val apk get() = File(getApplication<Application>().cacheDir, "updates/update.apk")
@@ -79,13 +81,17 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
     fun dismiss(skip: Boolean = false) {
         if (skip) prefs.edit().putString("skipped", release?.tag).apply()
         release = null
+        isExpanded = false
     }
-    fun cancel() { job?.cancel() }
+    fun cancel() {
+        job?.cancel()
+        isExpanded = false
+    }
     fun download() {
         val target = release ?: return
         if (busy) return
         job = viewModelScope.launch {
-            busy = true; downloaded = false; progress = 0f
+            busy = true; downloaded = false; progress = 0f; downloadSpeedText = ""
             message = "Downloading ${target.tag}…"
             try {
                 withContext(Dispatchers.IO) {
@@ -112,12 +118,23 @@ class AppUpdates(app: Application) : AndroidViewModel(app) {
                                     try {
                                         c.inputStream.use { input -> partial.outputStream().use { output ->
                                             val buffer = ByteArray(65536); var total = 0L
+                                            var lastTime = System.currentTimeMillis()
+                                            var lastBytes = 0L
                                             while (true) {
                                                 currentCoroutineContext().ensureActive()
                                                 val n = input.read(buffer); if (n < 0) break
                                                 total += n; require(total <= target.size) { "Unexpected APK size." }
                                                 output.write(buffer, 0, n)
-                                                withContext(Dispatchers.Main) { progress = total.toFloat() / target.size }
+                                                val now = System.currentTimeMillis()
+                                                if (now - lastTime >= 400L) {
+                                                    val speed = (total - lastBytes) * 1000f / (now - lastTime) / (1024f * 1024f)
+                                                    lastTime = now
+                                                    lastBytes = total
+                                                    withContext(Dispatchers.Main) {
+                                                        progress = total.toFloat() / target.size
+                                                        downloadSpeedText = String.format(java.util.Locale.US, "%.1f MB/s", speed)
+                                                    }
+                                                }
                                             }
                                             require(total == target.size) { "Incomplete APK download." }
                                         } }
