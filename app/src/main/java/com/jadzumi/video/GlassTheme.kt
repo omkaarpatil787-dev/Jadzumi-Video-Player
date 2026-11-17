@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -220,37 +221,48 @@ object SpatialGlass {
     }
 
     /**
-     * Specular hairline rim gradient that catches dimensional light from above.
+     * Curved specular hairline rim gradient for pills.
+     * Uses a subtle 45-degree diagonal refraction vector so the specular highlight
+     * organically curves around the rounded corner arcs instead of cutting across vertically.
      */
     fun specularRimBrush(alphaBoost: Float = 1.0f): Brush {
-        return Brush.verticalGradient(
-            listOf(
-                Color.White.copy(alpha = (0.28f * alphaBoost).coerceIn(0f, 1f)),
-                Color.White.copy(alpha = (0.12f * alphaBoost).coerceIn(0f, 1f)),
-                Color.White.copy(alpha = (0.04f * alphaBoost).coerceIn(0f, 1f))
-            )
+        return Brush.linearGradient(
+            colors = listOf(
+                Color.White.copy(alpha = (0.24f * alphaBoost).coerceIn(0f, 1f)),
+                Color.White.copy(alpha = (0.10f * alphaBoost).coerceIn(0f, 1f)),
+                Color.White.copy(alpha = (0.03f * alphaBoost).coerceIn(0f, 1f)),
+                Color.Transparent
+            ),
+            start = Offset(0f, 0f),
+            end = Offset.Infinite
         )
     }
 
     /**
-     * Theme-adaptive specular hairline rim brush for cards.
+     * Theme-adaptive curved specular hairline rim brush for cards.
+     * Refracts light diagonally across the 20dp corner arcs for smooth organic curvature.
      */
     fun cardBorderBrush(theme: String, alphaBoost: Float = 1.0f): Brush {
         return if (theme == "Light") {
-            Brush.verticalGradient(
-                listOf(
-                    Color.White.copy(alpha = (0.95f * alphaBoost).coerceIn(0f, 1f)),
-                    Color(0xFFE5DFEE).copy(alpha = (0.75f * alphaBoost).coerceIn(0f, 1f)),
-                    Color(0x33544878)
-                )
+            Brush.linearGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = (0.85f * alphaBoost).coerceIn(0f, 1f)),
+                    Color(0xFFE8E2F2).copy(alpha = (0.50f * alphaBoost).coerceIn(0f, 1f)),
+                    Color(0x1F544878)
+                ),
+                start = Offset(0f, 0f),
+                end = Offset.Infinite
             )
         } else {
-            Brush.verticalGradient(
-                listOf(
-                    Color.White.copy(alpha = (0.24f * alphaBoost).coerceIn(0f, 1f)),
-                    Color.White.copy(alpha = (0.10f * alphaBoost).coerceIn(0f, 1f)),
-                    Color.White.copy(alpha = (0.04f * alphaBoost).coerceIn(0f, 1f))
-                )
+            Brush.linearGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = (0.20f * alphaBoost).coerceIn(0f, 1f)),
+                    Color.White.copy(alpha = (0.08f * alphaBoost).coerceIn(0f, 1f)),
+                    Color.White.copy(alpha = (0.02f * alphaBoost).coerceIn(0f, 1f)),
+                    Color.Transparent
+                ),
+                start = Offset(0f, 0f),
+                end = Offset.Infinite
             )
         }
     }
@@ -320,7 +332,10 @@ fun SpatialTactilePill(
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
+                this.shape = RoundedCornerShape(999.dp)
+                clip = true
             }
+            .clip(RoundedCornerShape(999.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -329,7 +344,7 @@ fun SpatialTactilePill(
         shape = RoundedCornerShape(999.dp),
         color = bgColor,
         border = borderStroke,
-        shadowElevation = if (isPressed) 2.dp else (if (isLight) 4.dp else 6.dp)
+        shadowElevation = if (isPressed) 1.dp else (if (isLight) 2.dp else 3.dp)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
@@ -370,7 +385,10 @@ fun SpatialTactileCard(
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
+                this.shape = shape
+                clip = true
             }
+            .clip(shape)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(
@@ -382,8 +400,8 @@ fun SpatialTactileCard(
             ),
         shape = shape,
         color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp, if (isPressed) 1.4f else 1.0f),
-        shadowElevation = if (theme == "Light") 6.dp else 10.dp
+        border = SpatialGlass.cardBorder(theme, 1.dp, if (isPressed) 1.25f else 1.0f),
+        shadowElevation = if (theme == "Light") 2.dp else 4.dp
     ) {
         Column(content = content)
     }

@@ -1,3 +1,21 @@
+# Jadzumi v2.3.5 — Curved Specular Optics, Sharp Box Elimination & Continuous Horizontal Pager
+
+A dedicated optical refinement and interaction release curving specular edge reflections naturally around pill/card arcs, eliminating child clipping bleed across all media containers, and introducing continuous swipe and sliding motion between Movies, Series, and Anime.
+
+### 1. Curved Specular Rim Optics
+- **Diagonal 45-Degree Refraction Vector**: Replaced flat perpendicular vertical gradients with an angled linear refraction vector, enabling specular catch-lights to wrap naturally around curved 20dp and 999dp corner arcs instead of cutting across horizontally.
+- **Subtle Depth Profile**: Softened shadow elevations to a clean, subtle 2dp–4dp across all cards and pills, achieving a modern, unbloated glass aesthetic.
+
+### 2. Elimination of Sharp Box Bleed
+- **Strict Shape Clipping**: Enforced explicit shape clipping and hardware layer clipping across all card surfaces, posters, thumbnails, and hero banners, permanently preventing inner images and container backgrounds from bleeding square 90-degree corners past the rounded border stroke.
+
+### 3. Continuous Sliding Carousel for Movies, Series & Anime
+- **HorizontalPager Architecture**: Migrated the library catalog to a continuous HorizontalPager with native 1:1 finger swipe gestures between Movies, Series (TV Shows), and Anime.
+- **Bi-Directional Pill Synchronization**: Tapping any top category pill smoothly scrolls the carousel to the selected category, and swiping between pages dynamically updates the active category indicator in real time.
+- **Independent Scroll Position Retention**: Each category maintains its own dedicated list state, ensuring your scroll position in one category is never lost when swiping across others.
+
+---
+
 # Jadzumi v2.3.4 — Universal Spatial Glass UI & Tactile Micro-Optics
 
 A comprehensive design language rollout elevating every card, capsule, subtab, and panel across the entire app with VisionOS-inspired Spatial Glass UI, tactile micro-press physics, and dual-tone optical parity in both Light and Dark modes.

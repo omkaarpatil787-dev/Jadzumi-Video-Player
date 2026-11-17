@@ -226,11 +226,11 @@ fun MovieDetailsPage(
             // 2. Movie Hero Banner Card
             item {
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
                     shape = RoundedCornerShape(20.dp),
                     color = SpatialGlass.cardBg(theme),
                     border = SpatialGlass.cardBorder(theme, 1.dp),
-                    shadowElevation = if (isLight) 4.dp else 8.dp
+                    shadowElevation = if (isLight) 2.dp else 4.dp
                 ) {
                     Box(
                         modifier = Modifier.fillMaxWidth()
@@ -526,8 +526,8 @@ fun MovieDetailsPage(
                             shape = RoundedCornerShape(20.dp),
                             color = SpatialGlass.cardBg(theme),
                             border = SpatialGlass.cardBorder(theme, 1.dp),
-                            modifier = Modifier.fillMaxWidth().touchMotion(),
-                            shadowElevation = if (isLight) 3.dp else 6.dp
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).touchMotion(),
+                            shadowElevation = if (isLight) 2.dp else 4.dp
                         ) {
                             Row(
                                 Modifier.padding(14.dp),

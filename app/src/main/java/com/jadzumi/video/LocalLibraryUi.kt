@@ -114,11 +114,11 @@ fun WelcomeOnboardingCard(
 ) {
     val theme = LocalThemeName.current
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
         border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 3.dp else 6.dp
+        shadowElevation = if (theme == "Light") 2.dp else 4.dp
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -169,11 +169,11 @@ fun WelcomeOnboardingCard(
 @Composable private fun LocalPanel(content: @Composable ColumnScope.() -> Unit) {
     val theme = LocalThemeName.current
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
         border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 3.dp else 6.dp
+        shadowElevation = if (theme == "Light") 2.dp else 4.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -469,11 +469,12 @@ private fun ContinueWatchingCard(
         modifier = Modifier
             .width(240.dp)
             .height(135.dp)
+            .clip(RoundedCornerShape(20.dp))
             .touchMotion(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         color = Charcoal,
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
-        shadowElevation = 3.dp
+        border = SpatialGlass.cardBorder(LocalThemeName.current, 1.dp),
+        shadowElevation = 2.dp
     ) {
         Box(Modifier.fillMaxSize()) {
             if (video != null) {
@@ -581,7 +582,7 @@ private fun CategoryQuickCard(
     val theme = LocalThemeName.current
     Card(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.clip(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else SpatialGlass.cardBg(theme)
@@ -646,7 +647,8 @@ fun StorageSummaryCard(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = SpatialGlass.cardBg(theme)),
         border = SpatialGlass.cardBorder(theme, 1.dp),
-        modifier = Modifier.fillMaxWidth()
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(18.dp)) {
             val compact = maxWidth < 460.dp
@@ -826,9 +828,9 @@ fun JadzumiCategoryPillsRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         categories.forEach { cat ->
-            val isSelected = cat == selectedCategory
+            val isSelected = cat == selectedCategory || (cat == "Series" && (selectedCategory == "TV Shows" || selectedCategory == "Series"))
             val pillElevation by animateDpAsState(
-                targetValue = if (isSelected) 4.dp else 1.dp,
+                targetValue = if (isSelected) 2.dp else 0.dp,
                 animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
                 label = "cat_pill_elev_$cat"
             )
@@ -847,23 +849,28 @@ fun JadzumiCategoryPillsRow(
                     .shadow(
                         elevation = pillElevation,
                         shape = RoundedCornerShape(999.dp),
-                        spotColor = if (isSelected) LavenderAccent.copy(alpha = 0.45f) else Color.Black.copy(alpha = if (isLight) 0.06f else 0.25f)
+                        spotColor = if (isSelected) LavenderAccent.copy(alpha = 0.35f) else Color.Black.copy(alpha = if (isLight) 0.04f else 0.15f)
                     )
                     .clip(RoundedCornerShape(999.dp))
                     .then(
                         if (isSelected) {
-                            Modifier.background(
-                                Brush.verticalGradient(
-                                    listOf(Color(0xFFC0A2FB), Color(0xFF986FF5))
+                            Modifier
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(Color(0xFFC4A8FB), Color(0xFF986FF5))
+                                    )
                                 )
-                            )
+                                .border(
+                                    BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                                    RoundedCornerShape(999.dp)
+                                )
                         } else {
                             Modifier
                                 .background(SpatialGlass.subCardBg(theme))
                                 .border(SpatialGlass.cardBorder(theme, 1.dp), RoundedCornerShape(999.dp))
                         }
                     )
-                    .clickable { onCategorySelected(cat) }
+                    .clickable { onCategorySelected(if (cat == "Series") "TV Shows" else cat) }
                     .touchMotion()
             ) {
                 Text(
@@ -896,9 +903,29 @@ fun JadzumiCategoryPillsRow(
     val listStateMovies = rememberLazyListState()
     val listStateSeries = rememberLazyListState()
     val listStateAnime = rememberLazyListState()
-    var category by rememberSaveable(defaultCategory) { mutableStateOf(defaultCategory) }
+    val categories = remember { listOf("Movies", "TV Shows", "Anime") }
+    fun catToPage(c: String): Int = when (c) {
+        "TV Shows", "Series" -> 1
+        "Anime" -> 2
+        else -> 0
+    }
+    val initialPage = remember { catToPage(defaultCategory) }
+    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { categories.size })
+    var category by rememberSaveable(defaultCategory) { mutableStateOf(if (defaultCategory == "Series") "TV Shows" else defaultCategory) }
+
     LaunchedEffect(defaultCategory) {
-        category = defaultCategory
+        val targetPage = catToPage(defaultCategory)
+        if (pagerState.currentPage != targetPage) {
+            pagerState.animateScrollToPage(targetPage)
+        }
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        val newCategory = categories[pagerState.currentPage]
+        if (category != newCategory) {
+            category = newCategory
+            onCategoryChanged?.invoke(newCategory)
+        }
     }
 
     fun getCategoryListState(cat: String): LazyListState = when (cat) {
@@ -1146,24 +1173,12 @@ fun JadzumiCategoryPillsRow(
         val bottomPad = if (isPhone) 24.dp else 28.dp
 
         Column(Modifier.fillMaxSize()) {
-            AnimatedContent(
-                targetState = category,
-                transitionSpec = {
-                    val categories = listOf("Movies", "TV Shows", "Anime")
-                    val fromIdx = categories.indexOf(initialState).coerceAtLeast(0)
-                    val toIdx = categories.indexOf(targetState).coerceAtLeast(0)
-                    val isForward = toIdx >= fromIdx
-
-                    (slideInHorizontally(animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow)) { if (isForward) (it * 0.05f).toInt() else (-it * 0.05f).toInt() } +
-                            fadeIn(animationSpec = tween(280, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))))
-                        .togetherWith(
-                            slideOutHorizontally(animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow)) { if (isForward) (-it * 0.05f).toInt() else (it * 0.05f).toInt() } +
-                                    fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
-                        )
-                },
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier.fillMaxSize().weight(1f),
-                label = "categoryContentAnimated"
-            ) { currentCategory ->
+                key = { categories[it] }
+            ) { pageIndex ->
+                val currentCategory = categories[pageIndex]
                 if (currentCategory == "Folders") {
                     Box(Modifier.fillMaxSize()) {
                         LocalFoldersPage(state = state, library = library, wide = screenMaxWidth >= 640.dp, select = select)
@@ -2840,6 +2855,7 @@ fun TvSeriesSummaryCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
             .touchMotion()
             .combinedClickable(
                 onClick = select,
@@ -2848,7 +2864,7 @@ fun TvSeriesSummaryCard(
         color = SpatialGlass.cardBg(theme),
         border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp),
         shape = RoundedCornerShape(20.dp),
-        shadowElevation = if (theme == "Light") 3.dp else 6.dp
+        shadowElevation = if (theme == "Light") 2.dp else 4.dp
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
             val compact = maxWidth < 460.dp
@@ -2955,9 +2971,10 @@ private fun LocalPosterGridCard(
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
         border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 3.dp else 6.dp,
+        shadowElevation = if (theme == "Light") 2.dp else 4.dp,
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
             .touchMotion()
             .combinedClickable(
                 onClick = onClick,
@@ -3443,9 +3460,10 @@ private fun FranchiseCard(
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
         border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 3.dp else 6.dp,
+        shadowElevation = if (theme == "Light") 2.dp else 4.dp,
         modifier = Modifier
             .width(280.dp)
+            .clip(RoundedCornerShape(20.dp))
             .clickable {
                 val target = franchise.nextUnwatchedFilm ?: franchise.films.firstOrNull()
                 target?.let(onSelectFilm)

@@ -544,11 +544,11 @@ private fun ShowHeroCard(
     val theme = if (isLight) "Light" else "Dark"
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
         border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (isLight) 4.dp else 8.dp
+        shadowElevation = if (isLight) 2.dp else 4.dp
     ) {
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -896,11 +896,11 @@ private fun EpisodeCard(
     val theme = LocalThemeName.current
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().touchMotion(),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).touchMotion(),
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
         border = if (isNext) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 4.dp else 8.dp
+        shadowElevation = if (theme == "Light") 2.dp else 4.dp
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
@@ -1223,12 +1223,14 @@ private fun SeasonCompletionBar(
     val progress = if (totalCount > 0) watchedCount.toFloat() / totalCount.toFloat() else 0f
     val percent = (progress * 100).toInt()
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val theme = if (surfaceColor.luminance() > 0.5f) "Light" else "Dark"
+    val isLight = surfaceColor.luminance() > 0.5f
+    val theme = if (isLight) "Light" else "Dark"
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp)
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (isLight) 2.dp else 4.dp
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -1272,14 +1274,15 @@ private fun UpNextSpotlightCard(
     val title = epInfo?.episodeTitle ?: video.title
     val epLabel = if (epInfo != null) "S%02dE%02d".format(epInfo.season, epInfo.episode) else "Next"
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val theme = if (surfaceColor.luminance() > 0.5f) "Light" else "Dark"
+    val isLight = surfaceColor.luminance() > 0.5f
+    val theme = if (isLight) "Light" else "Dark"
     Surface(
         onClick = onPlay,
-        modifier = Modifier.fillMaxWidth().touchMotion(),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).touchMotion(),
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
         border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (surfaceColor.luminance() > 0.5f) 3.dp else 6.dp
+        shadowElevation = if (isLight) 2.dp else 4.dp
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
