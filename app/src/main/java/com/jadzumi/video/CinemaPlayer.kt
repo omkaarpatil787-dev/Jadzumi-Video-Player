@@ -84,6 +84,51 @@ private val FrostedCircleBg = Color.White.copy(alpha = 0.16f)
 private val FrostedCircleRim = Color.White.copy(alpha = 0.30f)
 internal val TimelineAccent = Color(0xFFB79AF7)
 
+private fun formatCompactAudioPill(track: AudioTrackInfo?): String {
+    if (track == null) return "Audio"
+    val codecRaw = track.codec.trim()
+    val codec = when {
+        codecRaw.contains("E-AC-3", true) || codecRaw.contains("Dolby Digital Plus", true) -> "E-AC-3"
+        codecRaw.contains("AC-3", true) || codecRaw.contains("Dolby Digital", true) -> "AC-3"
+        codecRaw.contains("TrueHD", true) -> "TrueHD"
+        codecRaw.contains("Atmos", true) -> "Atmos"
+        codecRaw.contains("DTS-HD MA", true) || codecRaw.contains("Master Audio", true) -> "DTS-HD MA"
+        codecRaw.contains("DTS-HD", true) -> "DTS-HD"
+        codecRaw.contains("DTS", true) -> "DTS"
+        codecRaw.contains("FLAC", true) -> "FLAC"
+        codecRaw.contains("Opus", true) -> "Opus"
+        codecRaw.contains("AAC", true) -> "AAC"
+        codecRaw.contains("MP3", true) -> "MP3"
+        codecRaw.isNotBlank() -> codecRaw.take(6)
+        else -> "Audio"
+    }
+
+    val channelsRaw = track.channels.trim()
+    val ch = when {
+        channelsRaw.contains("7.1", true) || channelsRaw.contains("8", true) -> "7.1"
+        channelsRaw.contains("5.1", true) || channelsRaw.contains("6", true) -> "5.1"
+        channelsRaw.contains("2.1", true) -> "2.1"
+        channelsRaw.contains("Stereo", true) || channelsRaw.contains("2", true) -> "2.0"
+        channelsRaw.contains("Mono", true) || channelsRaw.contains("1", true) -> "1.0"
+        else -> ""
+    }
+
+    return if (ch.isNotBlank()) "$codec $ch" else codec
+}
+
+private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
+    if (track == null) return "Subs Off"
+    val lang = track.language.trim()
+    val label = track.label.trim()
+    return when {
+        lang.isNotBlank() && !lang.equals("und", true) -> {
+            lang.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.ROOT) else it.toString() }.take(8)
+        }
+        label.isNotBlank() -> label.substringBefore(" (").substringBefore(" -").take(8)
+        else -> "Sub"
+    }
+}
+
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable fun CinemaPlayer(
@@ -865,23 +910,8 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                 }
                             }
 
-                            // Top-Right Icons: Decoder Badge, PiP & More Options
+                            // Top-Right Icons: PiP & More Options
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                val isHw = playback.runtimeVideoDecoder?.hardware != DecoderHardware.SOFTWARE
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = if (isHw) Color(0xFF10B981).copy(alpha = 0.20f) else TimelineAccent.copy(alpha = 0.20f),
-                                    border = BorderStroke(1.dp, if (isHw) Color(0xFF10B981).copy(alpha = 0.40f) else TimelineAccent.copy(alpha = 0.40f))
-                                ) {
-                                    Text(
-                                        if (isHw) "MediaCodec HW+" else "NextLib SW",
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isHw) Color(0xFF34D399) else TimelineAccent
-                                    )
-                                }
-
                                 FrostedCircleButton(
                                     label = "Picture-in-Picture",
                                     onClick = { activity.enterCinemaPip(); interaction++ },
@@ -1122,31 +1152,47 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     ) {
                                         Row(
                                             modifier = Modifier
-                                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                                .padding(horizontal = 10.dp, vertical = 6.dp)
                                                 .fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            horizontalArrangement = Arrangement.SpaceEvenly,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             val audioTrack = playback.audioTracks.firstOrNull { it.isSelected }
-                                            val audioText = audioTrack?.let { "${it.codec} ${it.channels}" } ?: "Audio"
+                                            val audioText = formatCompactAudioPill(audioTrack)
                                             SpatialTactilePill(
                                                 onClick = { quickMenuSection = if (quickMenuSection == "audio") null else "audio"; interaction++ },
                                                 isActive = quickMenuSection == "audio",
                                                 isOled = isAmoled
                                             ) {
-                                                Icon(Icons.Rounded.GraphicEq, null, Modifier.size(13.dp), tint = TimelineAccent)
-                                                Text(audioText, color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                                Icon(Icons.Rounded.GraphicEq, null, Modifier.size(13.dp), tint = if (quickMenuSection == "audio") SpatialGlass.Obsidian else TimelineAccent)
+                                                Spacer(Modifier.width(3.dp))
+                                                Text(
+                                                    audioText,
+                                                    color = if (quickMenuSection == "audio") SpatialGlass.Obsidian else playerContentColor,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    maxLines = 1,
+                                                    softWrap = false
+                                                )
                                             }
 
                                             val subTrack = playback.subtitleTracks.firstOrNull { it.isSelected }
-                                            val subText = subTrack?.label ?: "Subs Off"
+                                            val subText = formatCompactSubtitlePill(subTrack)
                                             SpatialTactilePill(
                                                 onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ },
                                                 isActive = quickMenuSection == "subs" || subTrack != null,
                                                 isOled = isAmoled
                                             ) {
-                                                Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(13.dp), tint = playerContentColor)
-                                                Text(subText, color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                                Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(13.dp), tint = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor)
+                                                Spacer(Modifier.width(3.dp))
+                                                Text(
+                                                    subText,
+                                                    color = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    maxLines = 1,
+                                                    softWrap = false
+                                                )
                                             }
 
                                             SpatialTactilePill(
@@ -1163,7 +1209,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                                 },
                                                 isOled = isAmoled
                                             ) {
-                                                Text("${playback.speed}x", color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                Text("${playback.speed}x", color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                                             }
 
                                             val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
@@ -1178,7 +1224,8 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                                 isOled = isAmoled
                                             ) {
                                                 Icon(Icons.Rounded.AspectRatio, null, Modifier.size(13.dp), tint = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor)
-                                                Text(if (isZoomMode) "Zoom" else "Fit", color = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                                Spacer(Modifier.width(3.dp))
+                                                Text(if (isZoomMode) "Zoom" else "Fit", color = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
                                             }
 
                                             IconButton(
@@ -1197,7 +1244,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        timelineCapsule(Modifier.weight(1.2f))
+                                        timelineCapsule(Modifier.weight(1.0f))
                                         streamActionsCapsule(Modifier.weight(1.0f))
                                     }
                                 } else {
