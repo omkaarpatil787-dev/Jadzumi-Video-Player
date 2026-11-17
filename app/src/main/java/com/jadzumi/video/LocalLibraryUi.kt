@@ -829,56 +829,21 @@ fun JadzumiCategoryPillsRow(
     ) {
         categories.forEach { cat ->
             val isSelected = cat == selectedCategory || (cat == "Series" && (selectedCategory == "TV Shows" || selectedCategory == "Series"))
-            val pillElevation by animateDpAsState(
-                targetValue = if (isSelected) 2.dp else 0.dp,
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
-                label = "cat_pill_elev_$cat"
-            )
-            val unselectedTextColor = if (isLight) Color(0xFF5A526B) else MoonlitSecondaryText
-            val unselectedBgColor = if (isLight) Color(0xFFEDE7F6) else Color(0xFF262234).copy(alpha = 0.65f)
-            val unselectedBorderColor = if (isLight) Color(0xFFD7CCE8) else Color.White.copy(alpha = 0.08f)
-
-            val pillText by animateColorAsState(
-                targetValue = if (isSelected) Obsidian else unselectedTextColor,
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
-                label = "cat_pill_txt_$cat"
-            )
-
-            Box(
-                modifier = Modifier
-                    .shadow(
-                        elevation = pillElevation,
-                        shape = RoundedCornerShape(999.dp),
-                        spotColor = if (isSelected) LavenderAccent.copy(alpha = 0.35f) else Color.Black.copy(alpha = if (isLight) 0.04f else 0.15f)
-                    )
-                    .clip(RoundedCornerShape(999.dp))
-                    .then(
-                        if (isSelected) {
-                            Modifier
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(Color(0xFFC4A8FB), Color(0xFF986FF5))
-                                    )
-                                )
-                                .border(
-                                    BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
-                                    RoundedCornerShape(999.dp)
-                                )
-                        } else {
-                            Modifier
-                                .background(SpatialGlass.subCardBg(theme))
-                                .border(SpatialGlass.cardBorder(theme, 1.dp), RoundedCornerShape(999.dp))
-                        }
-                    )
-                    .clickable { onCategorySelected(if (cat == "Series") "TV Shows" else cat) }
-                    .touchMotion()
+            MaterialExpressivePill(
+                isSelected = isSelected,
+                onClick = { onCategorySelected(if (cat == "Series") "TV Shows" else cat) },
+                theme = theme
             ) {
                 Text(
                     text = cat,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                    modifier = Modifier.padding(horizontal = 4.dp),
                     fontSize = 12.5.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = pillText,
+                    color = if (isSelected) {
+                        if (isLight) MaterialExpressive.OnPrimaryContainerLight else MaterialExpressive.OnPrimaryDark
+                    } else {
+                        if (isLight) MaterialExpressive.TextSecondaryLight else MaterialExpressive.TextSecondaryDark
+                    },
                     maxLines = 1
                 )
             }

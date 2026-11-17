@@ -1,3 +1,24 @@
+# Jadzumi v2.3.6 — Google Pixel Material 3 Expressive UI & Spatial Glass Player Isolation
+
+A major architectural and design refinement introducing Google Pixel Flagship Material 3 Expressive surfaces across all catalog, library, details, inspector, and settings screens, while keeping Spatial Glass optics dedicated exclusively to the Now Playing video player HUD.
+
+### 1. Dual-Metaphor Architecture
+- **Dedicated Player Spatial Glass**: Retained 100% of translucent Spatial Glass optics, specular hairline rims, and live video ambilight in the Now Playing playback HUD (Floating Island Scrubber, Center Control Capsule, Quick Island Menu, Gesture HUD, and Lock Pill).
+- **Grounded Browsing Experience**: Replaced translucent glass outside the player with grounded, high-contrast Material 3 Expressive surfaces, eliminating poster glare, reflection artifacts, and box-corner clashing across the browsing experience.
+
+### 2. Google Pixel Material 3 Expressive Design System
+- **Tonal Container Hierarchy**: Implemented structured tonal containers (`surfaceContainerLowest` through `surfaceContainerHighest`) across Dark, Light, and AMOLED modes for clean, natural elevation stepping.
+- **Pixel Capsule Pills (`MaterialExpressivePill`)**: Introduced 999dp full-capsule pill components with spring micro-press kinetics, tactile haptic feedback, and vibrant primary-container active fills with high-contrast typography.
+- **20dp Squircle Container Cards (`MaterialExpressiveCard`)**: Standardized all media cards, hero cards, and settings panels on 20dp squircle geometry with subtle 0.75dp hairline contours and soft tonal elevation.
+
+### 3. Screen-by-Screen Enhancements
+- **Main Library & Search**: Search bar upgraded to a clean Material Expressive capsule with subtle outline contour; category pills (*Movies, Series, Anime*) powered by `MaterialExpressivePill`.
+- **Movie & TV Show Details**: Subtabs (*Overview, Cast, Details, Related* / *Episodes, Cast, Specs*) upgraded to Material Expressive capsules; season selectors and episode cards upgraded to grounded tonal cards.
+- **Media Inspector 2.0**: The 4 Bento technical cards now render in solid tonal containers with high-contrast spec chips, maximizing legibility for 4K HDR, audio channels, and bitrate metadata.
+- **Settings & Dialogs**: App configuration panels upgraded to clean M3 Expressive surfaces with subtle 1dp/2dp elevation.
+
+---
+
 # Jadzumi v2.3.5 — Curved Specular Optics, Sharp Box Elimination & Continuous Horizontal Pager
 
 A dedicated optical refinement and interaction release curving specular edge reflections naturally around pill/card arcs, eliminating child clipping bleed across all media containers, and introducing continuous swipe and sliding motion between Movies, Series, and Anime.

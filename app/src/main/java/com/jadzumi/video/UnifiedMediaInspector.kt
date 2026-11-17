@@ -42,9 +42,9 @@ internal fun UnifiedMediaInspectorCard(
 
     val theme = LocalThemeName.current
     val isLight = theme == "Light"
-    val cardBg = SpatialGlass.cardBg(theme)
-    val cardBorder = SpatialGlass.cardBorder(theme, 1.dp)
-    val cardElevation = if (isLight) 6.dp else 10.dp
+    val cardBg = MaterialExpressive.cardBg(theme)
+    val cardBorder = MaterialExpressive.cardBorder(theme)
+    val cardElevation = MaterialExpressive.cardElevation(theme)
 
     Column(
         modifier = modifier.fillMaxWidth(),

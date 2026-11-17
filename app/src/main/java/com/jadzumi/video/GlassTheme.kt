@@ -1,5 +1,6 @@
 package com.jadzumi.video
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -199,29 +201,17 @@ object SpatialGlass {
     }
 
     /**
-     * Theme-adaptive card background color.
+     * Non-player surfaces delegate directly to Material 3 Expressive tokens.
      */
-    fun cardBg(theme: String): Color {
-        return when (theme) {
-            "Light" -> LightPorcelainBg
-            "AMOLED" -> Color(0xFC06050A)
-            else -> Color(0xF0161224)
-        }
-    }
+    fun cardBg(theme: String): Color = MaterialExpressive.cardBg(theme)
 
     /**
-     * Theme-adaptive sub-card or inset background color.
+     * Non-player sub-card or inset surfaces delegate to Material 3 Expressive containerHigh.
      */
-    fun subCardBg(theme: String): Color {
-        return when (theme) {
-            "Light" -> LightPorcelainSubBg
-            "AMOLED" -> Color(0x99181427)
-            else -> Color(0x80231E35)
-        }
-    }
+    fun subCardBg(theme: String): Color = MaterialExpressive.subCardBg(theme)
 
     /**
-     * Curved specular hairline rim gradient for pills.
+     * Curved specular hairline rim gradient for pills (Used exclusively in CinemaPlayer HUD).
      * Uses a subtle 45-degree diagonal refraction vector so the specular highlight
      * organically curves around the rounded corner arcs instead of cutting across vertically.
      */
@@ -239,46 +229,237 @@ object SpatialGlass {
     }
 
     /**
-     * Theme-adaptive curved specular hairline rim brush for cards.
-     * Refracts light diagonally across the 20dp corner arcs for smooth organic curvature.
-     */
-    fun cardBorderBrush(theme: String, alphaBoost: Float = 1.0f): Brush {
-        return if (theme == "Light") {
-            Brush.linearGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = (0.85f * alphaBoost).coerceIn(0f, 1f)),
-                    Color(0xFFE8E2F2).copy(alpha = (0.50f * alphaBoost).coerceIn(0f, 1f)),
-                    Color(0x1F544878)
-                ),
-                start = Offset(0f, 0f),
-                end = Offset.Infinite
-            )
-        } else {
-            Brush.linearGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = (0.20f * alphaBoost).coerceIn(0f, 1f)),
-                    Color.White.copy(alpha = (0.08f * alphaBoost).coerceIn(0f, 1f)),
-                    Color.White.copy(alpha = (0.02f * alphaBoost).coerceIn(0f, 1f)),
-                    Color.Transparent
-                ),
-                start = Offset(0f, 0f),
-                end = Offset.Infinite
-            )
-        }
-    }
-
-    /**
-     * Specular rim border stroke for pills.
+     * Specular rim border stroke for pills (Used exclusively in CinemaPlayer HUD).
      */
     fun pillBorder(strokeWidth: Dp = 1.dp, alphaBoost: Float = 1.0f): BorderStroke {
         return BorderStroke(strokeWidth, specularRimBrush(alphaBoost))
     }
 
     /**
-     * Theme-adaptive border stroke for 20dp cards.
+     * Theme-adaptive border stroke for cards (delegates to MaterialExpressive hairline contour).
      */
-    fun cardBorder(theme: String, strokeWidth: Dp = 1.dp, alphaBoost: Float = 1.0f): BorderStroke {
-        return BorderStroke(strokeWidth, cardBorderBrush(theme, alphaBoost))
+    fun cardBorder(theme: String, strokeWidth: Dp = 0.75.dp, alphaBoost: Float = 1.0f): BorderStroke {
+        return MaterialExpressive.cardBorder(theme, strokeWidth)
+    }
+
+    fun cardBorderBrush(theme: String, alphaBoost: Float = 1.0f): Brush {
+        val color = if (theme == "Light") Color(0x1F79747E) else Color(0x1FFFFFFF)
+        return Brush.verticalGradient(listOf(color, color))
+    }
+}
+
+/**
+ * Google Pixel Flagship Material 3 Expressive Design System
+ * Powers all non-player surfaces across Library, Movie & TV Details, Media Inspector, and Settings:
+ * - Fluid Tonal Containers: surfaceContainerLowest -> surfaceContainerHigh
+ * - Flagship 999.dp Pill Geometry with high-contrast active containers
+ * - Zero Glass Glare / Reflections over media posters and metadata
+ * - Flawless Light Mode with warm pastel lavender/slate tonal surfaces
+ */
+object MaterialExpressive {
+    // Dark Theme Container Hierarchy (Cinematic Dark Tonal)
+    val DarkContainerLowest = Color(0xFF0F0D17)
+    val DarkContainerLow = Color(0xFF161322)
+    val DarkContainer = Color(0xFF1D192B)
+    val DarkContainerHigh = Color(0xFF262137)
+    val DarkContainerHighest = Color(0xFF312B45)
+
+    // Light Theme Container Hierarchy (Pixel Expressive Light)
+    val LightContainerLowest = Color(0xFFFFFFFF)
+    val LightContainerLow = Color(0xFFF7F2FA)
+    val LightContainer = Color(0xFFF3EDF7)
+    val LightContainerHigh = Color(0xFFECE6F0)
+    val LightContainerHighest = Color(0xFFE6E0E9)
+
+    // AMOLED Theme Container Hierarchy
+    val AmoledContainerLowest = Color(0xFF000000)
+    val AmoledContainerLow = Color(0xFF07050A)
+    val AmoledContainer = Color(0xFF0F0D16)
+    val AmoledContainerHigh = Color(0xFF181522)
+    val AmoledContainerHighest = Color(0xFF241F32)
+
+    // Expressive Primary Accents
+    val PrimaryDark = Color(0xFFD0BCFF)
+    val OnPrimaryDark = Color(0xFF381E72)
+    val PrimaryContainerDark = Color(0xFF4F378B)
+    val OnPrimaryContainerDark = Color(0xFFEADDFF)
+
+    val PrimaryLight = Color(0xFF6750A4)
+    val OnPrimaryLight = Color(0xFFFFFFFF)
+    val PrimaryContainerLight = Color(0xFFEADDFF)
+    val OnPrimaryContainerLight = Color(0xFF21005D)
+
+    // Typography Tones
+    val TextPrimaryDark = Color(0xFFE6E1E5)
+    val TextSecondaryDark = Color(0xFFCAC4D0)
+    val TextPrimaryLight = Color(0xFF1D1B20)
+    val TextSecondaryLight = Color(0xFF49454F)
+
+    fun cardBg(theme: String): Color {
+        return when (theme) {
+            "Light" -> LightContainer
+            "AMOLED" -> AmoledContainer
+            else -> DarkContainer
+        }
+    }
+
+    fun subCardBg(theme: String): Color {
+        return when (theme) {
+            "Light" -> LightContainerHigh
+            "AMOLED" -> AmoledContainerHigh
+            else -> DarkContainerHigh
+        }
+    }
+
+    fun containerLowest(theme: String): Color {
+        return when (theme) {
+            "Light" -> LightContainerLowest
+            "AMOLED" -> AmoledContainerLowest
+            else -> DarkContainerLowest
+        }
+    }
+
+    fun cardBorder(theme: String, strokeWidth: Dp = 0.75.dp): BorderStroke {
+        val color = when (theme) {
+            "Light" -> Color(0x1F79747E)
+            "AMOLED" -> Color(0x26FFFFFF)
+            else -> Color(0x1FFFFFFF)
+        }
+        return BorderStroke(strokeWidth, color)
+    }
+
+    fun cardElevation(theme: String): Dp {
+        return if (theme == "Light") 2.dp else 1.dp
+    }
+}
+
+/**
+ * Material 3 Expressive Pill Composable (Pixel Flagship Capsule).
+ * Used for Library, Details Tabs, and Filters outside the player.
+ */
+@Composable
+fun MaterialExpressivePill(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
+    selected: Boolean = false,
+    theme: String = LocalThemeName.current,
+    content: @Composable RowScope.() -> Unit
+) {
+    val active = isSelected || selected
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "m3PillScale"
+    )
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+    }
+
+    val isLight = theme == "Light"
+    val bgColor by animateColorAsState(
+        targetValue = when {
+            active && isLight -> MaterialExpressive.PrimaryContainerLight
+            active -> MaterialExpressive.PrimaryDark
+            isLight -> MaterialExpressive.LightContainerHigh
+            theme == "AMOLED" -> MaterialExpressive.AmoledContainerHigh
+            else -> MaterialExpressive.DarkContainerHigh
+        },
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
+        label = "m3PillBgColor"
+    )
+
+    val borderStroke = when {
+        active && isLight -> BorderStroke(1.dp, Color(0x336750A4))
+        active -> BorderStroke(1.dp, Color(0x44D0BCFF))
+        isLight -> BorderStroke(0.75.dp, Color(0x1F79747E))
+        else -> BorderStroke(0.75.dp, Color(0x1FFFFFFF))
+    }
+
+    Surface(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.shape = RoundedCornerShape(999.dp)
+                clip = true
+            }
+            .clip(RoundedCornerShape(999.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        shape = RoundedCornerShape(999.dp),
+        color = bgColor,
+        border = borderStroke,
+        shadowElevation = if (active) (if (isLight) 2.dp else 1.dp) else 0.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            content = content
+        )
+    }
+}
+
+/**
+ * Material 3 Expressive Card Composable (20.dp rounded corners with tonal elevation).
+ */
+@Composable
+fun MaterialExpressiveCard(
+    modifier: Modifier = Modifier,
+    theme: String = LocalThemeName.current,
+    onClick: (() -> Unit)? = null,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(20.dp),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (onClick != null && isPressed) 0.985f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "m3CardScale"
+    )
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(isPressed) {
+        if (onClick != null && isPressed) {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+    }
+
+    val isLight = theme == "Light"
+
+    Surface(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.shape = shape
+                clip = true
+            }
+            .clip(shape)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = onClick
+                    )
+                } else Modifier
+            ),
+        shape = shape,
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = if (isLight) 2.dp else 1.dp
+    ) {
+        Column(content = content)
     }
 }
 
@@ -324,7 +505,7 @@ fun SpatialTactilePill(
     val borderStroke = when {
         active && isLight -> BorderStroke(1.dp, Color(0xFF551CA8))
         active -> BorderStroke(1.dp, Color(0xFFD4C2FA))
-        else -> SpatialGlass.cardBorder(if (isLight) "Light" else "Dark", 1.dp, if (isPressed) 1.5f else 1.0f)
+        else -> SpatialGlass.pillBorder(1.dp, if (isPressed) 1.5f else 1.0f)
     }
 
     Surface(

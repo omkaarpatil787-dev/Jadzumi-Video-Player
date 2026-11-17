@@ -232,17 +232,21 @@ fun TvShowDetailsPage(
                 ) {
                     tvSubtabs.forEach { tab ->
                         val isSelected = tab == tvSubtab
-                        SpatialTactilePill(
-                            selected = isSelected,
+                        MaterialExpressivePill(
+                            isSelected = isSelected,
                             onClick = { tvSubtab = tab },
                             theme = theme
                         ) {
                             Text(
                                 text = tab,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                                modifier = Modifier.padding(horizontal = 4.dp),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) Color.White else (if (isLight) SpatialGlass.LightPrimaryText.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.75f))
+                                color = if (isSelected) {
+                                    if (isLight) MaterialExpressive.OnPrimaryContainerLight else MaterialExpressive.OnPrimaryDark
+                                } else {
+                                    if (isLight) MaterialExpressive.TextSecondaryLight else MaterialExpressive.TextSecondaryDark
+                                }
                             )
                         }
                     }

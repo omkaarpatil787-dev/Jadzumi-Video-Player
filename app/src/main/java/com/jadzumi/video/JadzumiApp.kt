@@ -447,8 +447,8 @@ private val destinations = listOf(
                                                     .widthIn(min = 220.dp, max = 340.dp)
                                                     .height(42.dp),
                                                 shape = RoundedCornerShape(999.dp),
-                                                color = SpatialGlass.cardBg(effectiveTheme),
-                                                border = SpatialGlass.cardBorder(effectiveTheme, 1.dp)
+                                                color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                border = MaterialExpressive.cardBorder(effectiveTheme)
                                             ) {
                                                 Row(
                                                     Modifier
@@ -521,8 +521,8 @@ private val destinations = listOf(
                                                 Surface(
                                                     onClick = { showStorageSheet = true },
                                                     shape = CircleShape,
-                                                    color = SpatialGlass.subCardBg(effectiveTheme),
-                                                    border = SpatialGlass.cardBorder(effectiveTheme, 1.dp)
+                                                    color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                    border = MaterialExpressive.cardBorder(effectiveTheme)
                                                 ) {
                                                     Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
                                                         Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
@@ -532,8 +532,8 @@ private val destinations = listOf(
                                                     onClick = { library.rescan() },
                                                     enabled = !localState.busy && localState.folders.isNotEmpty(),
                                                     shape = CircleShape,
-                                                    color = SpatialGlass.subCardBg(effectiveTheme),
-                                                    border = SpatialGlass.cardBorder(effectiveTheme, 1.dp)
+                                                    color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                    border = MaterialExpressive.cardBorder(effectiveTheme)
                                                 ) {
                                                     Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
                                                         if (localState.busy) {
@@ -2794,9 +2794,9 @@ private fun Panel(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 4.dp else 8.dp
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(
             modifier = Modifier
