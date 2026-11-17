@@ -216,22 +216,14 @@ object SpatialGlass {
      * organically curves around the rounded corner arcs instead of cutting across vertically.
      */
     fun specularRimBrush(alphaBoost: Float = 1.0f): Brush {
-        return Brush.linearGradient(
-            colors = listOf(
-                Color.White.copy(alpha = (0.24f * alphaBoost).coerceIn(0f, 1f)),
-                Color.White.copy(alpha = (0.10f * alphaBoost).coerceIn(0f, 1f)),
-                Color.White.copy(alpha = (0.03f * alphaBoost).coerceIn(0f, 1f)),
-                Color.Transparent
-            ),
-            start = Offset(0f, 0f),
-            end = Offset.Infinite
-        )
+        val color = Color.White.copy(alpha = (0.09f * alphaBoost).coerceIn(0.06f, 0.14f))
+        return Brush.verticalGradient(listOf(color, color))
     }
 
     /**
      * Specular rim border stroke for pills (Used exclusively in CinemaPlayer HUD).
      */
-    fun pillBorder(strokeWidth: Dp = 1.dp, alphaBoost: Float = 1.0f): BorderStroke {
+    fun pillBorder(strokeWidth: Dp = 0.75.dp, alphaBoost: Float = 1.0f): BorderStroke {
         return BorderStroke(strokeWidth, specularRimBrush(alphaBoost))
     }
 
@@ -322,14 +314,14 @@ object MaterialExpressive {
     fun cardBorder(theme: String, strokeWidth: Dp = 0.75.dp): BorderStroke {
         val color = when (theme) {
             "Light" -> Color(0x1F79747E)
-            "AMOLED" -> Color(0x26FFFFFF)
-            else -> Color(0x1FFFFFFF)
+            "AMOLED" -> Color(0x14FFFFFF)
+            else -> Color(0x14FFFFFF)
         }
         return BorderStroke(strokeWidth, color)
     }
 
     fun cardElevation(theme: String): Dp {
-        return if (theme == "Light") 2.dp else 1.dp
+        return 0.dp
     }
 }
 

@@ -1,3 +1,20 @@
+# Jadzumi v3.3.1 — Clean Flat Material 3 Expressive Architecture, Upper-Right Dynamic Action Pill & Subtitle Unobstructed Baseline
+
+A design system refinement release delivering a pure flat Material 3 Expressive architecture (elevation = 0dp), an upper-right dynamic action pill, an edge-to-edge baseline hairline scrubber with zero subtitle collision, and hairline 0.75dp muted contours across Dark, AMOLED, and Light themes.
+
+### 1. Pure Flat Material 3 Expressive Architecture
+- **Global Elevation Zero**: Eliminated artificial Android drop shadows across cards, panels, and surfaces in Dark and AMOLED modes. Surface depth is communicated purely through flat tonal luminance shifts (`surfaceContainerLowest` to `surfaceContainerLow`).
+- **Muted Hairline Contours (0.75dp)**: Replaced high-contrast specular white outlines with subtle, uniform hairline strokes (8% alpha in Dark/AMOLED, 16% stone in Light) to remove 3D beveled rims and embossed artifacts.
+- **Unified Corner Geometry Scale**: Standardized corner radii across the app (`8dp` for badges/switches, `20dp` for cards and panels, `CircleShape` for action pills).
+
+### 2. Upper-Right Dynamic Action Pill & Baseline Scrubber
+- **Upper-Right Consolidation**: Relocated all primary stream actions (`Audio`, `Subtitles`, `Speed`, `Aspect Ratio`, `PiP`, `Settings`, and `Screen Lock`) into a sleek, non-intrusive floating micro-pill in the upper-right corner.
+- **Hairline Baseline Scrubber**: Replaced bulky split bottom capsules with a minimal edge-to-edge baseline timeline track.
+- **Uncompromised Subtitle Freedom**: Decoupled the bottom deck from subtitles, ensuring subtitles have 100% vertical headroom with zero overlap or border collision.
+- **Center Ghost Seeking Preserved**: Maintained the user-approved 48dp ghost outline play/pause ring flanked by 10s back and forward steppers.
+
+---
+
 # Jadzumi v3.3.0 — Precision Audio & Subtitle Sync Studio, Sonic Pitch Preservation, Refined HUD 3 & SQLite Watch Intelligence
 
 A focused playback fidelity, audio-video synchronization, and data layer release delivering real-time lip-sync calibration, NextLib live subtitle delay, natural Sonic pitch preservation, refined HUD 3 compact pills, and native SQLite watch intelligence.

@@ -117,8 +117,8 @@ fun WelcomeOnboardingCard(
         modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 2.dp else 4.dp
+        border = SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -172,8 +172,8 @@ fun WelcomeOnboardingCard(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 2.dp else 4.dp
+        border = SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -473,8 +473,8 @@ private fun ContinueWatchingCard(
             .touchMotion(),
         shape = RoundedCornerShape(20.dp),
         color = Charcoal,
-        border = SpatialGlass.cardBorder(LocalThemeName.current, 1.dp),
-        shadowElevation = 2.dp
+        border = SpatialGlass.cardBorder(LocalThemeName.current, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(LocalThemeName.current)
     ) {
         Box(Modifier.fillMaxSize()) {
             if (video != null) {
@@ -2724,8 +2724,8 @@ fun MovieSummaryCard(
             .touchMotion(),
         shape = RoundedCornerShape(cardRadius),
         color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 3.dp else 6.dp
+        border = SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -3015,8 +3015,8 @@ fun TvSeriesSummaryCard(
             .touchMotion(),
         shape = RoundedCornerShape(cardRadius),
         color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 3.dp else 6.dp
+        border = SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -3236,9 +3236,9 @@ fun TvSeriesSummaryCard(
                 onLongClick = onLongClick
             ),
         color = SpatialGlass.cardBg(theme),
-        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp),
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 0.75.dp),
         shape = RoundedCornerShape(20.dp),
-        shadowElevation = if (theme == "Light") 2.dp else 4.dp
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
             val compact = maxWidth < 460.dp
@@ -3344,8 +3344,8 @@ private fun LocalPosterGridCard(
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
-        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 2.dp else 4.dp,
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme),
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
@@ -3839,8 +3839,8 @@ private fun FranchiseCard(
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 2.dp else 4.dp,
+        border = SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme),
         modifier = Modifier
             .width(280.dp)
             .clip(RoundedCornerShape(20.dp))

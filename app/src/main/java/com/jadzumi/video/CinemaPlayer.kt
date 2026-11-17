@@ -910,26 +910,111 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                 }
                             }
 
-                            // Top-Right Icons: PiP & More Options
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                FrostedCircleButton(
-                                    label = "Picture-in-Picture",
-                                    onClick = { activity.enterCinemaPip(); interaction++ },
-                                    size = 42.dp,
-                                    bgColor = dynamicFrostedCircleBg,
-                                    rimColor = dynamicFrostedCircleRim
+                            // Top-Right: Clean Dynamic Capsule (All Stream Actions & PiP & More)
+                            Surface(
+                                shape = CircleShape,
+                                color = SpatialGlass.pillBg(isAmoled),
+                                border = SpatialGlass.pillBorder(0.75.dp),
+                                shadowElevation = 0.dp
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(19.dp))
-                                }
+                                    val audioTrack = playback.audioTracks.firstOrNull { it.isSelected }
+                                    val audioText = formatCompactAudioPill(audioTrack)
+                                    SpatialTactilePill(
+                                        onClick = { quickMenuSection = if (quickMenuSection == "audio") null else "audio"; interaction++ },
+                                        isActive = quickMenuSection == "audio",
+                                        isOled = isAmoled
+                                    ) {
+                                        Icon(Icons.Rounded.GraphicEq, null, Modifier.size(13.dp), tint = if (quickMenuSection == "audio") SpatialGlass.Obsidian else TimelineAccent)
+                                        Spacer(Modifier.width(3.dp))
+                                        Text(
+                                            audioText,
+                                            color = if (quickMenuSection == "audio") SpatialGlass.Obsidian else playerContentColor,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                    }
 
-                                FrostedCircleButton(
-                                    label = "More options",
-                                    onClick = { quickMenuSection = "main"; interaction++ },
-                                    size = 42.dp,
-                                    bgColor = dynamicFrostedCircleBg,
-                                    rimColor = dynamicFrostedCircleRim
-                                ) {
-                                    Icon(Icons.Rounded.MoreVert, "More", tint = playerContentColor, modifier = Modifier.size(20.dp))
+                                    val subTrack = playback.subtitleTracks.firstOrNull { it.isSelected }
+                                    val subText = formatCompactSubtitlePill(subTrack)
+                                    SpatialTactilePill(
+                                        onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ },
+                                        isActive = quickMenuSection == "subs" || subTrack != null,
+                                        isOled = isAmoled
+                                    ) {
+                                        Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(13.dp), tint = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor)
+                                        Spacer(Modifier.width(3.dp))
+                                        Text(
+                                            subText,
+                                            color = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                    }
+
+                                    SpatialTactilePill(
+                                        onClick = {
+                                            val next = when (playback.speed) {
+                                                1.0f -> 1.25f
+                                                1.25f -> 1.5f
+                                                2.0f -> 1.0f
+                                                else -> 1.0f
+                                            }
+                                            playback.changeSpeed(next)
+                                            message = "${next}x Speed"
+                                            interaction++
+                                        },
+                                        isOled = isAmoled
+                                    ) {
+                                        Text("${playback.speed}x", color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                                    }
+
+                                    val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
+                                    SpatialTactilePill(
+                                        onClick = {
+                                            val next = if (isZoomMode) AspectRatioMode.FIT else AspectRatioMode.ZOOM
+                                            playback.setAspectRatioMode(next)
+                                            message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
+                                            interaction++
+                                        },
+                                        isActive = isZoomMode,
+                                        isOled = isAmoled
+                                    ) {
+                                        Icon(Icons.Rounded.AspectRatio, null, Modifier.size(13.dp), tint = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor)
+                                        Spacer(Modifier.width(3.dp))
+                                        Text(if (isZoomMode) "Zoom" else "Fit", color = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+                                    }
+
+                                    SpatialTactilePill(
+                                        onClick = { activity.enterCinemaPip(); interaction++ },
+                                        isOled = isAmoled
+                                    ) {
+                                        Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(14.dp))
+                                    }
+
+                                    SpatialTactilePill(
+                                        onClick = { quickMenuSection = if (quickMenuSection == "main") null else "main"; interaction++ },
+                                        isActive = quickMenuSection == "main",
+                                        isOled = isAmoled
+                                    ) {
+                                        Icon(Icons.Rounded.MoreVert, "More", tint = if (quickMenuSection == "main") SpatialGlass.Obsidian else playerContentColor, modifier = Modifier.size(14.dp))
+                                    }
+
+                                    SpatialTactilePill(
+                                        onClick = { playback.locked = true; interaction++ },
+                                        isOled = isAmoled
+                                    ) {
+                                        Icon(Icons.Rounded.Lock, "Lock", tint = playerContentColor, modifier = Modifier.size(13.dp))
+                                    }
                                 }
                             }
                         }
@@ -1093,168 +1178,52 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                             val totalSec = (playback.duration / 1000).coerceAtLeast(0)
                             val pct = ((playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)) * 100).toInt().coerceIn(0, 100)
 
-                            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                                val isLandscape = maxWidth > maxHeight && maxWidth > 560.dp
-
-                                val timelineCapsule = @Composable { mod: Modifier ->
-                                    Surface(
-                                        modifier = mod,
-                                        shape = RoundedCornerShape(20.dp),
-                                        color = SpatialGlass.pillBg(isAmoled),
-                                        border = SpatialGlass.pillBorder(1.dp),
-                                        shadowElevation = 10.dp
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
-                                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    compactTimecode(elapsedSec),
-                                                    color = TimelineAccent,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Text(
-                                                    "${compactTimecode(totalSec)} ($pct%)",
-                                                    color = playerSubtextColor,
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Medium
-                                                )
+                            // Pure Flat Baseline Scrubber Deck (Elevation = 0dp, Zero Subtitle Collision)
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 4.dp),
+                                shape = CircleShape,
+                                color = SpatialGlass.pillBg(isAmoled),
+                                border = SpatialGlass.pillBorder(0.75.dp),
+                                shadowElevation = 0.dp
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 7.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        compactTimecode(elapsedSec),
+                                        color = TimelineAccent,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                    )
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        CinemaTimelineBar(
+                                            fraction = currentFraction,
+                                            bufferedFraction = bufferedFraction,
+                                            isScrubbing = scrub != null,
+                                            enabled = playback.seekable && playback.duration > 0,
+                                            chapters = playback.chapters,
+                                            onScrub = { scrub = it; interaction++ },
+                                            onScrubFinished = {
+                                                scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
+                                                scrub = null
                                             }
-                                            CinemaTimelineBar(
-                                                fraction = currentFraction,
-                                                bufferedFraction = bufferedFraction,
-                                                isScrubbing = scrub != null,
-                                                enabled = playback.seekable && playback.duration > 0,
-                                                chapters = playback.chapters,
-                                                onScrub = { scrub = it; interaction++ },
-                                                onScrubFinished = {
-                                                    scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
-                                                    scrub = null
-                                                }
-                                            )
-                                        }
+                                        )
                                     }
-                                }
-
-                                val streamActionsCapsule = @Composable { mod: Modifier ->
-                                    Surface(
-                                        modifier = mod,
-                                        shape = RoundedCornerShape(20.dp),
-                                        color = SpatialGlass.pillBg(isAmoled),
-                                        border = SpatialGlass.pillBorder(1.dp),
-                                        shadowElevation = 10.dp
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .padding(horizontal = 10.dp, vertical = 6.dp)
-                                                .fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceEvenly,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            val audioTrack = playback.audioTracks.firstOrNull { it.isSelected }
-                                            val audioText = formatCompactAudioPill(audioTrack)
-                                            SpatialTactilePill(
-                                                onClick = { quickMenuSection = if (quickMenuSection == "audio") null else "audio"; interaction++ },
-                                                isActive = quickMenuSection == "audio",
-                                                isOled = isAmoled
-                                            ) {
-                                                Icon(Icons.Rounded.GraphicEq, null, Modifier.size(13.dp), tint = if (quickMenuSection == "audio") SpatialGlass.Obsidian else TimelineAccent)
-                                                Spacer(Modifier.width(3.dp))
-                                                Text(
-                                                    audioText,
-                                                    color = if (quickMenuSection == "audio") SpatialGlass.Obsidian else playerContentColor,
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    maxLines = 1,
-                                                    softWrap = false
-                                                )
-                                            }
-
-                                            val subTrack = playback.subtitleTracks.firstOrNull { it.isSelected }
-                                            val subText = formatCompactSubtitlePill(subTrack)
-                                            SpatialTactilePill(
-                                                onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ },
-                                                isActive = quickMenuSection == "subs" || subTrack != null,
-                                                isOled = isAmoled
-                                            ) {
-                                                Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(13.dp), tint = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor)
-                                                Spacer(Modifier.width(3.dp))
-                                                Text(
-                                                    subText,
-                                                    color = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor,
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    maxLines = 1,
-                                                    softWrap = false
-                                                )
-                                            }
-
-                                            SpatialTactilePill(
-                                                onClick = {
-                                                    val next = when (playback.speed) {
-                                                        1.0f -> 1.25f
-                                                        1.25f -> 1.5f
-                                                        2.0f -> 1.0f
-                                                        else -> 1.0f
-                                                    }
-                                                    playback.changeSpeed(next)
-                                                    message = "${next}x Speed"
-                                                    interaction++
-                                                },
-                                                isOled = isAmoled
-                                            ) {
-                                                Text("${playback.speed}x", color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
-                                            }
-
-                                            val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
-                                            SpatialTactilePill(
-                                                onClick = {
-                                                    val next = if (isZoomMode) AspectRatioMode.FIT else AspectRatioMode.ZOOM
-                                                    playback.setAspectRatioMode(next)
-                                                    message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
-                                                    interaction++
-                                                },
-                                                isActive = isZoomMode,
-                                                isOled = isAmoled
-                                            ) {
-                                                Icon(Icons.Rounded.AspectRatio, null, Modifier.size(13.dp), tint = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor)
-                                                Spacer(Modifier.width(3.dp))
-                                                Text(if (isZoomMode) "Zoom" else "Fit", color = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
-                                            }
-
-                                            IconButton(
-                                                onClick = { playback.locked = true; interaction++ },
-                                                modifier = Modifier.size(28.dp)
-                                            ) {
-                                                Icon(Icons.Rounded.Lock, "Lock", Modifier.size(15.dp), tint = playerSubtextColor)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if (isLandscape) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        timelineCapsule(Modifier.weight(1.0f))
-                                        streamActionsCapsule(Modifier.weight(1.0f))
-                                    }
-                                } else {
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        timelineCapsule(Modifier.fillMaxWidth())
-                                        streamActionsCapsule(Modifier.fillMaxWidth())
-                                    }
+                                    val remainingSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                    Text(
+                                        "${compactTimecode(totalSec)} (-${compactTimecode(remainingSec)})",
+                                        color = playerSubtextColor,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                    )
                                 }
                             }
                         }
