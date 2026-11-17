@@ -1,3 +1,40 @@
+# Jadzumi v3.0.0 — Ground-Up Architecture Refresh & Unified Living Motion
+
+A landmark release transforming Jadzumi Video Player from the ground up: unifying the app under a single 6% Shared-Axis Spring Motion signature, introducing the Clean Rails Flow library catalog, the Cinephile Stream Deck details page, the hierarchical Material 3 Expressive Settings Hub, and the refined Style C Ghost Seeking playback HUD.
+
+### 1. Unified Living Motion Engine
+- **Universal 6% Shared-Axis Spring Drift**: Standardized navigation transitions across the entire app on a 6% horizontal spring drift with cubic-bezier easing (`0.22, 1.0, 0.36, 1.0`).
+- **Seamless Surfaces**: Governs Home to Settings navigation, tap-to-switch category browsing across Movies, TV Shows, and Anime, and drill-down navigation into sub-settings pages.
+- **Gesture Decoupling**: Replaced full-screen horizontal page dragging with pure tap-driven spring motion, eliminating conflicts with vertical scrolling.
+
+### 2. Unified Library Catalog: Clean Rails Flow
+- **Zero Resolution Fragmentation**: Completely eliminated arbitrary 4K, 1080p, and 720p quality divider tabs. All media resides together naturally in its designated category.
+- **Direct Continue Watching Shelf**: Opens directly with an interactive Continue Watching shelf with exact watch progress lines, remaining duration, and instant play capsules, removing redundant hero resume banners.
+- **Universal 2:3 Poster Grid**: Standardized 2:3 vertical poster cards with 16dp rounded corners and consistent typography across Movies, Shows, and Anime.
+- **First-Class Anime Support**: Authentic dual-title presentation with English and Japanese Romaji/Kanji, animation studio tags, and dual-audio format chips.
+- **Purged Offline Clutter**: Removed all redundant "100% offline" and sidecar warning notices from browsing catalog cards.
+
+### 3. Media Details: The Cinephile Stream Deck
+- **Purged Clutter**: Removed cast rosters, external YouTube trailer links, and generic bookmarks.
+- **Offline Audio & Subtitle Track Pre-Selector**: Inspect and pre-select audio channels (e.g. 5.1 Surround vs. Commentary) and subtitle streams (ASS Styled vs. Off) before starting playback.
+- **Technical Stream Specs Bento Grid**: Real-time readout of MediaCodec HW+ status, video profile, resolution, color space (HDR10+ / BT.2020), and bitrate.
+- **Dual Play Dock**: High-contrast primary Resume capsule with integrated progress bar alongside a dedicated Start Over button.
+- **100% Adaptive Light & Dark Engine**: Pixel-perfect Material 3 Expressive semantic tokens with deep contrast across both themes.
+
+### 4. Settings & Sub-Settings: Hierarchical Hub
+- **Grouped Category Cards**: Replaced the 1,500-line monolithic filter-chip row with clean grouped cards: Playback & Engine, Controls & Interface, and System & About.
+- **6% Shared-Axis Drill-Down**: Silky forward slide into focused sub-settings pages and reverse slide on back navigation.
+- **Device & Storage Meter**: Real-time storage meter breaking down media consumption across Movies, TV Shows, and Anime.
+- **Dedicated Offline Privacy Documentation**: Official offline architecture information centralized in Settings > About.
+
+### 5. Now Playing HUD: Style C Ghost Minimal Seeking
+- **Ghost Outline Seeking Controls**: Replaced bulky chapter buttons with borderless, minimalist vector seek icons and a delicate translucent outline play/pause ring.
+- **Top Stream Telemetry**: Header displays video codec profile, bitrate, HDR10+, and MediaCodec HW+ acceleration status.
+- **Bottom Split Capsules**: Distinct Spatial Glass pods for timeline scrubbing and direct 1-tap audio/subtitle switching.
+- **Spatial Glass 2.0**: Retains 100% frosted acrylic optics exclusively inside the video player HUD.
+
+---
+
 # Jadzumi v2.3.7 — Option A: Full Continuous Spring Slide Navigation
 
 A motion physics release implementing Option A continuous spring sliding across Movies, Series, and Anime, perfectly matching the fluid shared-axis transitions of the Home and Settings tabs.

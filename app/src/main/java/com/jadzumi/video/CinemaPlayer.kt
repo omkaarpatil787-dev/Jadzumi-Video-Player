@@ -833,17 +833,16 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                             }
                         }
 
-                        // PANEL 1: CENTRAL UNIFIED SPATIAL GLASS ISLAND CAPSULE (Rewind, Play/Pause, Forward)
+                        // PANEL 1: CENTRAL MINIMALIST GHOST SEEK & PLAY/PAUSE (Style C - Borderless Vector Minimalism)
                         Surface(
                             modifier = Modifier.align(Alignment.Center),
-                            shape = RoundedCornerShape(999.dp),
-                            color = SpatialGlass.pillBg(isAmoled),
-                            border = SpatialGlass.pillBorder(1.dp),
-                            shadowElevation = 14.dp
+                            shape = CircleShape,
+                            color = Color.Transparent,
+                            shadowElevation = 0.dp
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 AnimatedSeekCircleButton(
@@ -867,20 +866,15 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     size = 46.dp,
                                     bgColor = Color.Transparent,
                                     rimColor = Color.Transparent,
-                                    contentColor = Color.White.copy(alpha = 0.95f)
+                                    contentColor = Color.White.copy(alpha = 0.92f)
                                 )
 
-                                // Primary Tactile Lavender Play/Pause Centerpiece
+                                // Style C Minimalist Outline Play/Pause Centerpiece
                                 Box(
                                     modifier = Modifier
-                                        .size(58.dp)
-                                        .shadow(elevation = 10.dp, shape = CircleShape, spotColor = LavenderAccent.copy(alpha = 0.55f))
-                                        .clip(CircleShape)
-                                        .background(
-                                            Brush.verticalGradient(
-                                                listOf(Color(0xFFC0A2FB), Color(0xFF986FF5))
-                                            )
-                                        )
+                                        .size(54.dp)
+                                        .border(1.5.dp, Color.White.copy(alpha = 0.55f), CircleShape)
+                                        .background(Color.White.copy(alpha = 0.14f), CircleShape)
                                         .clickable { playback.toggle(); interaction++ }
                                         .touchMotion(),
                                     contentAlignment = Alignment.Center
@@ -888,8 +882,8 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     AnimatedContent(
                                         targetState = playback.playRequested,
                                         transitionSpec = {
-                                            (fadeIn(tween(160)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
-                                                .togetherWith(fadeOut(tween(120)) + scaleOut(targetScale = 0.72f))
+                                            (fadeIn(tween(140)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
+                                                .togetherWith(fadeOut(tween(110)) + scaleOut(targetScale = 0.72f))
                                         },
                                         label = "playPauseIcon"
                                     ) { isPlaying ->
@@ -897,7 +891,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                             imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                                             contentDescription = if (isPlaying) "Pause" else "Play",
                                             tint = Color.White,
-                                            modifier = Modifier.size(32.dp)
+                                            modifier = Modifier.size(30.dp)
                                         )
                                     }
                                 }
@@ -923,7 +917,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     size = 46.dp,
                                     bgColor = Color.Transparent,
                                     rimColor = Color.Transparent,
-                                    contentColor = Color.White.copy(alpha = 0.95f)
+                                    contentColor = Color.White.copy(alpha = 0.92f)
                                 )
                             }
                         }

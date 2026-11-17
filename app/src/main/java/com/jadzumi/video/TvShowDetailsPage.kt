@@ -150,39 +150,11 @@ fun TvShowDetailsPage(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = SpatialGlass.subCardBg(theme),
-                            border = SpatialGlass.cardBorder(theme, 1.dp),
-                            modifier = Modifier.wrapContentWidth()
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Icon(
-                                    if (onlineShow != null) Icons.Rounded.CloudDone else Icons.Rounded.Storage,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    if (onlineShow != null) (if (isTablet) "Online artwork & metadata" else "Online Art")
-                                    else if (series.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
-                                    else if (isTablet) "Hardware Offline Analysis" else "Offline",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
                         // Fix Match button (Online poster & title corrections)
                         Surface(
                             shape = CircleShape,
-                            color = SpatialGlass.subCardBg(theme),
-                            border = SpatialGlass.cardBorder(theme, 1.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
                             modifier = Modifier.clip(CircleShape).clickable { showFixMatch = true }
                         ) {
                             Row(
@@ -290,9 +262,6 @@ fun TvShowDetailsPage(
                                 Text("No episodes available to inspect.", modifier = Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium)
                             }
                         }
-                    }
-                    item {
-                        OfflineVerificationCard()
                     }
                 }
                 "Related" -> {
@@ -416,7 +385,6 @@ fun TvShowDetailsPage(
                                     if (sampleVideo != null) {
                                         UnifiedMediaInspectorCard(sampleVideo, state, playback)
                                     }
-                                    OfflineVerificationCard()
                                 }
                             }
                         } else {

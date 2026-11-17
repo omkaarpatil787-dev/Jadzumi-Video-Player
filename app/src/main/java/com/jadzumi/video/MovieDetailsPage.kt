@@ -166,44 +166,16 @@ fun MovieDetailsPage(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            shape = CircleShape,
-                            color = SpatialGlass.subCardBg(theme),
-                            border = SpatialGlass.cardBorder(theme, 1.dp),
-                            modifier = Modifier.wrapContentWidth()
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Icon(
-                                    if (onlineMeta != null) Icons.Rounded.CloudDone else Icons.Rounded.Storage,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    if (onlineMeta != null) (if (isTablet) "Online artwork & metadata" else "Online Art")
-                                    else if (metadata.posterUri != null) (if (isTablet) "100% Offline Sidecar Artwork" else "Offline Sidecar")
-                                    else if (isTablet) "Hardware Offline Analysis" else "Offline",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Surface(
                             onClick = { showFixMatch = true },
                             shape = CircleShape,
-                            color = SpatialGlass.subCardBg(theme),
-                            border = SpatialGlass.cardBorder(theme, 1.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
                             modifier = Modifier.wrapContentWidth()
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Icon(
                                     Icons.Rounded.Edit,
@@ -560,29 +532,9 @@ fun MovieDetailsPage(
                 // Unified Media Inspector 2.0 (Strict Zero Duplication)
                 item {
                     if (isTablet) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(22.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1.6f),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                UnifiedMediaInspectorCard(video, state, playback)
-                            }
-                            Column(
-                                modifier = Modifier.weight(1.0f),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                OfflineVerificationCard()
-                            }
-                        }
+                        UnifiedMediaInspectorCard(video, state, playback)
                     } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            UnifiedMediaInspectorCard(video, state, playback)
-                            OfflineVerificationCard()
-                        }
+                        UnifiedMediaInspectorCard(video, state, playback)
                     }
                 }
             }

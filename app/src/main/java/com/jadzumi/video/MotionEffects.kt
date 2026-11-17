@@ -2,6 +2,12 @@ package com.jadzumi.video
 
 import android.animation.ValueAnimator
 import android.content.SharedPreferences
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -24,6 +30,7 @@ import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,6 +68,30 @@ object JadzumiMotion {
             else -> spring(dampingRatio = 0.85f, stiffness = 400f) // Balanced (Default)
         }
     }
+}
+
+/**
+ * Shared-Axis X Spring Motion Specification
+ * Delivers silky 6% horizontal displacement with low-stiffness spring and cubic bezier crossfade.
+ * Used universally across Home <-> Settings, Library Categories, Details Subtabs, and TV Seasons.
+ */
+fun sharedAxisTransition(
+    isForward: Boolean,
+    dampingRatio: Float = 0.85f,
+    offsetFraction: Float = 0.06f
+): ContentTransform {
+    val entranceEasing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)
+    val exitEasing = FastOutLinearInEasing
+    val springSpec = spring<IntOffset>(dampingRatio = dampingRatio, stiffness = Spring.StiffnessLow)
+
+    return (slideInHorizontally(animationSpec = springSpec) { fullWidth ->
+        if (isForward) (fullWidth * offsetFraction).toInt() else (-fullWidth * offsetFraction).toInt()
+    } + fadeIn(animationSpec = tween(360, easing = entranceEasing)))
+        .togetherWith(
+            slideOutHorizontally(animationSpec = springSpec) { fullWidth ->
+                if (isForward) (-fullWidth * offsetFraction).toInt() else (fullWidth * offsetFraction).toInt()
+            } + fadeOut(animationSpec = tween(240, easing = exitEasing))
+        )
 }
 
 internal data class MotionStyle(

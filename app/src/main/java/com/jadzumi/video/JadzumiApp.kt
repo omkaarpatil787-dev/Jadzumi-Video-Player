@@ -580,13 +580,7 @@ private val destinations = listOf(
                                                     val initialIndex = tabOrder.indexOf(initialState)
                                                     val targetIndex = tabOrder.indexOf(targetState)
                                                     val isForward = if (initialIndex != -1 && targetIndex != -1) targetIndex > initialIndex else true
-
-                                                    (slideInHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessLow)) { if (isForward) (it * 0.06f).toInt() else (-it * 0.06f).toInt() } +
-                                                            fadeIn(animationSpec = tween(360, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))))
-                                                        .togetherWith(
-                                                            slideOutHorizontally(animationSpec = spring(dampingRatio = motionStyle.damping, stiffness = Spring.StiffnessLow)) { if (isForward) (-it * 0.06f).toInt() else (it * 0.06f).toInt() } +
-                                                                    fadeOut(animationSpec = tween(240, easing = FastOutLinearInEasing))
-                                                        )
+                                                    sharedAxisTransition(isForward = isForward, dampingRatio = motionStyle.damping)
                                                 }
                                             }
                                         },
