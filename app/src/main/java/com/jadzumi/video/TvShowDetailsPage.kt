@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -95,6 +96,9 @@ fun TvShowDetailsPage(
     var showFixMatch by rememberSaveable { mutableStateOf(false) }
     var tvSubtab by rememberSaveable { mutableStateOf("Episodes") }
     val tvSubtabs = remember { listOf("Episodes", "Media Inspector", "Related") }
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val isLight = surfaceColor.luminance() > 0.5f
+    val theme = if (isLight) "Light" else "Dark"
 
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         val isTablet = maxWidth >= 840.dp
@@ -148,8 +152,8 @@ fun TvShowDetailsPage(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                            color = SpatialGlass.subCardBg(theme),
+                            border = SpatialGlass.cardBorder(theme, 1.dp),
                             modifier = Modifier.wrapContentWidth()
                         ) {
                             Row(
@@ -177,8 +181,8 @@ fun TvShowDetailsPage(
                         // Fix Match button (Online poster & title corrections)
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                            color = SpatialGlass.subCardBg(theme),
+                            border = SpatialGlass.cardBorder(theme, 1.dp),
                             modifier = Modifier.clip(CircleShape).clickable { showFixMatch = true }
                         ) {
                             Row(
@@ -228,30 +232,17 @@ fun TvShowDetailsPage(
                 ) {
                     tvSubtabs.forEach { tab ->
                         val isSelected = tab == tvSubtab
-                        val tabBg by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                            label = "tv_tab_bg"
-                        )
-                        val tabContent by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                            label = "tv_tab_txt"
-                        )
-
-                        Surface(
+                        SpatialTactilePill(
+                            selected = isSelected,
                             onClick = { tvSubtab = tab },
-                            modifier = Modifier.touchMotion(),
-                            shape = RoundedCornerShape(999.dp),
-                            color = tabBg,
-                            border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                            theme = theme
                         ) {
                             Text(
                                 text = tab,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = tabContent
+                                color = if (isSelected) Color.White else (if (isLight) SpatialGlass.LightPrimaryText.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.75f))
                             )
                         }
                     }
@@ -261,8 +252,8 @@ fun TvShowDetailsPage(
                     // Binge Automation pill
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                        color = SpatialGlass.subCardBg(theme),
+                        border = SpatialGlass.cardBorder(theme, 1.dp),
                         modifier = Modifier.clip(CircleShape).clickable { showBingeDialog = true }
                     ) {
                         Row(
@@ -288,8 +279,9 @@ fun TvShowDetailsPage(
                         } else {
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                                shape = RoundedCornerShape(20.dp),
+                                color = SpatialGlass.subCardBg(theme),
+                                border = SpatialGlass.cardBorder(theme, 1.dp)
                             ) {
                                 Text("No episodes available to inspect.", modifier = Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium)
                             }
@@ -305,8 +297,9 @@ fun TvShowDetailsPage(
                         item {
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                                shape = RoundedCornerShape(20.dp),
+                                color = SpatialGlass.subCardBg(theme),
+                                border = SpatialGlass.cardBorder(theme, 1.dp)
                             ) {
                                 Text("No related series indexed in your library.", modifier = Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -315,9 +308,11 @@ fun TvShowDetailsPage(
                         items(otherSeries, key = { it.id }) { rel ->
                             Surface(
                                 onClick = { onBack() },
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                                modifier = Modifier.fillMaxWidth()
+                                shape = RoundedCornerShape(20.dp),
+                                color = SpatialGlass.cardBg(theme),
+                                border = SpatialGlass.cardBorder(theme, 1.dp),
+                                modifier = Modifier.fillMaxWidth().touchMotion(),
+                                shadowElevation = if (isLight) 3.dp else 6.dp
                             ) {
                                 Row(
                                     Modifier.padding(14.dp),
@@ -544,10 +539,16 @@ private fun ShowHeroCard(
         else -> "Start Series"
     }
 
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val isLight = surfaceColor.luminance() > 0.5f
+    val theme = if (isLight) "Light" else "Dark"
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface
+        shape = RoundedCornerShape(20.dp),
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (isLight) 4.dp else 8.dp
     ) {
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -786,10 +787,12 @@ private fun SeasonTabPill(
     isCompleted: Boolean,
     onClick: () -> Unit
 ) {
+    val theme = LocalThemeName.current
     Surface(
-        shape = CircleShape,
-        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.clip(CircleShape).clickable(onClick = onClick)
+        shape = RoundedCornerShape(999.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primary else SpatialGlass.subCardBg(theme),
+        border = if (isSelected) null else SpatialGlass.cardBorder(theme, 1.dp),
+        modifier = Modifier.touchMotion().clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
@@ -856,9 +859,12 @@ private fun EpisodesHeader(
             }
         }
 
+        val surfaceColor = MaterialTheme.colorScheme.surface
+        val theme = if (surfaceColor.luminance() > 0.5f) "Light" else "Dark"
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            color = SpatialGlass.subCardBg(theme),
+            border = SpatialGlass.cardBorder(theme, 1.dp),
             modifier = Modifier.clip(CircleShape).clickable(onClick = onToggleSort)
         ) {
             Row(
@@ -887,12 +893,14 @@ private fun EpisodeCard(
     val isWatched = savedPos >= dur * 0.9f
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progressFraction = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
+    val theme = LocalThemeName.current
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().touchMotion(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = if (isNext) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
+        color = SpatialGlass.cardBg(theme),
+        border = if (isNext) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 4.dp else 8.dp
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
@@ -1066,10 +1074,13 @@ internal fun TechRow(label: String, value: String) {
 
 @Composable
 internal fun OfflineVerificationCard() {
+    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 4.dp else 8.dp
     ) {
         Row(
             modifier = Modifier
@@ -1211,10 +1222,13 @@ private fun SeasonCompletionBar(
 ) {
     val progress = if (totalCount > 0) watchedCount.toFloat() / totalCount.toFloat() else 0f
     val percent = (progress * 100).toInt()
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val theme = if (surfaceColor.luminance() > 0.5f) "Light" else "Dark"
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface
+        shape = RoundedCornerShape(20.dp),
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -1257,11 +1271,15 @@ private fun UpNextSpotlightCard(
     val epInfo = remember(video.name) { EpisodePatterns.parse(video.name) }
     val title = epInfo?.episodeTitle ?: video.title
     val epLabel = if (epInfo != null) "S%02dE%02d".format(epInfo.season, epInfo.episode) else "Next"
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val theme = if (surfaceColor.luminance() > 0.5f) "Light" else "Dark"
     Surface(
         onClick = onPlay,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().touchMotion(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (surfaceColor.luminance() > 0.5f) 3.dp else 6.dp
     ) {
         Row(
             modifier = Modifier.padding(14.dp),

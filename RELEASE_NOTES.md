@@ -1,3 +1,27 @@
+# Jadzumi v2.3.4 — Universal Spatial Glass UI & Tactile Micro-Optics
+
+A comprehensive design language rollout elevating every card, capsule, subtab, and panel across the entire app with VisionOS-inspired Spatial Glass UI, tactile micro-press physics, and dual-tone optical parity in both Light and Dark modes.
+
+### 1. Universal Spatial Glass & Tactile Micro-Optics
+- **Tactile Micro-Press Kinetics**: Integrated physical spring micro-press compression and haptic tick feedback into interactive pills and cards via SpatialTactilePill and SpatialTactileCard.
+- **Top Navigation Island**: Transformed the search bar into a floating Spatial Glass capsule (999dp) flanked by tactile circular Spatial Glass utility capsules for Storage Cleaner and Library Sync.
+- **Pure Pill Architecture**: Standardized all filter chips, subtabs, and category selectors on pure 999dp pill geometry with dynamic specular hairline rims.
+
+### 2. Dual-Tone Light & Dark Optical Parity
+- **Light Mode Porcelain Acrylic**: Formulated light surfaces with Alabaster Porcelain (#F5FAF9FE) and high-contrast obsidian ink (#161224) achieving over 12:1 WCAG AAA legibility.
+- **Dual-Tone Specular Borders**: Integrated top catch-light gradient to bottom subtle ambient refraction contour, eliminating washed-out edges in light themes while preserving deep obsidian clarity in dark/AMOLED modes.
+
+### 3. Movie Details & TV Series Polish
+- **Movie Details Page**: Upgraded the Hero Banner, Offline Sidecar badge, Fix Match pill, Overview/Related subtabs, and Related title cards to 20dp Spatial Glass cards with hairline specular borders.
+- **TV Show Details Page**: Elevated ShowHeroCard, Episodes/Details/Inspector subtabs, Binge Automation pill, SeasonProgressCard, and UpNextSpotlightCard to unified 20dp Spatial Glass components.
+- **Universal Media Inspector 2.0**: All four Bento engine cards upgraded with theme-adaptive specular rims and elevated tactile depth.
+
+### 4. Local Library & Settings Elevation
+- **Card Hierarchy Standardization**: Elevated WelcomeOnboardingCard, LocalPanel, CategoryQuickCard, StorageSummaryCard, LocalPosterGridCard, and FranchiseCard to 20dp rounded corners with specular rims.
+- **Settings Panels**: Enforced 20dp Spatial Glass elevation across all settings panels, maintaining visual harmony between player HUD, library, and configuration pages.
+
+---
+
 # Jadzumi v2.3.3 — Spatial Glass UI, Tactile Micro-Optics & Player Refinements
 
 A major visual and experiential upgrade bringing VisionOS-style Spatial Glass UI, tactile micro-press physics, unified pill architecture, and player usability refinements.

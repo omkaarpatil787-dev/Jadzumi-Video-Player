@@ -34,8 +34,8 @@ android {
         applicationId = "com.jadzumi.video"
         minSdk = 26
         targetSdk = 35
-        versionCode = 62
-        versionName = "2.3.3"
+        versionCode = 63
+        versionName = "2.3.4"
         ndk { abiFilters += "arm64-v8a" }
     }
 

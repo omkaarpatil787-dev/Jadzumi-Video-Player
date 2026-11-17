@@ -446,9 +446,9 @@ private val destinations = listOf(
                                                 modifier = Modifier
                                                     .widthIn(min = 220.dp, max = 340.dp)
                                                     .height(42.dp),
-                                                shape = RoundedCornerShape(21.dp),
-                                                color = GlassTheme.surfaceColor(effectiveTheme, glassIntensity),
-                                                border = BorderStroke(1.dp, GlassTheme.borderColor(effectiveTheme, glassIntensity))
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = SpatialGlass.cardBg(effectiveTheme),
+                                                border = SpatialGlass.cardBorder(effectiveTheme, 1.dp)
                                             ) {
                                                 Row(
                                                     Modifier
@@ -514,18 +514,33 @@ private val destinations = listOf(
                                                 }
                                             }
 
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                IconButton(onClick = { showStorageSheet = true }) {
-                                                    Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary)
-                                                }
-                                                IconButton(
-                                                    onClick = { library.rescan() },
-                                                    enabled = !localState.busy && localState.folders.isNotEmpty()
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Surface(
+                                                    onClick = { showStorageSheet = true },
+                                                    shape = CircleShape,
+                                                    color = SpatialGlass.subCardBg(effectiveTheme),
+                                                    border = SpatialGlass.cardBorder(effectiveTheme, 1.dp)
                                                 ) {
-                                                    if (localState.busy) {
-                                                        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                                                    } else {
-                                                        Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary)
+                                                    Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+                                                        Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                                    }
+                                                }
+                                                Surface(
+                                                    onClick = { library.rescan() },
+                                                    enabled = !localState.busy && localState.folders.isNotEmpty(),
+                                                    shape = CircleShape,
+                                                    color = SpatialGlass.subCardBg(effectiveTheme),
+                                                    border = SpatialGlass.cardBorder(effectiveTheme, 1.dp)
+                                                ) {
+                                                    Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+                                                        if (localState.busy) {
+                                                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                                        } else {
+                                                            Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                                        }
                                                     }
                                                 }
                                             }
@@ -2776,13 +2791,12 @@ private fun Panel(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val theme = LocalThemeName.current
-    val isLight = theme == "Light"
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        color = if (isLight) Color(0xFFFBF8FD) else Color(0xFF1B1826),
-        border = BorderStroke(1.dp, if (isLight) Color(0xFFE4DCF0) else Color.White.copy(alpha = 0.08f)),
-        shadowElevation = if (isLight) 1.dp else 4.dp
+        shape = RoundedCornerShape(20.dp),
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 4.dp else 8.dp
     ) {
         Column(
             modifier = Modifier

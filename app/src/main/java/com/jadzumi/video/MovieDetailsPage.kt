@@ -94,6 +94,7 @@ fun MovieDetailsPage(
 
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isLight = surfaceColor.luminance() > 0.5f
+    val theme = if (isLight) "Light" else "Dark"
 
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         val isTablet = maxWidth >= 840.dp
@@ -166,8 +167,8 @@ fun MovieDetailsPage(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                            color = SpatialGlass.subCardBg(theme),
+                            border = SpatialGlass.cardBorder(theme, 1.dp),
                             modifier = Modifier.wrapContentWidth()
                         ) {
                             Row(
@@ -195,8 +196,8 @@ fun MovieDetailsPage(
                         Surface(
                             onClick = { showFixMatch = true },
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
+                            color = SpatialGlass.subCardBg(theme),
+                            border = SpatialGlass.cardBorder(theme, 1.dp),
                             modifier = Modifier.wrapContentWidth()
                         ) {
                             Row(
@@ -226,9 +227,10 @@ fun MovieDetailsPage(
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    shape = RoundedCornerShape(20.dp),
+                    color = SpatialGlass.cardBg(theme),
+                    border = SpatialGlass.cardBorder(theme, 1.dp),
+                    shadowElevation = if (isLight) 4.dp else 8.dp
                 ) {
                     Box(
                         modifier = Modifier.fillMaxWidth()
@@ -478,30 +480,17 @@ fun MovieDetailsPage(
                     ) {
                         movieSubtabs.forEach { tab ->
                             val isSelected = tab == detailsSubtab
-                            val tabBg by animateColorAsState(
-                                targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                label = "tab_bg"
-                            )
-                            val tabContent by animateColorAsState(
-                                targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                label = "tab_txt"
-                            )
-
-                            Surface(
+                            SpatialTactilePill(
+                                selected = isSelected,
                                 onClick = { detailsSubtab = tab },
-                                modifier = Modifier.touchMotion(),
-                                shape = RoundedCornerShape(999.dp),
-                                color = tabBg,
-                                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                                theme = theme
                             ) {
                                 Text(
                                     text = tab,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = tabContent
+                                    color = if (isSelected) Color.White else (if (isLight) SpatialGlass.LightPrimaryText.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.75f))
                                 )
                             }
                         }
@@ -515,8 +504,9 @@ fun MovieDetailsPage(
                     item {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                            shape = RoundedCornerShape(20.dp),
+                            color = SpatialGlass.subCardBg(theme),
+                            border = SpatialGlass.cardBorder(theme, 1.dp)
                         ) {
                             Text(
                                 "No related titles indexed in your library.",
@@ -533,9 +523,11 @@ fun MovieDetailsPage(
                                 playback.open(rel)
                                 playback.fullscreen = true
                             },
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            modifier = Modifier.fillMaxWidth()
+                            shape = RoundedCornerShape(20.dp),
+                            color = SpatialGlass.cardBg(theme),
+                            border = SpatialGlass.cardBorder(theme, 1.dp),
+                            modifier = Modifier.fillMaxWidth().touchMotion(),
+                            shadowElevation = if (isLight) 3.dp else 6.dp
                         ) {
                             Row(
                                 Modifier.padding(14.dp),

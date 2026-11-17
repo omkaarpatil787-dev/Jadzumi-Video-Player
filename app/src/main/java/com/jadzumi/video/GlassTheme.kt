@@ -18,6 +18,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
@@ -174,6 +176,11 @@ object GlassTheme {
 object SpatialGlass {
     val Accent = Color(0xFFB79AF7)
     val Obsidian = Color(0xFF120E20)
+    val LightPorcelainBg = Color(0xF5FAF9FE)
+    val LightPorcelainSubBg = Color(0xEEF3F0FA)
+    val LightPrimaryText = Color(0xFF161224)
+    val LightSecondaryText = Color(0xFF645C75)
+    val LightAccent = Color(0xFF6D28D9)
 
     /**
      * Optical lens background for video overlay controls (CinemaPlayer time pills, docks, buttons).
@@ -191,6 +198,28 @@ object SpatialGlass {
     }
 
     /**
+     * Theme-adaptive card background color.
+     */
+    fun cardBg(theme: String): Color {
+        return when (theme) {
+            "Light" -> LightPorcelainBg
+            "AMOLED" -> Color(0xFC06050A)
+            else -> Color(0xF0161224)
+        }
+    }
+
+    /**
+     * Theme-adaptive sub-card or inset background color.
+     */
+    fun subCardBg(theme: String): Color {
+        return when (theme) {
+            "Light" -> LightPorcelainSubBg
+            "AMOLED" -> Color(0x99181427)
+            else -> Color(0x80231E35)
+        }
+    }
+
+    /**
      * Specular hairline rim gradient that catches dimensional light from above.
      */
     fun specularRimBrush(alphaBoost: Float = 1.0f): Brush {
@@ -204,10 +233,40 @@ object SpatialGlass {
     }
 
     /**
+     * Theme-adaptive specular hairline rim brush for cards.
+     */
+    fun cardBorderBrush(theme: String, alphaBoost: Float = 1.0f): Brush {
+        return if (theme == "Light") {
+            Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = (0.95f * alphaBoost).coerceIn(0f, 1f)),
+                    Color(0xFFE5DFEE).copy(alpha = (0.75f * alphaBoost).coerceIn(0f, 1f)),
+                    Color(0x33544878)
+                )
+            )
+        } else {
+            Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = (0.24f * alphaBoost).coerceIn(0f, 1f)),
+                    Color.White.copy(alpha = (0.10f * alphaBoost).coerceIn(0f, 1f)),
+                    Color.White.copy(alpha = (0.04f * alphaBoost).coerceIn(0f, 1f))
+                )
+            )
+        }
+    }
+
+    /**
      * Specular rim border stroke for pills.
      */
     fun pillBorder(strokeWidth: Dp = 1.dp, alphaBoost: Float = 1.0f): BorderStroke {
         return BorderStroke(strokeWidth, specularRimBrush(alphaBoost))
+    }
+
+    /**
+     * Theme-adaptive border stroke for 20dp cards.
+     */
+    fun cardBorder(theme: String, strokeWidth: Dp = 1.dp, alphaBoost: Float = 1.0f): BorderStroke {
+        return BorderStroke(strokeWidth, cardBorderBrush(theme, alphaBoost))
     }
 }
 
@@ -220,9 +279,12 @@ fun SpatialTactilePill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
+    selected: Boolean = false,
+    theme: String = LocalThemeName.current,
     isOled: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
+    val active = isActive || selected
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -237,11 +299,20 @@ fun SpatialTactilePill(
         }
     }
 
-    val bgColor = if (isActive) SpatialGlass.Accent else SpatialGlass.subPillBg(isOled)
-    val borderStroke = if (isActive) {
-        BorderStroke(1.dp, Color(0xFFD4C2FA))
-    } else {
-        SpatialGlass.pillBorder(1.dp, if (isPressed) 1.5f else 1.0f)
+    val isLight = theme == "Light"
+    val effectiveOled = isOled || theme == "AMOLED"
+
+    val bgColor = when {
+        active && isLight -> SpatialGlass.LightAccent
+        active -> SpatialGlass.Accent
+        isLight -> SpatialGlass.LightPorcelainSubBg
+        else -> SpatialGlass.subPillBg(effectiveOled)
+    }
+
+    val borderStroke = when {
+        active && isLight -> BorderStroke(1.dp, Color(0xFF551CA8))
+        active -> BorderStroke(1.dp, Color(0xFFD4C2FA))
+        else -> SpatialGlass.cardBorder(if (isLight) "Light" else "Dark", 1.dp, if (isPressed) 1.5f else 1.0f)
     }
 
     Surface(
@@ -258,7 +329,7 @@ fun SpatialTactilePill(
         shape = RoundedCornerShape(999.dp),
         color = bgColor,
         border = borderStroke,
-        shadowElevation = if (isPressed) 2.dp else 6.dp
+        shadowElevation = if (isPressed) 2.dp else (if (isLight) 4.dp else 6.dp)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
@@ -266,6 +337,55 @@ fun SpatialTactilePill(
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             content = content
         )
+    }
+}
+
+/**
+ * Tactile Spatial Glass Card Composable (20.dp rounded corners with specular hairline rim).
+ */
+@Composable
+fun SpatialTactileCard(
+    modifier: Modifier = Modifier,
+    theme: String = LocalThemeName.current,
+    onClick: (() -> Unit)? = null,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(20.dp),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (onClick != null && isPressed) 0.98f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "spatialCardPressScale"
+    )
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(isPressed) {
+        if (onClick != null && isPressed) {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+    }
+
+    Surface(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = onClick
+                    )
+                } else Modifier
+            ),
+        shape = shape,
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp, if (isPressed) 1.4f else 1.0f),
+        shadowElevation = if (theme == "Light") 6.dp else 10.dp
+    ) {
+        Column(content = content)
     }
 }
 

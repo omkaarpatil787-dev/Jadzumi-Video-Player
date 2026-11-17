@@ -42,17 +42,9 @@ internal fun UnifiedMediaInspectorCard(
 
     val theme = LocalThemeName.current
     val isLight = theme == "Light"
-    val isAmoled = theme == "AMOLED"
-    val cardBg = when {
-        isAmoled -> Color(0xFF0A0A0E)
-        isLight -> Color(0xFFFBF8FD)
-        else -> Color(0xFF1B1826)
-    }
-    val cardBorder = when {
-        isAmoled -> Color(0xFF1F1C2E)
-        isLight -> Color(0xFFE4DCF0)
-        else -> Color.White.copy(alpha = 0.08f)
-    }
+    val cardBg = SpatialGlass.cardBg(theme)
+    val cardBorder = SpatialGlass.cardBorder(theme, 1.dp)
+    val cardElevation = if (isLight) 6.dp else 10.dp
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -102,9 +94,10 @@ internal fun UnifiedMediaInspectorCard(
             // CARD 1: VIDEO STREAM & CODEC
             Surface(
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = cardBg,
-                border = BorderStroke(1.dp, cardBorder)
+                border = cardBorder,
+                shadowElevation = cardElevation
             ) {
                 Column(Modifier.padding(14.dp)) {
                     Row(
@@ -153,9 +146,10 @@ internal fun UnifiedMediaInspectorCard(
             // CARD 2: AUDIO ENGINE & CHANNELS
             Surface(
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = cardBg,
-                border = BorderStroke(1.dp, cardBorder)
+                border = cardBorder,
+                shadowElevation = cardElevation
             ) {
                 Column(Modifier.padding(14.dp)) {
                     Row(
@@ -209,9 +203,10 @@ internal fun UnifiedMediaInspectorCard(
             // CARD 3: SUBTITLE STUDIO
             Surface(
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = cardBg,
-                border = BorderStroke(1.dp, cardBorder)
+                border = cardBorder,
+                shadowElevation = cardElevation
             ) {
                 Column(Modifier.padding(14.dp)) {
                     Row(
@@ -247,9 +242,10 @@ internal fun UnifiedMediaInspectorCard(
             // CARD 4: STORAGE & CONTAINER
             Surface(
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = cardBg,
-                border = BorderStroke(1.dp, cardBorder)
+                border = cardBorder,
+                shadowElevation = cardElevation
             ) {
                 Column(Modifier.padding(14.dp)) {
                     Row(

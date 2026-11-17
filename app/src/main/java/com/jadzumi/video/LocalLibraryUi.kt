@@ -112,10 +112,13 @@ fun WelcomeOnboardingCard(
     onAddFolder: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalThemeName.current
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        color = MaterialTheme.colorScheme.surface
+        shape = RoundedCornerShape(20.dp),
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 3.dp else 6.dp
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -164,10 +167,13 @@ fun WelcomeOnboardingCard(
 }
 
 @Composable private fun LocalPanel(content: @Composable ColumnScope.() -> Unit) {
+    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface
+        shape = RoundedCornerShape(20.dp),
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 3.dp else 6.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -572,14 +578,15 @@ private fun CategoryQuickCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalThemeName.current
     Card(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else SpatialGlass.cardBg(theme)
         ),
-        border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
+        border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp)
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
@@ -628,6 +635,7 @@ fun StorageSummaryCard(
     onAnalyzeStorage: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val theme = LocalThemeName.current
     val stat = remember { runCatching { android.os.StatFs(android.os.Environment.getDataDirectory().path) }.getOrNull() }
     val totalDeviceBytes = stat?.totalBytes ?: (256L * 1024 * 1024 * 1024)
     val freeDeviceBytes = stat?.availableBytes ?: (178L * 1024 * 1024 * 1024)
@@ -635,8 +643,9 @@ fun StorageSummaryCard(
     val storageRatio = (usedDeviceBytes.toDouble() / totalDeviceBytes.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f)
 
     Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = SpatialGlass.cardBg(theme)),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(18.dp)) {
@@ -837,10 +846,10 @@ fun JadzumiCategoryPillsRow(
                 modifier = Modifier
                     .shadow(
                         elevation = pillElevation,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(999.dp),
                         spotColor = if (isSelected) LavenderAccent.copy(alpha = 0.45f) else Color.Black.copy(alpha = if (isLight) 0.06f else 0.25f)
                     )
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(999.dp))
                     .then(
                         if (isSelected) {
                             Modifier.background(
@@ -850,8 +859,8 @@ fun JadzumiCategoryPillsRow(
                             )
                         } else {
                             Modifier
-                                .background(unselectedBgColor)
-                                .border(1.dp, unselectedBorderColor, RoundedCornerShape(16.dp))
+                                .background(SpatialGlass.subCardBg(theme))
+                                .border(SpatialGlass.cardBorder(theme, 1.dp), RoundedCornerShape(999.dp))
                         }
                     )
                     .clickable { onCategorySelected(cat) }
@@ -2314,30 +2323,20 @@ fun MovieSummaryCard(
     val inProgress = savedPos in 1 until (dur * 0.9f).toLong()
     val progress = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
 
-    val surfaceColor = MaterialTheme.colorScheme.surface
-    val isLight = surfaceColor.luminance() > 0.5f
-    val cardBorder = BorderStroke(
-        width = 1.dp,
-        color = if (isLight) Color(0xFFE2E8F0)
-                else Color.White.copy(alpha = 0.12f)
-    )
-    val cardBg = if (isLight) Color.White
-                 else MaterialTheme.colorScheme.surfaceContainerLow
-
-        val cardRadius = when (density) {
-            "compact" -> 12.dp
-            "spacious" -> 22.dp
-            else -> 18.dp
-        }
-        Surface(
+    val theme = LocalThemeName.current
+    val cardRadius = when (density) {
+        "compact" -> 16.dp
+        else -> 20.dp
+    }
+    Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
         shape = RoundedCornerShape(cardRadius),
-        color = cardBg,
-        border = cardBorder,
-        shadowElevation = 0.dp
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 3.dp else 6.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -2615,30 +2614,20 @@ fun TvSeriesSummaryCard(
     val progress = if (total > 0) (watched.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
     val nextEp = remember(series, playback.historyVersion) { series.nextUnwatchedEpisode(playback) }
 
-    val surfaceColor = MaterialTheme.colorScheme.surface
-    val isLight = surfaceColor.luminance() > 0.5f
-    val cardBorder = BorderStroke(
-        width = 1.dp,
-        color = if (isLight) Color(0xFFE2E8F0)
-                else Color.White.copy(alpha = 0.12f)
-    )
-    val cardBg = if (isLight) Color.White
-                 else MaterialTheme.colorScheme.surfaceContainerLow
-
-        val cardRadius = when (density) {
-            "compact" -> 12.dp
-            "spacious" -> 22.dp
-            else -> 18.dp
-        }
-        Surface(
+    val theme = LocalThemeName.current
+    val cardRadius = when (density) {
+        "compact" -> 16.dp
+        else -> 20.dp
+    }
+    Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
         shape = RoundedCornerShape(cardRadius),
-        color = cardBg,
-        border = cardBorder,
-        shadowElevation = 0.dp
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 3.dp else 6.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -2847,6 +2836,7 @@ fun TvSeriesSummaryCard(
     select: () -> Unit
 ) {
     val context = LocalContext.current
+    val theme = LocalThemeName.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -2855,9 +2845,10 @@ fun TvSeriesSummaryCard(
                 onClick = select,
                 onLongClick = onLongClick
             ),
-        color = MaterialTheme.colorScheme.surface,
-        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
-        shape = RoundedCornerShape(22.dp)
+        color = SpatialGlass.cardBg(theme),
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp),
+        shape = RoundedCornerShape(20.dp),
+        shadowElevation = if (theme == "Light") 3.dp else 6.dp
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(14.dp)) {
             val compact = maxWidth < 460.dp
@@ -2962,8 +2953,9 @@ private fun LocalPosterGridCard(
 
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
+        color = SpatialGlass.cardBg(theme),
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 3.dp else 6.dp,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion()
@@ -3446,10 +3438,12 @@ private fun FranchiseCard(
     franchise: CinemaFranchise,
     onSelectFilm: (LocalVideo) -> Unit
 ) {
+    val theme = LocalThemeName.current
     Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
-        border = subtleCardBorder(strokeWidth = 0.75.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 3.dp else 6.dp,
         modifier = Modifier
             .width(280.dp)
             .clickable {

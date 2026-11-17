@@ -205,8 +205,10 @@ fun HaloSettingsCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface
+        shape = RoundedCornerShape(20.dp),
+        color = SpatialGlass.cardBg(theme),
+        border = SpatialGlass.cardBorder(theme, 1.dp),
+        shadowElevation = if (theme == "Light") 4.dp else 8.dp
     ) {
         Column(
             modifier = Modifier
