@@ -1,3 +1,22 @@
+# Jadzumi v3.3.0 — Precision Audio & Subtitle Sync Studio, Sonic Pitch Preservation, Refined HUD 3 & SQLite Watch Intelligence
+
+A focused playback fidelity, audio-video synchronization, and data layer release delivering real-time lip-sync calibration, NextLib live subtitle delay, natural Sonic pitch preservation, refined HUD 3 compact pills, and native SQLite watch intelligence.
+
+### 1. Precision Audio & Subtitle Sync Studio
+- **Real-Time Audio Lip-Sync Calibration**: Dedicated circular delay audio processor (`LipSyncAudioProcessor`) providing instant `+/- 50ms` tactile nudges to eliminate Bluetooth headset and soundbar latency without stream reloads.
+- **Live Subtitle Offset Steppers**: Built-in NextLib timing synchronization (`subtitleDelayMilliseconds`) with tactile `+/- 100ms` nudges and instant offset readout.
+- **Sonic Audio Pitch Preservation**: Guaranteed natural voice pitch across all playback speeds (0.25x to 3.0x) via Media3 Sonic processor configuration (`PlaybackParameters(speed, 1.0f)`).
+
+### 2. Refined HUD 3 Cinephile Deck & Uncluttered Header
+- **Concise Audio & Subtitle Badges**: Compact industry format tags (`E-AC-3 5.1`, `TrueHD 7.1`, `DTS 5.1`, `AAC 2.0`) eliminating oversized pill chips.
+- **Uncluttered Top Bar**: Purged redundant decoder chips for an elegant, distraction-free live stream telemetry deck.
+- **Strict Text Anti-Wrapping**: Hardened horizontal layout ensuring action labels (`Fit`, `Zoom`, `1.0x`) never vertically wrap into letters.
+
+### 3. Native SQLite Watch Intelligence (Data Layer)
+- **Structured Database Migration**: Replaced flat SharedPreferences storage with an indexed native Android SQLite database (`WatchIntelligenceDatabase`), providing robust millisecond resume points, completion tracking, and watch history records.
+
+---
+
 # Jadzumi v3.2.0 — Cinephile Command Deck HUD 3, Pinch-to-Zoom, OkHttp Engine, Frame Stepping & Morphing Updater Capsule
 
 A major performance, playback controls, and UI fluidity release delivering HUD 3 Cinephile Command Deck, continuous pinch-to-zoom with 2D pan dragging, frame-by-frame pause stepping, OkHttp network streaming engine, Smart Binge pre-buffering, and Concept 2A Morphing Updater Capsule.

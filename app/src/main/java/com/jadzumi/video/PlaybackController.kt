@@ -196,6 +196,8 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     private var loudnessEnhancer: android.media.audiofx.LoudnessEnhancer? = null
     val spatialAudioEngine = SpatialAudioEngine(application)
     val dualSubtitleStudio = DualSubtitleStudio(application)
+    val watchDb = WatchIntelligenceDatabase(application)
+    val lipSyncProcessor = LipSyncAudioProcessor()
 
     var spatial3DMode by mutableStateOf(Spatial3DMode.fromId(prefs.getString("spatial_3d_mode", "off")))
         private set
@@ -229,6 +231,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     private var fadedPlayer: ExoPlayer? = null
     private var volumeBeforeFade: Float? = null
     init {
+        lipSyncProcessor.setDelayMs(audioDelayMs.coerceAtLeast(0L))
         createNotificationChannel()
         viewModelScope.launch {
             while (true) {
@@ -366,7 +369,17 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     private fun persistedPosition(v: LocalVideo): Long {
         if (!rememberProgress) return 0L
-        return resumePosition(prefs.getLong(key(v), 0), v.duration, prefs.getBoolean(key(v) + ".done", false))
+        val k = key(v)
+        val rec = watchDb.getProgress(k)
+        if (rec != null) {
+            return resumePosition(rec.positionMs, v.duration, rec.isCompleted)
+        }
+        val legacyPos = prefs.getLong(k, 0L)
+        val legacyDone = prefs.getBoolean("$k.done", false)
+        if (legacyPos > 0L) {
+            watchDb.saveProgress(k, legacyPos, v.duration, legacyDone)
+        }
+        return resumePosition(legacyPos, v.duration, legacyDone)
     }
 
     fun savedPosition(v: LocalVideo): Long {
@@ -635,25 +648,46 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
 
     fun updateAudioDelay(deltaMs: Long) {
         audioDelayMs = (audioDelayMs + deltaMs).coerceIn(-500L, 500L)
+        lipSyncProcessor.setDelayMs(audioDelayMs.coerceAtLeast(0L))
         prefs.edit { putLong("audio_delay", audioDelayMs) }
     }
 
     fun resetAudioDelay() {
         audioDelayMs = 0L
+        lipSyncProcessor.setDelayMs(0L)
         prefs.edit { putLong("audio_delay", 0L) }
     }
 
     fun updateSubtitleDelay(deltaMs: Long) {
         subtitleDelayMs = (subtitleDelayMs + deltaMs).coerceIn(-10_000L, 10_000L)
         prefs.edit { putLong("sub_delay", subtitleDelayMs) }
+        applySubtitleDelay()
     }
 
     fun resetSubtitleDelay() {
         subtitleDelayMs = 0L
         prefs.edit { putLong("sub_delay", 0L) }
+        applySubtitleDelay()
+    }
+
+    fun applySubtitleDelay() {
+        val p = player ?: return
+        try {
+            val method = p.javaClass.methods.firstOrNull { it.name == "setSubtitleDelayMilliseconds" }
+                ?: Class.forName("io.github.anilbeesetti.nextlib.media3ext.renderer.SubtitleDelayKt")
+                    .methods.firstOrNull { it.name == "setSubtitleDelayMilliseconds" }
+            if (method != null) {
+                if (method.parameterCount == 2) {
+                    method.invoke(null, p, subtitleDelayMs)
+                } else if (method.parameterCount == 1) {
+                    method.invoke(p, subtitleDelayMs)
+                }
+            }
+        } catch (_: Exception) {}
     }
 
     fun clearWatchHistory() {
+        watchDb.clearAll()
         // Remove only hashed viewing records. Clearing history must preserve consent/settings.
         prefs.edit { prefs.all.keys.filter(::isWatchHistoryKey).forEach { remove(it) } }
         suspendedPosition = 0L
@@ -663,11 +697,15 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun markEpisodeWatched(v: LocalVideo, watched: Boolean) {
         val k = key(v)
         val dur = v.duration.takeIf { it > 0 } ?: 1000L
-        prefs.edit {
-            if (watched) {
+        if (watched) {
+            watchDb.saveProgress(k, dur, dur, true)
+            prefs.edit {
                 putLong(k, dur)
                 putBoolean("$k.done", true)
-            } else {
+            }
+        } else {
+            watchDb.removeRecord(k)
+            prefs.edit {
                 remove(k)
                 remove("$k.done")
             }
@@ -676,6 +714,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     fun markSeasonWatched(videos: List<LocalVideo>, watched: Boolean) {
+        videos.forEach { v ->
+            val k = key(v)
+            val dur = v.duration.takeIf { it > 0 } ?: 1000L
+            if (watched) watchDb.saveProgress(k, dur, dur, true) else watchDb.removeRecord(k)
+        }
         prefs.edit {
             videos.forEach { v ->
                 val k = key(v)
@@ -693,6 +736,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     fun markVideosWatched(videos: List<LocalVideo>, watched: Boolean) {
+        videos.forEach { v ->
+            val k = key(v)
+            val dur = v.duration.takeIf { it > 0 } ?: 1000L
+            if (watched) watchDb.saveProgress(k, dur, dur, true) else watchDb.removeRecord(k)
+        }
         prefs.edit {
             videos.forEach { v ->
                 val k = key(v)
@@ -710,6 +758,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     }
 
     fun clearProgress(videos: List<LocalVideo>) {
+        videos.forEach { v -> watchDb.removeRecord(key(v)) }
         prefs.edit {
             videos.forEach { v ->
                 val k = key(v)
@@ -724,9 +773,11 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         @Suppress("UNUSED_EXPRESSION")
         historyVersion
         if (!rememberProgress) return false
-        val done = prefs.getBoolean(key(v) + ".done", false) ||
-            (video?.identity == v.identity && completed)
-        return watchHistoryIsComplete(savedPosition(v), v.duration, done)
+        val k = key(v)
+        val rec = watchDb.getProgress(k)
+        val done = rec?.isCompleted ?: (prefs.getBoolean(k + ".done", false) || (video?.identity == v.identity && completed))
+        val pos = rec?.positionMs ?: savedPosition(v)
+        return watchHistoryIsComplete(pos, v.duration, done)
     }
 
     fun isInProgress(v: LocalVideo): Boolean = !isWatched(v) && savedPosition(v) > 0L
@@ -1081,6 +1132,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 .build()
             p.setVideoChangeFrameRateStrategy(if (matchRefreshRate) C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_ONLY_IF_SEAMLESS else C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_OFF)
             player = p
+            p.playbackParameters = androidx.media3.common.PlaybackParameters(speed, 1.0f)
+            applySubtitleDelay()
+            lipSyncProcessor.setDelayMs(audioDelayMs.coerceAtLeast(0L))
             applyAudioChannelMode()
             applyVideoEffects()
 
@@ -1553,7 +1607,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun changeSpeed(value: Float) {
         if (value.isFinite()) {
             speed = value.coerceIn(0.25f, 3f)
-            player?.setPlaybackSpeed(speed)
+            player?.playbackParameters = androidx.media3.common.PlaybackParameters(speed, 1.0f)
         }
     }
 
@@ -1568,7 +1622,9 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         if (!rememberProgress) return
         val pos = if (mediaItemAssigned) player?.currentPosition?.coerceAtLeast(0) ?: position else position
         position = pos; suspendedPosition = pos
-        prefs.edit { putLong(key(v), pos); putBoolean(key(v) + ".done", completed) }
+        val k = key(v)
+        watchDb.saveProgress(k, pos, v.duration, completed)
+        prefs.edit { putLong(k, pos); putBoolean(k + ".done", completed) }
     }
 
     fun pauseForBackground() {
