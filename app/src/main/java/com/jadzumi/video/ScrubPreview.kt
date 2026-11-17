@@ -68,8 +68,8 @@ private val previewCache = LruCache<String, Bitmap>(36)
         modifier = Modifier.size(164.dp, 96.dp),
         shape = RoundedCornerShape(14.dp),
         color = Color(0xFF101622).copy(alpha = 0.90f),
-        border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.80f)),
-        shadowElevation = 10.dp
+        border = BorderStroke(0.75.dp, Color.White.copy(alpha = 0.60f)),
+        shadowElevation = 0.dp
     ) {
         Box(Modifier.fillMaxSize()) {
             frame?.let {

@@ -132,6 +132,10 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         private set
     var showBatteryPercentage by mutableStateOf(prefs.getBoolean("show_battery_pct", true))
         private set
+    var displayDuringPlaybackOpacity by mutableFloatStateOf(
+        prefs.getFloat("display_playback_opacity", 0.85f).coerceIn(0.2f, 1.0f)
+    )
+        private set
 
     val displayDuringPlaybackSummary: String
         get() {
@@ -142,14 +146,21 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             return if (list.isEmpty()) "None" else list.joinToString(", ")
         }
 
-    fun updateDisplayDuringPlayback(remaining: Boolean, clock: Boolean, battery: Boolean) {
+    fun updateDisplayDuringPlayback(
+        remaining: Boolean,
+        clock: Boolean,
+        battery: Boolean,
+        opacity: Float = displayDuringPlaybackOpacity
+    ) {
         showRemainingTime = remaining
         showPlayerClock = clock
         showBatteryPercentage = battery
+        displayDuringPlaybackOpacity = opacity.coerceIn(0.2f, 1.0f)
         prefs.edit {
             putBoolean("show_remaining_time", remaining)
             putBoolean("show_player_clock", clock)
             putBoolean("show_battery_pct", battery)
+            putFloat("display_playback_opacity", displayDuringPlaybackOpacity)
         }
     }
 
@@ -1024,7 +1035,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         }
 
         if (video?.identity == v.identity && player != null) {
-            fullscreen = true; locked = false
+            fullscreen = true; locked = false; inPip = false
             if (error != null) retry() else {
                 val p = player ?: return
                 if (p.playbackState == Player.STATE_ENDED) { completed = false; p.seekTo(0) }
@@ -1034,7 +1045,7 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             return
         }
         release()
-        video = v; fullscreen = true; locked = false; error = null; completed = false; aspect = 16f / 9f; aspectMode = AspectRatioMode.FIT; resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        video = v; fullscreen = true; locked = false; inPip = false; error = null; completed = false; aspect = 16f / 9f; aspectMode = AspectRatioMode.FIT; resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         isHdr = when (hdrProfileMode) {
             HdrProfileMode.SDR_TONEMAPPED -> false
             HdrProfileMode.DOLBY_VISION, HdrProfileMode.HDR10_PLUS, HdrProfileMode.HDR10 -> true

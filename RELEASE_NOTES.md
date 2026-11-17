@@ -1,3 +1,29 @@
+# Jadzumi v3.3.3 — Luminescent Morphing Pill, Telemetry Opacity & PiP Desync Fix
+
+A major player ergonomics, visual elegance, and system stability release introducing the Variation 3B Luminescent Action Pill with dynamic downward in-pill menu morphing, telemetry HUD adjustable opacity slider, and robust Android Picture-in-Picture window-manager desync resolution.
+
+### 1. Variation 3B Luminescent Action Pill & Dynamic In-Pill Morphing
+- **Variation 3B Luminescent Typography & Accents**: Replaced filled solid chip backgrounds in the upper-right capsule with sleek, borderless Luminescent lavender typography and active icon accents (`#D0BCFF`). Keeps the top player HUD airy, non-distracting, and pristine in both dark and light modes.
+- **Dynamic In-Pill Morphing Expansion**: Eliminated detached right-side flyout cards for Audio and Subtitles. Selecting Audio or Subtitles smoothly morphs the upper-right capsule directly downward into a rounded 20dp track picker using system-wide living motion springs (`dampingRatio = 0.85f`, `stiffness = 400f`), collapsing seamlessly upon track selection.
+- **Direct Track Selection**: Instant track switching with soft lavender checkmark indicators and dedicated subtitle toggle ("Off").
+
+### 2. Picture-in-Picture (PiP) Window Desync Fix
+- **Stale Video Bounds Guard**: Resolved the bug where reopening or switching videos and launching PiP caused the window to collapse to 0x0 and vanish into a background notification. Added strict dimension validation (`width > 100 && height > 100`) to prevent invalid window-manager source rect hints.
+- **PiP State Reset on Open**: Explicitly reset `inPip = false` whenever initiating playback of a new or reopened video in `PlaybackController`.
+- **Instant Control Overlay Dismissal**: Automatically hides on-screen overlay controls (`controls = false`) immediately before invoking `enterCinemaPip()` to avoid transition collisions.
+
+### 3. Display During Playback Redesign & Adjustable Opacity
+- **Live Opacity Slider**: Added an interactive 20% to 100% opacity slider with live percentage readout in `DisplayDuringPlaybackDialog`, persisted across sessions via SharedPreferences.
+- **Clean Essential Telemetry**: Streamlined telemetry to the essential indicators: Remaining Time, Current Clock, and Battery Percentage (Format and HDR badges cleanly separated from the telemetry HUD).
+- **System-Wide Flat Living Geometry**: Updated dialog container and telemetry status pill to 20dp curvature, hairline 0.75dp border, and 0dp elevation.
+
+### 4. Player Micro-Details Polish
+- **Volume & Brightness Gestures (`FluidGestureCapsule`)**: Updated vertical swipe capsules to 0.75dp hairline border and 0dp elevation.
+- **Hold-to-Fast-Forward 2.0x Micro-Pill**: Flat 0dp elevation with 0.75dp border.
+- **Timeline Scrubbing Thumbnail Tooltip (`ScrubPreview`)**: Aligned to flat 0dp elevation and 0.75dp border.
+
+---
+
 # Jadzumi v3.3.2 — System-Wide Flat Card Architecture, Symmetrical 32dp Action Pill & Light Theme Typography Contrast
 
 A design system harmonization and visual fluidity release extending the pure flat Material 3 Expressive architecture across all library rails, continue-watching shelves, and player controls, ensuring strict alignment, clean typography, and zero embossed artifacts across Light, Dark, and AMOLED themes.

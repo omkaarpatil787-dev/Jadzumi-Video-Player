@@ -120,7 +120,7 @@ class MainActivity : ComponentActivity() {
                 )
             )
 
-        videoBounds?.takeIf { !it.isEmpty && playback.video != null }?.let { bounds ->
+        videoBounds?.takeIf { !it.isEmpty && it.width() > 100 && it.height() > 100 && playback.video != null }?.let { bounds ->
             val isFit = playback.aspectMode == AspectRatioMode.FIT
             val content = videoContentBounds(bounds.width(), bounds.height(), effectiveAspect, isFit)
             builder.setSourceRectHint(Rect(bounds.left + content.left, bounds.top + content.top, bounds.left + content.right, bounds.top + content.bottom))

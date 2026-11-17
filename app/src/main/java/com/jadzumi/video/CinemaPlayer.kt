@@ -749,8 +749,8 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                     Surface(
                         shape = RoundedCornerShape(999.dp),
                         color = QuickMenuBg,
-                        border = BorderStroke(1.dp, TimelineAccent.copy(alpha = 0.6f)),
-                        shadowElevation = 16.dp
+                        border = SpatialGlass.pillBorder(0.75.dp),
+                        shadowElevation = 0.dp
                     ) {
                         Row(
                             Modifier.padding(horizontal = 18.dp, vertical = 9.dp),
@@ -806,8 +806,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                         showBattery = playback.showBatteryPercentage,
                         showRemainingTime = playback.showRemainingTime,
                         remainingSecProvider = { ((effectiveDuration - playback.position) / 1000).coerceAtLeast(0) },
-                        hdrBadge = playback.hdrFlavor,
-                        bgColor = SpatialGlass.pillBg(isAmoled),
+                        bgColor = (if (isAmoled) Color.Black else Color(0xFF0A0E17)).copy(alpha = playback.displayDuringPlaybackOpacity),
                         rimColor = dynamicFrostedCircleRim,
                         contentColor = playerContentColor,
                         accentColor = playerAccentColor
@@ -910,133 +909,373 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                 }
                             }
 
-                            // Top-Right: Symmetrical Dynamic Action Capsule (Locked 32dp Height & Shape)
+                            // Top-Right: Symmetrical Dynamic Action Capsule (Morphs smoothly into track selector)
+                            val isExpandedTrackMenu = quickMenuSection == "audio" || quickMenuSection == "subs"
+                            val pillCornerRadius by animateDpAsState(
+                                targetValue = if (isExpandedTrackMenu) 20.dp else 999.dp,
+                                animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
+                                label = "pillCornerRadius"
+                            )
+
                             Surface(
-                                shape = CircleShape,
+                                shape = RoundedCornerShape(pillCornerRadius),
                                 color = SpatialGlass.pillBg(isAmoled),
                                 border = SpatialGlass.pillBorder(0.75.dp),
-                                shadowElevation = 0.dp
+                                shadowElevation = 0.dp,
+                                modifier = Modifier.animateContentSize(
+                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f)
+                                )
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .padding(horizontal = 5.dp, vertical = 3.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                Column(
+                                    modifier = Modifier.padding(
+                                        horizontal = if (isExpandedTrackMenu) 10.dp else 5.dp,
+                                        vertical = if (isExpandedTrackMenu) 10.dp else 3.dp
+                                    ),
+                                    horizontalAlignment = Alignment.End
                                 ) {
-                                    val audioTrack = playback.audioTracks.firstOrNull { it.isSelected }
-                                    val audioText = formatCompactAudioPill(audioTrack)
-                                    SpatialTactilePill(
-                                        onClick = { quickMenuSection = if (quickMenuSection == "audio") null else "audio"; interaction++ },
-                                        isActive = quickMenuSection == "audio",
-                                        isOled = isAmoled,
-                                        modifier = Modifier.height(32.dp),
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(Icons.Rounded.GraphicEq, null, Modifier.size(13.dp), tint = if (quickMenuSection == "audio") SpatialGlass.Obsidian else TimelineAccent)
-                                        Spacer(Modifier.width(4.dp))
-                                        Text(
-                                            audioText,
-                                            color = if (quickMenuSection == "audio") SpatialGlass.Obsidian else playerContentColor,
-                                            fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 1,
-                                            softWrap = false
+                                        val audioTrack = playback.audioTracks.firstOrNull { it.isSelected }
+                                        val audioText = formatCompactAudioPill(audioTrack)
+                                        val isAudioActive = quickMenuSection == "audio"
+                                        SpatialTactilePill(
+                                            onClick = { quickMenuSection = if (isAudioActive) null else "audio"; interaction++ },
+                                            isActive = false,
+                                            isOled = isAmoled,
+                                            modifier = Modifier.height(32.dp),
+                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Rounded.GraphicEq,
+                                                null,
+                                                Modifier.size(13.dp),
+                                                tint = if (isAudioActive) Color(0xFFD0BCFF) else TimelineAccent
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(
+                                                audioText,
+                                                color = if (isAudioActive) Color(0xFFD0BCFF) else playerContentColor,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+
+                                        val subTrack = playback.subtitleTracks.firstOrNull { it.isSelected }
+                                        val subText = formatCompactSubtitlePill(subTrack)
+                                        val isSubsActive = quickMenuSection == "subs"
+                                        SpatialTactilePill(
+                                            onClick = { quickMenuSection = if (isSubsActive) null else "subs"; interaction++ },
+                                            isActive = false,
+                                            isOled = isAmoled,
+                                            modifier = Modifier.height(32.dp),
+                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Rounded.ClosedCaption,
+                                                null,
+                                                Modifier.size(13.dp),
+                                                tint = if (isSubsActive || subTrack != null) Color(0xFFD0BCFF) else playerContentColor
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(
+                                                subText,
+                                                color = if (isSubsActive || subTrack != null) Color(0xFFD0BCFF) else playerContentColor,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+
+                                        SpatialTactilePill(
+                                            onClick = {
+                                                val next = when (playback.speed) {
+                                                    1.0f -> 1.25f
+                                                    1.25f -> 1.5f
+                                                    2.0f -> 1.0f
+                                                    else -> 1.0f
+                                                }
+                                                playback.changeSpeed(next)
+                                                message = "${next}x Speed"
+                                                interaction++
+                                            },
+                                            isOled = isAmoled,
+                                            modifier = Modifier.height(32.dp),
+                                            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp)
+                                        ) {
+                                            Text(
+                                                "${playback.speed}x",
+                                                color = if (playback.speed != 1.0f) Color(0xFFD0BCFF) else playerContentColor,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+
+                                        val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
+                                        SpatialTactilePill(
+                                            onClick = {
+                                                val next = if (isZoomMode) AspectRatioMode.FIT else AspectRatioMode.ZOOM
+                                                playback.setAspectRatioMode(next)
+                                                message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
+                                                interaction++
+                                            },
+                                            isActive = false,
+                                            isOled = isAmoled,
+                                            modifier = Modifier.height(32.dp),
+                                            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Rounded.AspectRatio,
+                                                null,
+                                                Modifier.size(13.dp),
+                                                tint = if (isZoomMode) Color(0xFFD0BCFF) else playerContentColor
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(
+                                                if (isZoomMode) "Zoom" else "Fit",
+                                                color = if (isZoomMode) Color(0xFFD0BCFF) else playerContentColor,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+
+                                        // Hairline Vertical Divider
+                                        Box(
+                                            modifier = Modifier
+                                                .width(0.75.dp)
+                                                .height(16.dp)
+                                                .background(Color.White.copy(alpha = 0.16f))
                                         )
+
+                                        // Symmetrical 32dp Circular Utility Icons
+                                        SpatialTactilePill(
+                                            onClick = {
+                                                controls = false
+                                                activity.enterCinemaPip()
+                                                interaction++
+                                            },
+                                            isOled = isAmoled,
+                                            modifier = Modifier.size(32.dp),
+                                            contentPadding = PaddingValues(0.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(15.dp))
+                                        }
+
+                                        SpatialTactilePill(
+                                            onClick = { quickMenuSection = if (quickMenuSection == "main") null else "main"; interaction++ },
+                                            isActive = false,
+                                            isOled = isAmoled,
+                                            modifier = Modifier.size(32.dp),
+                                            contentPadding = PaddingValues(0.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.MoreVert, "More", tint = if (quickMenuSection == "main") Color(0xFFD0BCFF) else playerContentColor, modifier = Modifier.size(15.dp))
+                                        }
+
+                                        SpatialTactilePill(
+                                            onClick = { playback.locked = true; interaction++ },
+                                            isOled = isAmoled,
+                                            modifier = Modifier.size(32.dp),
+                                            contentPadding = PaddingValues(0.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.Lock, "Lock", tint = playerContentColor, modifier = Modifier.size(14.dp))
+                                        }
                                     }
 
-                                    val subTrack = playback.subtitleTracks.firstOrNull { it.isSelected }
-                                    val subText = formatCompactSubtitlePill(subTrack)
-                                    SpatialTactilePill(
-                                        onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ },
-                                        isActive = quickMenuSection == "subs" || subTrack != null,
-                                        isOled = isAmoled,
-                                        modifier = Modifier.height(32.dp),
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
-                                    ) {
-                                        Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(13.dp), tint = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor)
-                                        Spacer(Modifier.width(4.dp))
-                                        Text(
-                                            subText,
-                                            color = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor,
-                                            fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 1,
-                                            softWrap = false
-                                        )
-                                    }
-
-                                    SpatialTactilePill(
-                                        onClick = {
-                                            val next = when (playback.speed) {
-                                                1.0f -> 1.25f
-                                                1.25f -> 1.5f
-                                                2.0f -> 1.0f
-                                                else -> 1.0f
+                                    // Dynamic In-Pill Morphing Content Expansion
+                                    if (quickMenuSection == "audio") {
+                                        Column(
+                                            modifier = Modifier
+                                                .widthIn(min = 280.dp, max = 340.dp)
+                                                .padding(top = 10.dp, start = 4.dp, end = 4.dp, bottom = 4.dp)
+                                        ) {
+                                            HorizontalDivider(
+                                                color = Color.White.copy(alpha = 0.12f),
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    "AUDIO TRACKS",
+                                                    color = Color(0xFFD0BCFF),
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 0.5.sp
+                                                )
+                                                TextButton(
+                                                    onClick = { quickMenuSection = null },
+                                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                                ) {
+                                                    Text("Close", fontSize = 11.sp, color = playerSubtextColor)
+                                                }
                                             }
-                                            playback.changeSpeed(next)
-                                            message = "${next}x Speed"
-                                            interaction++
-                                        },
-                                        isOled = isAmoled,
-                                        modifier = Modifier.height(32.dp),
-                                        contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp)
-                                    ) {
-                                        Text("${playback.speed}x", color = playerContentColor, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+
+                                            if (playback.audioTracks.isEmpty()) {
+                                                Text(
+                                                    "Default audio stream active",
+                                                    color = playerSubtextColor,
+                                                    fontSize = 12.sp,
+                                                    modifier = Modifier.padding(vertical = 6.dp)
+                                                )
+                                            } else {
+                                                playback.audioTracks.forEach { track ->
+                                                    val isSelected = track.isSelected
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .clip(RoundedCornerShape(10.dp))
+                                                            .clickable {
+                                                                playback.selectAudioTrack(track)
+                                                                message = "Audio: ${track.label}"
+                                                                quickMenuSection = null
+                                                                interaction++
+                                                            }
+                                                            .padding(horizontal = 10.dp, vertical = 9.dp),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Column(Modifier.weight(1f)) {
+                                                            Text(
+                                                                track.label,
+                                                                color = if (isSelected) Color(0xFFD0BCFF) else playerContentColor,
+                                                                fontSize = 12.5.sp,
+                                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                                maxLines = 1,
+                                                                overflow = TextOverflow.Ellipsis
+                                                            )
+                                                            Text(
+                                                                "${track.codec} · ${track.channels}",
+                                                                color = playerSubtextColor,
+                                                                fontSize = 10.5.sp
+                                                            )
+                                                        }
+                                                        if (isSelected) {
+                                                            Icon(
+                                                                Icons.Rounded.Check,
+                                                                null,
+                                                                tint = Color(0xFFD0BCFF),
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
 
-                                    val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
-                                    SpatialTactilePill(
-                                        onClick = {
-                                            val next = if (isZoomMode) AspectRatioMode.FIT else AspectRatioMode.ZOOM
-                                            playback.setAspectRatioMode(next)
-                                            message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
-                                            interaction++
-                                        },
-                                        isActive = isZoomMode,
-                                        isOled = isAmoled,
-                                        modifier = Modifier.height(32.dp),
-                                        contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp)
-                                    ) {
-                                        Icon(Icons.Rounded.AspectRatio, null, Modifier.size(13.dp), tint = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor)
-                                        Spacer(Modifier.width(4.dp))
-                                        Text(if (isZoomMode) "Zoom" else "Fit", color = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
-                                    }
+                                    if (quickMenuSection == "subs") {
+                                        Column(
+                                            modifier = Modifier
+                                                .widthIn(min = 280.dp, max = 340.dp)
+                                                .padding(top = 10.dp, start = 4.dp, end = 4.dp, bottom = 4.dp)
+                                        ) {
+                                            HorizontalDivider(
+                                                color = Color.White.copy(alpha = 0.12f),
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    "SUBTITLES",
+                                                    color = Color(0xFFD0BCFF),
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 0.5.sp
+                                                )
+                                                TextButton(
+                                                    onClick = { quickMenuSection = null },
+                                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                                ) {
+                                                    Text("Close", fontSize = 11.sp, color = playerSubtextColor)
+                                                }
+                                            }
 
-                                    // Hairline Vertical Divider
-                                    Box(
-                                        modifier = Modifier
-                                            .width(0.75.dp)
-                                            .height(16.dp)
-                                            .background(Color.White.copy(alpha = 0.16f))
-                                    )
+                                            val noneSelected = playback.subtitleTracks.none { it.isSelected }
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .clickable {
+                                                        playback.selectSubtitleTrack(null)
+                                                        message = "Subtitles Off"
+                                                        quickMenuSection = null
+                                                        interaction++
+                                                    }
+                                                    .padding(horizontal = 10.dp, vertical = 9.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    "Off",
+                                                    color = if (noneSelected) Color(0xFFD0BCFF) else playerContentColor,
+                                                    fontSize = 12.5.sp,
+                                                    fontWeight = if (noneSelected) FontWeight.Bold else FontWeight.Medium
+                                                )
+                                                if (noneSelected) {
+                                                    Icon(
+                                                        Icons.Rounded.Check,
+                                                        null,
+                                                        tint = Color(0xFFD0BCFF),
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                }
+                                            }
 
-                                    // Perfectly Symmetrical 32dp Circular Utility Icons
-                                    SpatialTactilePill(
-                                        onClick = { activity.enterCinemaPip(); interaction++ },
-                                        isOled = isAmoled,
-                                        modifier = Modifier.size(32.dp),
-                                        contentPadding = PaddingValues(0.dp)
-                                    ) {
-                                        Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(15.dp))
-                                    }
-
-                                    SpatialTactilePill(
-                                        onClick = { quickMenuSection = if (quickMenuSection == "main") null else "main"; interaction++ },
-                                        isActive = quickMenuSection == "main",
-                                        isOled = isAmoled,
-                                        modifier = Modifier.size(32.dp),
-                                        contentPadding = PaddingValues(0.dp)
-                                    ) {
-                                        Icon(Icons.Rounded.MoreVert, "More", tint = if (quickMenuSection == "main") SpatialGlass.Obsidian else playerContentColor, modifier = Modifier.size(15.dp))
-                                    }
-
-                                    SpatialTactilePill(
-                                        onClick = { playback.locked = true; interaction++ },
-                                        isOled = isAmoled,
-                                        modifier = Modifier.size(32.dp),
-                                        contentPadding = PaddingValues(0.dp)
-                                    ) {
-                                        Icon(Icons.Rounded.Lock, "Lock", tint = playerContentColor, modifier = Modifier.size(14.dp))
+                                            playback.subtitleTracks.forEach { track ->
+                                                val isSelected = track.isSelected
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clip(RoundedCornerShape(10.dp))
+                                                        .clickable {
+                                                            playback.selectSubtitleTrack(track)
+                                                            message = "Subtitles: ${track.label}"
+                                                            quickMenuSection = null
+                                                            interaction++
+                                                        }
+                                                        .padding(horizontal = 10.dp, vertical = 9.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Column(Modifier.weight(1f)) {
+                                                        Text(
+                                                            track.label,
+                                                            color = if (isSelected) Color(0xFFD0BCFF) else playerContentColor,
+                                                            fontSize = 12.5.sp,
+                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                        Text(
+                                                            track.format,
+                                                            color = playerSubtextColor,
+                                                            fontSize = 10.5.sp
+                                                        )
+                                                    }
+                                                    if (isSelected) {
+                                                        Icon(
+                                                            Icons.Rounded.Check,
+                                                            null,
+                                                            tint = Color(0xFFD0BCFF),
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1278,7 +1517,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
 
                 // PANEL 5: RIGHT-SIDE QUICK MENU (Fluid Spring Morphing)
                 AnimatedVisibility(
-                    visible = quickMenuSection != null && !playback.inPip,
+                    visible = quickMenuSection != null && quickMenuSection != "audio" && quickMenuSection != "subs" && !playback.inPip,
                     enter = fadeIn(tween(if (reducedMotion) 0 else 220)) +
                             slideInHorizontally(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow)) { it / 2 } +
                             scaleIn(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow), initialScale = 0.90f),
@@ -2605,9 +2844,9 @@ fun FluidGestureCapsule(
         Surface(
             modifier = modifier.wrapContentSize(),
             color = SpatialGlass.pillBg(isOled),
-            border = SpatialGlass.pillBorder(1.dp),
+            border = SpatialGlass.pillBorder(0.75.dp),
             shape = RoundedCornerShape(999.dp),
-            shadowElevation = 14.dp
+            shadowElevation = 0.dp
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
@@ -2635,9 +2874,9 @@ fun FluidGestureCapsule(
                 .width(44.dp)
                 .height(138.dp),
             color = SpatialGlass.pillBg(isOled),
-            border = SpatialGlass.pillBorder(1.dp),
+            border = SpatialGlass.pillBorder(0.75.dp),
             shape = RoundedCornerShape(999.dp),
-            shadowElevation = 14.dp
+            shadowElevation = 0.dp
         ) {
             Column(
                 modifier = Modifier
@@ -3206,7 +3445,6 @@ private fun PlayerStatusPill(
     showRemainingTime: Boolean = false,
     remainingSec: Long? = null,
     remainingSecProvider: (() -> Long)? = null,
-    hdrBadge: String? = null,
     bgColor: Color = Color(0x990A0E17),
     rimColor: Color = Color.White.copy(alpha = 0.22f),
     contentColor: Color = Color.White,
@@ -3243,8 +3481,8 @@ private fun PlayerStatusPill(
     Surface(
         shape = RoundedCornerShape(999.dp),
         color = bgColor,
-        border = SpatialGlass.pillBorder(1.dp),
-        shadowElevation = 6.dp,
+        border = SpatialGlass.pillBorder(0.75.dp),
+        shadowElevation = 0.dp,
         modifier = modifier
     ) {
         Row(
@@ -3254,16 +3492,6 @@ private fun PlayerStatusPill(
         ) {
             val hasClock = showClock && timeText.isNotEmpty()
             val hasBattery = showBattery && batteryText.isNotEmpty()
-
-            if (!hdrBadge.isNullOrEmpty()) {
-                Text(
-                    text = hdrBadge,
-                    color = Color(0xFFFFB300),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text("·", color = contentColor.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
 
             if (hasClock) {
                 Text(

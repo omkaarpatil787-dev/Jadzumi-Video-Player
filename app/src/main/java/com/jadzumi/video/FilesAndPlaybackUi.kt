@@ -37,6 +37,7 @@ fun DisplayDuringPlaybackDialog(
     var remainingTime by remember { mutableStateOf(playback.showRemainingTime) }
     var playerClock by remember { mutableStateOf(playback.showPlayerClock) }
     var batteryPercentage by remember { mutableStateOf(playback.showBatteryPercentage) }
+    var opacity by remember { mutableFloatStateOf(playback.displayDuringPlaybackOpacity) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -50,8 +51,42 @@ fun DisplayDuringPlaybackDialog(
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // Opacity Slider Row
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "HUD Opacity",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            "${(opacity * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Slider(
+                        value = opacity,
+                        onValueChange = { opacity = it },
+                        valueRange = 0.2f..1.0f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
                 DisplayOptionRow(
                     label = "Remaining Time",
                     checked = remainingTime,
@@ -72,7 +107,7 @@ fun DisplayDuringPlaybackDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    playback.updateDisplayDuringPlayback(remainingTime, playerClock, batteryPercentage)
+                    playback.updateDisplayDuringPlayback(remainingTime, playerClock, batteryPercentage, opacity)
                     onDismiss()
                 },
                 shape = RoundedCornerShape(20.dp)
@@ -85,7 +120,7 @@ fun DisplayDuringPlaybackDialog(
                 Text("Cancel")
             }
         },
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(20.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     )
 }
