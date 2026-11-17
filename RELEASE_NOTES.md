@@ -1,3 +1,24 @@
+# Jadzumi v3.0.1 — Hotfix: Series Navigation, Category Stutter Elimination & Clean Rails Catalog Activation
+
+A targeted performance and navigation hotfix resolving Series tab interaction, eliminating category switching jank, and fully activating the locked v3.0 Clean Rails catalog layout.
+
+### 1. Series Tab Navigation Fix
+- **Identifier Mismatch Resolution**: Resolved state normalization discrepancy between Series and TV Shows tab identifiers in navigation capsule and library page listeners.
+- **Bi-Directional State Synchronization**: Tapping the Series tab now consistently switches to and maintains focus on TV Series collections without resetting to Movies.
+
+### 2. Category Transition Performance Optimization
+- **Virtualized Lazy Content**: Eliminated non-lazy chunked item measurement during shared-axis slide transitions. All categories now utilize memoized chunked rows virtualized directly by Compose.
+- **Pre-Computed Category Slices**: Hoisted and memoized independent video subsets for Movies, TV Shows, and Anime outside animation blocks, eliminating heavy re-filtering and GC churn on the main thread during tab transitions.
+- **Scoped Animation Keys**: Switched animated transition evaluation to scoped category target keys, ensuring outgoing and incoming views render smoothly without layout thrashing.
+
+### 3. Clean Rails Catalog Flow (Direction 1A) Activation
+- **Top Continue Watching Shelf**: Top shelf now features clean 16:9 widescreen cards with progress percentages, remaining duration timecodes, instant play capsules, and purple accent progress tracks.
+- **Universal 2:3 Poster Grid**: Replaced legacy grid components with clean 2:3 vertical poster cards styled with Google Pixel Material 3 Expressive tokens, 16dp rounded corners, and subtle borders.
+- **First-Class Anime Support**: Added animation studio chips (MAPPA, Ufotable, Wit Studio, etc.) and dual-title support.
+- **TV Series Rails**: Displays dedicated season counts and total episode counts across collections.
+
+---
+
 # Jadzumi v3.0.0 — Ground-Up Architecture Refresh & Unified Living Motion
 
 A landmark release transforming Jadzumi Video Player from the ground up: unifying the app under a single 6% Shared-Axis Spring Motion signature, introducing the Clean Rails Flow library catalog, the Cinephile Stream Deck details page, the hierarchical Material 3 Expressive Settings Hub, and the refined Style C Ghost Seeking playback HUD.

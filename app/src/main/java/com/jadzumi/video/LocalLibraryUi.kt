@@ -971,149 +971,49 @@ fun JadzumiCategoryPillsRow(
 
     val totalSearchResults = searchSeries.size + searchMovies.size + searchEpisodes.size
 
-    val candidateVideos = remember(allVideos, category) {
-        when (category) {
-            "Movies" -> allVideos.filter { it.episode == null }
-            "TV Shows" -> allVideos.filter { it.episode != null }
-            else -> allVideos
+    val allMovies = remember(allVideos) { allVideos.filter { it.episode == null } }
+    val animeKeywords = remember {
+        listOf(
+            "anime", "animation", "manga", "jujutsu", "titan", "demon slayer", "naruto",
+            "one piece", "bleach", "frieren", "evangelion", "ghibli", "chainsaw", "vinland",
+            "haikyu", "spy x family", "death note", "fullmetal", "solo leveling", "dandadan"
+        )
+    }
+    val allAnime = remember(allVideos, animeKeywords) {
+        allVideos.filter { v ->
+            val nl = v.name.lowercase()
+            val fl = v.folder.lowercase()
+            animeKeywords.any { nl.contains(it) || fl.contains(it) }
         }
     }
+    val allSeries = seriesList
 
-    val videos = remember(allVideos, query, category) {
-        candidateVideos.filter {
-            matchesQuery(query, it.name, it.title, it.folder) && when (category) {
-                "Anime" -> it.name.contains("anime", true) || it.folder.contains("anime", true)
-                "Recently Added" -> true
-                else -> true
-            }
-        }.let { list ->
-            if (category == "Recently Added") list.sortedByDescending { it.modified } else list
+    val continueWatchingMovies = remember(allMovies, playback.historyVersion) {
+        allMovies.filter { playback.savedPosition(it) > 0 && !playback.isWatched(it) }
+    }
+    val continueWatchingSeries = remember(allSeries, playback.historyVersion) {
+        allSeries.mapNotNull { s ->
+            val inProg = s.seasons.values.flatten().firstOrNull { playback.savedPosition(it) > 0 && !playback.isWatched(it) }
+            if (inProg != null) Pair(s, inProg) else null
         }
     }
-
-    val displayVideos = remember(videos, activeFilter, activeSort, playback.historyVersion) {
-        val filtered = when (activeFilter) {
-            "In Progress" -> videos.filter { playback.isInProgress(it) }
-            "Unwatched" -> videos.filter { playback.savedPosition(it) == 0L && !playback.isWatched(it) }
-            "Watched" -> videos.filter { playback.isWatched(it) }
-            "4K UHD" -> videos.filter { isMedia4K(it.width, it.height, it.name) }
-            "Recently Added" -> videos.sortedByDescending { it.modified }
-            else -> videos
-        }
-        when (activeSort) {
-            "Title (A-Z)" -> filtered.sortedBy { it.title.lowercase() }
-            "Duration" -> filtered.sortedByDescending { it.duration }
-            "File Size" -> filtered.sortedByDescending { it.bytes }
-            else -> if (activeFilter == "Recently Added" || category == "Recently Added") filtered else filtered.sortedByDescending { it.modified }
-        }
+    val continueWatchingAnime = remember(allAnime, playback.historyVersion) {
+        allAnime.filter { playback.savedPosition(it) > 0 && !playback.isWatched(it) }
     }
 
-    val movieList = remember(videos) { videos.filter { it.episode == null } }
-    val franchises = remember(movieList) { CinemaFranchiseManager.detectFranchises(movieList) }
+    val franchises = remember(allMovies) { CinemaFranchiseManager.detectFranchises(allMovies) }
 
-    val filteredSeries = remember(seriesList, query) {
-        seriesList.filter { matchesQuery(query, it.title, it.studio, it.synopsis) }
+    val filteredSeries = remember(allSeries, query) {
+        if (query.isBlank()) allSeries
+        else allSeries.filter { matchesQuery(query, it.title, it.studio, it.synopsis) }
     }
-
-    val continueWatching = remember(candidateVideos, playback.historyVersion) {
-        candidateVideos.filter { playback.savedPosition(it) > 0 }
+    val filteredMovies = remember(allMovies, query) {
+        if (query.isBlank()) allMovies
+        else allMovies.filter { matchesQuery(query, it.name, it.title, it.folder) }
     }
-
-    val isHomeTab = category == "Movies" || category == "Home"
-    val heroItems = remember(candidateVideos, continueWatching, seriesList, category, playback.historyVersion) {
-        if (!isHomeTab || candidateVideos.isEmpty()) {
-            emptyList()
-        } else {
-            val suggestions = mutableListOf<HeroItem>()
-
-            // 1. Real-time "Up Next" episode for active series
-            val activeSeries = seriesList.filter { s ->
-                s.seasons.values.flatten().any { playback.savedPosition(it) > 0 }
-            }
-            activeSeries.forEach { series ->
-                val nextEp = series.nextUnwatchedEpisode(playback)
-                if (nextEp != null && suggestions.size < 2) {
-                    val epInfo = EpisodePatterns.parse(nextEp.name)
-                    val sNum = epInfo?.season ?: 1
-                    val eNum = epInfo?.episode ?: 1
-                    suggestions.add(
-                        HeroItem(
-                            id = nextEp.uri,
-                            title = series.title,
-                            subtitle = "Up Next: S%02dE%02d · %s".format(sNum, eNum, epInfo?.episodeTitle ?: nextEp.title),
-                            badge = "▶ UP NEXT · S%02dE%02d".format(sNum, eNum),
-                            localVideo = nextEp,
-                            backdropUri = series.backdropUri ?: series.posterUri,
-                            onPlay = {
-                                playback.open(nextEp)
-                                playback.fullscreen = true
-                            },
-                            onInfo = {
-                                select("series:${series.id}")
-                            }
-                        )
-                    )
-                }
-            }
-
-            // 2. Real-time Continue Watching in-progress movie
-            continueWatching.filter { it.episode == null }.take(2).forEach { movie ->
-                if (suggestions.none { it.id == movie.uri } && suggestions.size < 4) {
-                    val pos = playback.savedPosition(movie)
-                    val dur = movie.duration.takeIf { it > 0 } ?: 1000L
-                    suggestions.add(
-                        HeroItem(
-                            id = movie.uri,
-                            title = movie.title,
-                            subtitle = "Resume from ${timecode(pos / 1000)} · ${timecode((dur - pos).coerceAtLeast(0) / 1000)} left",
-                            badge = "⏱ RESUME WATCHING",
-                            localVideo = movie,
-                            backdropUri = null,
-                            onPlay = {
-                                playback.open(movie)
-                                playback.fullscreen = true
-                            },
-                            onInfo = {
-                                select(movie.uri)
-                            }
-                        )
-                    )
-                }
-            }
-
-            // 3. Unwatched spotlight recommendations from library
-            candidateVideos.filter { playback.savedPosition(it) == 0L }.take(3).forEach { video ->
-                if (suggestions.none { it.id == video.uri } && suggestions.size < 6) {
-                    val epInfo = EpisodePatterns.parse(video.name)
-                    val durStr = if (video.duration > 0) timecode(video.duration / 1000) else "Feature Film"
-                    val resStr = if (video.width > 0 && video.height > 0) "${video.width}×${video.height}" else "1080p FHD"
-                    suggestions.add(
-                        HeroItem(
-                            id = video.uri,
-                            title = epInfo?.seriesTitle ?: video.title,
-                            subtitle = "$durStr · $resStr · Dolby Audio",
-                            badge = if (epInfo != null) "TV SERIES SPOTLIGHT" else "RECOMMENDED CINEMA",
-                            localVideo = video,
-                            backdropUri = null,
-                            onPlay = {
-                                playback.open(video)
-                                playback.fullscreen = true
-                            },
-                            onInfo = {
-                                if (epInfo != null) {
-                                    val matched = seriesList.find { it.title.equals(epInfo.seriesTitle, ignoreCase = true) }
-                                    if (matched != null) select("series:${matched.id}") else select(video.uri)
-                                } else {
-                                    select(video.uri)
-                                }
-                            }
-                        )
-                    )
-                }
-            }
-
-            suggestions
-        }
+    val filteredAnime = remember(allAnime, query) {
+        if (query.isBlank()) allAnime
+        else allAnime.filter { matchesQuery(query, it.name, it.title, it.folder) }
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -1150,6 +1050,16 @@ fun JadzumiCategoryPillsRow(
                     }
                 } else {
                     val catListState = getCategoryListState(currentCategory)
+                    val effectiveTheme = LocalThemeName.current
+                    val colCount = when (libraryDensity) {
+                        "compact" -> if (isPhone) 3 else if (screenMaxWidth >= 900.dp) 5 else 4
+                        "spacious" -> if (isPhone) 2 else if (screenMaxWidth >= 900.dp) 3 else 3
+                        else -> if (isPhone) 2 else if (screenMaxWidth >= 900.dp) 4 else 3
+                    }
+                    val seriesRows = remember(filteredSeries, colCount) { filteredSeries.chunked(colCount) }
+                    val animeRows = remember(filteredAnime, colCount) { filteredAnime.chunked(colCount) }
+                    val movieRows = remember(filteredMovies, colCount) { filteredMovies.chunked(colCount) }
+
                     PullToRefreshBox(
                         isRefreshing = state.busy,
                         onRefresh = { library.rescan() },
@@ -1193,7 +1103,7 @@ fun JadzumiCategoryPillsRow(
                             }
                         }
                     } else {
-                        if (category == "TV Shows") {
+                        if (currentCategory == "TV Shows") {
                             if (searchSeries.isNotEmpty()) {
                                 item {
                                     Text("TV Series (${searchSeries.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -1218,7 +1128,7 @@ fun JadzumiCategoryPillsRow(
                                     MovieCardGrid(movies = searchMovies, sidecars = state.sidecars, playback = playback, isPosterAspect = isPosterAspect, onSelect = { select(it.uri) })
                                 }
                             }
-                        } else if (category == "Movies") {
+                        } else if (currentCategory == "Movies") {
                             if (searchMovies.isNotEmpty()) {
                                 item {
                                     Text("Movies (${searchMovies.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -1276,550 +1186,363 @@ fun JadzumiCategoryPillsRow(
                         item {
                             WelcomeOnboardingCard(onAddFolder = add)
                         }
-                    }
-
-                    // 1. Hero Movie Banner Pager (Optionally enabled in Settings, defaulting to false for clean content-first view)
-                    if (showHeroBanner && heroItems.isNotEmpty() && (category == "Movies" || category == "Home")) {
-                        item {
-                            HeroMoviePager(
-                                items = heroItems,
-                                isPhone = isPhone,
-                                isMinimized = isHeroMinimized
-                            )
-                        }
-                    }
-
-                    // 2. Continue Watching Section (only real in-progress videos)
-                    if (continueWatching.isNotEmpty()) {
-                        item {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("Continue Watching", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                    if (continueWatching.size > 1) {
-                                        Text(
-                                            "See all >",
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 13.sp,
-                                            modifier = Modifier.clickable { category = "Recently Added" }
-                                        )
-                                    }
-                                }
-                                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    items(continueWatching, key = { it.uri }) { v ->
-                                        val pos = playback.savedPosition(v)
-                                        val dur = v.duration.takeIf { it > 0 } ?: 1000L
-                                        ContinueWatchingCard(
-                                            video = v,
-                                            previewFallback = null,
-                                            savedPos = pos,
-                                            durationMs = dur,
-                                            onClick = {
-                                                playback.open(v)
-                                                playback.fullscreen = true
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (category == "TV Shows") {
-                        if (state.busy && filteredSeries.isEmpty()) {
-                            item { ExpressiveLibrarySkeleton() }
-                        } else if (filteredSeries.isEmpty()) {
-                            item {
-                                LocalPanel {
-                                    Icon(Icons.Rounded.Tv, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
-                                    Text("No TV Series Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                    Text(
-                                        "Videos with episode naming patterns (e.g. S01E01, 1x04, Episode 12) will automatically be organized into dedicated series pages.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        } else {
-                            item {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        "TV Series (${filteredSeries.size})",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        if (isGridView) {
-                                            Surface(
-                                                shape = CircleShape,
-                                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
-                                                modifier = Modifier.size(36.dp)
-                                            ) {
-                                                IconButton(
-                                                    onClick = {
-                                                        isPosterAspect = !isPosterAspect
-                                                        libraryPrefs.edit().putBoolean("library_poster_aspect", isPosterAspect).apply()
-                                                    },
-                                                    modifier = Modifier.fillMaxSize()
-                                                ) {
-                                                    Icon(
-                                                        if (isPosterAspect) Icons.Rounded.CropPortrait else Icons.Rounded.CropLandscape,
-                                                        contentDescription = if (isPosterAspect) "Switch to 16:9 Backdrop View" else "Switch to 2:3 Poster View",
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(18.dp)
-                                                    )
-                                                }
-                                            }
-                                            Surface(
-                                                shape = CircleShape,
-                                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
-                                                modifier = Modifier.size(36.dp)
-                                            ) {
-                                                IconButton(
-                                                    onClick = {
-                                                        libraryDensity = when (libraryDensity) {
-                                                            "compact" -> "comfortable"
-                                                            "comfortable" -> "spacious"
-                                                            else -> "compact"
-                                                        }
-                                                        libraryPrefs.edit().putString("library_density", libraryDensity).apply()
-                                                    },
-                                                    modifier = Modifier.fillMaxSize()
-                                                ) {
-                                                    Icon(
-                                                        when (libraryDensity) {
-                                                            "compact" -> Icons.Rounded.DensitySmall
-                                                            "spacious" -> Icons.Rounded.DensityLarge
-                                                            else -> Icons.Rounded.DensityMedium
-                                                        },
-                                                        contentDescription = "Grid Density: ${libraryDensity.replaceFirstChar { it.uppercase() }}",
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(18.dp)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        Surface(
-                                            shape = CircleShape,
-                                            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
-                                            border = subtleCardBorder(strokeWidth = 0.75.dp),
-                                            modifier = Modifier.size(36.dp)
-                                        ) {
-                                            IconButton(
-                                                onClick = {
-                                                    isGridView = !isGridView
-                                                    libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
-                                                },
-                                                modifier = Modifier.fillMaxSize()
-                                            ) {
-                                                Icon(
-                                                    if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
-                                                    contentDescription = "Toggle Grid or List View",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(18.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (isGridView) {
-                                item {
-                                    TvSeriesCardGrid(
-                                        seriesList = filteredSeries,
-                                        playback = playback,
-                                        isPosterAspect = isPosterAspect,
-                                        density = libraryDensity,
-                                        onSelect = { select("series:${it.id}") }
-                                    )
-                                }
-                            } else {
-                                items(filteredSeries, key = { it.id }) { series ->
-                                    TvSeriesRowItem(
-                                        series = series,
-                                        playback = playback,
-                                        onClick = { select("series:${series.id}") }
-                                    )
-                                }
-                            }
-                        }
-                    } else if (category == "Movies") {
-                        if (state.busy && movieList.isEmpty()) {
-                            item { ExpressiveLibrarySkeleton() }
-                        } else if (movieList.isEmpty()) {
-                            item {
-                                LocalPanel {
-                                    Icon(Icons.Rounded.Movie, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
-                                    Text("No Movies Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                    Text(
-                                        "Standalone feature films stored in your connected folders will appear here.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        } else {
-                            item {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        "Movies (${movieList.size})",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        if (isGridView) {
-                                            Surface(
-                                                shape = CircleShape,
-                                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
-                                                modifier = Modifier.size(36.dp)
-                                            ) {
-                                                IconButton(
-                                                    onClick = {
-                                                        isPosterAspect = !isPosterAspect
-                                                        libraryPrefs.edit().putBoolean("library_poster_aspect", isPosterAspect).apply()
-                                                    },
-                                                    modifier = Modifier.fillMaxSize()
-                                                ) {
-                                                    Icon(
-                                                        if (isPosterAspect) Icons.Rounded.CropPortrait else Icons.Rounded.CropLandscape,
-                                                        contentDescription = if (isPosterAspect) "Switch to 16:9 Backdrop View" else "Switch to 2:3 Poster View",
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(18.dp)
-                                                    )
-                                                }
-                                            }
-                                            Surface(
-                                                shape = CircleShape,
-                                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
-                                                modifier = Modifier.size(36.dp)
-                                            ) {
-                                                IconButton(
-                                                    onClick = {
-                                                        libraryDensity = when (libraryDensity) {
-                                                            "compact" -> "comfortable"
-                                                            "comfortable" -> "spacious"
-                                                            else -> "compact"
-                                                        }
-                                                        libraryPrefs.edit().putString("library_density", libraryDensity).apply()
-                                                    },
-                                                    modifier = Modifier.fillMaxSize()
-                                                ) {
-                                                    Icon(
-                                                        when (libraryDensity) {
-                                                            "compact" -> Icons.Rounded.DensitySmall
-                                                            "spacious" -> Icons.Rounded.DensityLarge
-                                                            else -> Icons.Rounded.DensityMedium
-                                                        },
-                                                        contentDescription = "Grid Density: ${libraryDensity.replaceFirstChar { it.uppercase() }}",
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(18.dp)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        Surface(
-                                            shape = CircleShape,
-                                            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
-                                            border = subtleCardBorder(strokeWidth = 0.75.dp),
-                                            modifier = Modifier.size(36.dp)
-                                        ) {
-                                            IconButton(
-                                                onClick = {
-                                                    isGridView = !isGridView
-                                                    libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
-                                                },
-                                                modifier = Modifier.fillMaxSize()
-                                            ) {
-                                                Icon(
-                                                    if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
-                                                    contentDescription = "Toggle Grid or List View",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(18.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (franchises.isNotEmpty()) {
-                                item {
-                                    CinemaFranchiseShelf(
-                                        franchises = franchises,
-                                        onSelectFilm = { select(it.uri) }
-                                    )
-                                }
-                            }
-
-                            if (isGridView) {
-                                item {
-                                    MovieCardGrid(
-                                        movies = movieList,
-                                        sidecars = state.sidecars,
-                                        playback = playback,
-                                        isPosterAspect = isPosterAspect,
-                                        density = libraryDensity,
-                                        onSelect = { select(it.uri) }
-                                    )
-                                }
-                            } else {
-                                items(movieList, key = { it.uri }) { movie ->
-                                    LocalVideoCard(
-                                        video = movie,
-                                        isSelectionMode = isSelectionMode,
-                                        isSelected = movie.uri in selectedUris,
-                                        isWatched = playback.isWatched(movie),
-                                        onLongClick = {
-                                            if (!isSelectionMode) {
-                                                isSelectionMode = true
-                                                selectedUris.add(movie.uri)
-                                            }
-                                        },
-                                        select = {
-                                            if (isSelectionMode) {
-                                                if (movie.uri in selectedUris) selectedUris.remove(movie.uri)
-                                                else selectedUris.add(movie.uri)
-                                            } else {
-                                                select(movie.uri)
-                                            }
-                                        }
-                                    )
-                                }
-                            }
-                        }
                     } else {
-                        if (videos.isEmpty()) {
-                            item {
-                                if (state.busy) {
-                                    ExpressiveLibrarySkeleton()
-                                } else {
-                                    LocalPanel {
-                                        Icon(Icons.Rounded.VideoLibrary, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
-                                        Text(
-                                            text = when {
-                                                state.folders.isEmpty() -> "Make room for your stories"
-                                                isSearching -> "No matching videos"
-                                                category != "Movies" && category != "Home" -> "No videos in $category"
-                                                else -> "Your library is quiet"
-                                            },
-                                            style = MaterialTheme.typography.titleLarge,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Text(
-                                            text = when {
-                                                state.folders.isEmpty() -> "Connect a folder using Android's file picker to populate your library."
-                                                isSearching -> "No videos matched \"$query\". Check your spelling or clear filters."
-                                                category != "Movies" && category != "Home" -> "Try selecting Movies or adding media to this category."
-                                                else -> "Pull down to refresh or check folder permissions."
-                                            },
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        if (state.folders.isEmpty()) {
-                                            Spacer(Modifier.height(4.dp))
-                                            Button(onClick = add, shape = RoundedCornerShape(20.dp)) {
-                                                Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp))
-                                                Spacer(Modifier.width(8.dp))
-                                                Text("Add your first folder")
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            if (isSelectionMode) {
-                                item {
-                                    val theme = LocalThemeName.current
-                                    val glassIntensity = LocalGlassIntensity.current
-                                    Surface(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(18.dp),
-                                        color = GlassTheme.surfaceColor(theme, glassIntensity),
-                                        border = BorderStroke(1.dp, GlassTheme.borderColor(theme, glassIntensity))
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
+                        when (currentCategory) {
+                            "TV Shows" -> {
+                                // 1. Continue Watching shelf for in-progress series episodes
+                                if (continueWatchingSeries.isNotEmpty()) {
+                                    item {
+                                        CleanRailsContinueWatchingShelf(
+                                            title = "CONTINUE WATCHING",
+                                            countText = "${continueWatchingSeries.size} in progress"
                                         ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                IconButton(
-                                                    onClick = { isSelectionMode = false; selectedUris.clear() },
-                                                    modifier = Modifier.size(32.dp).touchMotion()
-                                                ) {
-                                                    Icon(Icons.Rounded.Close, "Exit selection", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
-                                                }
-                                                Text(
-                                                    "${selectedUris.size} selected",
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
-
-                                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                val selectedVideos = remember(selectedUris.toList(), displayVideos) {
-                                                     displayVideos.filter { it.uri in selectedUris }
-                                                }
-                                                TextButton(
-                                                    onClick = {
-                                                        if (selectedUris.size == displayVideos.size) selectedUris.clear()
-                                                        else {
-                                                            selectedUris.clear()
-                                                            selectedUris.addAll(displayVideos.map { it.uri })
+                                            LazyRow(
+                                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                                contentPadding = PaddingValues(horizontal = 2.dp)
+                                            ) {
+                                                items(continueWatchingSeries, key = { it.second.uri }) { (series, ep) ->
+                                                    val pos = playback.savedPosition(ep)
+                                                    val dur = ep.duration.takeIf { it > 0 } ?: 1000L
+                                                    val epInfo = EpisodePatterns.parse(ep.name)
+                                                    val epSubtitle = if (epInfo != null) "S%02dE%02d · %s".format(epInfo.season, epInfo.episode, epInfo.episodeTitle ?: ep.title) else ep.title
+                                                    CleanContinueWatchingCard(
+                                                        video = ep,
+                                                        title = series.title,
+                                                        subtitle = epSubtitle,
+                                                        savedPos = pos,
+                                                        durationMs = dur,
+                                                        onClick = {
+                                                            playback.open(ep)
+                                                            playback.fullscreen = true
                                                         }
-                                                    },
-                                                    modifier = Modifier.touchMotion()
-                                                ) {
-                                                    Text(if (selectedUris.size == displayVideos.size) "Deselect" else "Select All", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                                }
-                                                TextButton(
-                                                    onClick = {
-                                                        playback.markVideosWatched(selectedVideos, true)
-                                                        isSelectionMode = false
-                                                        selectedUris.clear()
-                                                    },
-                                                    enabled = selectedVideos.isNotEmpty(),
-                                                    modifier = Modifier.touchMotion()
-                                                ) {
-                                                    Text("Watched", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                                }
-                                                TextButton(
-                                                    onClick = {
-                                                        playback.clearProgress(selectedVideos)
-                                                        isSelectionMode = false
-                                                        selectedUris.clear()
-                                                    },
-                                                    enabled = selectedVideos.isNotEmpty(),
-                                                    modifier = Modifier.touchMotion()
-                                                ) {
-                                                    Text("Clear", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                    )
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                        if (category != "Movies" && category != "TV Shows") {
-                            // Filtered category section header with clean Grid / List toggle
-                            item {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        "$category (${displayVideos.size})",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
-                                        border = subtleCardBorder(strokeWidth = 0.75.dp),
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        IconButton(
-                                            onClick = {
+                                // 2. TV Series All Titles Rail
+                                if (state.busy && filteredSeries.isEmpty()) {
+                                    item { ExpressiveLibrarySkeleton() }
+                                } else if (filteredSeries.isEmpty()) {
+                                    item {
+                                        LocalPanel {
+                                            Icon(Icons.Rounded.Tv, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                            Text("No TV Series Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                "Videos with episode naming patterns (e.g. S01E01, 1x04, Episode 12) will automatically be organized into dedicated series pages.",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    item {
+                                        CleanRailSectionHeader(
+                                            title = "TV SERIES",
+                                            countText = "${filteredSeries.size} Shows",
+                                            isGridView = isGridView,
+                                            onToggleGrid = {
                                                 isGridView = !isGridView
                                                 libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
                                             },
-                                            modifier = Modifier.fillMaxSize()
-                                        ) {
-                                            Icon(
-                                                if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
-                                                contentDescription = "Toggle Grid or List View",
-                                                tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(18.dp)
+                                            density = libraryDensity,
+                                            onCycleDensity = {
+                                                libraryDensity = when (libraryDensity) {
+                                                    "compact" -> "comfortable"
+                                                    "comfortable" -> "spacious"
+                                                    else -> "compact"
+                                                }
+                                                libraryPrefs.edit().putString("library_density", libraryDensity).apply()
+                                            }
+                                        )
+                                    }
+
+                                    if (isGridView) {
+                                        items(seriesRows, key = { it.first().id }) { row ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                for (series in row) {
+                                                    Box(Modifier.weight(1f)) {
+                                                        CleanRailSeriesCard(
+                                                            series = series,
+                                                            playback = playback,
+                                                            theme = effectiveTheme,
+                                                            onClick = { select("series:${series.id}") }
+                                                        )
+                                                    }
+                                                }
+                                                val fillSlots = colCount - row.size
+                                                repeat(fillSlots) {
+                                                    Spacer(Modifier.weight(1f))
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        items(filteredSeries, key = { it.id }) { series ->
+                                            TvSeriesRowItem(
+                                                series = series,
+                                                playback = playback,
+                                                onClick = { select("series:${series.id}") }
                                             )
                                         }
                                     }
                                 }
                             }
 
-                            if (isGridView) {
-                                val colCount = if (isPhone) 2 else if (screenMaxWidth >= 900.dp) 4 else 3
-                                items(displayVideos.chunked(colCount), key = { chunk -> chunk.firstOrNull()?.uri ?: "" }) { chunk ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        for (video in chunk) {
-                                            Box(Modifier.weight(1f)) {
-                                                LocalPosterGridCard(
-                                                    video = video,
-                                                    isSelectionMode = isSelectionMode,
-                                                    isSelected = video.uri in selectedUris,
-                                                    playback = playback,
-                                                    onClick = {
-                                                        if (isSelectionMode) {
-                                                            if (video.uri in selectedUris) selectedUris.remove(video.uri)
-                                                            else selectedUris.add(video.uri)
-                                                        } else {
-                                                            select(video.uri)
+                            "Anime" -> {
+                                // 1. Continue Watching shelf for anime
+                                if (continueWatchingAnime.isNotEmpty()) {
+                                    item {
+                                        CleanRailsContinueWatchingShelf(
+                                            title = "CONTINUE WATCHING",
+                                            countText = "${continueWatchingAnime.size} in progress"
+                                        ) {
+                                            LazyRow(
+                                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                                contentPadding = PaddingValues(horizontal = 2.dp)
+                                            ) {
+                                                items(continueWatchingAnime, key = { it.uri }) { anime ->
+                                                    val pos = playback.savedPosition(anime)
+                                                    val dur = anime.duration.takeIf { it > 0 } ?: 1000L
+                                                    CleanContinueWatchingCard(
+                                                        video = anime,
+                                                        title = anime.title,
+                                                        subtitle = timecode(pos / 1000) + " / " + timecode(dur / 1000),
+                                                        savedPos = pos,
+                                                        durationMs = dur,
+                                                        onClick = {
+                                                            playback.open(anime)
+                                                            playback.fullscreen = true
                                                         }
-                                                    },
-                                                    onLongClick = {
-                                                        if (!isSelectionMode) {
-                                                            isSelectionMode = true
-                                                            selectedUris.add(video.uri)
-                                                        }
-                                                    }
-                                                )
+                                                    )
+                                                }
                                             }
-                                        }
-                                        val fillSlots = colCount - chunk.size
-                                        for (i in 0 until fillSlots) {
-                                            Spacer(Modifier.weight(1f))
                                         }
                                     }
                                 }
-                            } else {
-                                items(displayVideos, key = { it.uri }) { video ->
-                                    LocalVideoCard(
-                                        video = video,
-                                        isSelectionMode = isSelectionMode,
-                                        isSelected = video.uri in selectedUris,
-                                        isWatched = playback.isWatched(video),
-                                        onLongClick = {
-                                            if (!isSelectionMode) {
-                                                isSelectionMode = true
-                                                selectedUris.add(video.uri)
+
+                                // 2. Anime Collection Rail
+                                if (state.busy && filteredAnime.isEmpty()) {
+                                    item { ExpressiveLibrarySkeleton() }
+                                } else if (filteredAnime.isEmpty()) {
+                                    item {
+                                        LocalPanel {
+                                            Icon(Icons.Rounded.Animation, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                            Text("No Anime Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                "Videos with anime names or located in Anime folders will automatically appear here with dual-titles and studio tags.",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    item {
+                                        CleanRailSectionHeader(
+                                            title = "ANIME COLLECTION",
+                                            countText = "${filteredAnime.size} Titles",
+                                            isGridView = isGridView,
+                                            onToggleGrid = {
+                                                isGridView = !isGridView
+                                                libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
+                                            },
+                                            density = libraryDensity,
+                                            onCycleDensity = {
+                                                libraryDensity = when (libraryDensity) {
+                                                    "compact" -> "comfortable"
+                                                    "comfortable" -> "spacious"
+                                                    else -> "compact"
+                                                }
+                                                libraryPrefs.edit().putString("library_density", libraryDensity).apply()
                                             }
-                                        },
-                                        select = {
-                                            if (isSelectionMode) {
-                                                if (video.uri in selectedUris) selectedUris.remove(video.uri)
-                                                else selectedUris.add(video.uri)
-                                            } else {
-                                                select(video.uri)
+                                        )
+                                    }
+
+                                    if (isGridView) {
+                                        items(animeRows, key = { it.first().uri }) { row ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                for (anime in row) {
+                                                    Box(Modifier.weight(1f)) {
+                                                        CleanRailAnimeCard(
+                                                            video = anime,
+                                                            theme = effectiveTheme,
+                                                            playback = playback,
+                                                            onClick = { select(anime.uri) }
+                                                        )
+                                                    }
+                                                }
+                                                val fillSlots = colCount - row.size
+                                                repeat(fillSlots) {
+                                                    Spacer(Modifier.weight(1f))
+                                                }
                                             }
                                         }
-                                    )
+                                    } else {
+                                        items(filteredAnime, key = { it.uri }) { anime ->
+                                            LocalVideoCard(
+                                                video = anime,
+                                                isSelectionMode = isSelectionMode,
+                                                isSelected = anime.uri in selectedUris,
+                                                isWatched = playback.isWatched(anime),
+                                                onLongClick = {
+                                                    if (!isSelectionMode) {
+                                                        isSelectionMode = true
+                                                        selectedUris.add(anime.uri)
+                                                    }
+                                                },
+                                                select = {
+                                                    if (isSelectionMode) {
+                                                        if (anime.uri in selectedUris) selectedUris.remove(anime.uri)
+                                                        else selectedUris.add(anime.uri)
+                                                    } else {
+                                                        select(anime.uri)
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            else -> {
+                                // Default / Movies Tab
+                                // 1. Continue Watching shelf for movies
+                                if (continueWatchingMovies.isNotEmpty()) {
+                                    item {
+                                        CleanRailsContinueWatchingShelf(
+                                            title = "CONTINUE WATCHING",
+                                            countText = "${continueWatchingMovies.size} in progress"
+                                        ) {
+                                            LazyRow(
+                                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                                contentPadding = PaddingValues(horizontal = 2.dp)
+                                            ) {
+                                                items(continueWatchingMovies, key = { it.uri }) { movie ->
+                                                    val pos = playback.savedPosition(movie)
+                                                    val dur = movie.duration.takeIf { it > 0 } ?: 1000L
+                                                    CleanContinueWatchingCard(
+                                                        video = movie,
+                                                        title = movie.title,
+                                                        subtitle = timecode(pos / 1000) + " / " + timecode(dur / 1000),
+                                                        savedPos = pos,
+                                                        durationMs = dur,
+                                                        onClick = {
+                                                            playback.open(movie)
+                                                            playback.fullscreen = true
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 2. Franchises Shelf (if any)
+                                if (franchises.isNotEmpty()) {
+                                    item {
+                                        CinemaFranchiseShelf(
+                                            franchises = franchises,
+                                            onSelectFilm = { select(it.uri) }
+                                        )
+                                    }
+                                }
+
+                                // 3. Feature Films Rail
+                                if (state.busy && filteredMovies.isEmpty()) {
+                                    item { ExpressiveLibrarySkeleton() }
+                                } else if (filteredMovies.isEmpty()) {
+                                    item {
+                                        LocalPanel {
+                                            Icon(Icons.Rounded.Movie, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                            Text("No Movies Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                "Standalone feature films stored in your connected folders will appear here.",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    item {
+                                        CleanRailSectionHeader(
+                                            title = "FEATURE FILMS",
+                                            countText = "${filteredMovies.size} Titles",
+                                            isGridView = isGridView,
+                                            onToggleGrid = {
+                                                isGridView = !isGridView
+                                                libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
+                                            },
+                                            density = libraryDensity,
+                                            onCycleDensity = {
+                                                libraryDensity = when (libraryDensity) {
+                                                    "compact" -> "comfortable"
+                                                    "comfortable" -> "spacious"
+                                                    else -> "compact"
+                                                }
+                                                libraryPrefs.edit().putString("library_density", libraryDensity).apply()
+                                            }
+                                        )
+                                    }
+
+                                    if (isGridView) {
+                                        items(movieRows, key = { it.first().uri }) { row ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                for (movie in row) {
+                                                    Box(Modifier.weight(1f)) {
+                                                        CleanRailPosterCard(
+                                                            video = movie,
+                                                            sidecars = state.sidecars,
+                                                            playback = playback,
+                                                            theme = effectiveTheme,
+                                                            onClick = { select(movie.uri) }
+                                                        )
+                                                    }
+                                                }
+                                                val fillSlots = colCount - row.size
+                                                repeat(fillSlots) {
+                                                    Spacer(Modifier.weight(1f))
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        items(filteredMovies, key = { it.uri }) { movie ->
+                                            LocalVideoCard(
+                                                video = movie,
+                                                isSelectionMode = isSelectionMode,
+                                                isSelected = movie.uri in selectedUris,
+                                                isWatched = playback.isWatched(movie),
+                                                onLongClick = {
+                                                    if (!isSelectionMode) {
+                                                        isSelectionMode = true
+                                                        selectedUris.add(movie.uri)
+                                                    }
+                                                },
+                                                select = {
+                                                    if (isSelectionMode) {
+                                                        if (movie.uri in selectedUris) selectedUris.remove(movie.uri)
+                                                        else selectedUris.add(movie.uri)
+                                                    } else {
+                                                        select(movie.uri)
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
-                        }
                     }
+                }
                 }
             }
         }
@@ -1827,6 +1550,546 @@ fun JadzumiCategoryPillsRow(
 }
 }
 }
+
+@Composable
+fun CleanRailsContinueWatchingShelf(
+    title: String = "CONTINUE WATCHING",
+    countText: String = "",
+    content: @Composable () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (countText.isNotEmpty()) {
+                Text(
+                    countText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+        content()
+    }
+}
+
+@Composable
+fun CleanContinueWatchingCard(
+    video: LocalVideo,
+    title: String = video.title,
+    subtitle: String = "",
+    savedPos: Long,
+    durationMs: Long,
+    onClick: () -> Unit
+) {
+    val theme = LocalThemeName.current
+    val progress = if (durationMs > 0) (savedPos.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
+    val remainingSec = ((durationMs - savedPos).coerceAtLeast(0) / 1000)
+    val remainingText = if (remainingSec >= 3600) "${remainingSec / 3600}h ${(remainingSec % 3600) / 60}m left" else "${(remainingSec / 60).coerceAtLeast(1)}m left"
+    val percentText = "${(progress * 100).toInt()}%"
+
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .width(220.dp)
+            .touchMotion(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = 2.dp
+    ) {
+        Column(Modifier.padding(8.dp)) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                LocalThumbnail(video, Modifier.fillMaxSize())
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f)),
+                                startY = 40f
+                            )
+                        )
+                )
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.65f),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                ) {
+                    Text(
+                        percentText,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 9.sp
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .background(Color.White.copy(alpha = 0.25f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.PlayArrow,
+                            contentDescription = "Resume",
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                    Text(
+                        remainingText,
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .align(Alignment.BottomCenter),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = Color.Black.copy(alpha = 0.5f)
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (subtitle.isNotEmpty()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 11.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CleanRailSectionHeader(
+    title: String,
+    countText: String,
+    isGridView: Boolean,
+    onToggleGrid: () -> Unit,
+    density: String,
+    onCycleDensity: () -> Unit
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                "· $countText",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (isGridView) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    IconButton(
+                        onClick = onCycleDensity,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Icon(
+                            when (density) {
+                                "compact" -> Icons.Rounded.DensitySmall
+                                "spacious" -> Icons.Rounded.DensityLarge
+                                else -> Icons.Rounded.DensityMedium
+                            },
+                            contentDescription = "Grid Density",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                border = subtleCardBorder(strokeWidth = 0.75.dp),
+                modifier = Modifier.size(36.dp)
+            ) {
+                IconButton(
+                    onClick = onToggleGrid,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        if (isGridView) Icons.Rounded.ViewList else Icons.Rounded.GridView,
+                        contentDescription = "Toggle Grid or List View",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CleanRailPosterCard(
+    video: LocalVideo,
+    sidecars: Map<String, List<LocalSidecar>>,
+    playback: PlaybackController,
+    theme: String,
+    onClick: () -> Unit
+) {
+    val savedPos = playback.savedPosition(video)
+    val dur = video.duration.takeIf { it > 0 } ?: 1000L
+    val isWatched = playback.isWatched(video)
+    val inProgress = savedPos > 0 && !isWatched
+    val progress = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
+
+    val qualityBadge = when {
+        isMedia4K(video.width, video.height, video.name) -> "4K UHD"
+        video.height >= 1000 || video.width >= 1900 -> "1080p"
+        video.height >= 700 || video.width >= 1200 -> "720p"
+        else -> null
+    }
+
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .touchMotion(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = 2.dp
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(2f / 3f)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                LocalThumbnail(video, Modifier.fillMaxSize())
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
+                                startY = 100f
+                            )
+                        )
+                )
+
+                if (qualityBadge != null) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color.Black.copy(alpha = 0.65f),
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp)
+                    ) {
+                        Text(
+                            qualityBadge,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 9.sp
+                        )
+                    }
+                }
+
+                if (inProgress) {
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .align(Alignment.BottomCenter),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = Color.Black.copy(alpha = 0.4f)
+                    )
+                }
+            }
+
+            Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+                Text(
+                    text = video.title,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                val durFormatted = if (video.duration > 0) timecode(video.duration / 1000) else "Movie"
+                val (_, cleanYear) = OnlineMetadataFetcher.extractCleanTitleAndYear(video.name)
+                val subText = if (cleanYear != null) "$cleanYear · $durFormatted" else durFormatted
+                Text(
+                    text = subText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 11.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CleanRailSeriesCard(
+    series: TvSeries,
+    playback: PlaybackController,
+    theme: String,
+    onClick: () -> Unit
+) {
+    val totalEpisodes = series.seasons.values.sumOf { it.size }
+    val seasonCount = series.seasons.size
+
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .touchMotion(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = 2.dp
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(2f / 3f)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                SidecarImage(
+                    uri = series.posterUri ?: series.backdropUri,
+                    fallbackVideo = series.seasons.values.firstOrNull()?.firstOrNull(),
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
+                                startY = 100f
+                            )
+                        )
+                )
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.65f),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        "$seasonCount ${if (seasonCount == 1) "Season" else "Seasons"}",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 9.sp
+                    )
+                }
+            }
+
+            Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+                Text(
+                    text = series.title,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "$seasonCount ${if (seasonCount == 1) "Season" else "Seasons"} · $totalEpisodes Episodes",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 11.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CleanRailAnimeCard(
+    video: LocalVideo,
+    theme: String,
+    playback: PlaybackController,
+    onClick: () -> Unit
+) {
+    val savedPos = playback.savedPosition(video)
+    val dur = video.duration.takeIf { it > 0 } ?: 1000L
+    val isWatched = playback.isWatched(video)
+    val inProgress = savedPos > 0 && !isWatched
+    val progress = (savedPos.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
+
+    val nameLower = video.name.lowercase()
+    val studio = when {
+        nameLower.contains("mappa") -> "MAPPA"
+        nameLower.contains("ufotable") -> "ufotable"
+        nameLower.contains("wit") -> "Wit Studio"
+        nameLower.contains("cloverworks") -> "CloverWorks"
+        nameLower.contains("kyoto") || nameLower.contains("kyoani") -> "Kyoto Animation"
+        nameLower.contains("bones") -> "Bones"
+        nameLower.contains("madhouse") -> "Madhouse"
+        nameLower.contains("ghibli") -> "Studio Ghibli"
+        nameLower.contains("toei") -> "Toei"
+        nameLower.contains("a-1") -> "A-1 Pictures"
+        else -> null
+    }
+
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .touchMotion(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = 2.dp
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(2f / 3f)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                LocalThumbnail(video, Modifier.fillMaxSize())
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f)),
+                                startY = 100f
+                            )
+                        )
+                )
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = if (studio != null) MaterialTheme.colorScheme.primary.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.65f),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        studio ?: "ANIME",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 9.sp
+                    )
+                }
+
+                if (inProgress) {
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .align(Alignment.BottomCenter),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = Color.Black.copy(alpha = 0.4f)
+                    )
+                }
+            }
+
+            Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+                Text(
+                    text = video.title,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                val epInfo = EpisodePatterns.parse(video.name)
+                val epText = if (epInfo != null) "S${epInfo.season}E${epInfo.episode}" else if (video.duration > 0) timecode(video.duration / 1000) else "Anime Feature"
+                Text(
+                    text = if (studio != null) "$studio · $epText" else epText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 11.sp
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)

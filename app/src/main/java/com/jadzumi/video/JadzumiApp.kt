@@ -286,16 +286,16 @@ private val destinations = listOf(
                                                     JadzumiCategoryPillsRow(
                                                         selectedCategory = when (activeLibraryCategory) {
                                                             "Movies" -> "Movies"
-                                                            "TV Shows" -> "Series"
+                                                            "TV Shows", "Series" -> "Series"
                                                             "Anime" -> "Anime"
                                                             else -> "Movies"
                                                         },
                                                         onCategorySelected = { cat ->
                                                             val newCat = when (cat) {
                                                                 "Movies" -> "Movies"
-                                                                "Series" -> "TV Shows"
+                                                                "Series", "TV Shows" -> "TV Shows"
                                                                 "Anime" -> "Anime"
-                                                                else -> "Movies"
+                                                                else -> cat
                                                             }
                                                             activeLibraryCategory = newCat
                                                         }
@@ -414,16 +414,16 @@ private val destinations = listOf(
                                                 JadzumiCategoryPillsRow(
                                                     selectedCategory = when (activeLibraryCategory) {
                                                         "Movies" -> "Movies"
-                                                        "TV Shows" -> "Series"
+                                                        "TV Shows", "Series" -> "Series"
                                                         "Anime" -> "Anime"
                                                         else -> "Movies"
                                                     },
                                                     onCategorySelected = { cat ->
                                                         val newCat = when (cat) {
                                                             "Movies" -> "Movies"
-                                                            "Series" -> "TV Shows"
+                                                            "Series", "TV Shows" -> "TV Shows"
                                                             "Anime" -> "Anime"
-                                                            else -> "Movies"
+                                                            else -> cat
                                                         }
                                                         activeLibraryCategory = newCat
                                                     }
