@@ -1,3 +1,20 @@
+# Jadzumi v2.3.7 — Option A: Full Continuous Spring Slide Navigation
+
+A motion physics release implementing Option A continuous spring sliding across Movies, Series, and Anime, perfectly matching the fluid shared-axis transitions of the Home and Settings tabs.
+
+### 1. Full Continuous Spring Slide (`AnimatedContent`)
+- **Directional Spring Translation**: Replaced page carousel paging with native `AnimatedContent` executing full screen-width directional spring transitions (`dampingRatio = 0.86f`, `StiffnessMediumLow`) combined with smooth fade curves.
+- **Natural Directional Axis**: Navigating forward (*Movies -> Series -> Anime*) slides content cleanly from right to left; navigating backward (*Anime -> Series -> Movies*) slides smoothly from left to right.
+
+### 2. Intuitive Swipe & Drag Gestures
+- **Fluid Horizontal Gesture Recognition**: Integrated `detectHorizontalDragGestures` allowing you to swipe horizontally anywhere on the catalog to trigger directional spring sliding between categories.
+- **Bi-Directional Pill Sync**: The top category pills instantly synchronize their active indicator when swiping between pages, and tapping any pill glides the catalog with spring velocity.
+
+### 3. Preserved List Scroll Memory
+- **Independent State Retention**: Each category (*Movies*, *Series*, *Anime*) continues to retain its own dedicated `LazyListState`, ensuring your scroll position in one section is never lost when sliding across to another.
+
+---
+
 # Jadzumi v2.3.6 — Google Pixel Material 3 Expressive UI & Spatial Glass Player Isolation
 
 A major architectural and design refinement introducing Google Pixel Flagship Material 3 Expressive surfaces across all catalog, library, details, inspector, and settings screens, while keeping Spatial Glass optics dedicated exclusively to the Now Playing video player HUD.

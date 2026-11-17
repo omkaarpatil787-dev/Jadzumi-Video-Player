@@ -29,6 +29,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
@@ -56,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -869,27 +871,12 @@ fun JadzumiCategoryPillsRow(
     val listStateSeries = rememberLazyListState()
     val listStateAnime = rememberLazyListState()
     val categories = remember { listOf("Movies", "TV Shows", "Anime") }
-    fun catToPage(c: String): Int = when (c) {
-        "TV Shows", "Series" -> 1
-        "Anime" -> 2
-        else -> 0
-    }
-    val initialPage = remember { catToPage(defaultCategory) }
-    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { categories.size })
     var category by rememberSaveable(defaultCategory) { mutableStateOf(if (defaultCategory == "Series") "TV Shows" else defaultCategory) }
 
     LaunchedEffect(defaultCategory) {
-        val targetPage = catToPage(defaultCategory)
-        if (pagerState.currentPage != targetPage) {
-            pagerState.animateScrollToPage(targetPage)
-        }
-    }
-
-    LaunchedEffect(pagerState.currentPage) {
-        val newCategory = categories[pagerState.currentPage]
-        if (category != newCategory) {
-            category = newCategory
-            onCategoryChanged?.invoke(newCategory)
+        val norm = if (defaultCategory == "Series") "TV Shows" else defaultCategory
+        if (category != norm) {
+            category = norm
         }
     }
 
@@ -1138,12 +1125,81 @@ fun JadzumiCategoryPillsRow(
         val bottomPad = if (isPhone) 24.dp else 28.dp
 
         Column(Modifier.fillMaxSize()) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize().weight(1f),
-                key = { categories[it] }
-            ) { pageIndex ->
-                val currentCategory = categories[pageIndex]
+            val motionStyle = LocalMotionStyle.current
+            var totalDragX by remember { mutableFloatStateOf(0f) }
+
+            AnimatedContent(
+                targetState = category,
+                transitionSpec = {
+                    if (!motionStyle.enabled) {
+                        fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
+                    } else {
+                        val tabOrder = listOf("Movies", "TV Shows", "Anime", "Folders")
+                        val initialIndex = tabOrder.indexOf(initialState)
+                        val targetIndex = tabOrder.indexOf(targetState)
+                        val isForward = if (initialIndex != -1 && targetIndex != -1) targetIndex > initialIndex else true
+
+                        (slideInHorizontally(
+                            animationSpec = spring(
+                                dampingRatio = 0.86f,
+                                stiffness = Spring.StiffnessMediumLow
+                            )
+                        ) { fullWidth -> if (isForward) fullWidth else -fullWidth } +
+                            fadeIn(animationSpec = tween(280, easing = LinearOutSlowInEasing)))
+                            .togetherWith(
+                                slideOutHorizontally(
+                                    animationSpec = spring(
+                                        dampingRatio = 0.86f,
+                                        stiffness = Spring.StiffnessMediumLow
+                                    )
+                                ) { fullWidth -> if (isForward) -fullWidth else fullWidth } +
+                                    fadeOut(animationSpec = tween(200, easing = FastOutLinearInEasing))
+                            )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+                    .pointerInput(category) {
+                        detectHorizontalDragGestures(
+                            onDragStart = { totalDragX = 0f },
+                            onDragEnd = {
+                                val threshold = 72.dp.toPx()
+                                if (totalDragX < -threshold) {
+                                    // Swiped Left -> go Forward
+                                    when (category) {
+                                        "Movies" -> {
+                                            category = "TV Shows"
+                                            onCategoryChanged?.invoke("TV Shows")
+                                        }
+                                        "TV Shows" -> {
+                                            category = "Anime"
+                                            onCategoryChanged?.invoke("Anime")
+                                        }
+                                    }
+                                } else if (totalDragX > threshold) {
+                                    // Swiped Right -> go Backward
+                                    when (category) {
+                                        "Anime" -> {
+                                            category = "TV Shows"
+                                            onCategoryChanged?.invoke("TV Shows")
+                                        }
+                                        "TV Shows" -> {
+                                            category = "Movies"
+                                            onCategoryChanged?.invoke("Movies")
+                                        }
+                                    }
+                                }
+                                totalDragX = 0f
+                            },
+                            onHorizontalDrag = { _, dragAmount ->
+                                totalDragX += dragAmount
+                            }
+                        )
+                    },
+                contentKey = { it },
+                label = "categoryContinuousSpringSlide"
+            ) { currentCategory ->
                 if (currentCategory == "Folders") {
                     Box(Modifier.fillMaxSize()) {
                         LocalFoldersPage(state = state, library = library, wide = screenMaxWidth >= 640.dp, select = select)
