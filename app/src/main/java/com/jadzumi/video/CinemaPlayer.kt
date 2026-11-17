@@ -2871,8 +2871,8 @@ private fun NextEpisodeAutoplayBanner(
     Surface(
         modifier = Modifier.widthIn(max = 380.dp),
         shape = RoundedCornerShape(20.dp),
-        color = SpatialGlass.pillBg(false),
-        border = SpatialGlass.pillBorder(1.dp),
+        color = Color(0xE60D0F17),
+        border = BorderStroke(1.dp, Color(0x33FFFFFF)),
         shadowElevation = 16.dp
     ) {
         Column(
@@ -2937,7 +2937,7 @@ private fun NextEpisodeAutoplayBanner(
                     Surface(
                         shape = RoundedCornerShape(999.dp),
                         color = TimelineAccent.copy(alpha = 0.25f),
-                        border = SpatialGlass.pillBorder(0.5.dp)
+                        border = BorderStroke(0.5.dp, Color(0x33FFFFFF))
                     ) {
                         Text(
                             epLabel,

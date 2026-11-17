@@ -76,115 +76,92 @@ enum class HaloPalette(
 }
 
 /**
- * Atmospheric Portal Halo Backdrop Composable.
- * Renders two soft radial-gradient aura blobs behind app content.
+ * Direction A: Adaptive Cinematic Atmospheric Canvas.
+ * A calm, refined, non-distracting atmospheric canvas:
+ * - Light: Clean architectural paper (#F8F7FC) with subtle top micro-vignette.
+ * - Dark: Deep obsidian (#0E0C15) with subtle top-to-bottom depth falloff.
+ * - AMOLED: Pure #000000 black for infinite contrast and power saving.
+ */
+@Composable
+fun AdaptiveAtmosphericCanvas(
+    theme: String,
+    modifier: Modifier = Modifier
+) {
+    androidx.compose.foundation.Canvas(modifier = modifier.fillMaxSize()) {
+        when (theme) {
+            "AMOLED" -> {
+                drawRect(color = Color.Black)
+            }
+            "Light" -> {
+                // Architectural paper base
+                drawRect(color = Color(0xFFF8F7FC))
+                // Subtle top elevation vignette
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFEDEBF5).copy(alpha = 0.5f),
+                            Color(0xFFF8F7FC).copy(alpha = 0f)
+                        ),
+                        startY = 0f,
+                        endY = size.height * 0.35f
+                    )
+                )
+                // Soft corner vignette for depth
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFE4E1EF).copy(alpha = 0.3f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.95f, size.height * 0.05f),
+                        radius = size.width * 0.55f
+                    )
+                )
+            }
+            else -> { // Dark
+                // Deep obsidian base
+                drawRect(color = Color(0xFF0E0C15))
+                // Subtle depth falloff from top
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF181524),
+                            Color(0xFF0E0C15)
+                        ),
+                        startY = 0f,
+                        endY = size.height * 0.45f
+                    )
+                )
+                // Gentle horizon micro-ambient
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF261F38).copy(alpha = 0.35f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.5f, 0f),
+                        radius = size.width * 0.75f
+                    )
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Atmospheric Portal Halo Backdrop Composable (Redirected to Direction A Adaptive Atmospheric Canvas).
  */
 @Composable
 fun PortalHaloBackdrop(
     theme: String,
-    palette: HaloPalette,
-    enabled: Boolean,
+    palette: HaloPalette = HaloPalette.GlacierBlue,
+    enabled: Boolean = true,
     intensity: Float = 0.30f,
     spread: Float = 0.70f,
     reducedMotion: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    if (!enabled || intensity <= 0.01f) return
-
-    val effectiveIntensity = when (theme) {
-        "AMOLED" -> (intensity * 0.42f).coerceIn(0f, 0.26f)
-        "Light" -> (intensity * 0.72f).coerceIn(0f, 0.46f)
-        else -> intensity.coerceIn(0f, 0.65f)
-    }
-
-    val animatedGlow by animateFloatAsState(
-        targetValue = effectiveIntensity,
-        animationSpec = tween(420, easing = LinearOutSlowInEasing),
-        label = "haloGlow"
-    )
-
-    // 10-second gentle idle drift cycle from halo-explorer
-    val infiniteTransition = rememberInfiniteTransition(label = "haloDrift")
-    val driftFactor by if (!reducedMotion) {
-        infiniteTransition.animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(10_000, easing = EaseInOutSine),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "haloDriftFactor"
-        )
-    } else {
-        remember { mutableFloatStateOf(0f) }
-    }
-
-    val primaryCol = palette.primaryColor
-    val secondaryCol = palette.secondaryColor
-
-    Spacer(
-        modifier = modifier
-            .fillMaxSize()
-            .drawBehind {
-                if (animatedGlow <= 0.005f) return@drawBehind
-
-                val w = size.width
-                val h = size.height
-
-                // Blob 1: Upper-left anchor with gentle unhurried float
-                val driftX1 = -10f * driftFactor * density
-                val driftY1 = 8f * driftFactor * density
-                val center1 = Offset(w * 0.24f + driftX1, h * 0.25f + driftY1)
-                val radius1 = (w * spread).coerceAtLeast(100f)
-
-                // Blob 2: Lower-right anchor
-                val driftX2 = 8f * driftFactor * density
-                val driftY2 = -6f * driftFactor * density
-                val center2 = Offset(w * 0.94f + driftX2, h * 0.96f + driftY2)
-                val radius2 = (w * (spread * 0.85f)).coerceAtLeast(100f)
-
-                // Theatrical Ambient Wash (Top center Horizon)
-                val topWashCenter = Offset(w * 0.5f, 0f)
-                val topWashRadius = (w * 0.95f).coerceAtLeast(150f)
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        0.0f to primaryCol.copy(alpha = animatedGlow * 0.55f),
-                        0.50f to primaryCol.copy(alpha = animatedGlow * 0.20f),
-                        0.95f to Color.Transparent,
-                        center = topWashCenter,
-                        radius = topWashRadius
-                    ),
-                    center = topWashCenter,
-                    radius = topWashRadius
-                )
-
-                // Atmospheric Node 1: Upper-left anchor with gentle unhurried float
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        0.0f to primaryCol.copy(alpha = animatedGlow * 0.85f),
-                        0.45f to primaryCol.copy(alpha = animatedGlow * 0.35f),
-                        0.85f to Color.Transparent,
-                        center = center1,
-                        radius = radius1
-                    ),
-                    center = center1,
-                    radius = radius1
-                )
-
-                // Atmospheric Node 2: Lower-right anchor
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        0.0f to secondaryCol.copy(alpha = animatedGlow * 0.85f),
-                        0.45f to secondaryCol.copy(alpha = animatedGlow * 0.30f),
-                        0.85f to Color.Transparent,
-                        center = center2,
-                        radius = radius2
-                    ),
-                    center = center2,
-                    radius = radius2
-                )
-            }
-    )
+    AdaptiveAtmosphericCanvas(theme = theme, modifier = modifier)
 }
 
 /**

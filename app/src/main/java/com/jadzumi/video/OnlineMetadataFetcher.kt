@@ -44,7 +44,7 @@ object OnlineMetadataFetcher {
 
     fun isOnlineMetadataEnabled(context: Context): Boolean =
         context.getSharedPreferences("playback", Context.MODE_PRIVATE)
-            .getBoolean("online_metadata", false)
+            .getBoolean("online_metadata", true)
 
     // Check before EVERY request (including fallbacks and images). Opt-out never opens
     // a connection; existing memory/disk metadata and posters remain readable offline.

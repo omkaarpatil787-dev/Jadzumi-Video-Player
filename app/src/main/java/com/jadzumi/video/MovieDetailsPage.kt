@@ -200,9 +200,9 @@ fun MovieDetailsPage(
                 Surface(
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
                     shape = RoundedCornerShape(20.dp),
-                    color = SpatialGlass.cardBg(theme),
-                    border = SpatialGlass.cardBorder(theme, 1.dp),
-                    shadowElevation = if (isLight) 2.dp else 4.dp
+                    color = MaterialExpressive.cardBg(theme),
+                    border = MaterialExpressive.cardBorder(theme),
+                    shadowElevation = MaterialExpressive.cardElevation(theme)
                 ) {
                     Box(
                         modifier = Modifier.fillMaxWidth()
@@ -481,8 +481,8 @@ fun MovieDetailsPage(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(20.dp),
-                            color = SpatialGlass.subCardBg(theme),
-                            border = SpatialGlass.cardBorder(theme, 1.dp)
+                            color = MaterialExpressive.subCardBg(theme),
+                            border = MaterialExpressive.cardBorder(theme)
                         ) {
                             Text(
                                 "No related titles indexed in your library.",
@@ -500,10 +500,10 @@ fun MovieDetailsPage(
                                 playback.fullscreen = true
                             },
                             shape = RoundedCornerShape(20.dp),
-                            color = SpatialGlass.cardBg(theme),
-                            border = SpatialGlass.cardBorder(theme, 1.dp),
+                            color = MaterialExpressive.cardBg(theme),
+                            border = MaterialExpressive.cardBorder(theme),
                             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).touchMotion(),
-                            shadowElevation = if (isLight) 2.dp else 4.dp
+                            shadowElevation = MaterialExpressive.cardElevation(theme)
                         ) {
                             Row(
                                 Modifier.padding(14.dp),

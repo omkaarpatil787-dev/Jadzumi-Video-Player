@@ -1,3 +1,44 @@
+# Jadzumi v3.1.0 — Multi-Tier Artwork Resolver, Atmospheric Canvas, Unified Cards, Cleaned Settings & Smart Binge Engine
+
+A major feature and design system release delivering the Multi-Tier Poster Artwork Resolver, Direction A Adaptive Atmospheric Canvas, universal Material 3 Expressive surfaces across all screens, a streamlined 4-group Settings Hub, and the Smart Hybrid Binge Engine.
+
+### 1. Multi-Tier Artwork Resolution Engine
+- **Universal Poster Scraper**: Solved the missing artwork issue where cards rendered blank gray gradient rectangles on the library screen. Library cards now resolve posters immediately without requiring users to tap into details pages.
+- **Asynchronous 4-Tier Pipeline**:
+  - Tier 1: Local sidecar image scraping (`poster.jpg`, `cover.jpg`, `folder.jpg`, `.nfo`).
+  - Tier 2: Instant in-memory and disk cache checks for TMDB/Cinemeta and AniList online posters.
+  - Tier 3: Non-blocking background coroutine prefetching for indexed library media.
+  - Tier 4: Hardware thumbnail extraction fallback, backed by `CinematicFallbackPoster` with dynamic palette detection and styled typography so no card ever remains blank.
+- **Opt-Out Online Scraper**: Online metadata and poster scraping is now active out of the box with user privacy controls.
+
+### 2. Direction A: Adaptive Cinematic Atmospheric Canvas
+- **Calm Architectural Backdrop**: Replaced the floating `PortalHalo` radial gradient aura blobs with an adaptive, non-distracting atmospheric canvas:
+  - Light Mode: Crisp architectural paper (`#F8F7FC`) with subtle top micro-vignette.
+  - Dark Mode: Deep obsidian charcoal (`#0E0C15`) with gentle vertical depth falloff.
+  - AMOLED Mode: True pitch black (`#000000`) for infinite contrast and zero OLED power consumption.
+
+### 3. Universal Material 3 Expressive Design System
+- **Unified Card Hierarchy**: Replaced legacy `SpatialGlass` card implementations across `MovieDetailsPage` and `TvShowDetailsPage` with unified `MaterialExpressive.cardBg`, `MaterialExpressive.subCardBg`, and `MaterialExpressive.cardBorder` tokens.
+- **Harmonized Geometry**: Standardized 16dp corner radius across all library rail and grid cards, and 20dp corner radius on details hero banners, dialogs, and panels.
+
+### 4. Reorganized 4-Group Settings Hub & Gimmick Purge
+- **Clean 4-Group Architecture**: Consolidated fragmented settings categories into a clean, predictable hierarchy:
+  1. Playback & Decoders: MediaCodec hardware acceleration, Auto Frame Rate (AFR) display matching, resume playback rules, and background playback.
+  2. Audio & Subtitles Studio: Multi-track audio management, night mode voice boost, Spatial Audio virtualizer, dual subtitle studio, typography styling, and OpenSubtitles API integration.
+  3. Appearance & Controls: Curated theme engine (Light, Dark, AMOLED, Dynamic Material You), 6% shared-axis motion physics, touch gestures, and orientation lock.
+  4. Storage & About: Storage breakdown analyzer, indexed media folder management, blacklist/excluded paths, cache cleanup, app identity, and GitHub repository links.
+- **Gimmick Removal**: Purged halo sliders, halo palette selectors, splash replay button, theme bloom switch, corner style picker, and bottom bar style picker.
+
+### 5. Smart Hybrid Binge Engine (Up Next Auto-Queue)
+- **Deterministic Multi-Tier Detection**: Automated credit detection without heavy AI model overhead:
+  - Tier 1: Embedded chapter metadata inspection (`credits`, `ending`, `outro`, `ed`, `staff`).
+  - Tier 2: 90-second Anime ED rule anchoring credit detection at `duration - 90s` for TV anime.
+  - Tier 3: Real-time subtitle cue scanner monitoring production credit keywords (`directed by`, `starring`, `written by`, `executive producer`, `theme song`, `cast`, `produced by`, `music by`, `created by`) during the final 10% of playback.
+  - Tier 4: Dynamic runtime fallback at 92% duration or custom outro window.
+- **Minimal Floating Corner Prompt**: Replaced intrusive full-screen countdown overlays with a sleek floating corner chip (*"Up Next: S01E03 starts in 10s · [Play Now]"*) with an instant dismiss action.
+
+---
+
 # Jadzumi v3.0.1 — Hotfix: Series Navigation, Category Stutter Elimination & Clean Rails Catalog Activation
 
 A targeted performance and navigation hotfix resolving Series tab interaction, eliminating category switching jank, and fully activating the locked v3.0 Clean Rails catalog layout.

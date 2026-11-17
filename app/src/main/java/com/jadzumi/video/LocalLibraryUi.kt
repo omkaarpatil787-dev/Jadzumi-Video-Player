@@ -1211,6 +1211,7 @@ fun JadzumiCategoryPillsRow(
                                                         subtitle = epSubtitle,
                                                         savedPos = pos,
                                                         durationMs = dur,
+                                                        sidecars = state.sidecars,
                                                         onClick = {
                                                             playback.open(ep)
                                                             playback.fullscreen = true
@@ -1314,6 +1315,7 @@ fun JadzumiCategoryPillsRow(
                                                         subtitle = timecode(pos / 1000) + " / " + timecode(dur / 1000),
                                                         savedPos = pos,
                                                         durationMs = dur,
+                                                        sidecars = state.sidecars,
                                                         onClick = {
                                                             playback.open(anime)
                                                             playback.fullscreen = true
@@ -1372,6 +1374,7 @@ fun JadzumiCategoryPillsRow(
                                                     Box(Modifier.weight(1f)) {
                                                         CleanRailAnimeCard(
                                                             video = anime,
+                                                            sidecars = state.sidecars,
                                                             theme = effectiveTheme,
                                                             playback = playback,
                                                             onClick = { select(anime.uri) }
@@ -1433,6 +1436,7 @@ fun JadzumiCategoryPillsRow(
                                                         subtitle = timecode(pos / 1000) + " / " + timecode(dur / 1000),
                                                         savedPos = pos,
                                                         durationMs = dur,
+                                                        sidecars = state.sidecars,
                                                         onClick = {
                                                             playback.open(movie)
                                                             playback.fullscreen = true
@@ -1590,13 +1594,44 @@ fun CleanContinueWatchingCard(
     subtitle: String = "",
     savedPos: Long,
     durationMs: Long,
+    sidecars: Map<String, List<LocalSidecar>> = emptyMap(),
     onClick: () -> Unit
 ) {
     val theme = LocalThemeName.current
+    val context = LocalContext.current
     val progress = if (durationMs > 0) (savedPos.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
     val remainingSec = ((durationMs - savedPos).coerceAtLeast(0) / 1000)
     val remainingText = if (remainingSec >= 3600) "${remainingSec / 3600}h ${(remainingSec % 3600) / 60}m left" else "${(remainingSec / 60).coerceAtLeast(1)}m left"
     val percentText = "${(progress * 100).toInt()}%"
+
+    val movieMeta = remember(video.identity, sidecars) {
+        if (sidecars.isNotEmpty()) extractMovieMetadata(video, sidecars, context) else null
+    }
+    var onlinePosterUri by remember(video.identity) {
+        mutableStateOf(movieMeta?.backdropUri ?: movieMeta?.posterUri)
+    }
+
+    LaunchedEffect(video.identity) {
+        if (onlinePosterUri == null) {
+            val (cleanTitle, cleanYear) = OnlineMetadataFetcher.extractCleanTitleAndYear(video.name)
+            val searchTitle = cleanTitle.ifBlank { video.title }
+            val cached = withContext(Dispatchers.IO) {
+                OnlineMetadataFetcher.getCachedMovie(context, searchTitle, cleanYear, video.identity)
+                    ?: OnlineMetadataFetcher.getCachedTvShow(context, searchTitle)
+                    ?: if (OnlineMetadataFetcher.isOnlineMetadataEnabled(context)) {
+                        OnlineMetadataFetcher.fetchMovieMetadata(context, searchTitle, cleanYear, video.identity)
+                    } else null
+            }
+            if (cached != null) {
+                val uri = cached.backdropUrl ?: cached.localPosterPath ?: cached.posterUrl
+                if (!uri.isNullOrBlank()) {
+                    onlinePosterUri = uri
+                }
+            }
+        }
+    }
+
+    val artworkUri = onlinePosterUri ?: movieMeta?.backdropUri ?: movieMeta?.posterUri
 
     Surface(
         onClick = onClick,
@@ -1616,7 +1651,15 @@ fun CleanContinueWatchingCard(
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
-                LocalThumbnail(video, Modifier.fillMaxSize())
+                if (artworkUri != null) {
+                    SidecarImage(
+                        uri = artworkUri,
+                        fallbackVideo = video,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    LocalThumbnail(video, Modifier.fillMaxSize())
+                }
 
                 Box(
                     Modifier
@@ -1796,6 +1839,34 @@ fun CleanRailPosterCard(
     theme: String,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val movieMeta = remember(video.identity, sidecars) {
+        extractMovieMetadata(video, sidecars, context)
+    }
+    var onlinePosterUri by remember(video.identity) {
+        mutableStateOf(movieMeta.posterUri)
+    }
+
+    LaunchedEffect(video.identity) {
+        if (onlinePosterUri == null) {
+            val (cleanTitle, cleanYear) = OnlineMetadataFetcher.extractCleanTitleAndYear(video.name)
+            val searchTitle = cleanTitle.ifBlank { video.title }
+            val cached = withContext(Dispatchers.IO) {
+                OnlineMetadataFetcher.getCachedMovie(context, searchTitle, cleanYear, video.identity)
+                    ?: if (OnlineMetadataFetcher.isOnlineMetadataEnabled(context)) {
+                        OnlineMetadataFetcher.fetchMovieMetadata(context, searchTitle, cleanYear, video.identity)
+                    } else null
+            }
+            if (cached != null) {
+                val uri = cached.localPosterPath ?: cached.posterUrl
+                if (!uri.isNullOrBlank()) {
+                    onlinePosterUri = uri
+                }
+            }
+        }
+    }
+
+    val posterTarget = onlinePosterUri ?: movieMeta.posterUri
     val savedPos = playback.savedPosition(video)
     val dur = video.duration.takeIf { it > 0 } ?: 1000L
     val isWatched = playback.isWatched(video)
@@ -1826,7 +1897,15 @@ fun CleanRailPosterCard(
                     .aspectRatio(2f / 3f)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
-                LocalThumbnail(video, Modifier.fillMaxSize())
+                if (posterTarget != null) {
+                    SidecarImage(
+                        uri = posterTarget,
+                        fallbackVideo = video,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    LocalThumbnail(video, Modifier.fillMaxSize())
+                }
 
                 Box(
                     Modifier
@@ -1903,8 +1982,31 @@ fun CleanRailSeriesCard(
     theme: String,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    var seriesPoster by remember(series.id) {
+        mutableStateOf(series.posterUri ?: series.backdropUri)
+    }
+
+    LaunchedEffect(series.id) {
+        if (seriesPoster == null) {
+            val cached = withContext(Dispatchers.IO) {
+                OnlineMetadataFetcher.getCachedTvShow(context, series.title)
+                    ?: if (OnlineMetadataFetcher.isOnlineMetadataEnabled(context)) {
+                        OnlineMetadataFetcher.fetchTvShowMetadata(context, series.title)
+                    } else null
+            }
+            if (cached != null) {
+                val uri = cached.localPosterPath ?: cached.posterUrl
+                if (!uri.isNullOrBlank()) {
+                    seriesPoster = uri
+                }
+            }
+        }
+    }
+
     val totalEpisodes = series.seasons.values.sumOf { it.size }
     val seasonCount = series.seasons.size
+    val firstEp = series.seasons.values.firstOrNull()?.firstOrNull()
 
     Surface(
         onClick = onClick,
@@ -1923,11 +2025,17 @@ fun CleanRailSeriesCard(
                     .aspectRatio(2f / 3f)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
-                SidecarImage(
-                    uri = series.posterUri ?: series.backdropUri,
-                    fallbackVideo = series.seasons.values.firstOrNull()?.firstOrNull(),
-                    modifier = Modifier.fillMaxSize()
-                )
+                if (seriesPoster != null) {
+                    SidecarImage(
+                        uri = seriesPoster,
+                        fallbackVideo = firstEp,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else if (firstEp != null) {
+                    LocalThumbnail(firstEp, Modifier.fillMaxSize())
+                } else {
+                    CinematicFallbackPoster(title = series.title, name = series.title, modifier = Modifier.fillMaxSize())
+                }
 
                 Box(
                     Modifier
@@ -1983,10 +2091,40 @@ fun CleanRailSeriesCard(
 @Composable
 fun CleanRailAnimeCard(
     video: LocalVideo,
+    sidecars: Map<String, List<LocalSidecar>> = emptyMap(),
     theme: String,
     playback: PlaybackController,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val movieMeta = remember(video.identity, sidecars) {
+        if (sidecars.isNotEmpty()) extractMovieMetadata(video, sidecars, context) else null
+    }
+    var onlinePosterUri by remember(video.identity) {
+        mutableStateOf(movieMeta?.posterUri)
+    }
+
+    LaunchedEffect(video.identity) {
+        if (onlinePosterUri == null) {
+            val (cleanTitle, cleanYear) = OnlineMetadataFetcher.extractCleanTitleAndYear(video.name)
+            val searchTitle = cleanTitle.ifBlank { video.title }
+            val cached = withContext(Dispatchers.IO) {
+                OnlineMetadataFetcher.getCachedTvShow(context, searchTitle)
+                    ?: OnlineMetadataFetcher.getCachedMovie(context, searchTitle, cleanYear, video.identity)
+                    ?: if (OnlineMetadataFetcher.isOnlineMetadataEnabled(context)) {
+                        OnlineMetadataFetcher.fetchTvShowMetadata(context, searchTitle)
+                    } else null
+            }
+            if (cached != null) {
+                val uri = cached.localPosterPath ?: cached.posterUrl
+                if (!uri.isNullOrBlank()) {
+                    onlinePosterUri = uri
+                }
+            }
+        }
+    }
+
+    val targetArtwork = onlinePosterUri ?: movieMeta?.posterUri
     val savedPos = playback.savedPosition(video)
     val dur = video.duration.takeIf { it > 0 } ?: 1000L
     val isWatched = playback.isWatched(video)
@@ -2025,7 +2163,15 @@ fun CleanRailAnimeCard(
                     .aspectRatio(2f / 3f)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
-                LocalThumbnail(video, Modifier.fillMaxSize())
+                if (targetArtwork != null) {
+                    SidecarImage(
+                        uri = targetArtwork,
+                        fallbackVideo = video,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    LocalThumbnail(video, Modifier.fillMaxSize())
+                }
 
                 Box(
                     Modifier
@@ -3523,13 +3669,15 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
     val context = LocalContext.current.applicationContext
     val key = "${video.uri}:${video.modified}:${video.bytes}"
     val cached = remember(key) { ThumbnailMemory.cache.get(key) }
+    var hasLoaded by remember(key) { mutableStateOf(cached != null) }
     val bitmap by produceState<Bitmap?>(initialValue = cached, key1 = key) {
         if (cached != null) {
             value = cached
+            hasLoaded = true
             return@produceState
         }
         value = null
-        value = withContext(Dispatchers.IO) {
+        val loaded = withContext(Dispatchers.IO) {
             ThumbnailMemory.permits.withPermit {
                 ThumbnailMemory.cache.get(key) ?: run {
                     var bmp: Bitmap? = null
@@ -3570,13 +3718,17 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
                 }
             }
         }
+        value = loaded
+        hasLoaded = true
     }
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceVariant) {
         val frame = bitmap
         if (frame != null) {
             Image(frame.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        } else {
+        } else if (!hasLoaded) {
             ShimmerPlaceholder(Modifier.fillMaxSize())
+        } else {
+            CinematicFallbackPoster(title = video.title, name = video.name, modifier = Modifier.fillMaxSize())
         }
     }
 }

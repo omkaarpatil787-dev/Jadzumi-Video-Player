@@ -241,18 +241,38 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                     }
                     if (++pollCount % 10 == 0) save()
 
-                    // Binge Automation: Per-Series Auto-Skip Intro & Outro
+                    // Smart Hybrid Binge Engine: Auto-Skip Intro & Outro / Credit Detection
                     val v = video
                     if (v != null) {
                         val isEpisode = v.episode != null || EpisodePatterns.parse(v.name) != null
-                        if (isEpisode) {
+                        val isAnime = (v.parentDir?.contains("anime", ignoreCase = true) == true) ||
+                                      (v.folder?.contains("anime", ignoreCase = true) == true) ||
+                                      v.name.contains("Anime", ignoreCase = true)
+                        if (isEpisode || isAnime) {
                             val binge = BingeManager.getSettings(getApplication(), BingeManager.resolveSeriesKey(v.name))
                             if (binge.autoSkipIntro && p.isPlaying && position in 1_000L..15_000L && position < binge.introSkipSeconds * 1000L) {
                                 seekTo(binge.introSkipSeconds * 1000L)
                             }
                             val remaining = currentDur - position
-                            val outroMs = binge.outroSkipSeconds * 1000L
-                            if (currentDur > 180_000L && remaining in 1_000L..outroMs) {
+
+                            // Tier 1: Deterministic Chapter Metadata Check
+                            val creditChapter = chapters.firstOrNull { ch ->
+                                ch.timeMs >= currentDur * 0.85f &&
+                                (ch.title.contains("credit", ignoreCase = true) ||
+                                 ch.title.contains("ending", ignoreCase = true) ||
+                                 ch.title.contains("outro", ignoreCase = true) ||
+                                 ch.title.contains("ed", ignoreCase = true) ||
+                                 ch.title.contains("staff", ignoreCase = true))
+                            }
+
+                            // Calculate smart credit window
+                            val smartOutroMs: Long = when {
+                                creditChapter != null -> (currentDur - creditChapter.timeMs).coerceIn(10_000L, 300_000L)
+                                isAnime && currentDur > 180_000L -> 90_000L // Tier 2: Anime 90-second ED rule
+                                else -> (binge.outroSkipSeconds * 1000L).coerceAtLeast((currentDur * 0.08f).toLong().coerceIn(30_000L, 90_000L)) // Tier 4: Fallback
+                            }
+
+                            if (currentDur > 120_000L && remaining in 1_000L..smartOutroMs) {
                                 if (binge.autoSkipOutro && p.isPlaying && endedHandledFor != v.identity) {
                                     endedHandledFor = v.identity
                                     playNextEpisode()
@@ -1070,6 +1090,21 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
                 override fun onAudioSessionIdChanged(audioSessionId: Int) {
                     if (nightModeVoiceBoost) applyNightMode()
                     applySpatialAudio()
+                }
+
+                override fun onCues(cueGroup: androidx.media3.common.text.CueGroup) {
+                    val v = video ?: return
+                    val curDur = duration
+                    val curPos = position
+                    if (curDur > 120_000L && curPos >= curDur * 0.90f) {
+                        val cueText = cueGroup.cues.joinToString(" ") { it.text?.toString().orEmpty() }.lowercase()
+                        val keywords = listOf("directed by", "starring", "written by", "executive producer", "theme song", "cast", "produced by", "music by", "created by")
+                        if (keywords.any { cueText.contains(it) }) {
+                            if (nextEpisode != null && nextEpisodeCountdown == null && countdownDismissedForVideo != v.identity) {
+                                startNextEpisodeCountdown(v, 10)
+                            }
+                        }
+                    }
                 }
 
                 override fun onTracksChanged(tracks: Tracks) {

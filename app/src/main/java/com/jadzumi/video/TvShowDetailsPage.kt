@@ -228,8 +228,8 @@ fun TvShowDetailsPage(
                     // Binge Automation pill
                     Surface(
                         shape = CircleShape,
-                        color = SpatialGlass.subCardBg(theme),
-                        border = SpatialGlass.cardBorder(theme, 1.dp),
+                        color = MaterialExpressive.subCardBg(theme),
+                        border = MaterialExpressive.cardBorder(theme),
                         modifier = Modifier.clip(CircleShape).clickable { showBingeDialog = true }
                     ) {
                         Row(
@@ -256,8 +256,8 @@ fun TvShowDetailsPage(
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(20.dp),
-                                color = SpatialGlass.subCardBg(theme),
-                                border = SpatialGlass.cardBorder(theme, 1.dp)
+                                color = MaterialExpressive.subCardBg(theme),
+                                border = MaterialExpressive.cardBorder(theme)
                             ) {
                                 Text("No episodes available to inspect.", modifier = Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium)
                             }
@@ -271,8 +271,8 @@ fun TvShowDetailsPage(
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(20.dp),
-                                color = SpatialGlass.subCardBg(theme),
-                                border = SpatialGlass.cardBorder(theme, 1.dp)
+                                color = MaterialExpressive.subCardBg(theme),
+                                border = MaterialExpressive.cardBorder(theme)
                             ) {
                                 Text("No related series indexed in your library.", modifier = Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -282,10 +282,10 @@ fun TvShowDetailsPage(
                             Surface(
                                 onClick = { onBack() },
                                 shape = RoundedCornerShape(20.dp),
-                                color = SpatialGlass.cardBg(theme),
-                                border = SpatialGlass.cardBorder(theme, 1.dp),
+                                color = MaterialExpressive.cardBg(theme),
+                                border = MaterialExpressive.cardBorder(theme),
                                 modifier = Modifier.fillMaxWidth().touchMotion(),
-                                shadowElevation = if (isLight) 3.dp else 6.dp
+                                shadowElevation = MaterialExpressive.cardElevation(theme)
                             ) {
                                 Row(
                                     Modifier.padding(14.dp),
@@ -518,9 +518,9 @@ private fun ShowHeroCard(
     Surface(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
-        color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (isLight) 2.dp else 4.dp
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -762,8 +762,8 @@ private fun SeasonTabPill(
     val theme = LocalThemeName.current
     Surface(
         shape = RoundedCornerShape(999.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primary else SpatialGlass.subCardBg(theme),
-        border = if (isSelected) null else SpatialGlass.cardBorder(theme, 1.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialExpressive.subCardBg(theme),
+        border = if (isSelected) null else MaterialExpressive.cardBorder(theme),
         modifier = Modifier.touchMotion().clickable(onClick = onClick)
     ) {
         Row(
@@ -835,8 +835,8 @@ private fun EpisodesHeader(
         val theme = if (surfaceColor.luminance() > 0.5f) "Light" else "Dark"
         Surface(
             shape = CircleShape,
-            color = SpatialGlass.subCardBg(theme),
-            border = SpatialGlass.cardBorder(theme, 1.dp),
+            color = MaterialExpressive.subCardBg(theme),
+            border = MaterialExpressive.cardBorder(theme),
             modifier = Modifier.clip(CircleShape).clickable(onClick = onToggleSort)
         ) {
             Row(
@@ -870,9 +870,9 @@ private fun EpisodeCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).touchMotion(),
         shape = RoundedCornerShape(20.dp),
-        color = SpatialGlass.cardBg(theme),
-        border = if (isNext) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 2.dp else 4.dp
+        color = MaterialExpressive.cardBg(theme),
+        border = if (isNext) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else MaterialExpressive.cardBorder(theme),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val isNarrow = maxWidth < 480.dp
@@ -1050,9 +1050,9 @@ internal fun OfflineVerificationCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (theme == "Light") 4.dp else 8.dp
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Row(
             modifier = Modifier
@@ -1160,29 +1160,35 @@ internal fun SidecarImage(
 ) {
     val context = LocalContext.current.applicationContext
     val cached = remember(uri) { uri?.let { SidecarMemory.cache.get(it) } }
+    var hasLoaded by remember(uri) { mutableStateOf(cached != null || uri == null) }
     val bitmap by produceState<Bitmap?>(initialValue = cached, key1 = uri) {
         if (cached != null) {
             value = cached
+            hasLoaded = true
             return@produceState
         }
         value = null
         if (uri != null) {
-            value = withContext(Dispatchers.IO) {
+            val loaded = withContext(Dispatchers.IO) {
                 SidecarMemory.permits.withPermit {
                     SidecarMemory.cache.get(uri) ?: decodeSampledBitmap(context, uri)?.also {
                         SidecarMemory.cache.put(uri, it)
                     }
                 }
             }
+            value = loaded
         }
+        hasLoaded = true
     }
 
     if (bitmap != null) {
         Image(bitmap!!.asImageBitmap(), null, modifier, contentScale = ContentScale.Crop)
     } else if (fallbackVideo != null) {
         LocalThumbnail(fallbackVideo, modifier)
-    } else {
+    } else if (!hasLoaded) {
         ShimmerPlaceholder(modifier)
+    } else {
+        CinematicFallbackPoster(title = "", name = "", modifier = modifier)
     }
 }
 
@@ -1200,9 +1206,9 @@ private fun SeasonCompletionBar(
     Surface(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
-        color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (isLight) 2.dp else 4.dp
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -1252,9 +1258,9 @@ private fun UpNextSpotlightCard(
         onClick = onPlay,
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).touchMotion(),
         shape = RoundedCornerShape(20.dp),
-        color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp),
-        shadowElevation = if (isLight) 2.dp else 4.dp
+        color = MaterialExpressive.cardBg(theme),
+        border = MaterialExpressive.cardBorder(theme),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Row(
             modifier = Modifier.padding(14.dp),

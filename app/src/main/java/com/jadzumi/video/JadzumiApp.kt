@@ -245,13 +245,8 @@ private val destinations = listOf(
             Box(Modifier.fillMaxSize()) {
             Surface(Modifier.fillMaxSize(), color = colors.background) {
                 Box(Modifier.fillMaxSize()) {
-                    PortalHaloBackdrop(
-                        theme = effectiveTheme,
-                        palette = HaloPalette.fromName(haloPaletteName),
-                        enabled = haloEnabled && (playback.video == null || playback.isDocked || playback.inPip),
-                        intensity = haloIntensity,
-                        spread = haloSpread,
-                        reducedMotion = reducedMotion || !motionStyle.enabled
+                    AdaptiveAtmosphericCanvas(
+                        theme = effectiveTheme
                     )
                     BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
                     if (query.isNotEmpty()) {
@@ -637,112 +632,37 @@ private val destinations = listOf(
                                                 theme = theme,
                                                 effectiveTheme = effectiveTheme,
                                                 onTheme = ::switchThemeWithBloom,
-                                                themeBloom = themeBloomEnabled,
-                                                onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
                                                 reduced = reducedMotion,
                                                 onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
                                                 livelyAnimations = livelyAnimations,
                                                 onLivelyAnimations = { livelyAnimations = it; prefs.edit { putBoolean("livelyAnimations", it) } },
-                                                cornerStyle = cornerStyle,
-                                                onCornerStyle = {
-                                                    cornerStyle = it
-                                                    prefs.edit { putString("cornerStyle", it) }
-                                                },
-                                                bottomBarStyle = bottomBarStyle,
-                                                onBottomBarStyle = {
-                                                    bottomBarStyle = it
-                                                    prefs.edit { putString("bottomBarStyle", it) }
-                                                },
                                                 dockAutoMinimize = dockAutoMinimize,
                                                 onDockAutoMinimize = {
                                                     dockAutoMinimize = it
                                                     prefs.edit { putBoolean("dockAutoMinimize", it) }
                                                 },
-                                                glassIntensity = glassIntensity,
-                                                onGlassIntensity = {
-                                                    glassIntensity = it
-                                                    prefs.edit { putFloat("glassIntensity", it) }
-                                                },
-                                                haloEnabled = haloEnabled,
-                                                onHaloEnabled = {
-                                                    haloEnabled = it
-                                                    prefs.edit { putBoolean("halo_enabled", it) }
-                                                },
-                                                haloPalette = HaloPalette.fromName(haloPaletteName),
-                                                onHaloPalette = {
-                                                    haloPaletteName = it.title
-                                                    prefs.edit { putString("halo_palette", it.title) }
-                                                },
-                                                haloIntensity = haloIntensity,
-                                                onHaloIntensity = {
-                                                    haloIntensity = it
-                                                    prefs.edit { putFloat("halo_intensity", it) }
-                                                },
-                                                haloSpread = haloSpread,
-                                                onHaloSpread = {
-                                                    haloSpread = it
-                                                    prefs.edit { putFloat("halo_spread", it) }
-                                                },
-                                                onReplaySplash = { showSplash = true },
                                                 localState = localState,
                                                 library = library,
                                                 playback = playback,
-                                                initialCategory = "Folders"
+                                                initialCategory = "storage_about"
                                             )
                                             "Settings" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
                                                 effectiveTheme = effectiveTheme,
                                                 onTheme = ::switchThemeWithBloom,
-                                                themeBloom = themeBloomEnabled,
-                                                onThemeBloom = { themeBloomEnabled = it; prefs.edit { putBoolean("themeBloom", it) } },
                                                 reduced = reducedMotion,
                                                 onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
                                                 livelyAnimations = livelyAnimations,
                                                 onLivelyAnimations = { livelyAnimations = it; prefs.edit { putBoolean("livelyAnimations", it) } },
-                                                cornerStyle = cornerStyle,
-                                                onCornerStyle = {
-                                                    cornerStyle = it
-                                                    prefs.edit { putString("cornerStyle", it) }
-                                                },
-                                                bottomBarStyle = bottomBarStyle,
-                                                onBottomBarStyle = {
-                                                    bottomBarStyle = it
-                                                    prefs.edit { putString("bottomBarStyle", it) }
-                                                },
                                                 dockAutoMinimize = dockAutoMinimize,
                                                 onDockAutoMinimize = {
                                                     dockAutoMinimize = it
                                                     prefs.edit { putBoolean("dockAutoMinimize", it) }
                                                 },
-                                                glassIntensity = glassIntensity,
-                                                onGlassIntensity = {
-                                                    glassIntensity = it
-                                                    prefs.edit { putFloat("glassIntensity", it) }
-                                                },
-                                                haloEnabled = haloEnabled,
-                                                onHaloEnabled = {
-                                                    haloEnabled = it
-                                                    prefs.edit { putBoolean("halo_enabled", it) }
-                                                },
-                                                haloPalette = HaloPalette.fromName(haloPaletteName),
-                                                onHaloPalette = {
-                                                    haloPaletteName = it.title
-                                                    prefs.edit { putString("halo_palette", it.title) }
-                                                },
-                                                haloIntensity = haloIntensity,
-                                                onHaloIntensity = {
-                                                    haloIntensity = it
-                                                    prefs.edit { putFloat("halo_intensity", it) }
-                                                },
-                                                haloSpread = haloSpread,
-                                                onHaloSpread = {
-                                                    haloSpread = it
-                                                    prefs.edit { putFloat("halo_spread", it) }
-                                                },
-                                                onReplaySplash = { showSplash = true },
                                                 localState = localState,
                                                 library = library,
-                                                playback = playback
+                                                playback = playback,
+                                                initialCategory = "playback"
                                             )
                                             "Playlists" -> EmptyPage(Icons.AutoMirrored.Rounded.QueueMusic, "Your collections, together", "Playlist creation is planned for a later update.")
                                             else -> if (playback.video != null) {
@@ -1103,13 +1023,10 @@ fun JadzumiSegmentedNavCapsule(
 
 private data class SettingsCategory(val id: String, val label: String, val icon: ImageVector)
 private val settingsCategories = listOf(
-    SettingsCategory("Video", "Video", Icons.Rounded.PlayCircle),
-    SettingsCategory("Audio", "Audio", Icons.AutoMirrored.Rounded.VolumeUp),
-    SettingsCategory("Subtitles", "Subtitles", Icons.Rounded.Subtitles),
-    SettingsCategory("Display", "Display", Icons.Rounded.Palette),
-    SettingsCategory("Gestures", "Gestures", Icons.Rounded.TouchApp),
-    SettingsCategory("Folders", "Storage & Folders", Icons.Rounded.Folder),
-    SettingsCategory("Privacy", "Privacy & About", Icons.Rounded.Security)
+    SettingsCategory("playback", "Playback & Decoders", Icons.Rounded.PlayCircle),
+    SettingsCategory("audio_subtitles", "Audio & Subtitles Studio", Icons.Rounded.Subtitles),
+    SettingsCategory("appearance_controls", "Appearance & Controls", Icons.Rounded.Palette),
+    SettingsCategory("storage_about", "Storage & About", Icons.Rounded.Folder)
 )
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -1117,38 +1034,29 @@ private val settingsCategories = listOf(
     theme: String,
     effectiveTheme: String = theme,
     onTheme: (String) -> Unit,
-    themeBloom: Boolean,
-    onThemeBloom: (Boolean) -> Unit,
     reduced: Boolean,
     onReduced: (Boolean) -> Unit,
     livelyAnimations: Boolean = true,
     onLivelyAnimations: (Boolean) -> Unit = {},
-    cornerStyle: String,
-    onCornerStyle: (String) -> Unit,
-    bottomBarStyle: String = "Icons and labels",
-    onBottomBarStyle: (String) -> Unit = {},
     dockAutoMinimize: Boolean = true,
     onDockAutoMinimize: (Boolean) -> Unit = {},
-    glassIntensity: Float = 0.75f,
-    onGlassIntensity: (Float) -> Unit = {},
-    haloEnabled: Boolean = true,
-    onHaloEnabled: (Boolean) -> Unit = {},
-    haloPalette: HaloPalette = HaloPalette.GlacierBlue,
-    onHaloPalette: (HaloPalette) -> Unit = {},
-    haloIntensity: Float = 0.30f,
-    onHaloIntensity: (Float) -> Unit = {},
-    haloSpread: Float = 0.70f,
-    onHaloSpread: (Float) -> Unit = {},
-    onReplaySplash: () -> Unit,
     localState: LocalLibraryState,
     library: LocalLibrary,
     playback: PlaybackController,
-    initialCategory: String = "Video"
+    initialCategory: String = "playback"
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("playback", 0) }
     val settingsListState = rememberLazyListState()
-    var activeCategory by rememberSaveable { mutableStateOf(initialCategory) }
+    val normalizedCategory = rememberSaveable {
+        when (initialCategory) {
+            "Folders", "storage_about", "Privacy" -> "storage_about"
+            "Audio", "Subtitles", "audio_subtitles" -> "audio_subtitles"
+            "Display", "Gestures", "appearance_controls" -> "appearance_controls"
+            else -> "playback"
+        }
+    }
+    var activeCategory by rememberSaveable { mutableStateOf(normalizedCategory) }
     var statusNotice by remember { mutableStateOf<String?>(null) }
     var folderToRemove by remember { mutableStateOf<LocalFolder?>(null) }
     var showDisplayDuringPlaybackDialog by remember { mutableStateOf(false) }
@@ -1267,13 +1175,10 @@ private val settingsCategories = listOf(
                 ) {
                     Text(
                         when (activeCategory) {
-                            "Video" -> "Video Settings"
-                            "Audio" -> "Audio Settings"
-                            "Subtitles" -> "Subtitle Settings"
-                            "Display" -> "Display & Appearance"
-                            "Gestures" -> "Gestures & Controls"
-                            "Folders" -> "Storage & Folders"
-                            else -> "Privacy & About"
+                            "playback" -> "Playback & Decoders"
+                            "audio_subtitles" -> "Audio & Subtitles Studio"
+                            "appearance_controls" -> "Appearance & Controls"
+                            else -> "Storage & About"
                         },
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
@@ -1290,7 +1195,7 @@ private val settingsCategories = listOf(
                     ) {
 
                     when (activeCategory) {
-                        "Video" -> {
+                        "playback" -> {
                             item {
                                 Panel {
                                     Row(
@@ -1482,7 +1387,7 @@ private val settingsCategories = listOf(
                             }
                         }
 
-                        "Audio" -> {
+                        "audio_subtitles" -> {
                             // BENTO CARD 1: AUDIO OUTPUT & SPATIAL 3D
                             item {
                                 Panel {
@@ -1597,9 +1502,7 @@ private val settingsCategories = listOf(
                                     }
                                 }
                             }
-                        }
 
-                        "Subtitles" -> {
                             item {
                                 val context = LocalContext.current
                                 var subFont by remember { mutableStateOf(SubtitlePreferences.getFont(context)) }
@@ -1820,7 +1723,7 @@ private val settingsCategories = listOf(
                             }
                         }
 
-                        "Display" -> {
+                        "appearance_controls" -> {
                             // 1. Base Appearance Mode & Transitions
                             item {
                                 Panel {
@@ -1844,31 +1747,11 @@ private val settingsCategories = listOf(
                                         }
                                     }
 
-                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Theme Transition Blend (Fade)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Smooth 580ms circular blend reveal when switching themes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Switch(checked = themeBloom, onCheckedChange = onThemeBloom)
-                                    }
+
                                 }
                             }
 
-                            // 2. Portal Halo Backdrop System
-                            item {
-                                HaloSettingsCard(
-                                    theme = effectiveTheme,
-                                    enabled = haloEnabled,
-                                    onEnabledChange = onHaloEnabled,
-                                    palette = haloPalette,
-                                    onPaletteChange = onHaloPalette,
-                                    intensity = haloIntensity,
-                                    onIntensityChange = onHaloIntensity,
-                                    spread = haloSpread,
-                                    onSpreadChange = onHaloSpread
-                                )
-                            }
+
 
                             // 3. Motion Physics & Touch Dynamics
                             item {
@@ -1966,27 +1849,10 @@ private val settingsCategories = listOf(
                                         )
                                     }
 
-                                    HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
-                                    Row(
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .clickable { onReplaySplash() }
-                                            .padding(vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Replay Cinema Portal Splash Screen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                            Text("Play the cinematic opening portal animation in current theme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Text("Preview ›", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
-                                    }
                                 }
                             }
-                        }
 
-                        "Gestures" -> {
                             item {
                                 Panel {
                                     Text("Player Gestures & Seeking", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
@@ -2022,7 +1888,7 @@ private val settingsCategories = listOf(
                             }
                         }
 
-                        "Folders" -> {
+                        "storage_about" -> {
                             item {
                                 StorageSummaryCard(
                                     videoCount = localState.videos.size,
@@ -2186,10 +2052,7 @@ private val settingsCategories = listOf(
                                     }
                                 }
                             }
-                        }
 
-                        else -> {
-                            // "Privacy & About"
                             item {
                                 Surface(
                                     shape = RoundedCornerShape(20.dp),
@@ -2219,7 +2082,7 @@ private val settingsCategories = listOf(
                                 }
                             }
                             item {
-                                PrivacyLeftPane(localState, playback, addFolder, onManagePermissions = { activeCategory = "Folders" }) { statusNotice = it }
+                                PrivacyLeftPane(localState, playback, addFolder, onManagePermissions = { activeCategory = "storage_about" }) { statusNotice = it }
                             }
                             item {
                                 var extractThumbnails by rememberSaveable { mutableStateOf<Boolean>(prefs.getBoolean("extract_thumbnails", true)) }
