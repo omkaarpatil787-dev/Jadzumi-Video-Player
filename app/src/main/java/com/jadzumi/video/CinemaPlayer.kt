@@ -910,7 +910,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                 }
                             }
 
-                            // Top-Right: Clean Dynamic Capsule (All Stream Actions & PiP & More)
+                            // Top-Right: Symmetrical Dynamic Action Capsule (Locked 32dp Height & Shape)
                             Surface(
                                 shape = CircleShape,
                                 color = SpatialGlass.pillBg(isAmoled),
@@ -919,7 +919,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                             ) {
                                 Row(
                                     modifier = Modifier
-                                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                                        .padding(horizontal = 5.dp, vertical = 3.dp),
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -928,14 +928,16 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                     SpatialTactilePill(
                                         onClick = { quickMenuSection = if (quickMenuSection == "audio") null else "audio"; interaction++ },
                                         isActive = quickMenuSection == "audio",
-                                        isOled = isAmoled
+                                        isOled = isAmoled,
+                                        modifier = Modifier.height(32.dp),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
                                     ) {
                                         Icon(Icons.Rounded.GraphicEq, null, Modifier.size(13.dp), tint = if (quickMenuSection == "audio") SpatialGlass.Obsidian else TimelineAccent)
-                                        Spacer(Modifier.width(3.dp))
+                                        Spacer(Modifier.width(4.dp))
                                         Text(
                                             audioText,
                                             color = if (quickMenuSection == "audio") SpatialGlass.Obsidian else playerContentColor,
-                                            fontSize = 11.sp,
+                                            fontSize = 11.5.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             maxLines = 1,
                                             softWrap = false
@@ -947,14 +949,16 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                     SpatialTactilePill(
                                         onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ },
                                         isActive = quickMenuSection == "subs" || subTrack != null,
-                                        isOled = isAmoled
+                                        isOled = isAmoled,
+                                        modifier = Modifier.height(32.dp),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
                                     ) {
                                         Icon(Icons.Rounded.ClosedCaption, null, Modifier.size(13.dp), tint = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor)
-                                        Spacer(Modifier.width(3.dp))
+                                        Spacer(Modifier.width(4.dp))
                                         Text(
                                             subText,
                                             color = if (quickMenuSection == "subs" || subTrack != null) SpatialGlass.Obsidian else playerContentColor,
-                                            fontSize = 11.sp,
+                                            fontSize = 11.5.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             maxLines = 1,
                                             softWrap = false
@@ -973,9 +977,11 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                             message = "${next}x Speed"
                                             interaction++
                                         },
-                                        isOled = isAmoled
+                                        isOled = isAmoled,
+                                        modifier = Modifier.height(32.dp),
+                                        contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp)
                                     ) {
-                                        Text("${playback.speed}x", color = playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                                        Text("${playback.speed}x", color = playerContentColor, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                                     }
 
                                     val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
@@ -987,33 +993,50 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                             interaction++
                                         },
                                         isActive = isZoomMode,
-                                        isOled = isAmoled
+                                        isOled = isAmoled,
+                                        modifier = Modifier.height(32.dp),
+                                        contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp)
                                     ) {
                                         Icon(Icons.Rounded.AspectRatio, null, Modifier.size(13.dp), tint = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor)
-                                        Spacer(Modifier.width(3.dp))
-                                        Text(if (isZoomMode) "Zoom" else "Fit", color = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+                                        Spacer(Modifier.width(4.dp))
+                                        Text(if (isZoomMode) "Zoom" else "Fit", color = if (isZoomMode) SpatialGlass.Obsidian else playerContentColor, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
                                     }
 
+                                    // Hairline Vertical Divider
+                                    Box(
+                                        modifier = Modifier
+                                            .width(0.75.dp)
+                                            .height(16.dp)
+                                            .background(Color.White.copy(alpha = 0.16f))
+                                    )
+
+                                    // Perfectly Symmetrical 32dp Circular Utility Icons
                                     SpatialTactilePill(
                                         onClick = { activity.enterCinemaPip(); interaction++ },
-                                        isOled = isAmoled
+                                        isOled = isAmoled,
+                                        modifier = Modifier.size(32.dp),
+                                        contentPadding = PaddingValues(0.dp)
                                     ) {
-                                        Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(14.dp))
+                                        Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(15.dp))
                                     }
 
                                     SpatialTactilePill(
                                         onClick = { quickMenuSection = if (quickMenuSection == "main") null else "main"; interaction++ },
                                         isActive = quickMenuSection == "main",
-                                        isOled = isAmoled
+                                        isOled = isAmoled,
+                                        modifier = Modifier.size(32.dp),
+                                        contentPadding = PaddingValues(0.dp)
                                     ) {
-                                        Icon(Icons.Rounded.MoreVert, "More", tint = if (quickMenuSection == "main") SpatialGlass.Obsidian else playerContentColor, modifier = Modifier.size(14.dp))
+                                        Icon(Icons.Rounded.MoreVert, "More", tint = if (quickMenuSection == "main") SpatialGlass.Obsidian else playerContentColor, modifier = Modifier.size(15.dp))
                                     }
 
                                     SpatialTactilePill(
                                         onClick = { playback.locked = true; interaction++ },
-                                        isOled = isAmoled
+                                        isOled = isAmoled,
+                                        modifier = Modifier.size(32.dp),
+                                        contentPadding = PaddingValues(0.dp)
                                     ) {
-                                        Icon(Icons.Rounded.Lock, "Lock", tint = playerContentColor, modifier = Modifier.size(13.dp))
+                                        Icon(Icons.Rounded.Lock, "Lock", tint = playerContentColor, modifier = Modifier.size(14.dp))
                                     }
                                 }
                             }

@@ -1,3 +1,20 @@
+# Jadzumi v3.3.2 — System-Wide Flat Card Architecture, Symmetrical 32dp Action Pill & Light Theme Typography Contrast
+
+A design system harmonization and visual fluidity release extending the pure flat Material 3 Expressive architecture across all library rails, continue-watching shelves, and player controls, ensuring strict alignment, clean typography, and zero embossed artifacts across Light, Dark, and AMOLED themes.
+
+### 1. System-Wide Flat Clean Architecture on Homepage
+- **Rail Card Standardization (`CleanRailPosterCard`, `CleanRailSeriesCard`, `CleanRailAnimeCard`)**: Upgraded to 20dp corner radius, hairline 0.75dp muted contours (8% alpha in Dark/AMOLED, 16% stone in Light), and zero shadow elevation (elevation = 0dp), perfectly matching the Settings tab cards.
+- **Intelligent Title Sanitization**: Replaced raw, dot-separated filenames (e.g. `Beware.Boiuna.2026.1080p.1...`) with cleanly parsed media titles (e.g. `Beware Boiuna (2026)`) and high-contrast dual-tier typography (`onSurface` primary titles, `onSurfaceVariant` secondary metadata).
+- **Continue Watching Shelf Alignment (`CleanContinueWatchingCard`)**: Fully unified Continue Watching cards to 20dp rounded geometry, 0.75dp hairline borders, zero elevation, and clean title parsing.
+- **Top Segmented Capsule & Material Pills**: Zeroed out shadow elevation on the Home/Settings segmented navigation capsule (`JadzumiSegmentedNavCapsule`) and global tactile pills for a cohesive, flat aesthetic.
+
+### 2. Symmetrical 32dp Player Dynamic Action Pill
+- **Uniform Height & Touch Targets**: Locked all player top-right action buttons (`Audio`, `Subtitles`, `Speed`, `Aspect Ratio`, `PiP`, `More`, and `Screen Lock`) to an exact 32dp height.
+- **Circular Icon Touch Targets**: Standardized icon-only buttons (`PiP`, `More`, `Screen Lock`) to symmetrical 32dp x 32dp circular shapes (`CircleShape`), eliminating oblong stretching.
+- **Harmonized Typography & Dividers**: Aligned chip typography to 11.5sp semi-bold text with balanced 10dp horizontal padding and subtle 16dp hairline vertical dividers.
+
+---
+
 # Jadzumi v3.3.1 — Clean Flat Material 3 Expressive Architecture, Upper-Right Dynamic Action Pill & Subtitle Unobstructed Baseline
 
 A design system refinement release delivering a pure flat Material 3 Expressive architecture (elevation = 0dp), an upper-right dynamic action pill, an edge-to-edge baseline hairline scrubber with zero subtitle collision, and hairline 0.75dp muted contours across Dark, AMOLED, and Light themes.

@@ -390,7 +390,7 @@ fun MaterialExpressivePill(
         shape = RoundedCornerShape(999.dp),
         color = bgColor,
         border = borderStroke,
-        shadowElevation = if (active) (if (isLight) 2.dp else 1.dp) else 0.dp
+        shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
@@ -449,7 +449,7 @@ fun MaterialExpressiveCard(
         shape = shape,
         color = MaterialExpressive.cardBg(theme),
         border = MaterialExpressive.cardBorder(theme),
-        shadowElevation = if (isLight) 2.dp else 1.dp
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(content = content)
     }
@@ -467,6 +467,7 @@ fun SpatialTactilePill(
     selected: Boolean = false,
     theme: String = LocalThemeName.current,
     isOled: Boolean = false,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 5.dp),
     content: @Composable RowScope.() -> Unit
 ) {
     val active = isActive || selected
@@ -497,7 +498,7 @@ fun SpatialTactilePill(
     val borderStroke = when {
         active && isLight -> BorderStroke(1.dp, Color(0xFF551CA8))
         active -> BorderStroke(1.dp, Color(0xFFD4C2FA))
-        else -> SpatialGlass.pillBorder(1.dp, if (isPressed) 1.5f else 1.0f)
+        else -> SpatialGlass.pillBorder(0.75.dp, if (isPressed) 1.5f else 1.0f)
     }
 
     Surface(
@@ -517,12 +518,12 @@ fun SpatialTactilePill(
         shape = RoundedCornerShape(999.dp),
         color = bgColor,
         border = borderStroke,
-        shadowElevation = if (isPressed) 1.dp else (if (isLight) 2.dp else 3.dp)
+        shadowElevation = 0.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
+            modifier = Modifier.padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            horizontalArrangement = Arrangement.Center,
             content = content
         )
     }
@@ -573,8 +574,8 @@ fun SpatialTactileCard(
             ),
         shape = shape,
         color = SpatialGlass.cardBg(theme),
-        border = SpatialGlass.cardBorder(theme, 1.dp, if (isPressed) 1.25f else 1.0f),
-        shadowElevation = if (theme == "Light") 2.dp else 4.dp
+        border = SpatialGlass.cardBorder(theme, 0.75.dp, if (isPressed) 1.25f else 1.0f),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(content = content)
     }

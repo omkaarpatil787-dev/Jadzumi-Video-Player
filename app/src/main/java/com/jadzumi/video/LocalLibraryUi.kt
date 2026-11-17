@@ -1633,22 +1633,27 @@ fun CleanContinueWatchingCard(
 
     val artworkUri = onlinePosterUri ?: movieMeta?.backdropUri ?: movieMeta?.posterUri
 
+    val (extractedCleanTitle, _) = remember(video.name) { OnlineMetadataFetcher.extractCleanTitleAndYear(video.name) }
+    val displayTitle = remember(extractedCleanTitle, title) {
+        if (extractedCleanTitle.isNotBlank()) extractedCleanTitle else title
+    }
+
     Surface(
         onClick = onClick,
         modifier = Modifier
             .width(220.dp)
             .touchMotion(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         color = MaterialExpressive.cardBg(theme),
-        border = MaterialExpressive.cardBorder(theme),
-        shadowElevation = 2.dp
+        border = SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
-        Column(Modifier.padding(8.dp)) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) {
             Box(
                 Modifier
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(14.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 if (artworkUri != null) {
@@ -1732,7 +1737,7 @@ fun CleanContinueWatchingCard(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = title,
+                text = displayTitle,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -1880,15 +1885,20 @@ fun CleanRailPosterCard(
         else -> null
     }
 
+    val (extractedCleanTitle, cleanYear) = remember(video.name) { OnlineMetadataFetcher.extractCleanTitleAndYear(video.name) }
+    val displayTitle = remember(extractedCleanTitle, video.title) {
+        if (extractedCleanTitle.isNotBlank()) extractedCleanTitle else video.title
+    }
+
     Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         color = MaterialExpressive.cardBg(theme),
-        border = MaterialExpressive.cardBorder(theme),
-        shadowElevation = 2.dp
+        border = SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(Modifier.fillMaxWidth()) {
             Box(
@@ -1950,9 +1960,9 @@ fun CleanRailPosterCard(
                 }
             }
 
-            Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+            Column(Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
                 Text(
-                    text = video.title,
+                    text = displayTitle,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -2013,10 +2023,10 @@ fun CleanRailSeriesCard(
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         color = MaterialExpressive.cardBg(theme),
-        border = MaterialExpressive.cardBorder(theme),
-        shadowElevation = 2.dp
+        border = SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(Modifier.fillMaxWidth()) {
             Box(
@@ -2066,7 +2076,7 @@ fun CleanRailSeriesCard(
                 }
             }
 
-            Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+            Column(Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
                 Text(
                     text = series.title,
                     style = MaterialTheme.typography.labelLarge,
@@ -2146,15 +2156,20 @@ fun CleanRailAnimeCard(
         else -> null
     }
 
+    val (extractedCleanTitle, cleanYear) = remember(video.name) { OnlineMetadataFetcher.extractCleanTitleAndYear(video.name) }
+    val displayTitle = remember(extractedCleanTitle, video.title) {
+        if (extractedCleanTitle.isNotBlank()) extractedCleanTitle else video.title
+    }
+
     Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .touchMotion(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         color = MaterialExpressive.cardBg(theme),
-        border = MaterialExpressive.cardBorder(theme),
-        shadowElevation = 2.dp
+        border = SpatialGlass.cardBorder(theme, 0.75.dp),
+        shadowElevation = MaterialExpressive.cardElevation(theme)
     ) {
         Column(Modifier.fillMaxWidth()) {
             Box(
@@ -2214,9 +2229,9 @@ fun CleanRailAnimeCard(
                 }
             }
 
-            Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+            Column(Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
                 Text(
-                    text = video.title,
+                    text = displayTitle,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,

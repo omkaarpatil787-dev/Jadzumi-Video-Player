@@ -959,8 +959,8 @@ fun JadzumiSegmentedNavCapsule(
             .width(190.dp),
         shape = RoundedCornerShape(19.dp),
         color = capsuleBg,
-        border = BorderStroke(1.dp, capsuleBorder),
-        shadowElevation = if (isLight) 1.dp else 2.dp
+        border = BorderStroke(0.75.dp, capsuleBorder),
+        shadowElevation = 0.dp
     ) {
         BoxWithConstraints(
             modifier = Modifier
