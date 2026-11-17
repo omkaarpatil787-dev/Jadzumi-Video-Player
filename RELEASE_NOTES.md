@@ -1,3 +1,33 @@
+# Jadzumi v3.2.0 — Cinephile Command Deck HUD 3, Pinch-to-Zoom, OkHttp Engine, Frame Stepping & Morphing Updater Capsule
+
+A major performance, playback controls, and UI fluidity release delivering HUD 3 Cinephile Command Deck, continuous pinch-to-zoom with 2D pan dragging, frame-by-frame pause stepping, OkHttp network streaming engine, Smart Binge pre-buffering, and Concept 2A Morphing Updater Capsule.
+
+### 1. Playback HUD 3: Cinephile Command Deck
+- **Style C Ghost Minimal Seeking**: 48dp ghost outline play/pause ring flanked by 10s back and forward steppers, complemented by dedicated single-frame stepping controls on pause.
+- **Top Live Stream Telemetry Deck**: Real-time video codec identification (HEVC Main 10, H.264 High, AV1 Main, VP9), native resolution, exact fractional frame rate (24.000 fps), and HDR flavor badge (HDR10+, Dolby Vision, BT.709 SDR).
+- **Decoder Hardware/Software Chip**: Instant status pill indicating hardware acceleration (`MediaCodec HW+`) or software fallback (`NextLib SW`).
+- **Precision Split Capsules**: Left Scrubber Timeline Capsule (elapsed, total, percentage, precision scrubber) paired with Right Stream Actions Capsule (audio track selector, subtitle track selector, playback speed, aspect ratio mode, screen orientation lock).
+
+### 2. Continuous Pinch-to-Zoom & Pan
+- **Fluid 1.0x to 5.0x Scaling**: Continuous two-finger pinch-to-zoom with real-time 2D pan dragging and boundary clamping.
+- **Double-Tap Fit Reset**: Double-tapping the viewport while zoomed immediately resets the canvas to 1.0x Fit.
+- **Transient Zoom Feedback**: Sleek on-screen zoom indicator chip displaying active magnification percentage.
+
+### 3. Precision Frame-by-Frame Stepping
+- **Exact Pause Stepping**: Dedicated previous and next frame step buttons rendered upon pausing playback, leveraging `SeekParameters.EXACT` calculated from runtime frame rate.
+
+### 4. High-Performance OkHttp Network Engine
+- **Media3 OkHttp DataSource**: Replaced standard HTTP data source with dedicated OkHttp client featuring HTTP/2 multiplexing, connection pooling, and optimized timeouts for local NAS and remote streaming.
+
+### 5. Smart Binge Pre-Buffering
+- **Zero-Latency Next Episode Queue**: Proactively preloads the queued episode stream during the credits countdown to achieve seamless, pause-free episode transitions.
+
+### 6. Concept 2A: Morphing Cinema Capsule & Background Updater
+- **Non-Intrusive Cinema Capsule**: Collapsed bottom floating island that keeps video playback completely interactive and unobstructed.
+- **Expandable Frosted Bottom Sheet**: Rich changelog with categorized feature badges, live transfer speed telemetry (MB/s), linear download progress bar, SHA-256 package verification, and seamless background APK downloading.
+
+---
+
 # Jadzumi v3.1.0 — Multi-Tier Artwork Resolver, Atmospheric Canvas, Unified Cards, Cleaned Settings & Smart Binge Engine
 
 A major feature and design system release delivering the Multi-Tier Poster Artwork Resolver, Direction A Adaptive Atmospheric Canvas, universal Material 3 Expressive surfaces across all screens, a streamlined 4-group Settings Hub, and the Smart Hybrid Binge Engine.
