@@ -3,19 +3,36 @@ package com.jadzumi.video
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -24,6 +41,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -112,24 +131,12 @@ object GlassTheme {
 
     /**
      * Frosted background for video overlay controls (CinemaPlayer time pills, docks, buttons).
-     * Reacts directly to Light, Dark, and AMOLED themes.
+     * Always maintains cinematic frosted obsidian acrylic so controls never glare white over video footage.
      */
     fun playerFrostedBg(theme: String, isOled: Boolean, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
-        return when (theme) {
-            "Light" -> {
-                val alpha = (0.92f - 0.08f * intensity).coerceIn(0.82f, 0.94f)
-                Color(0xFFF0F4FC).copy(alpha = alpha)
-            }
-            "AMOLED" -> {
-                val alpha = (0.95f - 0.05f * intensity).coerceIn(0.88f, 0.97f)
-                Color(0xFF000000).copy(alpha = alpha)
-            }
-            else -> {
-                val alpha = (0.86f - 0.10f * intensity).coerceIn(0.74f, 0.88f)
-                if (isOled) Color(0xFF050811).copy(alpha = alpha) else Color(0xFF0F172A).copy(alpha = alpha)
-            }
-        }
+        val alpha = (0.84f - 0.12f * intensity).coerceIn(0.70f, 0.85f)
+        return if (isOled || theme == "AMOLED") Color(0xFF07050E).copy(alpha = alpha) else Color(0xFF13101F).copy(alpha = alpha)
     }
 
     /**
@@ -137,20 +144,8 @@ object GlassTheme {
      */
     fun playerFrostedRim(theme: String, isOled: Boolean, glassIntensity: Float): Color {
         val intensity = glassIntensity.coerceIn(0f, 1f)
-        return when (theme) {
-            "Light" -> {
-                val alpha = (0.14f + 0.08f * intensity).coerceIn(0.12f, 0.24f)
-                Color(0xFF183654).copy(alpha = alpha)
-            }
-            "AMOLED" -> {
-                val alpha = (0.22f + 0.10f * intensity).coerceIn(0.20f, 0.35f)
-                Color.White.copy(alpha = alpha)
-            }
-            else -> {
-                val alpha = (0.16f + 0.10f * intensity).coerceIn(0.14f, 0.26f)
-                Color.White.copy(alpha = alpha)
-            }
-        }
+        val alpha = (0.18f + 0.08f * intensity).coerceIn(0.16f, 0.28f)
+        return Color.White.copy(alpha = alpha)
     }
 
     /**
@@ -169,6 +164,109 @@ object GlassTheme {
     fun liquidBorderBrush(theme: String, glassIntensity: Float): Brush = embossedBorderBrush(theme, glassIntensity)
     fun liquidBorderStroke(theme: String, glassIntensity: Float, strokeWidth: Dp = 1.1.dp): BorderStroke = embossedBorderStroke(theme, glassIntensity, strokeWidth)
     fun liquidCardBrush(theme: String, glassIntensity: Float): Brush = embossedBorderBrush(theme, glassIntensity)
+}
+
+/**
+ * Spatial Glass UI & Tactile Micro-Optics System
+ * Replaces flat blurry glassmorphism with high-clarity dimensional optical surfaces,
+ * specular hairline rim gradients, and tactile micro-press physics.
+ */
+object SpatialGlass {
+    val Accent = Color(0xFFB79AF7)
+    val Obsidian = Color(0xFF120E20)
+
+    /**
+     * Optical lens background for video overlay controls (CinemaPlayer time pills, docks, buttons).
+     * Always maintains deep obsidian-smoke optical clarity so controls float without milky haze.
+     */
+    fun pillBg(isOled: Boolean = false): Color {
+        return if (isOled) Color(0xF2080611) else Color(0xCC141122)
+    }
+
+    /**
+     * Optical sub-pill background for secondary actions (Lock, Subtitles, Audio, Speed, Fit).
+     */
+    fun subPillBg(isOled: Boolean = false): Color {
+        return if (isOled) Color(0xA6181427) else Color(0x99231E35)
+    }
+
+    /**
+     * Specular hairline rim gradient that catches dimensional light from above.
+     */
+    fun specularRimBrush(alphaBoost: Float = 1.0f): Brush {
+        return Brush.verticalGradient(
+            listOf(
+                Color.White.copy(alpha = (0.28f * alphaBoost).coerceIn(0f, 1f)),
+                Color.White.copy(alpha = (0.12f * alphaBoost).coerceIn(0f, 1f)),
+                Color.White.copy(alpha = (0.04f * alphaBoost).coerceIn(0f, 1f))
+            )
+        )
+    }
+
+    /**
+     * Specular rim border stroke for pills.
+     */
+    fun pillBorder(strokeWidth: Dp = 1.dp, alphaBoost: Float = 1.0f): BorderStroke {
+        return BorderStroke(strokeWidth, specularRimBrush(alphaBoost))
+    }
+}
+
+/**
+ * Tactile Spatial Glass Pill Composable.
+ * Features 3D optical refraction, specular rim highlight, and tactile micro-press physics.
+ */
+@Composable
+fun SpatialTactilePill(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isActive: Boolean = false,
+    isOled: Boolean = false,
+    content: @Composable RowScope.() -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "tactilePressScale"
+    )
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+    }
+
+    val bgColor = if (isActive) SpatialGlass.Accent else SpatialGlass.subPillBg(isOled)
+    val borderStroke = if (isActive) {
+        BorderStroke(1.dp, Color(0xFFD4C2FA))
+    } else {
+        SpatialGlass.pillBorder(1.dp, if (isPressed) 1.5f else 1.0f)
+    }
+
+    Surface(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        shape = RoundedCornerShape(999.dp),
+        color = bgColor,
+        border = borderStroke,
+        shadowElevation = if (isPressed) 2.dp else 6.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            content = content
+        )
+    }
 }
 
 /**

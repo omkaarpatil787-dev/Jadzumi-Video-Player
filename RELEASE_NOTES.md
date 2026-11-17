@@ -1,3 +1,28 @@
+# Jadzumi v2.3.3 — Spatial Glass UI, Tactile Micro-Optics & Player Refinements
+
+A major visual and experiential upgrade bringing VisionOS-style Spatial Glass UI, tactile micro-press physics, unified pill architecture, and player usability refinements.
+
+### 1. Spatial Glass UI & Tactile Micro-Optics
+- **Central Control Island**: Grouped the central Rewind (-10s), Play/Pause, and Forward (+10s) controls into a unified floating Spatial Glass Capsule with specular hairline gradient rims, deep obsidian optical clarity, and spring-based micro-press compression.
+- **Micro-Pills Unification**: Upgraded top metadata tags (4K HDR, HDR flavor) and Player Status Pill (Clock, Battery, Time Remaining) to pure 999dp micro-pills with optical specular rims.
+- **Vertical Gesture HUD**: Replaced vertical cards with a VisionOS-style Spatial Optical Capsule with live percentage readout and glowing liquid lavender meter fill.
+
+### 2. Color Integrity & Ambilight Purge
+- **Zero Color Wash in Fit Mode**: Completely removed artificial ambilight/letterbox radial tints. Fit mode now renders 100% natural, deep, unwashed reference cinema colors identical to Zoom mode.
+- **White Glare Bug Fixed**: Locked all player overlay controls to permanent dark optical acrylic (#13101F / #07050E on OLED), preventing library light theme leaks from blinding users during playback.
+
+### 3. Usability & Player Flow Refinements
+- **Instant Track Selection**: Selecting subtitle or audio tracks now immediately dismisses the drawer, letting users resume viewing without interruption.
+- **Spatial Glass Unlock Pill**: Upgraded the lock screen overlay to a floating bottom pill with LockOpen icon and "Tap to Unlock" prompt.
+- **Portrait Overflow Protection**: Added horizontal scroll safety to bottom action pills to guarantee zero button crowding or clipping on narrow portrait displays.
+- **Quick Menu Polish**: Enforced permanent dark optical acrylic across the quick menu drawer, eliminated duplicate Brightness Boost entries, and upgraded the Diagnostics (Nerd Stats) capsule.
+
+### 4. Icon Restoration & Shape System
+- **Classic App Icon Restored**: Reverted launcher icon to the signature cobalt folded ribbon wing with front frosted play triangle.
+- **Unified Corner Geometry**: Standardized app cards on 16dp and 20dp smooth corners, eliminating 0dp sharp rectangular bricks.
+
+---
+
 # Jadzumi v2.3.2 — Floating Pill Bottom HUD, Continuous PiP Flow & Acrylic UI
 
 A landmark release refining the in-player experience with standalone floating pill controls, uninterrupted Picture-in-Picture playback, strict zero-emoji interface polish, and modern Acrylic glass styling.

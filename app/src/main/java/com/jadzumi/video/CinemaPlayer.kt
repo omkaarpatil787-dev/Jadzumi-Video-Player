@@ -410,32 +410,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
             }
         )
 
-        // Subtle Cinema Ambilight for letterbox bars during 2.39:1 / widescreen playback
-        val ambilightEnabled = remember(activity) {
-            activity.getSharedPreferences("appearance", Context.MODE_PRIVATE)
-                .getBoolean("cinema_ambilight", true)
-        }
-        if (ambilightEnabled && !playback.inPip && playback.aspectMode == AspectRatioMode.FIT && !isAmoled) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .drawBehind {
-                        val glowAlpha = 0.12f
-                        val topGlow = Brush.radialGradient(
-                            colors = listOf(LavenderAccent.copy(alpha = glowAlpha), Color.Transparent),
-                            center = Offset(size.width / 2f, 0f),
-                            radius = size.width * 0.70f
-                        )
-                        val bottomGlow = Brush.radialGradient(
-                            colors = listOf(TimelineAccent.copy(alpha = glowAlpha), Color.Transparent),
-                            center = Offset(size.width / 2f, size.height),
-                            radius = size.width * 0.70f
-                        )
-                        drawRect(topGlow)
-                        drawRect(bottomGlow)
-                    }
-            )
-        }
+
 
         if (playback.dualSubtitleStudio.isSecondaryEnabled) {
             val secCue = playback.dualSubtitleStudio.getActiveCue(playback.position)
@@ -583,9 +558,10 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                             .padding(horizontal = 28.dp)
                             .height(38.dp)
                             .wrapContentWidth(),
-                        shape = CircleShape,
-                        color = dynamicFrostedCircleBg,
-                        border = BorderStroke(1.dp, dynamicFrostedCircleRim)
+                        shape = RoundedCornerShape(999.dp),
+                        color = SpatialGlass.pillBg(isAmoled),
+                        border = SpatialGlass.pillBorder(1.dp),
+                        shadowElevation = 8.dp
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
@@ -662,7 +638,8 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                             type = side,
                             valueText = valueText,
                             fraction = fraction,
-                            icon = icon
+                            icon = icon,
+                            isOled = isAmoled
                         )
                     }
                 }
@@ -710,7 +687,7 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                         showRemainingTime = playback.showRemainingTime,
                         remainingSecProvider = { ((effectiveDuration - playback.position) / 1000).coerceAtLeast(0) },
                         hdrBadge = playback.hdrFlavor,
-                        bgColor = dynamicFrostedCircleBg,
+                        bgColor = SpatialGlass.pillBg(isAmoled),
                         rimColor = dynamicFrostedCircleRim,
                         contentColor = playerContentColor,
                         accentColor = playerAccentColor
@@ -800,14 +777,14 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                         }
                                         if (playback.isHdr) {
                                             Surface(
-                                                shape = RoundedCornerShape(6.dp),
-                                                color = Color.White.copy(alpha = 0.14f),
-                                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f))
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = SpatialGlass.pillBg(isAmoled),
+                                                border = SpatialGlass.pillBorder(1.dp)
                                             ) {
                                                 Text(
                                                     "4K HDR",
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                    fontSize = 10.5.sp,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                    fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = Color.White
                                                 )
@@ -815,16 +792,16 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                         }
                                         playback.hdrFlavor?.let { flavor ->
                                             Surface(
-                                                shape = RoundedCornerShape(6.dp),
-                                                color = Color.White.copy(alpha = 0.14f),
-                                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f))
+                                                shape = RoundedCornerShape(999.dp),
+                                                color = SpatialGlass.pillBg(isAmoled),
+                                                border = SpatialGlass.pillBorder(1.dp)
                                             ) {
                                                 Text(
                                                     flavor,
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                    fontSize = 10.5.sp,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                    fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = Color.White
+                                                    color = TimelineAccent
                                                 )
                                             }
                                         }
@@ -856,91 +833,99 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                             }
                         }
 
-                        // PANEL 1: CENTRAL PRIMARY LAVENDER PLAY/PAUSE & 10s SKIP CONTROLS (Approved v2.0 HTML Specification)
-                        Row(
-                            Modifier.align(Alignment.Center),
-                            horizontalArrangement = Arrangement.spacedBy(28.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        // PANEL 1: CENTRAL UNIFIED SPATIAL GLASS ISLAND CAPSULE (Rewind, Play/Pause, Forward)
+                        Surface(
+                            modifier = Modifier.align(Alignment.Center),
+                            shape = RoundedCornerShape(999.dp),
+                            color = SpatialGlass.pillBg(isAmoled),
+                            border = SpatialGlass.pillBorder(1.dp),
+                            shadowElevation = 14.dp
                         ) {
-                            AnimatedSeekCircleButton(
-                                isForward = false,
-                                accumulator = seekBackAccumulator,
-                                enabled = playback.seekable,
-                                onClick = {
-                                    val stepSec = playback.seekIncrementSeconds
-                                    playback.skip(-seekDeltaMs)
-                                    seekBackAccumulator += stepSec
-                                    seekGestureIsForward = false
-                                    seekGestureDeltaText = "−${seekBackAccumulator}s"
-                                    seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
-                                    seekBackJob?.cancel()
-                                    seekBackJob = coroutineScope.launch {
-                                        kotlinx.coroutines.delay(950)
-                                        seekBackAccumulator = 0
-                                    }
-                                    interaction++
-                                },
-                                size = 46.dp,
-                                bgColor = Color(0xD42B2639),
-                                rimColor = Color.White.copy(alpha = 0.14f),
-                                contentColor = Color.White.copy(alpha = 0.95f)
-                            )
-
-                            // Approved Hybrid Primary Play/Pause with soft lavender gradient and tactile shadow
-                            Box(
-                                modifier = Modifier
-                                    .size(62.dp)
-                                    .shadow(elevation = 10.dp, shape = CircleShape, spotColor = LavenderAccent.copy(alpha = 0.55f))
-                                    .clip(CircleShape)
-                                    .background(
-                                        Brush.verticalGradient(
-                                            listOf(Color(0xFFC0A2FB), Color(0xFF986FF5))
-                                        )
-                                    )
-                                    .clickable { playback.toggle(); interaction++ }
-                                    .touchMotion(),
-                                contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                AnimatedContent(
-                                    targetState = playback.playRequested,
-                                    transitionSpec = {
-                                        (fadeIn(tween(160)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
-                                            .togetherWith(fadeOut(tween(120)) + scaleOut(targetScale = 0.72f))
+                                AnimatedSeekCircleButton(
+                                    isForward = false,
+                                    accumulator = seekBackAccumulator,
+                                    enabled = playback.seekable,
+                                    onClick = {
+                                        val stepSec = playback.seekIncrementSeconds
+                                        playback.skip(-seekDeltaMs)
+                                        seekBackAccumulator += stepSec
+                                        seekGestureIsForward = false
+                                        seekGestureDeltaText = "−${seekBackAccumulator}s"
+                                        seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
+                                        seekBackJob?.cancel()
+                                        seekBackJob = coroutineScope.launch {
+                                            kotlinx.coroutines.delay(950)
+                                            seekBackAccumulator = 0
+                                        }
+                                        interaction++
                                     },
-                                    label = "playPauseIcon"
-                                ) { isPlaying ->
-                                    Icon(
-                                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                        contentDescription = if (isPlaying) "Pause" else "Play",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(34.dp)
-                                    )
-                                }
-                            }
+                                    size = 46.dp,
+                                    bgColor = Color.Transparent,
+                                    rimColor = Color.Transparent,
+                                    contentColor = Color.White.copy(alpha = 0.95f)
+                                )
 
-                            AnimatedSeekCircleButton(
-                                isForward = true,
-                                accumulator = seekFwdAccumulator,
-                                enabled = playback.seekable,
-                                onClick = {
-                                    val stepSec = playback.seekIncrementSeconds
-                                    playback.skip(seekDeltaMs)
-                                    seekFwdAccumulator += stepSec
-                                    seekGestureIsForward = true
-                                    seekGestureDeltaText = "+${seekFwdAccumulator}s"
-                                    seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
-                                    seekFwdJob?.cancel()
-                                    seekFwdJob = coroutineScope.launch {
-                                        kotlinx.coroutines.delay(950)
-                                        seekFwdAccumulator = 0
+                                // Primary Tactile Lavender Play/Pause Centerpiece
+                                Box(
+                                    modifier = Modifier
+                                        .size(58.dp)
+                                        .shadow(elevation = 10.dp, shape = CircleShape, spotColor = LavenderAccent.copy(alpha = 0.55f))
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.verticalGradient(
+                                                listOf(Color(0xFFC0A2FB), Color(0xFF986FF5))
+                                            )
+                                        )
+                                        .clickable { playback.toggle(); interaction++ }
+                                        .touchMotion(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    AnimatedContent(
+                                        targetState = playback.playRequested,
+                                        transitionSpec = {
+                                            (fadeIn(tween(160)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
+                                                .togetherWith(fadeOut(tween(120)) + scaleOut(targetScale = 0.72f))
+                                        },
+                                        label = "playPauseIcon"
+                                    ) { isPlaying ->
+                                        Icon(
+                                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                            contentDescription = if (isPlaying) "Pause" else "Play",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(32.dp)
+                                        )
                                     }
-                                    interaction++
-                                },
-                                size = 46.dp,
-                                bgColor = Color(0xD42B2639),
-                                rimColor = Color.White.copy(alpha = 0.14f),
-                                contentColor = Color.White.copy(alpha = 0.95f)
-                            )
+                                }
+
+                                AnimatedSeekCircleButton(
+                                    isForward = true,
+                                    accumulator = seekFwdAccumulator,
+                                    enabled = playback.seekable,
+                                    onClick = {
+                                        val stepSec = playback.seekIncrementSeconds
+                                        playback.skip(seekDeltaMs)
+                                        seekFwdAccumulator += stepSec
+                                        seekGestureIsForward = true
+                                        seekGestureDeltaText = "+${seekFwdAccumulator}s"
+                                        seekGestureProgress = (playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)).coerceIn(0f, 1f)
+                                        seekFwdJob?.cancel()
+                                        seekFwdJob = coroutineScope.launch {
+                                            kotlinx.coroutines.delay(950)
+                                            seekFwdAccumulator = 0
+                                        }
+                                        interaction++
+                                    },
+                                    size = 46.dp,
+                                    bgColor = Color.Transparent,
+                                    rimColor = Color.Transparent,
+                                    contentColor = Color.White.copy(alpha = 0.95f)
+                                )
+                            }
                         }
 
                         // PANEL 1 & 3: INLINE TIMELINE ROW + MINIMALIST BOTTOM CONTROLS
@@ -975,26 +960,17 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                             val introLimitMs = bingeSettings.introSkipSeconds * 1000L
                             val showSkipIntro = playback.duration > 180_000 && playback.position in 2_000..introLimitMs
                             if (showSkipIntro) {
-                                Surface(
+                                SpatialTactilePill(
                                     onClick = {
                                         playback.seekTo(introLimitMs)
                                         message = "Skipped Intro (${bingeSettings.introSkipSeconds}s)"
                                         interaction++
                                     },
-                                    shape = RoundedCornerShape(999.dp),
-                                    color = dynamicFrostedCircleBg,
-                                    border = BorderStroke(1.dp, dynamicFrostedCircleRim),
-                                    shadowElevation = 0.dp,
+                                    isOled = isAmoled,
                                     modifier = Modifier.align(Alignment.End).padding(bottom = 2.dp)
                                 ) {
-                                    Row(
-                                        Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Icon(Icons.Rounded.FastForward, null, tint = playerAccentColor, modifier = Modifier.size(16.dp))
-                                        Text("Skip Intro (${bingeSettings.introSkipSeconds}s)", color = playerContentColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                    }
+                                    Icon(Icons.Rounded.FastForward, null, tint = TimelineAccent, modifier = Modifier.size(16.dp))
+                                    Text("Skip Intro (${bingeSettings.introSkipSeconds}s)", color = playerContentColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 }
                             }
 
@@ -1003,40 +979,23 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                             val elapsedSec = (activePosMs / 1000).coerceAtLeast(0)
                             val totalSec = (playback.duration / 1000).coerceAtLeast(0)
 
-                            // CINEMA HUD SEPARATED & NEAR PILL ARCHITECTURE (Acrylic Glass + Floating Pills)
-                            val acrylicBorderBrush = Brush.verticalGradient(
-                                listOf(
-                                    Color.White.copy(alpha = 0.26f),
-                                    Color.White.copy(alpha = 0.08f)
-                                )
-                            )
-                            val acrylicPillBg = when {
-                                isAmoled -> Color(0xE608070F)
-                                isLight -> Color(0xE6EDE8F5)
-                                else -> Color(0xCC181525)
-                            }
-                            val acrylicSubPillBg = when {
-                                isAmoled -> Color(0x99181522)
-                                isLight -> Color(0xCCD8D2E8)
-                                else -> Color(0x80252136)
-                            }
-
+                            // CINEMA HUD SEPARATED & NEAR PILL ARCHITECTURE (Spatial Glass UI + Tactile Micro-Optics)
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 14.dp, vertical = 6.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // 1. Standalone Floating Scrubber Pill
+                                // 1. Standalone Floating Scrubber Pill (Optical Lens)
                                 Surface(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(999.dp),
-                                    color = acrylicPillBg,
-                                    border = BorderStroke(1.dp, acrylicBorderBrush),
+                                    color = SpatialGlass.pillBg(isAmoled),
+                                    border = SpatialGlass.pillBorder(1.dp),
                                     shadowElevation = 8.dp
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
@@ -1071,79 +1030,51 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                     }
                                 }
 
-                                // 2. Action Pills Dock Row (Separated & Directly Near Below)
+                                // 2. Action Pills Dock Row (Spatial Tactile Micro-Optics)
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     // Left: Lock Pill
-                                    Surface(
-                                        shape = RoundedCornerShape(999.dp),
-                                        color = acrylicSubPillBg,
-                                        border = BorderStroke(1.dp, acrylicBorderBrush),
-                                        shadowElevation = 6.dp,
-                                        onClick = { playback.locked = true; interaction++ }
+                                    SpatialTactilePill(
+                                        onClick = { playback.locked = true; interaction++ },
+                                        isOled = isAmoled
                                     ) {
-                                        Row(
-                                            Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Icon(Icons.Rounded.Lock, "Lock", Modifier.size(14.dp), tint = playerContentColor)
-                                            Text("Lock", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                        }
+                                        Icon(Icons.Rounded.Lock, "Lock", Modifier.size(14.dp), tint = playerContentColor)
+                                        Text("Lock", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                     }
 
-                                    // Right: Grouped Action Pills
+                                    // Right: Grouped Action Pills with horizontal scroll safety
                                     Row(
+                                        modifier = Modifier.horizontalScroll(rememberScrollState()),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         // Subtitles Pill
                                         val hasSubs = playback.subtitleTracks.any { it.isSelected } || quickMenuSection == "subs"
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = if (hasSubs) LavenderAccent else acrylicSubPillBg,
-                                            border = BorderStroke(1.dp, if (hasSubs) BorderStroke(1.dp, Color(0xFFD4C2FA)).brush else acrylicBorderBrush),
-                                            shadowElevation = 6.dp,
-                                            onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ }
+                                        SpatialTactilePill(
+                                            onClick = { quickMenuSection = if (quickMenuSection == "subs") null else "subs"; interaction++ },
+                                            isActive = hasSubs,
+                                            isOled = isAmoled
                                         ) {
-                                            Row(
-                                                Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                                            ) {
-                                                Icon(Icons.Rounded.ClosedCaption, "Subtitles", Modifier.size(15.dp), tint = if (hasSubs) Obsidian else playerContentColor)
-                                                Text("Subtitles", color = if (hasSubs) Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                            }
+                                            Icon(Icons.Rounded.ClosedCaption, "Subtitles", Modifier.size(15.dp), tint = if (hasSubs) SpatialGlass.Obsidian else playerContentColor)
+                                            Text("Subtitles", color = if (hasSubs) SpatialGlass.Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                         }
 
                                         // Audio Pill
                                         val isAudioActive = quickMenuSection == "audio"
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = if (isAudioActive) LavenderAccent else acrylicSubPillBg,
-                                            border = BorderStroke(1.dp, if (isAudioActive) BorderStroke(1.dp, Color(0xFFD4C2FA)).brush else acrylicBorderBrush),
-                                            shadowElevation = 6.dp,
-                                            onClick = { quickMenuSection = if (isAudioActive) null else "audio"; interaction++ }
+                                        SpatialTactilePill(
+                                            onClick = { quickMenuSection = if (isAudioActive) null else "audio"; interaction++ },
+                                            isActive = isAudioActive,
+                                            isOled = isAmoled
                                         ) {
-                                            Row(
-                                                Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                                            ) {
-                                                Icon(Icons.Rounded.GraphicEq, "Audio", Modifier.size(15.dp), tint = if (isAudioActive) Obsidian else playerContentColor)
-                                                Text("Audio", color = if (isAudioActive) Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                            }
+                                            Icon(Icons.Rounded.GraphicEq, "Audio", Modifier.size(15.dp), tint = if (isAudioActive) SpatialGlass.Obsidian else playerContentColor)
+                                            Text("Audio", color = if (isAudioActive) SpatialGlass.Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                         }
 
                                         // Speed Pill
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = acrylicSubPillBg,
-                                            border = BorderStroke(1.dp, acrylicBorderBrush),
-                                            shadowElevation = 6.dp,
+                                        SpatialTactilePill(
                                             onClick = {
                                                 val next = when (playback.speed) {
                                                     1.0f -> 1.25f
@@ -1154,39 +1085,27 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                                                 playback.changeSpeed(next)
                                                 message = "${next}x Speed"
                                                 interaction++
-                                            }
+                                            },
+                                            isOled = isAmoled
                                         ) {
-                                            Row(
-                                                Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                Icon(Icons.Rounded.PlayArrow, null, Modifier.size(14.dp), tint = playerContentColor)
-                                                Text("${playback.speed}x", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                            }
+                                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(14.dp), tint = playerContentColor)
+                                            Text("${playback.speed}x", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                         }
 
                                         // Aspect Ratio Pill (Fit / Zoom)
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = acrylicSubPillBg,
-                                            border = BorderStroke(1.dp, acrylicBorderBrush),
-                                            shadowElevation = 6.dp,
+                                        val isZoom = playback.aspectMode == AspectRatioMode.ZOOM
+                                        SpatialTactilePill(
                                             onClick = {
-                                                val next = if (playback.aspectMode == AspectRatioMode.FIT) AspectRatioMode.ZOOM else AspectRatioMode.FIT
+                                                val next = if (isZoom) AspectRatioMode.FIT else AspectRatioMode.ZOOM
                                                 playback.setAspectRatioMode(next)
                                                 message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
                                                 interaction++
-                                            }
+                                            },
+                                            isActive = isZoom,
+                                            isOled = isAmoled
                                         ) {
-                                            Row(
-                                                Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                Icon(Icons.Rounded.AspectRatio, null, Modifier.size(14.dp), tint = playerContentColor)
-                                                Text(if (playback.aspectMode == AspectRatioMode.ZOOM) "Zoom" else "Fit", color = playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                            }
+                                            Icon(Icons.Rounded.AspectRatio, null, Modifier.size(14.dp), tint = if (isZoom) SpatialGlass.Obsidian else playerContentColor)
+                                            Text(if (isZoom) "Zoom" else "Fit", color = if (isZoom) SpatialGlass.Obsidian else playerContentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                         }
                                     }
                                 }
@@ -1195,15 +1114,26 @@ internal val TimelineAccent = Color(0xFFB79AF7)
                     }
                 }
 
-                // Unlock Button when Screen Locked
-                if (playback.locked && controls) {
-                    FrostedCircleButton(
-                        label = "Unlock controls",
-                        onClick = { playback.locked = false; controls = true; interaction++ },
-                        modifier = Modifier.align(Alignment.CenterStart).safeDrawingPadding().padding(start = 24.dp),
-                        size = 50.dp
+                // Unlock Button when Screen Locked (Spatial Glass Unlock Pill)
+                AnimatedVisibility(
+                    visible = playback.locked && controls,
+                    enter = fadeIn(tween(180)) + scaleIn(initialScale = 0.90f),
+                    exit = fadeOut(tween(140)) + scaleOut(targetScale = 0.90f),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .safeDrawingPadding()
+                        .padding(bottom = 36.dp)
+                ) {
+                    SpatialTactilePill(
+                        onClick = {
+                            playback.locked = false
+                            controls = true
+                            interaction++
+                        },
+                        isOled = isAmoled
                     ) {
-                        Icon(Icons.Rounded.Lock, null, tint = Color.White)
+                        Icon(Icons.Rounded.LockOpen, contentDescription = "Unlock controls", tint = LavenderAccent, modifier = Modifier.size(16.dp))
+                        Text("Tap to Unlock", color = playerContentColor, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -1541,25 +1471,10 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
     val activeSub = playback.subtitleTracks.firstOrNull { it.isSelected }
     val subSummary = activeSub?.let { "${it.label} (${it.format})" } ?: "Off"
 
-    val isLight = theme == "Light"
     val isAmoled = theme == "AMOLED"
 
-    val palette = remember(theme) {
-        if (isLight) {
-            QuickMenuPalette(
-                bg = Color(0xF6F7F5FC),
-                rim = Color(0xFFE2DCED),
-                primaryText = Color(0xFF1C1A25),
-                secondaryText = Color(0xFF676175),
-                iconTint = Color(0xFF4A4456),
-                divider = Color(0x1F1C1A25),
-                accent = Color(0xFF704DB8),
-                cardBg = Color(0xFFEDE8F7),
-                cardBorder = Color(0xFFE2DCED),
-                btnBg = Color(0xFFE8DDFB),
-                btnRim = Color(0xFFD8CCE8)
-            )
-        } else if (isAmoled) {
+    val palette = remember(isAmoled) {
+        if (isAmoled) {
             QuickMenuPalette(
                 bg = Color(0xFC000000),
                 rim = Color.White.copy(alpha = 0.18f),
@@ -1575,23 +1490,23 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
             )
         } else {
             QuickMenuPalette(
-                bg = Color(0xF41C1A25),
-                rim = Color.White.copy(alpha = 0.12f),
+                bg = Color(0xF4141120),
+                rim = Color.White.copy(alpha = 0.14f),
                 primaryText = MoonlitPrimaryText,
                 secondaryText = MoonlitSecondaryText,
                 iconTint = Color.White.copy(alpha = 0.88f),
                 divider = Color.White.copy(alpha = 0.10f),
                 accent = LavenderAccent,
-                cardBg = MoonlitSurface,
+                cardBg = Color(0xFF1E1A2C),
                 cardBorder = Color.White.copy(alpha = 0.10f),
-                btnBg = Color(0xFF332D42),
-                btnRim = Color.White.copy(alpha = 0.12f)
+                btnBg = Color(0xFF2C273C),
+                btnRim = Color.White.copy(alpha = 0.14f)
             )
         }
     }
 
     CompositionLocalProvider(LocalQuickMenuPalette provides palette) {
-        BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = if (isLight) 0.18f else 0.25f)).clickable(onClick = onDismiss)) {
+        BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.28f)).clickable(onClick = onDismiss)) {
             val isPhonePortrait = maxWidth < 600.dp && maxHeight > maxWidth
             val isFloatingBottom = section == "subs" || section == "audio" || isPhonePortrait
             Surface(
@@ -1610,10 +1525,10 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                         .widthIn(min = 320.dp, max = 380.dp)
                         .clickable(enabled = false) {}
                 },
-                color = if (isLight) palette.bg else if (isPhonePortrait) Color(0xF5302C3A) else Color(0xF51C1A25),
-                border = BorderStroke(1.dp, if (isLight) palette.rim else Color(0xFFB79AF7).copy(alpha = 0.28f)),
-                shape = if (isPhonePortrait && !isFloatingBottom) RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp) else RoundedCornerShape(26.dp),
-                shadowElevation = if (isLight) 8.dp else 24.dp
+                color = palette.bg,
+                border = SpatialGlass.pillBorder(1.dp),
+                shape = if (isPhonePortrait && !isFloatingBottom) RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp) else RoundedCornerShape(24.dp),
+                shadowElevation = 24.dp
             ) {
                 Column {
                     if (isPhonePortrait) {
@@ -1841,7 +1756,7 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                         if (isHdrActive) {
                             val flavorText = playback.hdrFlavor ?: "HDR10"
                             Card(
-                                colors = CardDefaults.cardColors(containerColor = if (isLight) Color(0xFFFFF8E1) else Color(0xFF2E2200)),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF2E2200)),
                                 border = BorderStroke(1.dp, Color(0xFFFFB300).copy(alpha = 0.45f)),
                                 shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp)
@@ -1855,7 +1770,7 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                     Spacer(Modifier.height(6.dp))
                                     Text(
                                         "Native 10-bit BT.2020 wide color gamut & HDR dynamic range active. Use the Shadow Clarifier below to rescue crushed dark scenes without clipping highlights.",
-                                        color = if (isLight) Color(0xFF5D4037) else Color.White.copy(alpha = 0.82f),
+                                        color = Color.White.copy(alpha = 0.82f),
                                         fontSize = 11.sp
                                     )
                                 }
@@ -2161,7 +2076,7 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                                 QuickOptionItem(
                                     label = "${track.label} (${track.codec} · ${track.channels})",
                                     selected = track.isSelected,
-                                    onClick = { playback.selectAudioTrack(track); onMessage("Audio: ${track.label}"); onSelectSection("main") }
+                                    onClick = { playback.selectAudioTrack(track); onMessage("Audio: ${track.label}"); onDismiss() }
                                 )
                             }
                         }
@@ -2175,13 +2090,13 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                         QuickOptionItem(
                             label = "Off",
                             selected = noneSelected,
-                            onClick = { playback.selectSubtitleTrack(null); onMessage("Subtitles Off"); onSelectSection("main") }
+                            onClick = { playback.selectSubtitleTrack(null); onMessage("Subtitles Off"); onDismiss() }
                         )
                         playback.subtitleTracks.forEach { track ->
                             QuickOptionItem(
                                 label = "${track.label} (${track.format})",
                                 selected = track.isSelected,
-                                onClick = { playback.selectSubtitleTrack(track); onMessage("Subtitles: ${track.label}"); onSelectSection("main") }
+                                onClick = { playback.selectSubtitleTrack(track); onMessage("Subtitles: ${track.label}"); onDismiss() }
                             )
                         }
 
@@ -2271,15 +2186,6 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             label = "Background audio",
                             value = if (playback.backgroundAudioEnabled) "On" else "Off",
                             onClick = { playback.setBackgroundAudio(!playback.backgroundAudioEnabled) }
-                        )
-                        QuickMenuRow(
-                            icon = Icons.Rounded.BrightnessMedium,
-                            label = "Brightness Boost (HDR)",
-                            value = if (playback.brightnessBoost) "On (100%)" else "Off",
-                            onClick = {
-                                playback.updateBrightnessBoost(!playback.brightnessBoost)
-                                onMessage(if (playback.brightnessBoost) "Brightness Boost: On (100%)" else "Brightness Boost: Off")
-                            }
                         )
                         QuickMenuRow(
                             icon = Icons.Rounded.Replay,
@@ -2545,21 +2451,22 @@ private fun <T> SlidingSegmentedControl(
     }
 }
 
-// Approved Next-Gen Cinematic Gesture Capsule (Matching Image 2 Specification)
+// Approved Next-Gen Cinematic Gesture Capsule (Spatial Optical Capsule)
 @Composable
 fun FluidGestureCapsule(
     type: String,
     valueText: String,
     fraction: Float,
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isOled: Boolean = false
 ) {
     val isSeek = type == "Seek"
     if (isSeek) {
         Surface(
             modifier = modifier.wrapContentSize(),
-            color = Color(0xE61C1A25),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
+            color = SpatialGlass.pillBg(isOled),
+            border = SpatialGlass.pillBorder(1.dp),
             shape = RoundedCornerShape(999.dp),
             shadowElevation = 14.dp
         ) {
@@ -2583,14 +2490,14 @@ fun FluidGestureCapsule(
             }
         }
     } else {
-        // Vertical capsule pill matching Image 2 (Left: Brightness, Right: Volume)
+        // Vertical Spatial Optical Capsule (Left: Brightness, Right: Volume)
         Surface(
             modifier = modifier
-                .width(42.dp)
-                .height(130.dp),
-            color = Color(0xE61C1A25),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
-            shape = RoundedCornerShape(21.dp),
+                .width(44.dp)
+                .height(138.dp),
+            color = SpatialGlass.pillBg(isOled),
+            border = SpatialGlass.pillBorder(1.dp),
+            shape = RoundedCornerShape(999.dp),
             shadowElevation = 14.dp
         ) {
             Column(
@@ -2598,7 +2505,7 @@ fun FluidGestureCapsule(
                     .fillMaxSize()
                     .padding(vertical = 12.dp, horizontal = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
                     imageVector = icon,
@@ -2606,12 +2513,18 @@ fun FluidGestureCapsule(
                     tint = Color.White,
                     modifier = Modifier.size(18.dp)
                 )
+                Text(
+                    text = valueText,
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold
+                )
                 Box(
                     modifier = Modifier
                         .width(6.dp)
                         .weight(1f)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.22f)),
+                        .background(Color.White.copy(alpha = 0.16f)),
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     val animatedFill by animateFloatAsState(
@@ -2624,7 +2537,11 @@ fun FluidGestureCapsule(
                             .fillMaxWidth()
                             .fillMaxHeight(animatedFill)
                             .clip(CircleShape)
-                            .background(TimelineAccent)
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Color(0xFFC0A2FB), TimelineAccent)
+                                )
+                            )
                     )
                 }
             }
@@ -2671,10 +2588,10 @@ fun PlaybackInfoCapsule(
                 .widthIn(min = 320.dp, max = 460.dp)
                 .clickable(enabled = false) {}
                 .animateContentSize(spring(dampingRatio = 0.8f, stiffness = 400f)),
-            color = Color(0xF524232E),
-            border = BorderStroke(1.dp, Color(0xFF454050)),
-            shape = RoundedCornerShape(22.dp),
-            shadowElevation = 24.dp
+            color = SpatialGlass.pillBg(false),
+            border = SpatialGlass.pillBorder(1.dp),
+            shape = RoundedCornerShape(20.dp),
+            shadowElevation = 20.dp
         ) {
             Column(Modifier.padding(16.dp)) {
                 // Header with Pill Toggle Button (.cc-pill)
@@ -2689,10 +2606,11 @@ fun PlaybackInfoCapsule(
                     }
                     Surface(
                         onClick = { expanded = !expanded },
-                        shape = CircleShape,
-                        color = if (expanded) Color(0xFFDDC8FF) else Color(0xFF40364C),
-                        contentColor = if (expanded) Color(0xFF241A31) else Color(0xFFE9DCFA),
-                        modifier = Modifier.height(38.dp)
+                        shape = RoundedCornerShape(999.dp),
+                        color = if (expanded) LavenderAccent else Color.White.copy(alpha = 0.12f),
+                        contentColor = if (expanded) SpatialGlass.Obsidian else Color.White,
+                        border = SpatialGlass.pillBorder(1.dp),
+                        modifier = Modifier.height(34.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp),
@@ -2700,8 +2618,8 @@ fun PlaybackInfoCapsule(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                "ⓘ $summaryPillText",
-                                fontSize = 12.sp,
+                                summaryPillText,
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Icon(
@@ -2717,8 +2635,8 @@ fun PlaybackInfoCapsule(
                     Spacer(Modifier.height(14.dp))
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        color = Color(0xFF1E1D26),
-                        border = BorderStroke(1.dp, Color(0xFF393543)),
+                        color = Color(0xFF151221),
+                        border = SpatialGlass.pillBorder(1.dp),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Column(
@@ -2823,7 +2741,7 @@ private fun PlaybackKvRow(label: String, value: String, isLast: Boolean = false)
         modifier = modifier.size(size).touchMotion().semantics { contentDescription = label },
         shape = CircleShape,
         color = if (enabled) bgColor else bgColor.copy(alpha = 0.06f),
-        border = BorderStroke(1.dp, if (enabled) rimColor else rimColor.copy(alpha = 0.10f))
+        border = SpatialGlass.pillBorder(1.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
             icon()
@@ -2877,8 +2795,8 @@ private fun AnimatedSeekCircleButton(
                 },
             shape = CircleShape,
             color = bgColor,
-            border = BorderStroke(1.dp, rimColor),
-            shadowElevation = 6.dp
+            border = if (rimColor == Color.Transparent) null else BorderStroke(1.dp, rimColor),
+            shadowElevation = if (bgColor == Color.Transparent) 0.dp else 6.dp
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -2958,10 +2876,10 @@ private fun NextEpisodeAutoplayBanner(
 
     Surface(
         modifier = Modifier.widthIn(max = 380.dp),
-        shape = RoundedCornerShape(22.dp),
-        color = Color(0xF0131922),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
-        shadowElevation = 8.dp
+        shape = RoundedCornerShape(20.dp),
+        color = SpatialGlass.pillBg(false),
+        border = SpatialGlass.pillBorder(1.dp),
+        shadowElevation = 16.dp
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -3023,13 +2941,14 @@ private fun NextEpisodeAutoplayBanner(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(4.dp),
-                        color = TimelineAccent.copy(alpha = 0.25f)
+                        shape = RoundedCornerShape(999.dp),
+                        color = TimelineAccent.copy(alpha = 0.25f),
+                        border = SpatialGlass.pillBorder(0.5.dp)
                     ) {
                         Text(
                             epLabel,
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
-                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                            fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = TimelineAccent
                         )
@@ -3185,8 +3104,8 @@ private fun PlayerStatusPill(
     Surface(
         shape = RoundedCornerShape(999.dp),
         color = bgColor,
-        border = BorderStroke(1.dp, rimColor),
-        shadowElevation = 0.dp,
+        border = SpatialGlass.pillBorder(1.dp),
+        shadowElevation = 6.dp,
         modifier = modifier
     ) {
         Row(

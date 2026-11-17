@@ -491,7 +491,8 @@ fun MovieDetailsPage(
 
                             Surface(
                                 onClick = { detailsSubtab = tab },
-                                shape = RoundedCornerShape(18.dp),
+                                modifier = Modifier.touchMotion(),
+                                shape = RoundedCornerShape(999.dp),
                                 color = tabBg,
                                 border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
                             ) {

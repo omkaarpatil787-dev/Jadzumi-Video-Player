@@ -178,9 +178,8 @@ private val destinations = listOf(
     var haloIntensity by rememberSaveable { mutableFloatStateOf(prefs.getFloat("halo_intensity", 0.30f)) }
     var haloSpread by rememberSaveable { mutableFloatStateOf(prefs.getFloat("halo_spread", 0.70f)) }
     val cornerRadiusDp = when (cornerStyle) {
-        "Compact" -> 14.dp
-        "Sharp" -> 0.dp
-        else -> 24.dp
+        "Compact" -> 16.dp
+        else -> 20.dp
     }
     val motionStyle = rememberMotionStyle(reducedMotion, livelyAnimations)
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -1379,31 +1378,14 @@ private val settingsCategories = listOf(
                                 }
                             }
 
-                            // BENTO CARD 3: LUMINANCE, AMBILIGHT & DISPLAY OVERLAYS
+                            // BENTO CARD 3: LUMINANCE & DISPLAY OVERLAYS
                             item {
                                 Panel {
                                     val appearancePrefs = remember(context) { context.getSharedPreferences("appearance", Context.MODE_PRIVATE) }
-                                    var ambilightEnabled by remember { mutableStateOf(appearancePrefs.getBoolean("cinema_ambilight", true)) }
                                     var heroBannerEnabled by remember { mutableStateOf(appearancePrefs.getBoolean("show_hero_banner", false)) }
 
-                                    Text("Luminance, Ambilight & Overlays", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                    Text("Manage atmospheric lighting, HDR luminance boost, and persistent player telemetry.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
-
-                                    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                                            Text("Cinema Ambilight (Letterbox Glow)", fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
-                                            Text("Softly radiates active scene ambience into letterbox bars on widescreen films", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Switch(
-                                            checked = ambilightEnabled,
-                                            onCheckedChange = {
-                                                ambilightEnabled = it
-                                                appearancePrefs.edit().putBoolean("cinema_ambilight", it).apply()
-                                            }
-                                        )
-                                    }
-
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    Text("Luminance & Display Overlays", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Manage HDR luminance boost, persistent telemetry, and cinema player overlays.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
 
                                     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
