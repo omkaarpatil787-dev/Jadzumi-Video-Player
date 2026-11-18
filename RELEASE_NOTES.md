@@ -1,3 +1,23 @@
+# Jadzumi v3.4.1 - WebRTC Watch Party Audio Gate, Live Voice Controls & Reaction Bursts
+
+A targeted maintenance and refinement release resolving browser audio playback restrictions, enabling bidirectional WebRTC live voice calling controls for guests, optimizing dynamic viewport layouts for mobile devices, and adding instant reaction bursts.
+
+### 1. Web Audio Unlock Gate & Browser Audio Activation
+- **Guaranteed Unmuted Audio Playback**: Implemented an interactive "Tap to Unmute & Connect" audio gate overlay that instantiates and resumes the browser AudioContext on first tap, overcoming mobile browser autoplay mute restrictions.
+- **Top Bar Mute Toggle**: Added an instant Unmute/Mute button in the guest browser header bar for direct volume control without interrupting synchronization.
+
+### 2. Live WebRTC Voice Calling in Browser Client
+- **Join Call Action Bar**: Exposed WebRTC live voice channel controls directly in the browser client with hardware Acoustic Echo Cancellation (AEC) and noise suppression.
+- **Microphone Mute & Push-to-Talk**: Guests can easily toggle their microphone or mute on demand.
+- **Smart Voice Ducking Integration**: The browser client dynamically responds to host movie audio ducking (-25%), clearly prioritizing voice speech over background action scenes.
+
+### 3. Dynamic Mobile Viewport (100dvh) & Reaction Bursts
+- **Mobile-Responsive Dock**: Rebuilt the web layout using dynamic viewport height (100dvh) and flexible side-dock styling for landscape orientation, preventing virtual keyboards and mobile browser address bars from obscuring the chat composer.
+- **Quick Reaction Emoji Strip**: Integrated one-tap reaction chips (Love, Epic, Laugh, Bravo, Cinema, Mindblown) triggering animated floating reaction bursts rising across the cinema canvas.
+- **Real-Time Client Count Tracking**: Enhanced host session server to monitor active heartbeats and display the exact number of connected guests in real-time.
+
+---
+
 # Jadzumi v3.4.0 - Global WebRTC Watch Party, Audio Cinema Bridge, Episode Drawer & Micro-Scrubbing
 
 A major feature release introducing Global WebRTC Watch Party with zero-install browser streaming and real-time voice call, Audio Cinema Bridge for dual-headphone synchronization, In-Player "Up Next" Episode Drawer, Variable Micro-Scrubbing precision, and Letterbox Subtitle Placement.
