@@ -91,6 +91,18 @@ jobs:
       if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
       run: cp app/build/outputs/apk/release/*.apk "Jadzumi-Player-${APP_VERSION}.apk"
 
+    - name: Extract current version release notes
+      if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
+      shell: bash
+      run: |
+        python3 -c '
+        with open("RELEASE_NOTES.md", "r", encoding="utf-8") as f:
+            content = f.read()
+        notes = content.split("---")[0].strip()
+        with open("current_release_notes.md", "w", encoding="utf-8") as out:
+            out.write(notes)
+        '
+
     - name: Update GitHub Release
       if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
       uses: softprops/action-gh-release@v2
@@ -100,7 +112,7 @@ jobs:
         files: Jadzumi-Player-${{ env.APP_VERSION }}.apk
         target_commitish: ${{ github.sha }}
         generate_release_notes: false
-        body_path: RELEASE_NOTES.md
+        body_path: current_release_notes.md
         prerelease: false
         make_latest: true
         fail_on_unmatched_files: true
