@@ -967,7 +967,7 @@ fun JadzumiSegmentedNavCapsule(
     Surface(
         modifier = modifier
             .height(38.dp)
-            .width(190.dp),
+            .width(165.dp),
         shape = RoundedCornerShape(19.dp),
         color = capsuleBg,
         border = BorderStroke(0.75.dp, capsuleBorder),

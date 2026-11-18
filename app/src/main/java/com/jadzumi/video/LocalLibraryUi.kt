@@ -1123,10 +1123,7 @@ fun JadzumiCategoryPillsRow(
                     val catListState = getCategoryListState(currentCategory)
                     val effectiveTheme = LocalThemeName.current
                     val colCount = if (isPhone) {
-                        when (libraryDensity) {
-                            "compact" -> 3
-                            else -> 2
-                        }
+                        2
                     } else {
                         when (libraryDensity) {
                             "compact" -> if (screenMaxWidth >= 900.dp) 5 else 4

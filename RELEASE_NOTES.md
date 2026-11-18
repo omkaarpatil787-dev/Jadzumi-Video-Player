@@ -1,3 +1,16 @@
+# Jadzumi v3.4.6 - Enforced 2-Column Mobile Portrait Grid, Slim Nav Capsule & Desktop Delivery
+
+A targeted mobile experience refinement enforcing a 2-column portrait grid across all mobile devices, slimming the top navigation capsule to 165dp for optimal button clearance, and ensuring complete Desktop artifact delivery for immediate local installation.
+
+### 1. Enforced 2-Column Phone Grid
+- Guaranteed 2-Column Architecture: Locked phone portrait grid layouts strictly to 2 columns, overriding any legacy compact density settings from SharedPreferences that previously compressed mobile cards into 3 narrow columns.
+- Maximum Poster Width & Readability: Each card now consistently occupies at least 150dp-170dp of horizontal width, providing generous room for 2-line title wrapping and unclipped timestamps.
+
+### 2. Slimmed Navigation Capsule (165dp)
+- Clearance for Action Buttons: Slimmed JadzumiSegmentedNavCapsule width from 190dp to 165dp, providing generous breathing space for Search, Storage Cleaner, and Library Sync buttons on Row 1 across all mobile phone screen widths.
+
+---
+
 # Jadzumi v3.4.5 - Mobile UI Overhaul: Clean Two-Row Header, 2-Column Responsive Grid & Inset Protection
 
 A comprehensive mobile layout optimization release resolving top header pill collisions and text bleeding, implementing an uncrowded two-row phone header architecture, establishing an adaptive 2-column mobile portrait card grid with 2-line title wrapping, and enhancing system gesture navigation insets.
