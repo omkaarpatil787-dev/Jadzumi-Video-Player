@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -1085,10 +1086,12 @@ fun JadzumiCategoryPillsRow(
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
+        val configuration = LocalConfiguration.current
+        val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
         val screenMaxWidth = maxWidth
-        val pad = if (maxWidth >= 720.dp) 28.dp else 18.dp
-        val isPhone = maxWidth < 600.dp
-        val bottomPad = if (isPhone) 24.dp else 28.dp
+        val isPhone = (maxWidth < 600.dp || configuration.screenWidthDp < 600) && !isLandscape
+        val pad = if (screenMaxWidth >= 720.dp && isLandscape) 28.dp else 16.dp
+        val bottomPad = if (isPhone) 36.dp else 28.dp
 
         Column(Modifier.fillMaxSize()) {
             val motionStyle = LocalMotionStyle.current
@@ -1119,10 +1122,17 @@ fun JadzumiCategoryPillsRow(
                 } else {
                     val catListState = getCategoryListState(currentCategory)
                     val effectiveTheme = LocalThemeName.current
-                    val colCount = when (libraryDensity) {
-                        "compact" -> if (isPhone) 3 else if (screenMaxWidth >= 900.dp) 5 else 4
-                        "spacious" -> if (isPhone) 2 else if (screenMaxWidth >= 900.dp) 3 else 3
-                        else -> if (isPhone) 2 else if (screenMaxWidth >= 900.dp) 4 else 3
+                    val colCount = if (isPhone) {
+                        when (libraryDensity) {
+                            "compact" -> 3
+                            else -> 2
+                        }
+                    } else {
+                        when (libraryDensity) {
+                            "compact" -> if (screenMaxWidth >= 900.dp) 5 else 4
+                            "spacious" -> if (screenMaxWidth >= 900.dp) 3 else 3
+                            else -> if (screenMaxWidth >= 900.dp) 4 else 3
+                        }
                     }
                     val seriesRows = remember(filteredSeries, colCount) { filteredSeries.chunked(colCount) }
                     val animeRows = remember(filteredAnime, colCount) { filteredAnime.chunked(colCount) }
@@ -2028,13 +2038,13 @@ fun CleanRailPosterCard(
                 }
             }
 
-            Column(Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
+            Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
                 Text(
                     text = displayTitle,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 val durFormatted = if (video.duration > 0) timecode(video.duration / 1000) else "Movie"
@@ -2144,13 +2154,13 @@ fun CleanRailSeriesCard(
                 }
             }
 
-            Column(Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
+            Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
                 Text(
                     text = series.title,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
@@ -2297,13 +2307,13 @@ fun CleanRailAnimeCard(
                 }
             }
 
-            Column(Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
+            Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
                 Text(
                     text = displayTitle,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 val epInfo = EpisodePatterns.parse(video.name)

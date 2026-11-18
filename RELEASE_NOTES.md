@@ -1,3 +1,22 @@
+# Jadzumi v3.4.5 - Mobile UI Overhaul: Clean Two-Row Header, 2-Column Responsive Grid & Inset Protection
+
+A comprehensive mobile layout optimization release resolving top header pill collisions and text bleeding, implementing an uncrowded two-row phone header architecture, establishing an adaptive 2-column mobile portrait card grid with 2-line title wrapping, and enhancing system gesture navigation insets.
+
+### 1. Header Collision Resolution & Two-Row Phone Architecture
+- Header Overlap Elimination: On mobile portrait screens, placing both the Home/Settings navigation capsule (190dp) and the category switcher (225dp) alongside action icons in a single row forced 540dp of layout into 360dp-400dp viewports, causing 'ttings' text to bleed directly through category tabs and cramming search/action buttons.
+- Device Orientation & Width Detection: Integrated LocalConfiguration screen width and orientation checks (`screenWidthDp < 600 && !isLandscape`) to ensure smartphones reliably activate the dedicated two-row layout regardless of display density scaling.
+- Uncongested Layout Hierarchy: Row 1 hosts the Home/Settings capsule on the left and circular action buttons (Search, Storage, Sync) on the right; Row 2 neatly seats the category pills (Movies | Series | Anime) with 8dp vertical breathing room and zero overlapping text.
+
+### 2. Mobile Responsive 2-Column Grid & 2-Line Titles
+- 2-Column Default on Mobile Phones: Set the default comfortable library density on phone portrait viewports to 2 columns instead of 3, expanding usable card width from ~100dp to ~150dp+.
+- 2-Line Title Wrapping: Upgraded movie, series, and anime poster cards to support up to 2 lines of text (`maxLines = 2`), preventing long film titles, series titles, and personal camera recordings from abruptly truncating into ellipses.
+- Preserved Metadata Readability: Durations and release years (`2017 · 01:42:25`) now display with full fidelity without clipping.
+
+### 3. Gesture Bar Inset Protection
+- System Bar Insets: Increased mobile bottom padding to 36dp across library views to prevent bottom cards from colliding with the Android system navigation gesture pill.
+
+---
+
 # Jadzumi v3.4.4 - Dolby Vision Profile 5 Native Decoders, ICtCp Color Fix & Direct HWC Composition
 
 A targeted media engine and video pipeline release resolving purple and magenta color distortion on Dolby Vision Profile 5 content, prioritizing SoC hardware Dolby Vision decoders across all AMOLED and HDR panels, correcting HDR stream classification, and optimizing Direct Hardware Composer SurfaceView pass-through.

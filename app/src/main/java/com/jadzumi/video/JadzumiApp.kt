@@ -262,10 +262,13 @@ private val destinations = listOf(
                     }
                 }
                 BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
-                    val isTablet = maxWidth >= 640.dp
+                    val configuration = LocalConfiguration.current
+                    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                    val screenWidthDp = configuration.screenWidthDp.dp
                     val contentWidth = maxWidth
-                    val isPhone = contentWidth < 600.dp
-                    val topPad = if (contentWidth >= 720.dp) 24.dp else 16.dp
+                    val isPhone = (contentWidth < 600.dp || screenWidthDp < 600.dp) && !isLandscape
+                    val isTablet = !isPhone && (contentWidth >= 640.dp || configuration.smallestScreenWidthDp >= 600)
+                    val topPad = if (contentWidth >= 720.dp && isLandscape) 24.dp else 16.dp
 
                     Box(Modifier.fillMaxSize()) {
                         Column(Modifier.fillMaxSize()) {
@@ -374,8 +377,8 @@ private val destinations = listOf(
                                                     }
                                                 } else {
                                                     // IDLE UNCONGESTED HEADER
-                                                    if (isPhone) {
-                                                        // Mobile Phone: Row 1 has Home|Settings on left and Actions on right (zero crowding)
+                                                    if (isPhone || contentWidth < 720.dp || !isLandscape) {
+                                                        // Mobile Phone & Portrait Screens: Row 1 has Home|Settings on left and Actions on right (zero crowding)
                                                         Row(
                                                             Modifier.fillMaxWidth(),
                                                             verticalAlignment = Alignment.CenterVertically,
@@ -441,8 +444,8 @@ private val destinations = listOf(
                                                             }
                                                         }
 
-                                                        // Row 2 on Phone: Horizontal scrollable category pills (thin & thumb-accessible)
-                                                        Spacer(Modifier.height(6.dp))
+                                                        // Row 2 on Phone: Horizontal category pills (thin & thumb-accessible, zero overlap)
+                                                        Spacer(Modifier.height(8.dp))
                                                         JadzumiCategoryPillsRow(
                                                             selectedCategory = when (activeLibraryCategory) {
                                                                 "Movies" -> "Movies"
