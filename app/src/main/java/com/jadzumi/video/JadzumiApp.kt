@@ -8,11 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -168,6 +170,7 @@ private val destinations = listOf(
     val localState by library.state.collectAsState()
 
     var query by rememberSaveable { mutableStateOf("") }
+    var isSearchExpanded by rememberSaveable { mutableStateOf(false) }
     var cornerStyle by rememberSaveable { mutableStateOf(prefs.getString("cornerStyle", "Rounded") ?: "Rounded") }
     var bottomBarStyle by rememberSaveable { mutableStateOf(prefs.getString("bottomBarStyle", "Icons and labels") ?: "Icons and labels") }
     var dockAutoMinimize by rememberSaveable { mutableStateOf(prefs.getBoolean("dockAutoMinimize", true)) }
@@ -248,9 +251,10 @@ private val destinations = listOf(
                     AdaptiveAtmosphericCanvas(
                         theme = effectiveTheme
                     )
-                    BackHandler(query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
-                    if (query.isNotEmpty()) {
+                    BackHandler(isSearchExpanded || query.isNotEmpty() || selectedId != null || (route != "Home" && route != "Library")) {
+                    if (query.isNotEmpty() || isSearchExpanded) {
                         query = ""
+                        isSearchExpanded = false
                     } else if (selectedId != null) {
                         selectedId = null
                     } else {
@@ -388,153 +392,198 @@ private val destinations = listOf(
                                             }
                                         }
                                     } else {
-                                        Row(
-                                            Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 12.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(14.dp)
-                                        ) {
-                                            if (selectedId != null) {
-                                                IconButton(onClick = { selectedId = null }) {
-                                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library")
-                                                }
-                                                Text(
-                                                    "Library / Details",
-                                                    Modifier.weight(1f),
-                                                    style = MaterialTheme.typography.titleLarge,
-                                                    fontWeight = FontWeight.Bold,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                            } else {
-                                                JadzumiCategoryPillsRow(
-                                                    selectedCategory = when (activeLibraryCategory) {
-                                                        "Movies" -> "Movies"
-                                                        "TV Shows", "Series" -> "Series"
-                                                        "Anime" -> "Anime"
-                                                        else -> "Movies"
-                                                    },
-                                                    onCategorySelected = { cat ->
-                                                        val newCat = when (cat) {
-                                                            "Movies" -> "Movies"
-                                                            "Series", "TV Shows" -> "TV Shows"
-                                                            "Anime" -> "Anime"
-                                                            else -> cat
-                                                        }
-                                                        activeLibraryCategory = newCat
-                                                    }
-                                                )
-
-                                                Spacer(Modifier.weight(1f))
-
-                                                JadzumiSegmentedNavCapsule(
-                                                    currentRoute = if (route == "Settings") "Settings" else "Home",
-                                                    onNavigate = { newRoute ->
-                                                        route = newRoute
-                                                        selectedId = null
-                                                    }
-                                                )
-
-                                                Spacer(Modifier.weight(1f))
-                                            }
-
-                                            Surface(
-                                                modifier = Modifier
-                                                    .widthIn(min = 220.dp, max = 340.dp)
-                                                    .height(42.dp),
-                                                shape = RoundedCornerShape(999.dp),
-                                                color = MaterialExpressive.subCardBg(effectiveTheme),
-                                                border = MaterialExpressive.cardBorder(effectiveTheme)
-                                            ) {
-                                                Row(
-                                                    Modifier
-                                                        .fillMaxSize()
-                                                        .padding(horizontal = 14.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        val isSearchActive = isSearchExpanded || query.isNotEmpty()
+                                        AnimatedContent(
+                                            targetState = isSearchActive,
+                                            transitionSpec = {
+                                                (fadeIn(tween(200)) + expandHorizontally()).togetherWith(fadeOut(tween(140)) + shrinkHorizontally())
+                                            },
+                                            label = "searchExpandTransition",
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = topPad, vertical = 10.dp)
+                                        ) { activeSearch ->
+                                            if (activeSearch) {
+                                                // EXPANDED SEARCH BAR: Full width, spacious, with close/clear buttons
+                                                Surface(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(42.dp),
+                                                    shape = RoundedCornerShape(999.dp),
+                                                    color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                    border = MaterialExpressive.cardBorder(effectiveTheme)
                                                 ) {
-                                                    Icon(
-                                                        Icons.Rounded.Search,
-                                                        contentDescription = "Search",
-                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.size(20.dp)
-                                                    )
-                                                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                                                        if (query.isEmpty()) {
-                                                            Text(
-                                                                "Search videos, shows...",
-                                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                                                fontSize = 13.sp,
-                                                                maxLines = 1,
-                                                                overflow = TextOverflow.Ellipsis
+                                                    Row(
+                                                        Modifier
+                                                            .fillMaxSize()
+                                                            .padding(horizontal = 14.dp),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        Icon(
+                                                            Icons.Rounded.Search,
+                                                            contentDescription = "Search",
+                                                            tint = MaterialTheme.colorScheme.primary,
+                                                            modifier = Modifier.size(20.dp)
+                                                        )
+                                                        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                                                            if (query.isEmpty()) {
+                                                                Text(
+                                                                    "Search videos, shows...",
+                                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                                    fontSize = 13.sp,
+                                                                    maxLines = 1,
+                                                                    overflow = TextOverflow.Ellipsis
+                                                                )
+                                                            }
+                                                            BasicTextField(
+                                                                value = query,
+                                                                onValueChange = { newQuery ->
+                                                                    query = newQuery
+                                                                    if (newQuery.isNotBlank()) {
+                                                                        selectedId = null
+                                                                        if (route == "Folders") {
+                                                                            route = "Home"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                singleLine = true,
+                                                                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                                    fontSize = 13.sp
+                                                                ),
+                                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                                keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+                                                                modifier = Modifier.fillMaxWidth()
                                                             )
                                                         }
-                                                        BasicTextField(
-                                                            value = query,
-                                                            onValueChange = { newQuery ->
-                                                                query = newQuery
-                                                                if (newQuery.isNotBlank()) {
-                                                                    selectedId = null
-                                                                    if (route == "Folders") {
-                                                                        route = "Home"
-                                                                    }
-                                                                }
-                                                            },
-                                                            singleLine = true,
-                                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                                                color = MaterialTheme.colorScheme.onSurface,
-                                                                fontSize = 13.sp
-                                                            ),
-                                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
-                                                            modifier = Modifier.fillMaxWidth()
-                                                        )
-                                                    }
-                                                    if (query.isNotEmpty()) {
+                                                        if (query.isNotEmpty()) {
+                                                            IconButton(
+                                                                onClick = {
+                                                                    query = ""
+                                                                },
+                                                                modifier = Modifier.size(26.dp)
+                                                            ) {
+                                                                Icon(
+                                                                    Icons.Rounded.Close,
+                                                                    contentDescription = "Clear search",
+                                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                    modifier = Modifier.size(16.dp)
+                                                                )
+                                                            }
+                                                        }
                                                         IconButton(
                                                             onClick = {
                                                                 query = ""
+                                                                isSearchExpanded = false
                                                                 keyboardController?.hide()
                                                             },
-                                                            modifier = Modifier.size(24.dp)
+                                                            modifier = Modifier.size(26.dp)
                                                         ) {
                                                             Icon(
                                                                 Icons.Rounded.Close,
-                                                                contentDescription = "Clear search",
+                                                                contentDescription = "Close search",
                                                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                                modifier = Modifier.size(16.dp)
+                                                                modifier = Modifier.size(18.dp)
                                                             )
                                                         }
                                                     }
                                                 }
-                                            }
+                                            } else {
+                                                // IDLE UNCONGESTED ROW: Categories on left, Home|Settings in center, Circular Search + Actions on right
+                                                Row(
+                                                    Modifier.fillMaxWidth(),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    if (selectedId != null) {
+                                                        IconButton(onClick = { selectedId = null }) {
+                                                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to library")
+                                                        }
+                                                        Text(
+                                                            "Library / Details",
+                                                            Modifier.weight(1f),
+                                                            style = MaterialTheme.typography.titleLarge,
+                                                            fontWeight = FontWeight.Bold,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                    } else {
+                                                        JadzumiCategoryPillsRow(
+                                                            selectedCategory = when (activeLibraryCategory) {
+                                                                "Movies" -> "Movies"
+                                                                "TV Shows", "Series" -> "Series"
+                                                                "Anime" -> "Anime"
+                                                                else -> "Movies"
+                                                            },
+                                                            onCategorySelected = { cat ->
+                                                                val newCat = when (cat) {
+                                                                    "Movies" -> "Movies"
+                                                                    "Series", "TV Shows" -> "TV Shows"
+                                                                    "Anime" -> "Anime"
+                                                                    else -> cat
+                                                                }
+                                                                activeLibraryCategory = newCat
+                                                            }
+                                                        )
 
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Surface(
-                                                    onClick = { showStorageSheet = true },
-                                                    shape = CircleShape,
-                                                    color = MaterialExpressive.subCardBg(effectiveTheme),
-                                                    border = MaterialExpressive.cardBorder(effectiveTheme)
-                                                ) {
-                                                    Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
-                                                        Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                                        JadzumiSegmentedNavCapsule(
+                                                            currentRoute = if (route == "Settings") "Settings" else "Home",
+                                                            onNavigate = { newRoute ->
+                                                                route = newRoute
+                                                                selectedId = null
+                                                            }
+                                                        )
                                                     }
-                                                }
-                                                Surface(
-                                                    onClick = { library.rescan() },
-                                                    enabled = !localState.busy && localState.folders.isNotEmpty(),
-                                                    shape = CircleShape,
-                                                    color = MaterialExpressive.subCardBg(effectiveTheme),
-                                                    border = MaterialExpressive.cardBorder(effectiveTheme)
-                                                ) {
-                                                    Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
-                                                        if (localState.busy) {
-                                                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                                                        } else {
-                                                            Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        // Compact Collapsed Search Trigger Button (38dp circular)
+                                                        Surface(
+                                                            onClick = { isSearchExpanded = true },
+                                                            shape = CircleShape,
+                                                            color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                            border = MaterialExpressive.cardBorder(effectiveTheme),
+                                                            modifier = Modifier.size(38.dp)
+                                                        ) {
+                                                            Box(contentAlignment = Alignment.Center) {
+                                                                Icon(
+                                                                    Icons.Rounded.Search,
+                                                                    contentDescription = "Search",
+                                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                    modifier = Modifier.size(19.dp)
+                                                                )
+                                                            }
+                                                        }
+
+                                                        Surface(
+                                                            onClick = { showStorageSheet = true },
+                                                            shape = CircleShape,
+                                                            color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                            border = MaterialExpressive.cardBorder(effectiveTheme),
+                                                            modifier = Modifier.size(38.dp)
+                                                        ) {
+                                                            Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+                                                                Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                                            }
+                                                        }
+
+                                                        Surface(
+                                                            onClick = { library.rescan() },
+                                                            enabled = !localState.busy && localState.folders.isNotEmpty(),
+                                                            shape = CircleShape,
+                                                            color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                            border = MaterialExpressive.cardBorder(effectiveTheme),
+                                                            modifier = Modifier.size(38.dp)
+                                                        ) {
+                                                            Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+                                                                if (localState.busy) {
+                                                                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                                                } else {
+                                                                    Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }

@@ -46,241 +46,252 @@ internal fun UnifiedMediaInspectorCard(
     val cardBorder = MaterialExpressive.cardBorder(theme)
     val cardElevation = MaterialExpressive.cardElevation(theme)
 
-    Column(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = cardBg,
+        border = cardBorder,
+        shadowElevation = cardElevation
     ) {
-        // Section Header with Refresh Action
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            // Header: Title, Quality Chip & Refresh Action
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Rounded.Analytics, null, tint = LavenderAccent, modifier = Modifier.size(20.dp))
-                Text("Media Inspector 2.0", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            }
-            if (!scan.loading) {
-                IconButton(
-                    onClick = { refresh++ },
-                    modifier = Modifier.size(32.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        Icons.Rounded.Refresh,
-                        contentDescription = "Refresh inspection",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
+                        Icons.Rounded.Analytics,
+                        contentDescription = null,
+                        tint = LavenderAccent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        "Media Inspector",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
                 }
-            }
-        }
 
-        if (scan.loading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth().height(2.dp),
-                color = LavenderAccent,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        }
-
-        // BENTO ROW 1: Video Engine & Audio Engine (Side-by-Side)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // CARD 1: VIDEO STREAM & CODEC
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(20.dp),
-                color = cardBg,
-                border = cardBorder,
-                shadowElevation = cardElevation
-            ) {
-                Column(Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "VIDEO ENGINE",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            letterSpacing = 0.5.sp
-                        )
-                        Icon(Icons.Rounded.Videocam, null, tint = LavenderAccent, modifier = Modifier.size(14.dp))
-                    }
-                    Spacer(Modifier.height(6.dp))
-
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     val quality = when {
                         width != null && width >= 3840 -> "4K UHD"
                         width != null && width >= 1920 -> "1080p FHD"
                         width != null && width >= 1280 -> "720p HD"
                         else -> "Standard Def"
                     }
-                    Text(quality, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-
-                    val resText = if (width != null && height != null) "$width × $height" else "Auto Detected"
-                    Text(resText, fontSize = 11.sp, color = LavenderAccent, fontWeight = FontWeight.Medium)
-
-                    Spacer(Modifier.height(8.dp))
-                    val codecText = inspectionVideoCodec(info?.mime)
-                        ?: if (video.name.contains("265", true) || video.name.contains("hevc", true)) "HEVC / H.265"
-                        else if (video.name.contains("264", true) || video.name.contains("avc", true)) "AVC / H.264"
-                        else "H.264 / HEVC Decoded"
-                    Text("Codec: $codecText", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-
-                    val hwStatus = when (videoDecoder?.hardware) {
-                        DecoderHardware.HARDWARE -> "Hardware (GPU)"
-                        DecoderHardware.SOFTWARE -> "Software Fallback"
-                        else -> "Hardware Accelerated"
+                    Surface(
+                        shape = RoundedCornerShape(999.dp),
+                        color = LavenderAccent.copy(alpha = 0.15f),
+                        border = BorderStroke(0.75.dp, LavenderAccent.copy(alpha = 0.35f))
+                    ) {
+                        Text(
+                            text = quality,
+                            color = LavenderAccent,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
                     }
-                    Text(hwStatus, fontSize = 10.5.sp, color = Color(0xFF34D399), fontWeight = FontWeight.SemiBold)
+
+                    if (!scan.loading) {
+                        IconButton(
+                            onClick = { refresh++ },
+                            modifier = Modifier.size(30.dp)
+                        ) {
+                            Icon(
+                                Icons.Rounded.Refresh,
+                                contentDescription = "Refresh inspection",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
             }
 
-            // CARD 2: AUDIO ENGINE & CHANNELS
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(20.dp),
-                color = cardBg,
-                border = cardBorder,
-                shadowElevation = cardElevation
-            ) {
-                Column(Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "AUDIO ENGINE",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            letterSpacing = 0.5.sp
-                        )
-                        Icon(Icons.Rounded.Audiotrack, null, tint = TimelineAccent, modifier = Modifier.size(14.dp))
-                    }
-                    Spacer(Modifier.height(6.dp))
+            if (scan.loading) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().height(2.dp),
+                    color = LavenderAccent,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            }
 
-                    val primaryAudio = audio.firstOrNull()
-                    val audioCodec = when {
-                        primaryAudio != null -> inspectionAudio(primaryAudio).substringBefore(" ·").ifEmpty { "Multichannel" }
-                        video.name.contains("DDP", true) || video.name.contains("EAC3", true) -> "E-AC-3 Surround"
-                        video.name.contains("AAC", true) -> "AAC Stereo / 5.1"
-                        video.name.contains("DTS", true) -> "DTS-HD Audio"
-                        video.name.contains("TrueHD", true) -> "Dolby TrueHD"
-                        else -> "NextLib FFmpeg"
-                    }
-                    Text(audioCodec, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-
-                    val channelsText = when {
-                        primaryAudio?.channels != null && primaryAudio.channels > 2 -> "${primaryAudio.channels}CH Surround"
-                        video.name.contains("6CH", true) || video.name.contains("5.1", true) -> "5.1 Surround (6CH)"
-                        video.name.contains("7.1", true) -> "7.1 Surround (8CH)"
-                        else -> "Stereo / Surround"
-                    }
-                    Text(channelsText, fontSize = 11.sp, color = TimelineAccent, fontWeight = FontWeight.Medium)
-
-                    Spacer(Modifier.height(8.dp))
-                    val trackCountStr = if (audio.isNotEmpty()) "${audio.size} Audio Stream(s)" else "Bundled FFmpeg Decoder"
-                    Text(trackCountStr, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-                    Text("Auto Downmix Ready", fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f))
+            // SECTION 1: VIDEO STREAM
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Rounded.Videocam, null, tint = LavenderAccent, modifier = Modifier.size(14.dp))
+                    Text(
+                        "VIDEO STREAM",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = LavenderAccent,
+                        letterSpacing = 0.5.sp
+                    )
                 }
+
+                val resText = if (width != null && height != null) "$width × $height" else "Auto Detected"
+                InspectorSpecRow(label = "Resolution", value = resText)
+
+                val codecText = inspectionVideoCodec(info?.mime)
+                    ?: if (video.name.contains("265", true) || video.name.contains("hevc", true)) "HEVC / H.265"
+                    else if (video.name.contains("264", true) || video.name.contains("avc", true)) "AVC / H.264"
+                    else "H.264 / HEVC Decoded"
+                InspectorSpecRow(label = "Codec", value = codecText)
+
+                val hwStatus = when (videoDecoder?.hardware) {
+                    DecoderHardware.HARDWARE -> "Hardware (GPU)"
+                    DecoderHardware.SOFTWARE -> "Software Fallback"
+                    else -> "Hardware Accelerated"
+                }
+                InspectorSpecRow(label = "Decoder Pipeline", value = hwStatus, valueColor = Color(0xFF34D399))
+
+                val hdrText = if (playback.isHdr) (playback.hdrFlavor ?: "HDR10+") else "BT.709 SDR"
+                InspectorSpecRow(label = "Color & Dynamic Range", value = hdrText)
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f), thickness = 0.75.dp)
+
+            // SECTION 2: AUDIO & ACOUSTICS
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Rounded.Audiotrack, null, tint = TimelineAccent, modifier = Modifier.size(14.dp))
+                    Text(
+                        "AUDIO & ACOUSTICS",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TimelineAccent,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+
+                val primaryAudio = audio.firstOrNull()
+                val audioCodec = when {
+                    primaryAudio != null -> inspectionAudio(primaryAudio).substringBefore(" ·").ifEmpty { "Multichannel" }
+                    video.name.contains("DDP", true) || video.name.contains("EAC3", true) -> "E-AC-3 Surround"
+                    video.name.contains("AAC", true) -> "AAC Stereo / 5.1"
+                    video.name.contains("DTS", true) -> "DTS-HD Audio"
+                    video.name.contains("TrueHD", true) -> "Dolby TrueHD"
+                    else -> "NextLib FFmpeg"
+                }
+                val channelsText = when {
+                    primaryAudio?.channels != null && primaryAudio.channels > 2 -> "${primaryAudio.channels}CH Surround"
+                    video.name.contains("6CH", true) || video.name.contains("5.1", true) -> "5.1 Surround (6CH)"
+                    video.name.contains("7.1", true) -> "7.1 Surround (8CH)"
+                    else -> "Stereo (2CH)"
+                }
+                InspectorSpecRow(label = "Format & Channels", value = "$audioCodec · $channelsText")
+
+                val trackCountStr = if (audio.isNotEmpty()) "${audio.size} Audio Stream(s)" else "Single Track"
+                InspectorSpecRow(label = "Streams Detected", value = trackCountStr)
+                InspectorSpecRow(label = "Downmix Routing", value = "Auto Downmix Ready")
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f), thickness = 0.75.dp)
+
+            // SECTION 3: SUBTITLE STUDIO
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Rounded.ClosedCaption, null, tint = LavenderAccent, modifier = Modifier.size(14.dp))
+                    Text(
+                        "SUBTITLE STUDIO",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = LavenderAccent,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+
+                val subCount = subtitles.size
+                val subTitle = if (subCount > 0) "$subCount Track(s) Detected" else "Subtitles Ready"
+                InspectorSpecRow(label = "Tracks Detected", value = subTitle)
+                InspectorSpecRow(label = "Supported Formats", value = "ASS · SSA · SRT · VTT")
+                val dualSubReady = if (playback.dualSubtitleStudio.isSecondaryEnabled) "Active" else "Ready"
+                InspectorSpecRow(label = "Dual Subtitles", value = dualSubReady, valueColor = MaterialTheme.colorScheme.primary)
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f), thickness = 0.75.dp)
+
+            // SECTION 4: CONTAINER & FILE
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Rounded.Folder, null, tint = TimelineAccent, modifier = Modifier.size(14.dp))
+                    Text(
+                        "CONTAINER & FILE",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TimelineAccent,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+
+                val containerShort = when {
+                    video.name.endsWith(".mkv", true) || video.mime.contains("matroska") -> "MKV (Matroska)"
+                    video.name.endsWith(".mp4", true) || video.mime.contains("mp4") -> "MP4 Video"
+                    video.name.endsWith(".webm", true) -> "WebM Video"
+                    else -> video.mime.ifEmpty { "Video Container" }
+                }
+                InspectorSpecRow(label = "Container", value = containerShort)
+
+                val sizeStr = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "Local Storage"
+                InspectorSpecRow(label = "File Size", value = sizeStr)
+
+                val folderName = state.folders.firstOrNull { it.uri == video.folder }?.name ?: "Local Media"
+                InspectorSpecRow(label = "Folder Location", value = folderName)
             }
         }
+    }
+}
 
-        // BENTO ROW 2: Subtitle Studio & File Container Storage (Side-by-Side)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // CARD 3: SUBTITLE STUDIO
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(20.dp),
-                color = cardBg,
-                border = cardBorder,
-                shadowElevation = cardElevation
-            ) {
-                Column(Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "SUBTITLE STUDIO",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            letterSpacing = 0.5.sp
-                        )
-                        Icon(Icons.Rounded.ClosedCaption, null, tint = LavenderAccent, modifier = Modifier.size(14.dp))
-                    }
-                    Spacer(Modifier.height(6.dp))
-
-                    val subCount = subtitles.size
-                    val subTitle = if (subCount > 0) "$subCount Track(s) Detected" else "Subtitles Ready"
-                    Text(subTitle, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
-
-                    val subFormats = "Styled ASS · SRT · VTT"
-                    Text(subFormats, fontSize = 11.sp, color = LavenderAccent, fontWeight = FontWeight.Medium)
-
-                    Spacer(Modifier.height(8.dp))
-                    Text("Engine: Media3 TextRenderer", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    val dualSubReady = if (playback.dualSubtitleStudio.isSecondaryEnabled) "Dual Subtitles: Active" else "Dual Subtitles: Ready"
-                    Text(dualSubReady, fontSize = 10.5.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-                }
-            }
-
-            // CARD 4: STORAGE & CONTAINER
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(20.dp),
-                color = cardBg,
-                border = cardBorder,
-                shadowElevation = cardElevation
-            ) {
-                Column(Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "CONTAINER & STORAGE",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            letterSpacing = 0.5.sp
-                        )
-                        Icon(Icons.Rounded.Folder, null, tint = TimelineAccent, modifier = Modifier.size(14.dp))
-                    }
-                    Spacer(Modifier.height(6.dp))
-
-                    val sizeStr = if (video.bytes >= 0) Formatter.formatFileSize(context, video.bytes) else "Local Storage"
-                    Text(sizeStr, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-
-                    val containerShort = when {
-                        video.name.endsWith(".mkv", true) || video.mime.contains("matroska") -> "MKV (Matroska)"
-                        video.name.endsWith(".mp4", true) || video.mime.contains("mp4") -> "MP4 Video"
-                        video.name.endsWith(".webm", true) -> "WebM Video"
-                        else -> video.mime.ifEmpty { "Video Container" }
-                    }
-                    Text(containerShort, fontSize = 11.sp, color = TimelineAccent, fontWeight = FontWeight.Medium)
-
-                    Spacer(Modifier.height(8.dp))
-                    val folderName = state.folders.firstOrNull { it.uri == video.folder }?.name ?: "Local Media"
-                    Text("Folder: $folderName", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(video.name, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
-        }
+@Composable
+private fun InspectorSpecRow(
+    label: String,
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+            fontWeight = FontWeight.Normal
+        )
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            color = valueColor,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

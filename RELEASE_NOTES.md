@@ -1,3 +1,23 @@
+# Jadzumi v3.3.6 — HUD Alignment, Collapsible Search Bar & Material Expressive Spec Sheet
+
+A precision UX refinement release delivering symmetric 42dp player HUD controls, a fluid collapsible search bar resolving library header congestion, and the complete Material Expressive 2.0 Media Inspector spec sheet.
+
+### 1. Symmetrical Player HUD & Control Alignment
+- **Top-Right 42dp Utility Bar**: Standardized the upper-right utility buttons (PiP, Quick Menu, Screen Lock) to 42dp circular frosted controls, achieving visual balance and vertical baseline alignment with the 42dp Back button.
+- **Deduplication of Controls**: Completely removed redundant PiP and 3-dots More buttons from the bottom deck, leaving the bottom deck clean and focused on stream chips (Subtitles, Audio, Speed, Aspect Ratio).
+- **Circular Play Button Interaction**: Fixed the squarish gray box bounding artifact during center play button clicks by enforcing circular clip masks before touch interactions.
+
+### 2. Fluid Collapsible Search Bar
+- **Uncongested Header Layout**: Transformed the fixed search bar into a compact 38dp circular button when idle, giving ample breathing room to category pills and the segmented Home/Settings capsule.
+- **Fluid Expansion**: Smoothly expands horizontally across the top bar upon tap or active query with full text input, clear text button, and dismiss action.
+
+### 3. Material Expressive Media Inspector 2.0
+- **Compact Spec Sheet Architecture**: Replaced the bulky four-card bento grid with a single unified Material Expressive spec sheet (Concept 4A).
+- **Categorized Sections**: Clean key-value breakdown covering Video Stream, Audio & Acoustics, Subtitle Studio, and Container & File metrics separated by subtle 0.75dp hairline dividers.
+- **Design Token Compliance**: Fully conforms to GlassTheme design tokens with 0dp flat elevation, high-contrast readable typography, and dynamic resolution quality badges.
+
+---
+
 # Jadzumi v3.3.5 — Integrated Bottom Deck Architecture & Redesigned Display Settings
 
 A player ergonomics and customization release delivering the approved Approach B Integrated Unified Bottom Deck, eliminating top action pill clutter, and providing full telemetry customization options under settings.

@@ -922,56 +922,64 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                 }
                             }
 
-                            // Top-Right: Clean Minimal Utilities (Approach B - Controls Unified in Bottom Deck)
+                            // Top-Right: Clean Symmetrical Utilities (42dp aligned with Back Button)
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = SpatialGlass.pillBg(isAmoled),
-                                    border = SpatialGlass.pillBorder(0.75.dp),
-                                    shadowElevation = 0.dp,
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .clickable {
-                                            controls = false
-                                            activity.enterCinemaPip()
-                                            interaction++
-                                        }
+                                FrostedCircleButton(
+                                    label = "Picture in Picture",
+                                    onClick = {
+                                        controls = false
+                                        activity.enterCinemaPip()
+                                        interaction++
+                                    },
+                                    size = 42.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            Icons.Rounded.PictureInPictureAlt,
-                                            contentDescription = "PiP",
-                                            tint = playerContentColor,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
+                                    Icon(
+                                        Icons.Rounded.PictureInPictureAlt,
+                                        contentDescription = "PiP",
+                                        tint = playerContentColor,
+                                        modifier = Modifier.size(19.dp)
+                                    )
                                 }
 
-                                Surface(
-                                    shape = CircleShape,
-                                    color = SpatialGlass.pillBg(isAmoled),
-                                    border = SpatialGlass.pillBorder(0.75.dp),
-                                    shadowElevation = 0.dp,
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .clickable {
-                                            playback.locked = true
-                                            interaction++
-                                        }
+                                FrostedCircleButton(
+                                    label = "Quick Menu",
+                                    onClick = {
+                                        quickMenuSection = if (quickMenuSection == "main") null else "main"
+                                        interaction++
+                                    },
+                                    size = 42.dp,
+                                    bgColor = if (quickMenuSection == "main") LavenderAccent.copy(alpha = 0.22f) else dynamicFrostedCircleBg,
+                                    rimColor = if (quickMenuSection == "main") LavenderAccent.copy(alpha = 0.5f) else dynamicFrostedCircleRim
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            Icons.Rounded.Lock,
-                                            contentDescription = "Lock controls",
-                                            tint = playerContentColor,
-                                            modifier = Modifier.size(15.dp)
-                                        )
-                                    }
+                                    Icon(
+                                        Icons.Rounded.MoreVert,
+                                        contentDescription = "More options",
+                                        tint = if (quickMenuSection == "main") LavenderAccent else playerContentColor,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+
+                                FrostedCircleButton(
+                                    label = "Lock controls",
+                                    onClick = {
+                                        playback.locked = true
+                                        interaction++
+                                    },
+                                    size = 42.dp,
+                                    bgColor = dynamicFrostedCircleBg,
+                                    rimColor = dynamicFrostedCircleRim
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Lock,
+                                        contentDescription = "Lock controls",
+                                        tint = playerContentColor,
+                                        modifier = Modifier.size(19.dp)
+                                    )
                                 }
                             }
 
@@ -1024,6 +1032,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
+                                    .clip(CircleShape)
                                     .border(1.5.dp, Color.White.copy(alpha = 0.50f), CircleShape)
                                     .background(Color.White.copy(alpha = 0.14f), CircleShape)
                                     .clickable { playback.toggle(); interaction++ }
@@ -1203,17 +1212,12 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                             .background(Color.White.copy(alpha = 0.10f))
                                     )
 
-                                    // Row 2: Integrated Action Controls
+                                    // Row 2: Stream Action Controls (Subtitles, Audio, Speed, Aspect Mode)
                                     Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        // Left Group: Subtitles, Audio, Speed, Aspect Mode
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
                                             // Subtitles Pill Chip
                                             Row(
                                                 modifier = Modifier
@@ -1328,57 +1332,11 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                                 )
                                             }
                                         }
-
-                                        // Right Group: PiP & Quick Menu
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(30.dp)
-                                                    .clip(CircleShape)
-                                                    .background(Color.White.copy(alpha = 0.06f))
-                                                    .clickable {
-                                                        controls = false
-                                                        activity.enterCinemaPip()
-                                                        interaction++
-                                                    },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    Icons.Rounded.PictureInPictureAlt,
-                                                    "PiP",
-                                                    tint = playerContentColor,
-                                                    modifier = Modifier.size(15.dp)
-                                                )
-                                            }
-
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(30.dp)
-                                                    .clip(CircleShape)
-                                                    .background(if (quickMenuSection == "main") Color(0xFFD0BCFF).copy(alpha = 0.18f) else Color.White.copy(alpha = 0.06f))
-                                                    .clickable {
-                                                        quickMenuSection = if (quickMenuSection == "main") null else "main"
-                                                        interaction++
-                                                    },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    Icons.Rounded.MoreVert,
-                                                    "Quick Menu",
-                                                    tint = if (quickMenuSection == "main") Color(0xFFD0BCFF) else playerContentColor,
-                                                    modifier = Modifier.size(15.dp)
-                                                )
-                                            }
-                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
                 // Unlock Button when Screen Locked (Spatial Glass Unlock Pill)
                 AnimatedVisibility(
