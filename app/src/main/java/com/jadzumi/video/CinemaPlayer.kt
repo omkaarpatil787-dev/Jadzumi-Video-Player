@@ -459,12 +459,16 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
             },
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    scaleX = zoomScale
-                    scaleY = zoomScale
-                    translationX = panOffset.x
-                    translationY = panOffset.y
-                }
+                .then(
+                    if (zoomScale != 1f || panOffset != Offset.Zero) {
+                        Modifier.graphicsLayer {
+                            scaleX = zoomScale
+                            scaleY = zoomScale
+                            translationX = panOffset.x
+                            translationY = panOffset.y
+                        }
+                    } else Modifier
+                )
                 .onGloballyPositioned {
                 if (!playback.inPip) {
                     val b = it.boundsInWindow()

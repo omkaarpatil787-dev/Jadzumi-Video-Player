@@ -76,14 +76,11 @@ object HdrCodecSelector {
                         }
                     }
                     HdrProfileMode.AUTO -> {
-                        val displaySupportsDv = isDolbyVisionDisplaySupported(context)
-                        // On AMOLED HDR10+ displays without certified Dolby Vision hardware decoding (e.g. Samsung Galaxy, Xiaomi Pad 5),
-                        // route directly to hardware HEVC decoders for clean 10-bit BT.2020 HDR10/HDR10+ base layer
-                        if (!displaySupportsDv || defaultDecoders.isEmpty()) {
-                            if (hevcDecoders.isNotEmpty()) {
-                                return@MediaCodecSelector hevcDecoders
-                            }
-                        }
+                        // Prioritize native hardware Dolby Vision decoders (e.g. c2.qti.dv.decoder) first.
+                        // Hardware DV decoders on Qualcomm, MediaTek, and Exynos correctly decode
+                        // Profile 5 (ICtCp color space), Profile 8, and Profile 7 directly, preventing
+                        // the infamous purple and green tint caused by forcing ICtCp into generic HEVC decoders.
+                        // Fall back to hardware HEVC only if no DV decoder is available.
                         val combined = ArrayList<MediaCodecInfo>(defaultDecoders.size + hevcDecoders.size)
                         combined.addAll(defaultDecoders)
                         combined.addAll(hevcDecoders)

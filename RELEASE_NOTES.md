@@ -1,3 +1,21 @@
+# Jadzumi v3.4.4 - Dolby Vision Profile 5 Native Decoders, ICtCp Color Fix & Direct HWC Composition
+
+A targeted media engine and video pipeline release resolving purple and magenta color distortion on Dolby Vision Profile 5 content, prioritizing SoC hardware Dolby Vision decoders across all AMOLED and HDR panels, correcting HDR stream classification, and optimizing Direct Hardware Composer SurfaceView pass-through.
+
+### 1. Dolby Vision Profile 5 Native Hardware Decoding & ICtCp Color Fix
+- Root Cause Resolution: Dolby Vision Profile 5 (common in streaming releases from Disney+, Netflix, and Apple TV+) uses single-layer IPTPQc2 (ICtCp) color space without an HDR10 fallback base layer. Previously, Jadzumi checked whether the display panel explicitly declared Dolby Vision support. On devices whose displays do not declare Dolby Vision (such as HDR10+ AMOLED panels), the player bypassed the SoC's hardware Dolby Vision decoder and routed the bitstream to a generic HEVC decoder. The generic HEVC decoder interpreted ICtCp as standard YCbCr, causing severe purple and green posterization in shadows and highlights.
+- Hardware Decoder Prioritization: In HdrCodecSelector, Dolby Vision decoders (e.g. c2.qti.dv.decoder, c2.exynos.dv.decoder) are now strictly prioritized whenever available on the chipset, regardless of display panel flags. The hardware decoder decodes ICtCp correctly and outputs accurate color to the display.
+
+### 2. Stream Classification Fix for SDR-Flagged Containers
+- Container Tag Handling: Certain Dolby Vision Profile 5 MP4 and MKV containers declare colorTransfer as SDR (transfer = 1) in their container metadata.
+- Pre-Emptive DV Inspection: PlaybackController now inspects Dolby Vision codec identifiers (dvh, dvhe, dva, dav) and MIME types before checking SDR color transfer tags, ensuring Dolby Vision streams are never misidentified as SDR or routed into inappropriate rendering pipelines.
+
+### 3. Direct Hardware Composer SurfaceView Pass-Through
+- Zero-Copy Display Composition: CinemaPlayer now selectively bypasses Modifier.graphicsLayer on SurfaceView when zoom scale is 1.0 and pan offset is zero.
+- Native 10-Bit Output: SurfaceView renders directly to the Hardware Composer (HWC) overlay without intermediate Compose render node allocations, preserving pristine 10-bit HDR output and eliminating compositing latency.
+
+---
+
 # Jadzumi v3.4.3 - Hyper-Interactive Watch Party Dock, Persistent WebP Disk Cache & Compose Stability
 
 A performance and interactivity upgrade featuring an actionable collapsed Watch Party pill with direct mic and reaction triggers, a tabbed host command center with guest management and live VU meters, two-tier persistent WebP disk thumbnail caching for butter-smooth library scrolling, and Compose immutability optimizations.
