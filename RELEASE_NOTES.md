@@ -1,3 +1,35 @@
+# Jadzumi v3.4.7 - Modern Mobile Overhaul, Material 3 Bottom Navigation & Direct HDR Zero-Copy Pipeline
+
+A major mobile architectural overhaul introducing an ergonomic Material 3 Bottom Navigation Bar within thumb reach, a unified frosted search pill and horizontal category chips, an adaptive 2-column cinematic movie poster grid with HDR badges, intelligent personal camera clip isolation into a dedicated horizontal shelf, and complete elimination of HDR shadow color distortion via direct Hardware Composer zero-copy passthrough.
+
+### 1. Ergonomic Material 3 Bottom Navigation Bar
+- Thumb-Zone Architecture: Relocated primary destinations (Movies, Series, Folders, Settings) to an ergonomic bottom navigation bar docked within immediate one-handed thumb reach on mobile phones.
+- Expressive Pill Indicators: Implemented animated lavender pill indicators and distinct iconography providing immediate visual feedback of active destinations without crowding the top viewport.
+- Deep-Link Category Synchronization: Selecting Movies, Series, Folders, or Settings instantly synchronizes the library view, switching categories without unnecessary nesting or layout thrashing.
+- Gesture Inset Protection: Added 88dp bottom content padding across library and folder views, ensuring cards and controls glide smoothly above the bottom navigation bar and Android navigation gesture pill.
+
+### 2. Unified Frosted Search Pill & Category Chips
+- Decongested Top Header: Replaced the congested top header on smartphones with a full-width frosted acrylic search capsule, providing direct tap-to-search access alongside Storage Cleaner and Library Sync action buttons.
+- Horizontal Category Chips: Introduced a smooth scrollable chip row on Row 2 with individual frosted chips (Movies, Series, Anime, Clips, Folders), allowing rapid contextual filtering with zero horizontal text collisions.
+- Form-Factor Decoupling: Tablets, foldables, and landscape orientations preserve the wide panoramic top bar and side rails, maintaining tailored ergonomic experiences across all form factors.
+
+### 3. Intelligent Camera & Clips Isolation
+- Feature Film Library Cleansing: Implemented intelligent heuristic detection for personal camera recordings, screen captures, and social video clips (identifying VID_, PXL_, DCIM, Camera, and short unindexed recordings).
+- Dedicated Horizontal Shelf: Isolated personal clips into a dedicated 'Phone Camera & Clips' horizontal shelf with duration badges, quick-play triggers, and clean card styling, ensuring Feature Films remains exclusively dedicated to cinematic titles.
+- Full Clips View: Added a dedicated 'Clips' category view to easily browse, organize, and play personal camera recordings and short videos in full grid or list mode.
+
+### 4. Adaptive 2-Column Cinematic Cards & HDR Format Badges
+- 2-Column Portrait Grid: Enforced a 2-column poster grid on mobile phone portrait screens, allocating generous 150dp-170dp horizontal card widths.
+- 2-Line Title Wrapping: Guaranteed up to 2 lines of unclipped title text with ellipsis overflow, preventing truncated film titles.
+- Unified Quality & HDR Badges: Combined resolution (4K UHD, 1080p, 720p) with native HDR format tags (HDR, HDR10+, DV) into a crisp header badge, providing at-a-glance codec transparency.
+
+### 5. HDR Direct Hardware Composer Zero-Copy Pipeline & Shadow Color Fix
+- Root Cause Resolution: Resolved shadow posterization and purple/magenta color banding on HDR, HDR10, and Dolby Vision playback on AMOLED displays by strictly bypassing intermediate OpenGL SDR video effect pipelines for all 10-bit and HDR streams.
+- Direct SurfaceView Pass-Through: Native MediaCodec decoders now render directly to the Hardware Composer (HWC) overlay, preserving untouched 10-bit BT.2020 PQ and HLG color spaces with true shadow gradations.
+- Dynamic HDR Color Mode: Extended ActivityInfo.COLOR_MODE_HDR activation across all AMOLED/OLED displays playing HDR streams, ensuring system-level wide color gamut tone mapping.
+
+---
+
 # Jadzumi v3.4.6 - Enforced 2-Column Mobile Portrait Grid, Slim Nav Capsule & Desktop Delivery
 
 A targeted mobile experience refinement enforcing a 2-column portrait grid across all mobile devices, slimming the top navigation capsule to 165dp for optimal button clearance, and ensuring complete Desktop artifact delivery for immediate local installation.

@@ -378,89 +378,92 @@ private val destinations = listOf(
                                                 } else {
                                                     // IDLE UNCONGESTED HEADER
                                                     if (isPhone || contentWidth < 720.dp || !isLandscape) {
-                                                        // Mobile Phone & Portrait Screens: Row 1 has Home|Settings on left and Actions on right (zero crowding)
+                                                        // Mobile Phone & Portrait Screens: Modern Overhaul Architecture
+                                                        // Row 1: Unified Frosted Search Pill + Storage Cleaner & Sync Actions
                                                         Row(
                                                             Modifier.fillMaxWidth(),
                                                             verticalAlignment = Alignment.CenterVertically,
-                                                            horizontalArrangement = Arrangement.SpaceBetween
+                                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                                                         ) {
-                                                            JadzumiSegmentedNavCapsule(
-                                                                currentRoute = if (route == "Settings") "Settings" else "Home",
-                                                                onNavigate = { newRoute ->
-                                                                    route = newRoute
-                                                                    selectedId = null
-                                                                }
-                                                            )
-
-                                                            Row(
-                                                                verticalAlignment = Alignment.CenterVertically,
-                                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                            Surface(
+                                                                onClick = { isSearchExpanded = true },
+                                                                modifier = Modifier
+                                                                    .weight(1f)
+                                                                    .height(40.dp),
+                                                                shape = RoundedCornerShape(20.dp),
+                                                                color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                                border = MaterialExpressive.cardBorder(effectiveTheme)
                                                             ) {
-                                                                Surface(
-                                                                    onClick = { isSearchExpanded = true },
-                                                                    shape = CircleShape,
-                                                                    color = MaterialExpressive.subCardBg(effectiveTheme),
-                                                                    border = MaterialExpressive.cardBorder(effectiveTheme),
-                                                                    modifier = Modifier.size(38.dp)
+                                                                Row(
+                                                                    modifier = Modifier
+                                                                        .fillMaxSize()
+                                                                        .padding(horizontal = 14.dp),
+                                                                    verticalAlignment = Alignment.CenterVertically,
+                                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                                                 ) {
-                                                                    Box(contentAlignment = Alignment.Center) {
-                                                                        Icon(
-                                                                            Icons.Rounded.Search,
-                                                                            contentDescription = "Search",
-                                                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                                            modifier = Modifier.size(19.dp)
-                                                                        )
-                                                                    }
+                                                                    Icon(
+                                                                        Icons.Rounded.Search,
+                                                                        contentDescription = "Search",
+                                                                        tint = MaterialTheme.colorScheme.primary,
+                                                                        modifier = Modifier.size(18.dp)
+                                                                    )
+                                                                    Text(
+                                                                        text = "Search movies, series...",
+                                                                        style = MaterialTheme.typography.bodyMedium,
+                                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                                                                        fontSize = 13.sp,
+                                                                        maxLines = 1,
+                                                                        overflow = TextOverflow.Ellipsis
+                                                                    )
                                                                 }
+                                                            }
 
-                                                                Surface(
-                                                                    onClick = { showStorageSheet = true },
-                                                                    shape = CircleShape,
-                                                                    color = MaterialExpressive.subCardBg(effectiveTheme),
-                                                                    border = MaterialExpressive.cardBorder(effectiveTheme),
-                                                                    modifier = Modifier.size(38.dp)
-                                                                ) {
-                                                                    Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
-                                                                        Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                                                                    }
+                                                            Surface(
+                                                                onClick = { showStorageSheet = true },
+                                                                shape = CircleShape,
+                                                                color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                                border = MaterialExpressive.cardBorder(effectiveTheme),
+                                                                modifier = Modifier.size(40.dp)
+                                                            ) {
+                                                                Box(contentAlignment = Alignment.Center) {
+                                                                    Icon(Icons.Rounded.PieChart, "Storage Cleaner", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                                                                 }
+                                                            }
 
-                                                                Surface(
-                                                                    onClick = { library.rescan() },
-                                                                    enabled = !localState.busy && localState.folders.isNotEmpty(),
-                                                                    shape = CircleShape,
-                                                                    color = MaterialExpressive.subCardBg(effectiveTheme),
-                                                                    border = MaterialExpressive.cardBorder(effectiveTheme),
-                                                                    modifier = Modifier.size(38.dp)
-                                                                ) {
-                                                                    Box(modifier = Modifier.size(38.dp), contentAlignment = Alignment.Center) {
-                                                                        if (localState.busy) {
-                                                                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                                                                        } else {
-                                                                            Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                                                                        }
+                                                            Surface(
+                                                                onClick = { library.rescan() },
+                                                                enabled = !localState.busy && localState.folders.isNotEmpty(),
+                                                                shape = CircleShape,
+                                                                color = MaterialExpressive.subCardBg(effectiveTheme),
+                                                                border = MaterialExpressive.cardBorder(effectiveTheme),
+                                                                modifier = Modifier.size(40.dp)
+                                                            ) {
+                                                                Box(contentAlignment = Alignment.Center) {
+                                                                    if (localState.busy) {
+                                                                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                                                    } else {
+                                                                        Icon(Icons.Rounded.Sync, "Sync library now", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                                                                     }
                                                                 }
                                                             }
                                                         }
 
-                                                        // Row 2 on Phone: Horizontal category pills (thin & thumb-accessible, zero overlap)
+                                                        // Row 2 on Phone: Horizontal Category Chips Row
                                                         Spacer(Modifier.height(8.dp))
-                                                        JadzumiCategoryPillsRow(
-                                                            selectedCategory = when (activeLibraryCategory) {
-                                                                "Movies" -> "Movies"
-                                                                "TV Shows", "Series" -> "Series"
-                                                                "Anime" -> "Anime"
-                                                                else -> "Movies"
-                                                            },
+                                                        JadzumiCategoryChipsRow(
+                                                            selectedCategory = activeLibraryCategory,
                                                             onCategorySelected = { cat ->
-                                                                val newCat = when (cat) {
-                                                                    "Movies" -> "Movies"
-                                                                    "Series", "TV Shows" -> "TV Shows"
-                                                                    "Anime" -> "Anime"
-                                                                    else -> cat
+                                                                if (cat == "Folders") {
+                                                                    route = "Folders"
+                                                                } else {
+                                                                    if (route == "Folders" || route == "Settings") {
+                                                                        route = "Home"
+                                                                    }
+                                                                    activeLibraryCategory = when (cat) {
+                                                                        "Series" -> "TV Shows"
+                                                                        else -> cat
+                                                                    }
                                                                 }
-                                                                activeLibraryCategory = newCat
                                                             }
                                                         )
                                                     } else {
@@ -639,24 +642,7 @@ private val destinations = listOf(
                                             "Home", "Library" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "Movies", "Videos" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "TV Shows" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = activeLibraryCategory, onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
-                                            "Folders" -> UnifiedSettingsAndPrivacyScreen(
-                                                theme = theme,
-                                                effectiveTheme = effectiveTheme,
-                                                onTheme = ::switchThemeWithBloom,
-                                                reduced = reducedMotion,
-                                                onReduced = { reducedMotion = it; prefs.edit { putBoolean("reducedMotion", it) } },
-                                                livelyAnimations = livelyAnimations,
-                                                onLivelyAnimations = { livelyAnimations = it; prefs.edit { putBoolean("livelyAnimations", it) } },
-                                                dockAutoMinimize = dockAutoMinimize,
-                                                onDockAutoMinimize = {
-                                                    dockAutoMinimize = it
-                                                    prefs.edit { putBoolean("dockAutoMinimize", it) }
-                                                },
-                                                localState = localState,
-                                                library = library,
-                                                playback = playback,
-                                                initialCategory = "storage_about"
-                                            )
+                                            "Folders" -> LocalLibraryPage(localState, library, playback, query, { selectedId = it }, defaultCategory = "Folders", onCategoryChanged = { activeLibraryCategory = it }, onScrollActive = { shouldMin -> if (dockAutoMinimize) isDockMinimized = shouldMin })
                                             "Settings" -> UnifiedSettingsAndPrivacyScreen(
                                                 theme = theme,
                                                 effectiveTheme = effectiveTheme,
@@ -690,13 +676,26 @@ private val destinations = listOf(
 
                                 // In-App Docked Mini Player (YouTube / Spotify Style)
                                 if (playback.video != null && playback.isDocked) {
-                                    val bottomPad = if (isTablet) 16.dp else 12.dp
+                                    val bottomPad = if (isTablet) 16.dp else if (isPhone) 74.dp else 12.dp
                                     DockedMiniPlayer(
                                         playback = playback,
                                         theme = effectiveTheme,
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
                                             .padding(bottom = bottomPad)
+                                    )
+                                }
+
+                                if (isPhone && selectedId == null && !playback.fullscreen) {
+                                    JadzumiMobileBottomBar(
+                                        currentRoute = route,
+                                        currentCategory = activeLibraryCategory,
+                                        onNavigate = { newRoute, newCat ->
+                                            route = newRoute
+                                            if (newCat != null) activeLibraryCategory = newCat
+                                            selectedId = null
+                                        },
+                                        modifier = Modifier.align(Alignment.BottomCenter)
                                     )
                                 }
                             }
@@ -940,6 +939,198 @@ fun GeminiGlowingJadzumiLogo(
                             )
                         )
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun JadzumiCategoryChipsRow(
+    selectedCategory: String,
+    onCategorySelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val theme = LocalThemeName.current
+    val isLight = theme == "Light"
+    val isAmoled = theme == "AMOLED"
+
+    val chips = remember {
+        listOf("Movies", "Series", "Anime", "Clips", "Folders")
+    }
+
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 2.dp)
+    ) {
+        items(chips, key = { it }) { category ->
+            val isSelected = when (category) {
+                "Movies" -> selectedCategory == "Movies" || selectedCategory.isEmpty()
+                "Series" -> selectedCategory == "Series" || selectedCategory == "TV Shows"
+                "Anime" -> selectedCategory == "Anime"
+                "Clips" -> selectedCategory == "Clips"
+                "Folders" -> selectedCategory == "Folders"
+                else -> selectedCategory == category
+            }
+
+            val chipBg = when {
+                isSelected -> when {
+                    isAmoled -> LavenderAccent
+                    isLight -> Color(0xFF6750A4)
+                    else -> LavenderAccent
+                }
+                isAmoled -> Color(0xFF14121B)
+                isLight -> Color(0xFFF1ECF7)
+                else -> Color(0xFF1E1A29).copy(alpha = 0.85f)
+            }
+
+            val chipBorder = when {
+                isSelected -> Color.Transparent
+                isAmoled -> Color.White.copy(alpha = 0.12f)
+                isLight -> Color(0x286750A4)
+                else -> Color.White.copy(alpha = 0.08f)
+            }
+
+            val textColor = when {
+                isSelected -> if (isLight || !isAmoled) Obsidian else Color.White
+                isLight -> Color(0xFF49454F)
+                else -> Color(0xFFCAC4D0)
+            }
+
+            Surface(
+                onClick = { onCategorySelected(category) },
+                shape = RoundedCornerShape(999.dp),
+                color = chipBg,
+                border = BorderStroke(0.75.dp, chipBorder),
+                modifier = Modifier.height(34.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = category,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = textColor,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun JadzumiMobileBottomBar(
+    currentRoute: String,
+    currentCategory: String,
+    onNavigate: (route: String, category: String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val theme = LocalThemeName.current
+    val isLight = theme == "Light"
+    val isAmoled = theme == "AMOLED"
+
+    val barBg = when {
+        isAmoled -> Color(0xF00A0A0C)
+        isLight -> Color(0xF5FFFFFF)
+        else -> Color(0xF215121E)
+    }
+    val barBorder = when {
+        isAmoled -> Color.White.copy(alpha = 0.10f)
+        isLight -> Color(0x206750A4)
+        else -> Color.White.copy(alpha = 0.08f)
+    }
+
+    val destinations = remember {
+        listOf(
+            Pair("Movies", Icons.Rounded.Movie),
+            Pair("Series", Icons.Rounded.Tv),
+            Pair("Folders", Icons.Rounded.Folder),
+            Pair("Settings", Icons.Rounded.Settings)
+        )
+    }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.navigationBars),
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        color = barBg,
+        border = BorderStroke(0.75.dp, barBorder),
+        shadowElevation = if (isLight) 6.dp else 0.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            destinations.forEach { (label, icon) ->
+                val isSelected = when (label) {
+                    "Movies" -> currentRoute != "Settings" && currentRoute != "Folders" && (currentCategory == "Movies" || currentCategory.isEmpty())
+                    "Series" -> currentRoute != "Settings" && currentRoute != "Folders" && (currentCategory == "Series" || currentCategory == "TV Shows")
+                    "Folders" -> currentRoute == "Folders"
+                    "Settings" -> currentRoute == "Settings"
+                    else -> false
+                }
+
+                val activePillBg = when {
+                    isAmoled -> LavenderAccent.copy(alpha = 0.22f)
+                    isLight -> Color(0xFFE8DEF8)
+                    else -> LavenderAccent.copy(alpha = 0.18f)
+                }
+
+                val activeColor = if (isLight) Color(0xFF6750A4) else LavenderAccent
+                val inactiveColor = if (isLight) Color(0xFF79747E) else Color(0xFF938F99)
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            when (label) {
+                                "Movies" -> onNavigate("Home", "Movies")
+                                "Series" -> onNavigate("Home", "Series")
+                                "Folders" -> onNavigate("Folders", null)
+                                "Settings" -> onNavigate("Settings", null)
+                            }
+                        },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .height(28.dp)
+                            .width(52.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (isSelected) activePillBg else Color.Transparent),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = label,
+                            tint = if (isSelected) activeColor else inactiveColor,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isSelected) activeColor else inactiveColor
+                    )
+                }
             }
         }
     }

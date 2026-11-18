@@ -135,12 +135,14 @@ class MainActivity : ComponentActivity() {
 
     fun updateHdrColorMode(isOled: Boolean = DeviceHardwareInspector.isOledOrAmoledDisplay(this)) {
         if (Build.VERSION.SDK_INT >= 26) {
-            // Enable 10-bit HDR window mode ONLY when true HDR content (HDR10, HDR10+, HLG, or Dolby Vision)
-            // is playing AND the current display actually supports HDR output.
+            // Enable 10-bit HDR window mode when true HDR content (HDR10, HDR10+, HLG, or Dolby Vision)
+            // is playing AND the display supports HDR or is an AMOLED/OLED panel with wide color gamut.
             val isDisplayHdr = HdrCodecSelector.isHdr10Supported(this) ||
                     HdrCodecSelector.isDolbyVisionDisplaySupported(this) ||
-                    HdrCodecSelector.isHdr10PlusSupported(this)
-            val shouldEnableHdr = playback.video != null && playback.isHdr && isDisplayHdr
+                    HdrCodecSelector.isHdr10PlusSupported(this) ||
+                    isOled
+            val isStreamHdr = playback.isHdr || playback.isHdrFormat(playback.player?.videoFormat)
+            val shouldEnableHdr = playback.video != null && isStreamHdr && isDisplayHdr
             window.colorMode = if (shouldEnableHdr) {
                 ActivityInfo.COLOR_MODE_HDR
             } else {

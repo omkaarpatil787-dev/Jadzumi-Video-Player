@@ -13,6 +13,7 @@ import android.os.Environment
 import android.os.StatFs
 import android.text.format.Formatter
 import android.util.LruCache
+import java.util.Locale
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -920,6 +921,38 @@ fun JadzumiCategoryPillsRow(
     }
 }
 
+/**
+ * Detects whether a video is a personal camera recording, screen capture, or short phone clip
+ * to prevent library pollution alongside cinematic feature films.
+ */
+fun isCameraOrPersonalClip(video: LocalVideo): Boolean {
+    val name = video.name.lowercase(Locale.US)
+    val folder = video.folder.lowercase(Locale.US)
+    val parent = video.parentDir.lowercase(Locale.US)
+    val path = video.uri.lowercase(Locale.US)
+
+    val hasCameraPrefix = name.startsWith("vid_") || name.startsWith("vid-") ||
+            name.startsWith("pxl_") || name.startsWith("mov_") ||
+            name.startsWith("rec_") || name.startsWith("screen_") ||
+            name.startsWith("screenrecording") || name.startsWith("wp_") ||
+            name.startsWith("whatsapp") || name.startsWith("instagram") ||
+            name.startsWith("snapchat") || name.startsWith("tiktok")
+
+    val inCameraFolder = folder.contains("dcim") || folder.contains("camera") ||
+            parent.contains("dcim") || parent.contains("camera") ||
+            folder.contains("screenrecorder") || folder.contains("recordings") ||
+            folder.contains("whatsapp") || folder.contains("instagram") ||
+            path.contains("/dcim/") || path.contains("/camera/")
+
+    if (hasCameraPrefix || inCameraFolder) return true
+
+    val isShort = video.duration in 1..90_000L
+    val hasYear = Regex("""\b(19\d\d|20\d\d)\b""").containsMatchIn(video.name)
+    val hasMovieTag = Regex("""\b(1080p|720p|4k|2160p|uhd|bluray|web-dl|remux|hdr|hevc|x264|x265)\b""").containsMatchIn(name)
+
+    return isShort && !hasYear && !hasMovieTag
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable fun LocalLibraryPage(
     state: LocalLibraryState,
@@ -937,7 +970,8 @@ fun JadzumiCategoryPillsRow(
     val listStateMovies = rememberLazyListState()
     val listStateSeries = rememberLazyListState()
     val listStateAnime = rememberLazyListState()
-    val categories = remember { listOf("Movies", "TV Shows", "Anime") }
+    val listStateClips = rememberLazyListState()
+    val categories = remember { listOf("Movies", "TV Shows", "Anime", "Clips") }
     var category by rememberSaveable(defaultCategory) { mutableStateOf(if (defaultCategory == "Series") "TV Shows" else defaultCategory) }
 
     LaunchedEffect(defaultCategory) {
@@ -948,8 +982,9 @@ fun JadzumiCategoryPillsRow(
     }
 
     fun getCategoryListState(cat: String): LazyListState = when (cat) {
-        "TV Shows" -> listStateSeries
+        "TV Shows", "Series" -> listStateSeries
         "Anime" -> listStateAnime
+        "Clips" -> listStateClips
         else -> listStateMovies
     }
 
@@ -1041,6 +1076,9 @@ fun JadzumiCategoryPillsRow(
     val totalSearchResults = searchSeries.size + searchMovies.size + searchEpisodes.size
 
     val allMovies = remember(allVideos) { allVideos.filter { it.episode == null } }
+    val (allCameraClips, pureMovies) = remember(allMovies) {
+        allMovies.partition { isCameraOrPersonalClip(it) }
+    }
     val animeKeywords = remember {
         listOf(
             "anime", "animation", "manga", "jujutsu", "titan", "demon slayer", "naruto",
@@ -1057,8 +1095,8 @@ fun JadzumiCategoryPillsRow(
     }
     val allSeries = seriesList
 
-    val continueWatchingMovies = remember(allMovies, playback.historyVersion) {
-        allMovies.filter { playback.savedPosition(it) > 0 && !playback.isWatched(it) }
+    val continueWatchingMovies = remember(pureMovies, playback.historyVersion) {
+        pureMovies.filter { playback.savedPosition(it) > 0 && !playback.isWatched(it) }
     }
     val continueWatchingSeries = remember(allSeries, playback.historyVersion) {
         allSeries.mapNotNull { s ->
@@ -1070,15 +1108,19 @@ fun JadzumiCategoryPillsRow(
         allAnime.filter { playback.savedPosition(it) > 0 && !playback.isWatched(it) }
     }
 
-    val franchises = remember(allMovies) { CinemaFranchiseManager.detectFranchises(allMovies) }
+    val franchises = remember(pureMovies) { CinemaFranchiseManager.detectFranchises(pureMovies) }
 
     val filteredSeries = remember(allSeries, query) {
         if (query.isBlank()) allSeries
         else allSeries.filter { matchesQuery(query, it.title, it.studio, it.synopsis) }
     }
-    val filteredMovies = remember(allMovies, query) {
-        if (query.isBlank()) allMovies
-        else allMovies.filter { matchesQuery(query, it.name, it.title, it.folder) }
+    val filteredMovies = remember(pureMovies, query) {
+        if (query.isBlank()) pureMovies
+        else pureMovies.filter { matchesQuery(query, it.name, it.title, it.folder) }
+    }
+    val filteredCameraClips = remember(allCameraClips, query) {
+        if (query.isBlank()) allCameraClips
+        else allCameraClips.filter { matchesQuery(query, it.name, it.title, it.folder) }
     }
     val filteredAnime = remember(allAnime, query) {
         if (query.isBlank()) allAnime
@@ -1091,7 +1133,7 @@ fun JadzumiCategoryPillsRow(
         val screenMaxWidth = maxWidth
         val isPhone = (maxWidth < 600.dp || configuration.screenWidthDp < 600) && !isLandscape
         val pad = if (screenMaxWidth >= 720.dp && isLandscape) 28.dp else 16.dp
-        val bottomPad = if (isPhone) 36.dp else 28.dp
+        val bottomPad = if (isPhone) 88.dp else 28.dp
 
         Column(Modifier.fillMaxSize()) {
             val motionStyle = LocalMotionStyle.current
@@ -1102,7 +1144,7 @@ fun JadzumiCategoryPillsRow(
                     if (!motionStyle.enabled) {
                         fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
                     } else {
-                        val tabOrder = listOf("Movies", "TV Shows", "Anime", "Folders")
+                        val tabOrder = listOf("Movies", "TV Shows", "Series", "Anime", "Clips", "Folders")
                         val initialIndex = tabOrder.indexOf(initialState)
                         val targetIndex = tabOrder.indexOf(targetState)
                         val isForward = if (initialIndex != -1 && targetIndex != -1) targetIndex > initialIndex else true
@@ -1489,6 +1531,94 @@ fun JadzumiCategoryPillsRow(
                                 }
                             }
 
+                            "Clips" -> {
+                                if (state.busy && filteredCameraClips.isEmpty()) {
+                                    item { ExpressiveLibrarySkeleton() }
+                                } else if (filteredCameraClips.isEmpty()) {
+                                    item {
+                                        LocalPanel {
+                                            Icon(Icons.Rounded.Videocam, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
+                                            Text("No Camera Clips Found", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                "Personal recordings, phone camera captures, and social video clips will appear here.",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    item {
+                                        CleanRailSectionHeader(
+                                            title = "PHONE CAMERA & CLIPS",
+                                            countText = "${filteredCameraClips.size} Videos",
+                                            isGridView = isGridView,
+                                            onToggleGrid = {
+                                                isGridView = !isGridView
+                                                libraryPrefs.edit().putBoolean("library_grid_view", isGridView).apply()
+                                            },
+                                            density = libraryDensity,
+                                            onCycleDensity = {
+                                                libraryDensity = when (libraryDensity) {
+                                                    "compact" -> "comfortable"
+                                                    "comfortable" -> "spacious"
+                                                    else -> "compact"
+                                                }
+                                                libraryPrefs.edit().putString("library_density", libraryDensity).apply()
+                                            }
+                                        )
+                                    }
+
+                                    if (isGridView) {
+                                        val clipRows = filteredCameraClips.chunked(colCount)
+                                        items(clipRows, key = { it.first().uri }) { row ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                for (clip in row) {
+                                                    Box(Modifier.weight(1f)) {
+                                                        CleanRailPosterCard(
+                                                            video = clip,
+                                                            sidecars = state.sidecars,
+                                                            playback = playback,
+                                                            theme = effectiveTheme,
+                                                            onClick = { select(clip.uri) }
+                                                        )
+                                                    }
+                                                }
+                                                val fillSlots = colCount - row.size
+                                                repeat(fillSlots) {
+                                                    Spacer(Modifier.weight(1f))
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        items(filteredCameraClips, key = { it.uri }) { clip ->
+                                            LocalVideoCard(
+                                                video = clip,
+                                                isSelectionMode = isSelectionMode,
+                                                isSelected = clip.uri in selectedUris,
+                                                isWatched = playback.isWatched(clip),
+                                                onLongClick = {
+                                                    if (!isSelectionMode) {
+                                                        isSelectionMode = true
+                                                        selectedUris.add(clip.uri)
+                                                    }
+                                                },
+                                                select = {
+                                                    if (isSelectionMode) {
+                                                        if (clip.uri in selectedUris) selectedUris.remove(clip.uri)
+                                                        else selectedUris.add(clip.uri)
+                                                    } else {
+                                                        select(clip.uri)
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
                             else -> {
                                 // Default / Movies Tab
                                 // 1. Continue Watching shelf for movies
@@ -1529,6 +1659,18 @@ fun JadzumiCategoryPillsRow(
                                         CinemaFranchiseShelf(
                                             franchises = franchises,
                                             onSelectFilm = { select(it.uri) }
+                                        )
+                                    }
+                                }
+
+                                // 2.5 Phone Camera & Clips Shelf (if any)
+                                if (filteredCameraClips.isNotEmpty()) {
+                                    item {
+                                        CleanRailsCameraClipsShelf(
+                                            clips = filteredCameraClips,
+                                            sidecars = state.sidecars,
+                                            playback = playback,
+                                            onSelectClip = { select(it.uri) }
                                         )
                                     }
                                 }
@@ -1628,6 +1770,129 @@ fun JadzumiCategoryPillsRow(
     }
 }
 }
+}
+
+@Composable
+fun CleanRailsCameraClipsShelf(
+    clips: List<LocalVideo>,
+    sidecars: Map<String, List<LocalSidecar>>,
+    playback: PlaybackController,
+    onSelectClip: (LocalVideo) -> Unit
+) {
+    val theme = LocalThemeName.current
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "PHONE CAMERA & CLIPS",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                "${clips.size} clips",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp)
+        ) {
+            items(clips, key = { it.uri }) { clip ->
+                Surface(
+                    onClick = { onSelectClip(clip) },
+                    modifier = Modifier
+                        .width(170.dp)
+                        .touchMotion(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialExpressive.cardBg(theme),
+                    border = SpatialGlass.cardBorder(theme, 0.75.dp)
+                ) {
+                    Column {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(105.dp)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        ) {
+                            LocalThumbnail(clip, Modifier.fillMaxSize())
+
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.verticalGradient(
+                                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
+                                        )
+                                    )
+                            )
+
+                            Box(
+                                Modifier
+                                    .size(32.dp)
+                                    .align(Alignment.Center)
+                                    .clip(CircleShape)
+                                    .background(Color.Black.copy(alpha = 0.45f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Rounded.PlayArrow,
+                                    contentDescription = "Play clip",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+
+                            if (clip.duration > 0) {
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = Color.Black.copy(alpha = 0.7f),
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .padding(6.dp)
+                                ) {
+                                    Text(
+                                        timecode(clip.duration / 1000),
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontSize = 10.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+
+                        Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
+                            Text(
+                                clip.name,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            val folderName = clip.folder.ifBlank { "Camera" }
+                            Text(
+                                folderName,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -1960,6 +2225,20 @@ fun CleanRailPosterCard(
         else -> null
     }
 
+    val hdrBadge = when {
+        video.name.contains("dovi", ignoreCase = true) || video.name.contains("dv", ignoreCase = true) || video.name.contains("dolby vision", ignoreCase = true) -> "DV"
+        video.name.contains("hdr10+", ignoreCase = true) || video.name.contains("hdr10plus", ignoreCase = true) -> "HDR10+"
+        video.name.contains("hdr", ignoreCase = true) -> "HDR"
+        else -> null
+    }
+
+    val combinedBadge = when {
+        qualityBadge != null && hdrBadge != null -> "$qualityBadge · $hdrBadge"
+        qualityBadge != null -> qualityBadge
+        hdrBadge != null -> hdrBadge
+        else -> null
+    }
+
     val (extractedCleanTitle, cleanYear) = remember(video.name) { OnlineMetadataFetcher.extractCleanTitleAndYear(video.name) }
     val displayTitle = remember(extractedCleanTitle, video.title) {
         if (extractedCleanTitle.isNotBlank()) extractedCleanTitle else video.title
@@ -2003,7 +2282,7 @@ fun CleanRailPosterCard(
                         )
                 )
 
-                if (qualityBadge != null) {
+                if (combinedBadge != null) {
                     Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = Color.Black.copy(alpha = 0.65f),
@@ -2012,7 +2291,7 @@ fun CleanRailPosterCard(
                             .padding(8.dp)
                     ) {
                         Text(
-                            qualityBadge,
+                            combinedBadge,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,

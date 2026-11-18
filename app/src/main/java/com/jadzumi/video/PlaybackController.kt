@@ -580,9 +580,12 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
     fun applyVideoEffects() {
         val p = player ?: return
         try {
-            // Rule: When HDR is active, or Natural profile is chosen, or parameters are neutral,
-            // strictly pass emptyList() to preserve 100% zero-copy, untouched SurfaceView playback.
-            if (isHdr || videoEnhancerProfile == ColorEnhancementProfile.NATURAL || videoEnhancerParams.isNeutral()) {
+            // Rule: When HDR is active, or format is 10-bit/BT.2020, or Natural profile is chosen, or parameters are neutral,
+            // strictly pass emptyList() to preserve 100% zero-copy, untouched SurfaceView playback and eliminate
+            // intermediate OpenGL SDR conversion that causes shadow posterization and banding artifacts.
+            val format = p.videoFormat
+            val streamIsHdr = isHdr || (format != null && isHdrFormat(format))
+            if (streamIsHdr || videoEnhancerProfile == ColorEnhancementProfile.NATURAL || videoEnhancerParams.isNeutral()) {
                 p.setVideoEffects(emptyList())
             } else {
                 p.setVideoEffects(listOf(VideoEnhancerEffect(videoEnhancerParams)))
@@ -1426,7 +1429,14 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         // An explicit SDR color transfer is definitively not HDR for non-DV streams
         if (colorInfo != null && colorInfo.colorTransfer == C.COLOR_TRANSFER_SDR) return false
 
-        if (colorInfo == null) return false
+        if (colorInfo == null) {
+            val codecsLower = codecs.lowercase(Locale.US)
+            val nameLower = video?.name?.lowercase(Locale.US) ?: ""
+            val is10BitCodec = codecsLower.contains("hvc1.2") || codecsLower.contains("hev1.2") ||
+                    codecsLower.contains("vp09.02") || codecsLower.contains("av01.0.10m")
+            val hasHdrKeyword = nameLower.contains("hdr") || nameLower.contains("2160p") || nameLower.contains("remux") || nameLower.contains("uhd")
+            return is10BitCodec && hasHdrKeyword
+        }
         val transfer = colorInfo.colorTransfer
         if (transfer == C.COLOR_TRANSFER_ST2084 || transfer == C.COLOR_TRANSFER_HLG) return true
         if (colorInfo.colorSpace == C.COLOR_SPACE_BT2020 && transfer != C.COLOR_TRANSFER_SDR) return true
