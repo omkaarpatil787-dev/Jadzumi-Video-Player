@@ -55,6 +55,14 @@ class WatchPartyServer(private val context: Context) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val activeClients = ConcurrentHashMap<String, Long>()
 
+    val connectedPeers: List<String>
+        get() = activeClients.keys().toList()
+
+    fun disconnectPeer(ip: String) {
+        activeClients.remove(ip)
+        guestCount = activeClients.size
+    }
+
     var isRunning by mutableStateOf(false); private set
     var relayMode by mutableStateOf(CinemaRelayMode.WATCH_PARTY)
     var localIp by mutableStateOf("127.0.0.1"); private set

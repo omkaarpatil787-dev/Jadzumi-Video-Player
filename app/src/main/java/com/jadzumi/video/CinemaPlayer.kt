@@ -4289,39 +4289,49 @@ private fun WatchPartyTopHud(
 private fun WatchPartyFloatingReactions(messages: List<PartyChatMessage>) {
     val recentReaction = remember(messages.size) {
         messages.lastOrNull()?.text?.takeIf { txt ->
-            txt.contains("❤️") || txt.contains("🔥") || txt.contains("😂") || txt.contains("👏") || txt.contains("🍿") || txt.contains("🤯")
+            txt.contains("Love") || txt.contains("Epic") || txt.contains("Laugh") ||
+            txt.contains("Bravo") || txt.contains("Cinema") || txt.contains("Mindblown")
         }
     }
     recentReaction?.let { rx ->
-        var animStarted by remember(rx) { mutableStateOf(false) }
+        var animStarted by remember(rx, messages.size) { mutableStateOf(false) }
         val offsetY by animateFloatAsState(
-            targetValue = if (animStarted) -280f else 0f,
-            animationSpec = tween(2800, easing = LinearOutSlowInEasing),
+            targetValue = if (animStarted) -320f else 0f,
+            animationSpec = tween(2600, easing = FastOutSlowInEasing),
             label = "rxFloat"
         )
         val alpha by animateFloatAsState(
             targetValue = if (animStarted) 0f else 1f,
-            animationSpec = tween(2800),
+            animationSpec = tween(2600),
             label = "rxAlpha"
         )
-        LaunchedEffect(rx) {
+        LaunchedEffect(rx, messages.size) {
             animStarted = true
         }
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 60.dp, start = 80.dp),
+                .padding(bottom = 80.dp, start = 80.dp),
             contentAlignment = Alignment.BottomStart
         ) {
-            Text(
-                text = rx.take(4),
-                fontSize = 32.sp,
+            Surface(
+                shape = CircleShape,
+                color = Color(0x449D85FF),
+                border = BorderStroke(1.dp, Color(0x889D85FF)),
                 modifier = Modifier
                     .graphicsLayer {
                         translationY = offsetY
                         this.alpha = alpha
                     }
-            )
+            ) {
+                Text(
+                    text = rx,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                )
+            }
         }
     }
 }
@@ -4333,34 +4343,63 @@ private fun WatchPartyHostChatDock(
     onToggleShrunk: () -> Unit
 ) {
     var hostInput by remember { mutableStateOf("") }
+    var selectedTab by remember { mutableIntStateOf(0) }
     val lastMsg = server.chatMessages.lastOrNull()
 
     if (isShrunk) {
-        // Compact Floating Frosted Capsule (Shrunk State)
+        // Compact Actionable Floating Frosted Capsule (Shrunk State)
         Surface(
-            onClick = onToggleShrunk,
             shape = CircleShape,
             color = Color(0xF2140F22),
             border = BorderStroke(1.dp, Color(0x669D85FF)),
-            shadowElevation = 16.dp,
-            modifier = Modifier.widthIn(max = 280.dp)
+            shadowElevation = 18.dp,
+            modifier = Modifier.widthIn(max = 420.dp)
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                modifier = Modifier
+                    .clickable(onClick = onToggleShrunk)
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(26.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x339D85FF)),
-                    contentAlignment = Alignment.Center
+                // Direct Host Mic Toggle on Capsule
+                Surface(
+                    onClick = { server.isMicMuted = !server.isMicMuted },
+                    shape = CircleShape,
+                    color = if (!server.isMicMuted) Color(0x334ADE80) else Color(0x33F87171),
+                    border = BorderStroke(1.dp, if (!server.isMicMuted) Color(0x884ADE80) else Color(0x88F87171)),
+                    modifier = Modifier.size(30.dp)
                 ) {
-                    Icon(Icons.Rounded.ChatBubble, null, tint = Color(0xFF9D85FF), modifier = Modifier.size(14.dp))
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            if (!server.isMicMuted) Icons.Rounded.Mic else Icons.Rounded.MicOff,
+                            contentDescription = "Toggle Host Mic",
+                            tint = if (!server.isMicMuted) Color(0xFF4ADE80) else Color(0xFFF87171),
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
                 }
-                Column(modifier = Modifier.weight(1f, fill = false)) {
-                    Text("Cinema Chat", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+                // Title + Latest Message Preview
+                Column(modifier = Modifier.widthIn(max = 140.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Text("Cinema Chat", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Surface(
+                            shape = CircleShape,
+                            color = Color(0xFF9D85FF)
+                        ) {
+                            Text(
+                                text = "${server.chatMessages.size}",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF0D081A),
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                            )
+                        }
+                    }
                     Text(
                         text = if (lastMsg != null) "${lastMsg.sender}: ${lastMsg.text}" else "Tap to expand",
                         fontSize = 10.sp,
@@ -4369,36 +4408,97 @@ private fun WatchPartyHostChatDock(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                Icon(Icons.Rounded.ExpandLess, null, tint = Color(0xFF9D85FF), modifier = Modifier.size(16.dp))
+
+                // Quick Reaction Strip right on the collapsed pill
+                Row(
+                    modifier = Modifier.padding(horizontal = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    listOf("Cinema", "Epic", "Bravo").forEach { rx ->
+                        Surface(
+                            onClick = { server.sendHostChat(rx) },
+                            shape = CircleShape,
+                            color = Color.White.copy(alpha = 0.08f),
+                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f))
+                        ) {
+                            Text(
+                                text = rx,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFD4CCF0),
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Expand Chevron Button
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.06f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Rounded.ExpandLess, "Expand", tint = Color(0xFF9D85FF), modifier = Modifier.size(15.dp))
+                }
             }
         }
     } else {
-        // Normal Full-Size Chat Card
+        // Normal Full-Size Hyper-Interactive Watch Party Dock
         Surface(
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(24.dp),
             color = Color(0xF2140F22),
             border = BorderStroke(1.dp, Color(0x449D85FF)),
-            shadowElevation = 20.dp,
+            shadowElevation = 24.dp,
             modifier = Modifier
-                .width(330.dp)
-                .heightIn(max = 380.dp)
+                .width(340.dp)
+                .heightIn(max = 410.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // Header with Shrink Button
+                // Header with Tab Bar & Shrink Button
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    // Tabs: Live Chat vs Guests
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Icon(Icons.Rounded.ChatBubble, null, tint = Color(0xFF9D85FF), modifier = Modifier.size(16.dp))
-                        Text("Live Cinema Chat", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Surface(
+                            onClick = { selectedTab = 0 },
+                            shape = CircleShape,
+                            color = if (selectedTab == 0) Color(0xFF9D85FF) else Color.White.copy(alpha = 0.06f)
+                        ) {
+                            Text(
+                                text = "Live Chat",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (selectedTab == 0) Color(0xFF0F0A1F) else Color(0xFFA49FB5),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+                        Surface(
+                            onClick = { selectedTab = 1 },
+                            shape = CircleShape,
+                            color = if (selectedTab == 1) Color(0xFF9D85FF) else Color.White.copy(alpha = 0.06f)
+                        ) {
+                            Text(
+                                text = "Guests (${server.guestCount})",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (selectedTab == 1) Color(0xFF0F0A1F) else Color(0xFFA49FB5),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
                     }
+
+                    // Shrink Button
                     Surface(
                         onClick = onToggleShrunk,
                         shape = CircleShape,
@@ -4417,123 +4517,227 @@ private fun WatchPartyHostChatDock(
 
                 HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
 
-                // Voice status row
+                // Voice Status Bar with animated VU meters
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                        .background(Color.Black.copy(alpha = 0.25f))
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(22.dp)
-                                .clip(CircleShape)
-                                .background(if (!server.isMicMuted) Color(0x284ADE80) else Color(0x28F87171)),
-                            contentAlignment = Alignment.Center
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            onClick = { server.isMicMuted = !server.isMicMuted },
+                            shape = CircleShape,
+                            color = if (!server.isMicMuted) Color(0x334ADE80) else Color(0x33F87171),
+                            modifier = Modifier.size(24.dp)
                         ) {
-                            Icon(
-                                if (!server.isMicMuted) Icons.Rounded.Mic else Icons.Rounded.MicOff,
-                                null,
-                                tint = if (!server.isMicMuted) Color(0xFF4ADE80) else Color(0xFFF87171),
-                                modifier = Modifier.size(13.dp)
-                            )
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    if (!server.isMicMuted) Icons.Rounded.Mic else Icons.Rounded.MicOff,
+                                    null,
+                                    tint = if (!server.isMicMuted) Color(0xFF4ADE80) else Color(0xFFF87171),
+                                    modifier = Modifier.size(13.dp)
+                                )
+                            }
                         }
+
+                        // VU Meter Bars
+                        val infiniteTransition = rememberInfiniteTransition(label = "vuBars")
+                        val vuScale by infiniteTransition.animateFloat(
+                            initialValue = 0.4f,
+                            targetValue = 1.2f,
+                            animationSpec = infiniteRepeatable(tween(700, easing = LinearEasing), RepeatMode.Reverse),
+                            label = "vuScale"
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            modifier = Modifier.height(14.dp)
+                        ) {
+                            Box(modifier = Modifier.width(3.dp).fillMaxHeight(if (!server.isMicMuted) vuScale * 0.7f else 0.2f).background(Color(0xFF4ADE80), RoundedCornerShape(2.dp)))
+                            Box(modifier = Modifier.width(3.dp).fillMaxHeight(if (!server.isMicMuted) vuScale else 0.2f).background(Color(0xFF4ADE80), RoundedCornerShape(2.dp)))
+                            Box(modifier = Modifier.width(3.dp).fillMaxHeight(if (!server.isMicMuted) vuScale * 0.5f else 0.2f).background(Color(0xFF4ADE80), RoundedCornerShape(2.dp)))
+                        }
+
                         Text(
-                            if (!server.isMicMuted) "Host Mic: Open" else "Host Mic: Muted",
+                            text = if (!server.isMicMuted) "Broadcasting Live" else "Mic Muted",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFFA49FB5)
+                            color = if (!server.isMicMuted) Color.White else Color(0xFFA49FB5)
                         )
                     }
-                    Switch(
-                        checked = !server.isMicMuted,
-                        onCheckedChange = { server.isMicMuted = !it },
-                        modifier = Modifier.scale(0.7f)
-                    )
+
+                    // Auto-Ducking Badge
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0x289D85FF),
+                        border = BorderStroke(0.5.dp, Color(0x669D85FF))
+                    ) {
+                        Text(
+                            "Ducking -25%",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFC4B5FD),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
 
                 HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
 
-                // Chat Messages Feed
-                val scrollState = rememberScrollState()
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
-                        .verticalScroll(scrollState),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    server.chatMessages.takeLast(20).forEach { msg ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(
-                                text = "${msg.sender}:",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (msg.sender == "Host") Color(0xFFC4B5FD)
-                                else if (msg.sender == "System") Color(0xFFA49FB5)
-                                else Color(0xFF4ADE80)
-                            )
-                            Text(msg.text, fontSize = 11.sp, color = Color.White)
-                        }
-                    }
-                }
-
-                // Quick Reactions Row
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    listOf("❤️ Love", "🔥 Epic", "😂 Laugh", "👏 Bravo", "🍿 Cinema", "🤯 Mindblown").forEach { rx ->
-                        Surface(
-                            onClick = { server.sendHostChat(rx) },
-                            shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.06f),
-                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.1f))
-                        ) {
-                            Text(
-                                text = rx,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
-
-                // Composer Input Row
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = hostInput,
-                        onValueChange = { hostInput = it },
-                        placeholder = { Text("Chat with party...", fontSize = 11.sp, color = Color(0xFFA49FB5)) },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    Button(
-                        onClick = {
-                            if (hostInput.isNotBlank()) {
-                                server.sendHostChat(hostInput)
-                                hostInput = ""
-                            }
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9D85FF), contentColor = Color(0xFF0B0718))
+                if (selectedTab == 0) {
+                    // TAB 0: LIVE CHAT FEED
+                    val scrollState = rememberScrollState()
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                            .verticalScroll(scrollState),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text("Send", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        server.chatMessages.takeLast(25).forEach { msg ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = if (msg.sender == "Host") Color(0x339D85FF)
+                                    else if (msg.sender == "System") Color(0x22FFFFFF)
+                                    else Color(0x334ADE80)
+                                ) {
+                                    Text(
+                                        text = msg.sender,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (msg.sender == "Host") Color(0xFFC4B5FD)
+                                        else if (msg.sender == "System") Color(0xFFA49FB5)
+                                        else Color(0xFF4ADE80),
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                    )
+                                }
+                                Text(msg.text, fontSize = 11.sp, color = Color.White)
+                            }
+                        }
+                    }
+
+                    // Quick Reactions Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf("Love", "Epic", "Laugh", "Bravo", "Cinema", "Mindblown").forEach { rx ->
+                            Surface(
+                                onClick = { server.sendHostChat(rx) },
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.07f),
+                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.12f))
+                            ) {
+                                Text(
+                                    text = rx,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Composer Input Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = hostInput,
+                            onValueChange = { hostInput = it },
+                            placeholder = { Text("Chat with party...", fontSize = 11.sp, color = Color(0xFFA49FB5)) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        Button(
+                            onClick = {
+                                if (hostInput.isNotBlank()) {
+                                    server.sendHostChat(hostInput)
+                                    hostInput = ""
+                                }
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9D85FF), contentColor = Color(0xFF0B0718))
+                        ) {
+                            Text("Send", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                } else {
+                    // TAB 1: GUESTS MANAGEMENT
+                    val peers = server.connectedPeers
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "CONNECTED PARTICIPANTS",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFA49FB5)
+                        )
+
+                        if (peers.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "No guests connected yet.\nShare the link or QR to join.",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFA49FB5),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        } else {
+                            peers.forEach { peerIp ->
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Color.White.copy(alpha = 0.05f),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column {
+                                            Text(peerIp, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                            Text("Active • Sub-second Sync", fontSize = 10.sp, color = Color(0xFF4ADE80))
+                                        }
+                                        OutlinedButton(
+                                            onClick = { server.disconnectPeer(peerIp) },
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFF87171))
+                                        ) {
+                                            Text("Disconnect", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

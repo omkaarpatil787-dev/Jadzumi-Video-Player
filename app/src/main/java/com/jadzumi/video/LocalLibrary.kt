@@ -13,13 +13,17 @@ import android.provider.DocumentsContract as Docs
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import java.util.concurrent.atomic.AtomicBoolean
 
+@Immutable
 data class LocalFolder(val uri: String, val name: String, val status: String, val isBlacklisted: Boolean = false)
 private data class ScannedChildItem(val id: String, val name: String, val mime: String, val size: Long, val modified: Long, val flags: Int)
+
+@Immutable
 data class LocalVideo(
     val uri: String, val folder: String, val name: String, val mime: String,
     val bytes: Long, val modified: Long, val duration: Long, val width: Int, val height: Int,
@@ -42,6 +46,7 @@ data class LocalVideo(
     } catch (_: Exception) { "" }
 }
 
+@Immutable
 data class LocalLibraryState(
     val folders: List<LocalFolder> = emptyList(),
     val videos: List<LocalVideo> = emptyList(),
@@ -51,6 +56,7 @@ data class LocalLibraryState(
     val message: String? = null
 )
 
+@Immutable
 data class EpisodeHint(val season: Int, val episode: Int)
 fun parseEpisode(name: String): EpisodeHint? {
     val info = EpisodePatterns.parse(name)

@@ -3,6 +3,10 @@ package com.jadzumi.video
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import java.io.File
+import java.io.FileOutputStream
+import java.security.MessageDigest
 import android.media.MediaMetadataRetriever
 import android.os.Build
 import android.os.Environment
@@ -3662,10 +3666,48 @@ internal object ThumbnailMemory {
     private val maxCacheBytes = ((Runtime.getRuntime().maxMemory() / 7L).coerceIn(32L * 1024 * 1024, 96L * 1024 * 1024)).toInt()
     val cache = object : LruCache<String, Bitmap>(maxCacheBytes) { override fun sizeOf(key: String, value: Bitmap) = value.byteCount }
     val permits = Semaphore(4)
+
+    fun getDiskFile(context: Context, key: String): File {
+        val hash = runCatching {
+            MessageDigest.getInstance("MD5").digest(key.toByteArray()).joinToString("") { "%02x".format(it) }
+        }.getOrElse { key.hashCode().toString() }
+        val dir = File(context.cacheDir, "thumbnails").apply { if (!exists()) mkdirs() }
+        return File(dir, "$hash.webp")
+    }
+
+    fun loadFromDisk(context: Context, key: String): Bitmap? {
+        return runCatching {
+            val file = getDiskFile(context, key)
+            if (file.exists() && file.length() > 0) {
+                BitmapFactory.decodeFile(file.absolutePath)
+            } else null
+        }.getOrNull()
+    }
+
+    fun saveToDisk(context: Context, key: String, bmp: Bitmap) {
+        runCatching {
+            val file = getDiskFile(context, key)
+            val temp = File(file.parentFile, "${file.name}.tmp")
+            FileOutputStream(temp).use { out ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    bmp.compress(Bitmap.CompressFormat.WEBP_LOSSY, 80, out)
+                } else {
+                    @Suppress("DEPRECATION")
+                    bmp.compress(Bitmap.CompressFormat.WEBP, 80, out)
+                }
+            }
+            temp.renameTo(file)
+        }
+    }
 }
 
-fun clearThumbnailMemoryCache() {
+fun clearThumbnailMemoryCache(context: Context? = null) {
     ThumbnailMemory.cache.evictAll()
+    context?.let { ctx ->
+        runCatching {
+            File(ctx.cacheDir, "thumbnails").deleteRecursively()
+        }
+    }
 }
 
 @Composable
@@ -3758,42 +3800,53 @@ internal fun CinematicFallbackPoster(title: String, name: String, modifier: Modi
         value = null
         val loaded = withContext(Dispatchers.IO) {
             ThumbnailMemory.permits.withPermit {
+                // 1. Check RAM LruCache
                 ThumbnailMemory.cache.get(key) ?: run {
-                    var bmp: Bitmap? = null
-                    // 1. On Android 10+, request cached system thumbnail from ContentResolver
-                    if (Build.VERSION.SDK_INT >= 29) {
-                        runCatching {
-                            bmp = context.contentResolver.loadThumbnail(video.uri.toUri(), android.util.Size(480, 270), null)
-                        }
-                    }
-                    // 2. Sample frame at 12% into the movie (or 15s in) to bypass black intro frames
-                    if (bmp == null) {
-                        val retriever = MediaMetadataRetriever()
-                        try {
-                            retriever.setDataSource(context, video.uri.toUri())
-                            val sampleTimeUs = if (video.duration > 0) {
-                                (video.duration * 1000L * 0.12f).toLong().coerceIn(10_000_000L, 180_000_000L)
-                            } else {
-                                15_000_000L
+                    // 2. Check Persistent WebP Disk Cache (Fast decode, zero media decoders)
+                    val diskBmp = ThumbnailMemory.loadFromDisk(context, key)
+                    if (diskBmp != null) {
+                        ThumbnailMemory.cache.put(key, diskBmp)
+                        diskBmp
+                    } else {
+                        var bmp: Bitmap? = null
+                        // 3. On Android 10+, request cached system thumbnail from ContentResolver
+                        if (Build.VERSION.SDK_INT >= 29) {
+                            runCatching {
+                                bmp = context.contentResolver.loadThumbnail(video.uri.toUri(), android.util.Size(480, 270), null)
                             }
-                            if (Build.VERSION.SDK_INT >= 27) {
-                                bmp = retriever.getScaledFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
-                                if (bmp == null) {
-                                    bmp = retriever.getScaledFrameAtTime(sampleTimeUs / 2, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                        }
+                        // 4. Sample frame at 12% into the movie (or 15s in) to bypass black intro frames
+                        if (bmp == null) {
+                            val retriever = MediaMetadataRetriever()
+                            try {
+                                retriever.setDataSource(context, video.uri.toUri())
+                                val sampleTimeUs = if (video.duration > 0) {
+                                    (video.duration * 1000L * 0.12f).toLong().coerceIn(10_000_000L, 180_000_000L)
+                                } else {
+                                    15_000_000L
+                                }
+                                if (Build.VERSION.SDK_INT >= 27) {
+                                    bmp = retriever.getScaledFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                    if (bmp == null) {
+                                        bmp = retriever.getScaledFrameAtTime(sampleTimeUs / 2, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                    }
+                                    if (bmp == null) {
+                                        bmp = retriever.getScaledFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                    }
                                 }
                                 if (bmp == null) {
-                                    bmp = retriever.getScaledFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 480, 270)
+                                    bmp = retriever.getFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                                        ?: retriever.getFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
                                 }
+                            } catch (_: Exception) { } finally {
+                                runCatching { retriever.release() }
                             }
-                            if (bmp == null) {
-                                bmp = retriever.getFrameAtTime(sampleTimeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-                                    ?: retriever.getFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-                            }
-                        } catch (_: Exception) { } finally {
-                            runCatching { retriever.release() }
+                        }
+                        bmp?.also {
+                            ThumbnailMemory.cache.put(key, it)
+                            ThumbnailMemory.saveToDisk(context, key, it)
                         }
                     }
-                    bmp?.also { ThumbnailMemory.cache.put(key, it) }
                 }
             }
         }

@@ -4,11 +4,13 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract as Docs
 import androidx.core.net.toUri
+import androidx.compose.runtime.Immutable
 import java.io.InputStream
 
 /**
  * Representation of a local sidecar file (e.g. poster.jpg, fanart.jpg, tvshow.nfo)
  */
+@Immutable
 data class LocalSidecar(
     val parentId: String,
     val name: String,
@@ -56,6 +58,7 @@ data class ParsedNfo(
 /**
  * Full TV Series model clustered from local video files
  */
+@Immutable
 data class TvSeries(
     val id: String,
     val title: String,

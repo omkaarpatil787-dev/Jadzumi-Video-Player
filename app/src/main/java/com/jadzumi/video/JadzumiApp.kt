@@ -1943,7 +1943,7 @@ private val settingsCategories = listOf(
                                         }
                                         OutlinedButton(
                                             onClick = {
-                                                clearThumbnailMemoryCache()
+                                                clearThumbnailMemoryCache(context)
                                                 statusNotice = "Thumbnail cache cleared successfully."
                                             },
                                             shape = RoundedCornerShape(12.dp)
@@ -2497,8 +2497,8 @@ private val settingsCategories = listOf(
             ) {
                 OutlinedButton(
                     onClick = {
-                        clearThumbnailMemoryCache()
-                        onStatus("Thumbnail memory cache cleared. Your video files remain untouched.")
+                        clearThumbnailMemoryCache(context)
+                        onStatus("Thumbnail memory and disk cache cleared. Your video files remain untouched.")
                     },
                     shape = RoundedCornerShape(12.dp)
                 ) {
