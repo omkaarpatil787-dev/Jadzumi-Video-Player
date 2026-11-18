@@ -1,3 +1,21 @@
+# Jadzumi v3.3.5 — Integrated Bottom Deck Architecture & Redesigned Display Settings
+
+A player ergonomics and customization release delivering the approved Approach B Integrated Unified Bottom Deck, eliminating top action pill clutter, and providing full telemetry customization options under settings.
+
+### 1. Approach B: Integrated Unified Bottom Deck
+- **Top Bar De-Cluttering**: Eliminated the crowded top-right action capsule. The top bar is now completely clean and video-centric, displaying only the back button and title details on the left, with minimal circular PiP and screen lock buttons on the right.
+- **Unified Bottom Control Deck**: Merged media track and playback controls directly into the bottom scrubber deck inside a cohesive, two-row frosted glass deck with 22dp corner radius, 0dp elevation, and 0.75dp hairline border.
+- **Integrated Action Chips**: Quick Subtitle, Audio, Speed, and Aspect chips sit directly below the timeline scrubber, providing natural thumb access in landscape orientation without reaching to the top of the screen.
+- **Connected Track Sheets**: Tapping Subtitles or Audio seamlessly opens the bottom track picker sheet with instant selection and smooth transition physics.
+
+### 2. Redesigned "Display During Playback" Customization Screen
+- **Telemetry HUD Opacity**: Live 20% to 100% slider with real-time percentage readout and descriptive caption.
+- **Items to Display**: Dedicated switch toggles for Remaining Playback Time, Current Clock Time, and Battery Percentage & Level.
+- **HUD Style Presets**: Choose between Frosted Glass (rounded translucent capsule), Pure Text (borderless text with drop shadow), and Hairline (subtle rectangular notch).
+- **Placement Position**: Position the telemetry overlay in Top Right, Top Left, or Bottom Left with live alignment and safe drawing padding.
+
+---
+
 # Jadzumi v3.3.4 — Pure Borderless Action Pill, In-Player Telemetry Control, Flat Quick Menu & Dynamic OTA
 
 A refinement release delivering the strict borderless Variation 3B action pill with luminescent accents, direct in-player telemetry HUD controls, a flat 0dp elevation quick menu drawer, and real-time dynamic OTA changelog parsing.

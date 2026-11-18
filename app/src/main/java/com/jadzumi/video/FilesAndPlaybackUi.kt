@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -38,81 +39,232 @@ fun DisplayDuringPlaybackDialog(
     var playerClock by remember { mutableStateOf(playback.showPlayerClock) }
     var batteryPercentage by remember { mutableStateOf(playback.showBatteryPercentage) }
     var opacity by remember { mutableFloatStateOf(playback.displayDuringPlaybackOpacity) }
+    var stylePreset by remember { mutableStateOf(playback.displayDuringPlaybackStyle) }
+    var placementPos by remember { mutableStateOf(playback.displayDuringPlaybackPosition) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(
-                "Display during playback",
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleLarge
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    Icons.Rounded.Tune,
+                    null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(
+                    "Display During Playback",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
         },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Opacity Slider Row
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                // Section 1: Opacity Slider
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            "HUD Opacity",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Telemetry HUD Opacity",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "${(opacity * 100).toInt()}%",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Slider(
+                            value = opacity,
+                            onValueChange = { opacity = it },
+                            valueRange = 0.2f..1.0f,
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Text(
-                            "${(opacity * 100).toInt()}%",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            "Smoothly adjusts how translucent the telemetry pill appears over video. Lower values minimize eye distraction during dark cinema scenes.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp
                         )
                     }
-                    Slider(
-                        value = opacity,
-                        onValueChange = { opacity = it },
-                        valueRange = 0.2f..1.0f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                // Section 2: Items to Display Toggles
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            "Items to Display",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
 
-                DisplayOptionRow(
-                    label = "Remaining Time",
-                    checked = remainingTime,
-                    onCheckedChange = { remainingTime = it }
-                )
-                DisplayOptionRow(
-                    label = "Clock",
-                    checked = playerClock,
-                    onCheckedChange = { playerClock = it }
-                )
-                DisplayOptionRow(
-                    label = "Battery Percentage",
-                    checked = batteryPercentage,
-                    onCheckedChange = { batteryPercentage = it }
-                )
+                        DisplayOptionSwitchRow(
+                            icon = Icons.Rounded.History,
+                            label = "Remaining Playback Time",
+                            checked = remainingTime,
+                            onCheckedChange = { remainingTime = it }
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                        DisplayOptionSwitchRow(
+                            icon = Icons.Rounded.Schedule,
+                            label = "Current Clock Time",
+                            checked = playerClock,
+                            onCheckedChange = { playerClock = it }
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                        DisplayOptionSwitchRow(
+                            icon = Icons.Rounded.BatteryStd,
+                            label = "Battery Percentage & Level",
+                            checked = batteryPercentage,
+                            onCheckedChange = { batteryPercentage = it }
+                        )
+                    }
+                }
+
+                // Section 3: Style Preset & Placement Position
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Preset Selector
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                "HUD Style Preset",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .padding(3.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                SegmentedChoiceChip(
+                                    label = "Frosted Glass",
+                                    selected = stylePreset == "glass",
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { stylePreset = "glass" }
+                                )
+                                SegmentedChoiceChip(
+                                    label = "Pure Text",
+                                    selected = stylePreset == "text",
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { stylePreset = "text" }
+                                )
+                                SegmentedChoiceChip(
+                                    label = "Hairline",
+                                    selected = stylePreset == "hairline",
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { stylePreset = "hairline" }
+                                )
+                            }
+                        }
+
+                        // Placement Selector
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                "Placement Position",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .padding(3.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                SegmentedChoiceChip(
+                                    label = "Top Right",
+                                    selected = placementPos == "top_right",
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { placementPos = "top_right" }
+                                )
+                                SegmentedChoiceChip(
+                                    label = "Top Left",
+                                    selected = placementPos == "top_left",
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { placementPos = "top_left" }
+                                )
+                                SegmentedChoiceChip(
+                                    label = "Bottom Left",
+                                    selected = placementPos == "bottom_left",
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { placementPos = "bottom_left" }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    playback.updateDisplayDuringPlayback(remainingTime, playerClock, batteryPercentage, opacity)
+                    playback.updateDisplayDuringPlayback(
+                        remaining = remainingTime,
+                        clock = playerClock,
+                        battery = batteryPercentage,
+                        opacity = opacity,
+                        style = stylePreset,
+                        position = placementPos
+                    )
                     onDismiss()
                 },
                 shape = RoundedCornerShape(20.dp)
             ) {
-                Text("OK", fontWeight = FontWeight.Bold)
+                Text("Save", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
@@ -120,13 +272,14 @@ fun DisplayDuringPlaybackDialog(
                 Text("Cancel")
             }
         },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     )
 }
 
 @Composable
-private fun DisplayOptionRow(
+private fun DisplayOptionSwitchRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
@@ -137,17 +290,60 @@ private fun DisplayOptionRow(
             .clickable { onCheckedChange(!checked) }
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Checkbox(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Switch(
             checked = checked,
             onCheckedChange = onCheckedChange
         )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+    }
+}
+
+@Composable
+private fun SegmentedChoiceChip(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier.padding(vertical = 7.dp, horizontal = 4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = label,
+                fontSize = 11.5.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                softWrap = false
+            )
+        }
     }
 }
 

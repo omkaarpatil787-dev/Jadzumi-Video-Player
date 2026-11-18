@@ -793,14 +793,25 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                 }
 
                 // Immersive Playback HUD Overlay: Clock, Battery %, Remaining Time
+                val hudAlign = when (playback.displayDuringPlaybackPosition) {
+                    "top_left" -> Alignment.TopStart
+                    "bottom_left" -> Alignment.BottomStart
+                    else -> Alignment.TopEnd
+                }
+                val hudPad = when (playback.displayDuringPlaybackPosition) {
+                    "top_left" -> Modifier.padding(top = 18.dp, start = 24.dp)
+                    "bottom_left" -> Modifier.padding(bottom = 24.dp, start = 24.dp)
+                    else -> Modifier.padding(top = 18.dp, end = 24.dp)
+                }
+
                 AnimatedVisibility(
                     visible = !controls && !playback.locked && showAnyHud && !playback.inPip,
                     enter = fadeIn(tween(360, easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f))),
                     exit = fadeOut(tween(240)),
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
+                        .align(hudAlign)
                         .safeDrawingPadding()
-                        .padding(top = 18.dp, end = 24.dp)
+                        .then(hudPad)
                 ) {
                     PlayerStatusPill(
                         showClock = playback.showPlayerClock,
@@ -810,7 +821,8 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                         bgColor = (if (isAmoled) Color.Black else Color(0xFF0A0E17)).copy(alpha = playback.displayDuringPlaybackOpacity),
                         rimColor = dynamicFrostedCircleRim,
                         contentColor = playerContentColor,
-                        accentColor = playerAccentColor
+                        accentColor = playerAccentColor,
+                        style = playback.displayDuringPlaybackStyle
                     )
                 }
 
@@ -910,407 +922,59 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                 }
                             }
 
-                            // Top-Right: Symmetrical Dynamic Action Capsule (Variation 3B: Pure Borderless Text & Luminescent Accents)
-                            val isExpandedTrackMenu = quickMenuSection == "audio" || quickMenuSection == "subs"
-                            val pillCornerRadius by animateDpAsState(
-                                targetValue = if (isExpandedTrackMenu) 20.dp else 999.dp,
-                                animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
-                                label = "pillCornerRadius"
-                            )
-
-                            Surface(
-                                shape = RoundedCornerShape(pillCornerRadius),
-                                color = SpatialGlass.pillBg(isAmoled),
-                                border = SpatialGlass.pillBorder(0.75.dp),
-                                shadowElevation = 0.dp,
-                                modifier = Modifier.animateContentSize(
-                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f)
-                                )
+                            // Top-Right: Clean Minimal Utilities (Approach B - Controls Unified in Bottom Deck)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(
-                                        horizontal = if (isExpandedTrackMenu) 10.dp else 6.dp,
-                                        vertical = if (isExpandedTrackMenu) 10.dp else 4.dp
-                                    ),
-                                    horizontalAlignment = Alignment.End
+                                Surface(
+                                    shape = CircleShape,
+                                    color = SpatialGlass.pillBg(isAmoled),
+                                    border = SpatialGlass.pillBorder(0.75.dp),
+                                    shadowElevation = 0.dp,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .clickable {
+                                            controls = false
+                                            activity.enterCinemaPip()
+                                            interaction++
+                                        }
                                 ) {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        val audioTrack = playback.audioTracks.firstOrNull { it.isSelected }
-                                        val audioText = formatCompactAudioPill(audioTrack)
-                                        val isAudioActive = quickMenuSection == "audio"
-
-                                        // Audio Pill Button: Pure borderless text & icon
-                                        Row(
-                                            modifier = Modifier
-                                                .height(32.dp)
-                                                .clip(RoundedCornerShape(999.dp))
-                                                .clickable { quickMenuSection = if (isAudioActive) null else "audio"; interaction++ }
-                                                .padding(horizontal = 9.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                Icons.Rounded.GraphicEq,
-                                                null,
-                                                Modifier.size(13.5.dp),
-                                                tint = if (isAudioActive) Color(0xFFD0BCFF) else TimelineAccent
-                                            )
-                                            Spacer(Modifier.width(4.dp))
-                                            Text(
-                                                audioText,
-                                                color = if (isAudioActive) Color(0xFFD0BCFF) else playerContentColor,
-                                                fontSize = 11.5.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                maxLines = 1,
-                                                softWrap = false
-                                            )
-                                        }
-
-                                        val subTrack = playback.subtitleTracks.firstOrNull { it.isSelected }
-                                        val subText = formatCompactSubtitlePill(subTrack)
-                                        val isSubsActive = quickMenuSection == "subs"
-
-                                        // Subtitles Pill Button: Pure borderless text & icon
-                                        Row(
-                                            modifier = Modifier
-                                                .height(32.dp)
-                                                .clip(RoundedCornerShape(999.dp))
-                                                .clickable { quickMenuSection = if (isSubsActive) null else "subs"; interaction++ }
-                                                .padding(horizontal = 9.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                Icons.Rounded.ClosedCaption,
-                                                null,
-                                                Modifier.size(13.5.dp),
-                                                tint = if (isSubsActive || subTrack != null) Color(0xFFD0BCFF) else playerContentColor
-                                            )
-                                            Spacer(Modifier.width(4.dp))
-                                            Text(
-                                                subText,
-                                                color = if (isSubsActive || subTrack != null) Color(0xFFD0BCFF) else playerContentColor,
-                                                fontSize = 11.5.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                maxLines = 1,
-                                                softWrap = false
-                                            )
-                                        }
-
-                                        // Hairline Vertical Divider
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(horizontal = 3.dp)
-                                                .width(0.75.dp)
-                                                .height(15.dp)
-                                                .background(Color.White.copy(alpha = 0.16f))
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Rounded.PictureInPictureAlt,
+                                            contentDescription = "PiP",
+                                            tint = playerContentColor,
+                                            modifier = Modifier.size(16.dp)
                                         )
+                                    }
+                                }
 
-                                        // Playback Speed: Pure borderless
-                                        Box(
-                                            modifier = Modifier
-                                                .height(32.dp)
-                                                .clip(RoundedCornerShape(999.dp))
-                                                .clickable {
-                                                    val next = when (playback.speed) {
-                                                        1.0f -> 1.25f
-                                                        1.25f -> 1.5f
-                                                        2.0f -> 1.0f
-                                                        else -> 1.0f
-                                                    }
-                                                    playback.changeSpeed(next)
-                                                    message = "${next}x Speed"
-                                                    interaction++
-                                                }
-                                                .padding(horizontal = 8.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                "${playback.speed}x",
-                                                color = if (playback.speed != 1.0f) Color(0xFFD0BCFF) else playerContentColor,
-                                                fontSize = 11.5.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                maxLines = 1,
-                                                softWrap = false
-                                            )
+                                Surface(
+                                    shape = CircleShape,
+                                    color = SpatialGlass.pillBg(isAmoled),
+                                    border = SpatialGlass.pillBorder(0.75.dp),
+                                    shadowElevation = 0.dp,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .clickable {
+                                            playback.locked = true
+                                            interaction++
                                         }
-
-                                        val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
-
-                                        // Aspect Ratio: Pure borderless
-                                        Row(
-                                            modifier = Modifier
-                                                .height(32.dp)
-                                                .clip(RoundedCornerShape(999.dp))
-                                                .clickable {
-                                                    val next = if (isZoomMode) AspectRatioMode.FIT else AspectRatioMode.ZOOM
-                                                    playback.setAspectRatioMode(next)
-                                                    message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
-                                                    interaction++
-                                                }
-                                                .padding(horizontal = 8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                Icons.Rounded.AspectRatio,
-                                                null,
-                                                Modifier.size(13.5.dp),
-                                                tint = if (isZoomMode) Color(0xFFD0BCFF) else playerContentColor
-                                            )
-                                            Spacer(Modifier.width(4.dp))
-                                            Text(
-                                                if (isZoomMode) "Zoom" else "Fit",
-                                                color = if (isZoomMode) Color(0xFFD0BCFF) else playerContentColor,
-                                                fontSize = 11.5.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                maxLines = 1,
-                                                softWrap = false
-                                            )
-                                        }
-
-                                        // Hairline Vertical Divider
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(horizontal = 3.dp)
-                                                .width(0.75.dp)
-                                                .height(15.dp)
-                                                .background(Color.White.copy(alpha = 0.16f))
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Rounded.Lock,
+                                            contentDescription = "Lock controls",
+                                            tint = playerContentColor,
+                                            modifier = Modifier.size(15.dp)
                                         )
-
-                                        // PiP Circular Icon
-                                        Box(
-                                            modifier = Modifier
-                                                .size(32.dp)
-                                                .clip(CircleShape)
-                                                .clickable {
-                                                    controls = false
-                                                    activity.enterCinemaPip()
-                                                    interaction++
-                                                },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(15.dp))
-                                        }
-
-                                        // More Vert Circular Icon
-                                        Box(
-                                            modifier = Modifier
-                                                .size(32.dp)
-                                                .clip(CircleShape)
-                                                .clickable { quickMenuSection = if (quickMenuSection == "main") null else "main"; interaction++ },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                Icons.Rounded.MoreVert,
-                                                "More",
-                                                tint = if (quickMenuSection == "main") Color(0xFFD0BCFF) else playerContentColor,
-                                                modifier = Modifier.size(15.dp)
-                                            )
-                                        }
-
-                                        // Lock Circular Icon
-                                        Box(
-                                            modifier = Modifier
-                                                .size(32.dp)
-                                                .clip(CircleShape)
-                                                .clickable { playback.locked = true; interaction++ },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(Icons.Rounded.Lock, "Lock", tint = playerContentColor, modifier = Modifier.size(14.dp))
-                                        }
-                                    }
-
-                                    // Dynamic In-Pill Morphing Content Expansion
-                                    if (quickMenuSection == "audio") {
-                                        Column(
-                                            modifier = Modifier
-                                                .widthIn(min = 280.dp, max = 340.dp)
-                                                .padding(top = 10.dp, start = 4.dp, end = 4.dp, bottom = 4.dp)
-                                        ) {
-                                            HorizontalDivider(
-                                                color = Color.White.copy(alpha = 0.12f),
-                                                modifier = Modifier.padding(bottom = 8.dp)
-                                            )
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    "AUDIO TRACKS",
-                                                    color = Color(0xFFD0BCFF),
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    letterSpacing = 0.5.sp
-                                                )
-                                                TextButton(
-                                                    onClick = { quickMenuSection = null },
-                                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                                                ) {
-                                                    Text("Close", fontSize = 11.sp, color = playerSubtextColor)
-                                                }
-                                            }
-
-                                            if (playback.audioTracks.isEmpty()) {
-                                                Text(
-                                                    "Default audio stream active",
-                                                    color = playerSubtextColor,
-                                                    fontSize = 12.sp,
-                                                    modifier = Modifier.padding(vertical = 6.dp)
-                                                )
-                                            } else {
-                                                playback.audioTracks.forEach { track ->
-                                                    val isSelected = track.isSelected
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .clip(RoundedCornerShape(10.dp))
-                                                            .clickable {
-                                                                playback.selectAudioTrack(track)
-                                                                message = "Audio: ${track.label}"
-                                                                quickMenuSection = null
-                                                                interaction++
-                                                            }
-                                                            .padding(horizontal = 10.dp, vertical = 9.dp),
-                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                        verticalAlignment = Alignment.CenterVertically
-                                                    ) {
-                                                        Column(Modifier.weight(1f)) {
-                                                            Text(
-                                                                track.label,
-                                                                color = if (isSelected) Color(0xFFD0BCFF) else playerContentColor,
-                                                                fontSize = 12.5.sp,
-                                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                                maxLines = 1,
-                                                                overflow = TextOverflow.Ellipsis
-                                                            )
-                                                            Text(
-                                                                "${track.codec} · ${track.channels}",
-                                                                color = playerSubtextColor,
-                                                                fontSize = 10.5.sp
-                                                            )
-                                                        }
-                                                        if (isSelected) {
-                                                            Icon(
-                                                                Icons.Rounded.Check,
-                                                                null,
-                                                                tint = Color(0xFFD0BCFF),
-                                                                modifier = Modifier.size(16.dp)
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    if (quickMenuSection == "subs") {
-                                        Column(
-                                            modifier = Modifier
-                                                .widthIn(min = 280.dp, max = 340.dp)
-                                                .padding(top = 10.dp, start = 4.dp, end = 4.dp, bottom = 4.dp)
-                                        ) {
-                                            HorizontalDivider(
-                                                color = Color.White.copy(alpha = 0.12f),
-                                                modifier = Modifier.padding(bottom = 8.dp)
-                                            )
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    "SUBTITLES",
-                                                    color = Color(0xFFD0BCFF),
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    letterSpacing = 0.5.sp
-                                                )
-                                                TextButton(
-                                                    onClick = { quickMenuSection = null },
-                                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                                                ) {
-                                                    Text("Close", fontSize = 11.sp, color = playerSubtextColor)
-                                                }
-                                            }
-
-                                            val noneSelected = playback.subtitleTracks.none { it.isSelected }
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clip(RoundedCornerShape(10.dp))
-                                                    .clickable {
-                                                        playback.selectSubtitleTrack(null)
-                                                        message = "Subtitles Off"
-                                                        quickMenuSection = null
-                                                        interaction++
-                                                    }
-                                                    .padding(horizontal = 10.dp, vertical = 9.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    "Off",
-                                                    color = if (noneSelected) Color(0xFFD0BCFF) else playerContentColor,
-                                                    fontSize = 12.5.sp,
-                                                    fontWeight = if (noneSelected) FontWeight.Bold else FontWeight.Medium
-                                                )
-                                                if (noneSelected) {
-                                                    Icon(
-                                                        Icons.Rounded.Check,
-                                                        null,
-                                                        tint = Color(0xFFD0BCFF),
-                                                        modifier = Modifier.size(16.dp)
-                                                    )
-                                                }
-                                            }
-
-                                            playback.subtitleTracks.forEach { track ->
-                                                val isSelected = track.isSelected
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clip(RoundedCornerShape(10.dp))
-                                                        .clickable {
-                                                            playback.selectSubtitleTrack(track)
-                                                            message = "Subtitles: ${track.label}"
-                                                            quickMenuSection = null
-                                                            interaction++
-                                                        }
-                                                        .padding(horizontal = 10.dp, vertical = 9.dp),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    Column(Modifier.weight(1f)) {
-                                                        Text(
-                                                            track.label,
-                                                            color = if (isSelected) Color(0xFFD0BCFF) else playerContentColor,
-                                                            fontSize = 12.5.sp,
-                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                            maxLines = 1,
-                                                            overflow = TextOverflow.Ellipsis
-                                                        )
-                                                        Text(
-                                                            track.format,
-                                                            color = playerSubtextColor,
-                                                            fontSize = 10.5.sp
-                                                        )
-                                                    }
-                                                    if (isSelected) {
-                                                        Icon(
-                                                            Icons.Rounded.Check,
-                                                            null,
-                                                            tint = Color(0xFFD0BCFF),
-                                                            modifier = Modifier.size(16.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                             }
+
                         }
 
                         // PANEL 1: CENTRAL MINIMALIST GHOST SEEK & PLAY/PAUSE (Style C - Borderless Vector Minimalism)
@@ -1472,52 +1136,244 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                             val totalSec = (playback.duration / 1000).coerceAtLeast(0)
                             val pct = ((playback.position.toFloat() / effectiveDuration.coerceAtLeast(1L)) * 100).toInt().coerceIn(0, 100)
 
-                            // Pure Flat Baseline Scrubber Deck (Elevation = 0dp, Zero Subtitle Collision)
+                            // Approach B: Integrated Unified Bottom Deck (Timeline Scrubber + Integrated Controls)
+                            val audioTrack = playback.audioTracks.firstOrNull { it.isSelected }
+                            val audioText = formatCompactAudioPill(audioTrack)
+                            val subTrack = playback.subtitleTracks.firstOrNull { it.isSelected }
+                            val subText = formatCompactSubtitlePill(subTrack)
+                            val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
+
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 14.dp, vertical = 4.dp),
-                                shape = CircleShape,
+                                shape = RoundedCornerShape(22.dp),
                                 color = SpatialGlass.pillBg(isAmoled),
                                 border = SpatialGlass.pillBorder(0.75.dp),
                                 shadowElevation = 0.dp
                             ) {
-                                Row(
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 7.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text(
-                                        compactTimecode(elapsedSec),
-                                        color = TimelineAccent,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                                    )
-                                    Box(modifier = Modifier.weight(1f)) {
-                                        CinemaTimelineBar(
-                                            fraction = currentFraction,
-                                            bufferedFraction = bufferedFraction,
-                                            isScrubbing = scrub != null,
-                                            enabled = playback.seekable && playback.duration > 0,
-                                            chapters = playback.chapters,
-                                            onScrub = { scrub = it; interaction++ },
-                                            onScrubFinished = {
-                                                scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
-                                                scrub = null
-                                            }
+                                    // Row 1: Timeline Scrubber with Timecodes
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            compactTimecode(elapsedSec),
+                                            color = TimelineAccent,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                        )
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            CinemaTimelineBar(
+                                                fraction = currentFraction,
+                                                bufferedFraction = bufferedFraction,
+                                                isScrubbing = scrub != null,
+                                                enabled = playback.seekable && playback.duration > 0,
+                                                chapters = playback.chapters,
+                                                onScrub = { scrub = it; interaction++ },
+                                                onScrubFinished = {
+                                                    scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
+                                                    scrub = null
+                                                }
+                                            )
+                                        }
+                                        val remainingSec = (totalSec - elapsedSec).coerceAtLeast(0)
+                                        Text(
+                                            "${compactTimecode(totalSec)} (-${compactTimecode(remainingSec)})",
+                                            color = playerSubtextColor,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                                         )
                                     }
-                                    val remainingSec = (totalSec - elapsedSec).coerceAtLeast(0)
-                                    Text(
-                                        "${compactTimecode(totalSec)} (-${compactTimecode(remainingSec)})",
-                                        color = playerSubtextColor,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+
+                                    // Hairline Divider
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(0.75.dp)
+                                            .background(Color.White.copy(alpha = 0.10f))
                                     )
+
+                                    // Row 2: Integrated Action Controls
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // Left Group: Subtitles, Audio, Speed, Aspect Mode
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Subtitles Pill Chip
+                                            Row(
+                                                modifier = Modifier
+                                                    .height(30.dp)
+                                                    .clip(RoundedCornerShape(999.dp))
+                                                    .background(if (subTrack != null) Color(0xFFD0BCFF).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.06f))
+                                                    .clickable {
+                                                        quickMenuSection = if (quickMenuSection == "subs") null else "subs"
+                                                        interaction++
+                                                    }
+                                                    .padding(horizontal = 9.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    Icons.Rounded.ClosedCaption,
+                                                    null,
+                                                    Modifier.size(14.dp),
+                                                    tint = if (subTrack != null) Color(0xFFD0BCFF) else playerContentColor
+                                                )
+                                                Spacer(Modifier.width(4.dp))
+                                                Text(
+                                                    subText,
+                                                    color = if (subTrack != null) Color(0xFFD0BCFF) else playerContentColor,
+                                                    fontSize = 11.5.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
+
+                                            // Audio Pill Chip
+                                            Row(
+                                                modifier = Modifier
+                                                    .height(30.dp)
+                                                    .clip(RoundedCornerShape(999.dp))
+                                                    .background(Color.White.copy(alpha = 0.06f))
+                                                    .clickable {
+                                                        quickMenuSection = if (quickMenuSection == "audio") null else "audio"
+                                                        interaction++
+                                                    }
+                                                    .padding(horizontal = 9.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    Icons.Rounded.GraphicEq,
+                                                    null,
+                                                    Modifier.size(14.dp),
+                                                    tint = TimelineAccent
+                                                )
+                                                Spacer(Modifier.width(4.dp))
+                                                Text(
+                                                    audioText,
+                                                    color = playerContentColor,
+                                                    fontSize = 11.5.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
+
+                                            // Speed Pill Chip
+                                            Box(
+                                                modifier = Modifier
+                                                    .height(30.dp)
+                                                    .clip(RoundedCornerShape(999.dp))
+                                                    .background(if (playback.speed != 1.0f) Color(0xFFD0BCFF).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.06f))
+                                                    .clickable {
+                                                        val next = when (playback.speed) {
+                                                            1.0f -> 1.25f
+                                                            1.25f -> 1.5f
+                                                            2.0f -> 1.0f
+                                                            else -> 1.0f
+                                                        }
+                                                        playback.changeSpeed(next)
+                                                        message = "${next}x Speed"
+                                                        interaction++
+                                                    }
+                                                    .padding(horizontal = 9.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    "${playback.speed}x",
+                                                    color = if (playback.speed != 1.0f) Color(0xFFD0BCFF) else playerContentColor,
+                                                    fontSize = 11.5.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+
+                                            // Aspect Ratio Mode Chip
+                                            Row(
+                                                modifier = Modifier
+                                                    .height(30.dp)
+                                                    .clip(RoundedCornerShape(999.dp))
+                                                    .background(if (isZoomMode) Color(0xFFD0BCFF).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.06f))
+                                                    .clickable {
+                                                        val next = if (isZoomMode) AspectRatioMode.FIT else AspectRatioMode.ZOOM
+                                                        playback.setAspectRatioMode(next)
+                                                        message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
+                                                        interaction++
+                                                    }
+                                                    .padding(horizontal = 8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    Icons.Rounded.AspectRatio,
+                                                    null,
+                                                    Modifier.size(13.5.dp),
+                                                    tint = if (isZoomMode) Color(0xFFD0BCFF) else playerContentColor
+                                                )
+                                                Spacer(Modifier.width(4.dp))
+                                                Text(
+                                                    if (isZoomMode) "Zoom" else "Fit",
+                                                    color = if (isZoomMode) Color(0xFFD0BCFF) else playerContentColor,
+                                                    fontSize = 11.5.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
+                                        }
+
+                                        // Right Group: PiP & Quick Menu
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(30.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color.White.copy(alpha = 0.06f))
+                                                    .clickable {
+                                                        controls = false
+                                                        activity.enterCinemaPip()
+                                                        interaction++
+                                                    },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    Icons.Rounded.PictureInPictureAlt,
+                                                    "PiP",
+                                                    tint = playerContentColor,
+                                                    modifier = Modifier.size(15.dp)
+                                                )
+                                            }
+
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(30.dp)
+                                                    .clip(CircleShape)
+                                                    .background(if (quickMenuSection == "main") Color(0xFFD0BCFF).copy(alpha = 0.18f) else Color.White.copy(alpha = 0.06f))
+                                                    .clickable {
+                                                        quickMenuSection = if (quickMenuSection == "main") null else "main"
+                                                        interaction++
+                                                    },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    Icons.Rounded.MoreVert,
+                                                    "Quick Menu",
+                                                    tint = if (quickMenuSection == "main") Color(0xFFD0BCFF) else playerContentColor,
+                                                    modifier = Modifier.size(15.dp)
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1549,7 +1405,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
 
                 // PANEL 5: RIGHT-SIDE QUICK MENU (Fluid Spring Morphing)
                 AnimatedVisibility(
-                    visible = quickMenuSection != null && quickMenuSection != "audio" && quickMenuSection != "subs" && !playback.inPip,
+                    visible = quickMenuSection != null && !playback.inPip,
                     enter = fadeIn(tween(if (reducedMotion) 0 else 220)) +
                             slideInHorizontally(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow)) { it / 2 } +
                             scaleIn(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow), initialScale = 0.90f),
@@ -3499,6 +3355,7 @@ private fun PlayerStatusPill(
     rimColor: Color = Color.White.copy(alpha = 0.22f),
     contentColor: Color = Color.White,
     accentColor: Color = TimelineAccent,
+    style: String = "glass",
     modifier: Modifier = Modifier
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -3528,15 +3385,12 @@ private fun PlayerStatusPill(
     val hasRemaining = showRemainingTime && actualRemSec != null && actualRemSec > 0
     val remainingText = if (hasRemaining) "−${compactTimecode(actualRemSec!!)}" else ""
 
-    Surface(
-        shape = RoundedCornerShape(999.dp),
-        color = bgColor,
-        border = SpatialGlass.pillBorder(0.75.dp),
-        shadowElevation = 0.dp,
-        modifier = modifier
-    ) {
+    val pillContent: @Composable () -> Unit = {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+            modifier = Modifier.padding(
+                horizontal = if (style == "text") 6.dp else 14.dp,
+                vertical = if (style == "text") 4.dp else 7.dp
+            ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -3594,6 +3448,36 @@ private fun PlayerStatusPill(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
+        }
+    }
+
+    when (style) {
+        "text" -> {
+            Box(modifier = modifier) {
+                pillContent()
+            }
+        }
+        "hairline" -> {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = bgColor,
+                border = SpatialGlass.pillBorder(0.75.dp),
+                shadowElevation = 0.dp,
+                modifier = modifier
+            ) {
+                pillContent()
+            }
+        }
+        else -> {
+            Surface(
+                shape = RoundedCornerShape(999.dp),
+                color = bgColor,
+                border = SpatialGlass.pillBorder(0.75.dp),
+                shadowElevation = 0.dp,
+                modifier = modifier
+            ) {
+                pillContent()
             }
         }
     }

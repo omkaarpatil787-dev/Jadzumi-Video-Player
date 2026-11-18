@@ -136,6 +136,14 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
         prefs.getFloat("display_playback_opacity", 0.85f).coerceIn(0.2f, 1.0f)
     )
         private set
+    var displayDuringPlaybackStyle by mutableStateOf(
+        prefs.getString("display_playback_style", "glass") ?: "glass"
+    )
+        private set
+    var displayDuringPlaybackPosition by mutableStateOf(
+        prefs.getString("display_playback_position", "top_right") ?: "top_right"
+    )
+        private set
 
     val displayDuringPlaybackSummary: String
         get() {
@@ -143,24 +151,41 @@ class PlaybackController(application: Application) : AndroidViewModel(applicatio
             if (showRemainingTime) list.add("Remaining Time")
             if (showPlayerClock) list.add("Clock")
             if (showBatteryPercentage) list.add("Battery Percentage")
-            return if (list.isEmpty()) "None" else list.joinToString(", ")
+            val styleName = when (displayDuringPlaybackStyle) {
+                "text" -> "Pure Text"
+                "hairline" -> "Hairline"
+                else -> "Frosted Glass"
+            }
+            val posName = when (displayDuringPlaybackPosition) {
+                "top_left" -> "Top Left"
+                "bottom_left" -> "Bottom Left"
+                else -> "Top Right"
+            }
+            val itemsStr = if (list.isEmpty()) "None" else list.joinToString(", ")
+            return "$itemsStr · ${(displayDuringPlaybackOpacity * 100).toInt()}% · $styleName · $posName"
         }
 
     fun updateDisplayDuringPlayback(
         remaining: Boolean,
         clock: Boolean,
         battery: Boolean,
-        opacity: Float = displayDuringPlaybackOpacity
+        opacity: Float = displayDuringPlaybackOpacity,
+        style: String = displayDuringPlaybackStyle,
+        position: String = displayDuringPlaybackPosition
     ) {
         showRemainingTime = remaining
         showPlayerClock = clock
         showBatteryPercentage = battery
         displayDuringPlaybackOpacity = opacity.coerceIn(0.2f, 1.0f)
+        displayDuringPlaybackStyle = style
+        displayDuringPlaybackPosition = position
         prefs.edit {
             putBoolean("show_remaining_time", remaining)
             putBoolean("show_player_clock", clock)
             putBoolean("show_battery_pct", battery)
             putFloat("display_playback_opacity", displayDuringPlaybackOpacity)
+            putString("display_playback_style", style)
+            putString("display_playback_position", position)
         }
     }
 
