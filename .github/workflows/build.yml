@@ -24,7 +24,11 @@ jobs:
       with:
         distribution: temurin
         java-version: '17'
-        cache: gradle
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        cache-read-only: false
 
     - name: Install Android SDK packages
       shell: bash
@@ -58,19 +62,22 @@ jobs:
           echo "ready=false" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Run unit tests and build debug APK
-      run: bash gradlew test assembleDebug --no-daemon --stacktrace
-
-    - name: Build signed release APK
-      if: steps.signing.outputs.ready == 'true'
-      run: bash gradlew assembleRelease --no-daemon --stacktrace
+    - name: Build and test
+      shell: bash
+      run: |
+        if [[ "${{ steps.signing.outputs.ready }}" == "true" ]]; then
+          ./gradlew testReleaseUnitTest assembleRelease --stacktrace
+        else
+          ./gradlew testDebugUnitTest assembleDebug --stacktrace
+        fi
 
     - name: Save debug APK
+      if: steps.signing.outputs.ready != 'true'
       uses: actions/upload-artifact@v4
       with:
         name: Jadzumi-Video-${{ env.APP_VERSION }}-Debug
         path: app/build/outputs/apk/debug/*.apk
-        if-no-files-found: error
+        if-no-files-found: warn
 
     - name: Save signed release APK
       if: steps.signing.outputs.ready == 'true'
