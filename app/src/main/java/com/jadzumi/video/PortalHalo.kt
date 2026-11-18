@@ -95,95 +95,127 @@ fun AdaptiveAtmosphericCanvas(
             "Light" -> {
                 // Architectural paper base
                 drawRect(color = Color(0xFFF6F5FA))
-                // Multi-mesh radial atmospheric aura (Acrylic UI light mesh)
-                // Soft Lilac / Violet aura (top-left)
-                drawCircle(
+
+                val lilac = Color(0xFFD8B4FE)
+                val cyan = Color(0xFFBAE6FD)
+                val peach = Color(0xFFFED7AA)
+                val vignette = Color(0xFFEDEBF5)
+                val maxDim = maxOf(size.width, size.height)
+
+                // Seamless Diffused Acrylic Mesh 1: Lilac / Violet aura (top-left)
+                drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFFD8B4FE).copy(alpha = 0.28f),
-                            Color.Transparent
+                        colorStops = arrayOf(
+                            0.0f to lilac.copy(alpha = 0.24f),
+                            0.45f to lilac.copy(alpha = 0.10f),
+                            0.80f to lilac.copy(alpha = 0.02f),
+                            1.0f to lilac.copy(alpha = 0.0f)
                         ),
                         center = Offset(size.width * 0.10f, size.height * 0.12f),
-                        radius = size.width * 0.70f
+                        radius = maxDim * 0.85f
                     )
                 )
-                // Sky Glacier Cyan aura (top-right)
-                drawCircle(
+
+                // Seamless Diffused Acrylic Mesh 2: Glacier Sky Cyan aura (top-right)
+                drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFFBAE6FD).copy(alpha = 0.32f),
-                            Color.Transparent
+                        colorStops = arrayOf(
+                            0.0f to cyan.copy(alpha = 0.26f),
+                            0.45f to cyan.copy(alpha = 0.11f),
+                            0.80f to cyan.copy(alpha = 0.02f),
+                            1.0f to cyan.copy(alpha = 0.0f)
                         ),
                         center = Offset(size.width * 0.90f, size.height * 0.18f),
-                        radius = size.width * 0.75f
+                        radius = maxDim * 0.90f
                     )
                 )
-                // Gentle Warm Peach / Champagne aura (bottom-center)
-                drawCircle(
+
+                // Seamless Diffused Acrylic Mesh 3: Warm Peach / Champagne aura (bottom-center)
+                drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFFFED7AA).copy(alpha = 0.22f),
-                            Color.Transparent
+                        colorStops = arrayOf(
+                            0.0f to peach.copy(alpha = 0.18f),
+                            0.45f to peach.copy(alpha = 0.07f),
+                            0.80f to peach.copy(alpha = 0.01f),
+                            1.0f to peach.copy(alpha = 0.0f)
                         ),
                         center = Offset(size.width * 0.50f, size.height * 0.85f),
-                        radius = size.width * 0.80f
+                        radius = maxDim * 0.95f
                     )
                 )
-                // Subtle top elevation vignette
+
+                // Subtle top elevation vignette with hue-preserving fade
                 drawRect(
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFEDEBF5).copy(alpha = 0.35f),
-                            Color.Transparent
+                        colorStops = arrayOf(
+                            0.0f to vignette.copy(alpha = 0.35f),
+                            0.70f to vignette.copy(alpha = 0.10f),
+                            1.0f to vignette.copy(alpha = 0.0f)
                         ),
                         startY = 0f,
-                        endY = size.height * 0.25f
+                        endY = size.height * 0.28f
                     )
                 )
             }
             else -> { // Dark
                 // Deep obsidian base
                 drawRect(color = Color(0xFF0E0C15))
-                // Multi-mesh radial atmospheric aura (Acrylic UI dark mesh)
-                // Muted Iris aura (top-left)
-                drawCircle(
+
+                val iris = Color(0xFF7E57C2)
+                val sky = Color(0xFF38BDF8)
+                val amber = Color(0xFFEAB308)
+                val darkVignette = Color(0xFF181524)
+                val maxDim = maxOf(size.width, size.height)
+
+                // Seamless Diffused Acrylic Dark Mesh 1: Muted Iris (top-left)
+                drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF7E57C2).copy(alpha = 0.18f),
-                            Color.Transparent
+                        colorStops = arrayOf(
+                            0.0f to iris.copy(alpha = 0.18f),
+                            0.45f to iris.copy(alpha = 0.07f),
+                            0.80f to iris.copy(alpha = 0.01f),
+                            1.0f to iris.copy(alpha = 0.0f)
                         ),
                         center = Offset(size.width * 0.12f, size.height * 0.15f),
-                        radius = size.width * 0.70f
+                        radius = maxDim * 0.85f
                     )
                 )
-                // Oceanic Cyan aura (top-right)
-                drawCircle(
+
+                // Seamless Diffused Acrylic Dark Mesh 2: Oceanic Cyan (top-right)
+                drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF38BDF8).copy(alpha = 0.12f),
-                            Color.Transparent
+                        colorStops = arrayOf(
+                            0.0f to sky.copy(alpha = 0.12f),
+                            0.45f to sky.copy(alpha = 0.05f),
+                            0.80f to sky.copy(alpha = 0.01f),
+                            1.0f to sky.copy(alpha = 0.0f)
                         ),
                         center = Offset(size.width * 0.88f, size.height * 0.22f),
-                        radius = size.width * 0.75f
+                        radius = maxDim * 0.90f
                     )
                 )
-                // Deep Amber micro-glow (bottom-center)
-                drawCircle(
+
+                // Seamless Diffused Acrylic Dark Mesh 3: Deep Amber micro-glow (bottom-center)
+                drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFFEAB308).copy(alpha = 0.08f),
-                            Color.Transparent
+                        colorStops = arrayOf(
+                            0.0f to amber.copy(alpha = 0.08f),
+                            0.45f to amber.copy(alpha = 0.03f),
+                            0.80f to amber.copy(alpha = 0.0f),
+                            1.0f to amber.copy(alpha = 0.0f)
                         ),
                         center = Offset(size.width * 0.50f, size.height * 0.85f),
-                        radius = size.width * 0.80f
+                        radius = maxDim * 0.95f
                     )
                 )
-                // Subtle depth falloff from top
+
+                // Subtle depth falloff from top with hue-preserving fade
                 drawRect(
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF181524).copy(alpha = 0.6f),
-                            Color.Transparent
+                        colorStops = arrayOf(
+                            0.0f to darkVignette.copy(alpha = 0.60f),
+                            0.70f to darkVignette.copy(alpha = 0.15f),
+                            1.0f to darkVignette.copy(alpha = 0.0f)
                         ),
                         startY = 0f,
                         endY = size.height * 0.35f

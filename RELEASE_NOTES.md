@@ -1,3 +1,24 @@
+# Jadzumi v3.3.8 — Unified Category Segmented Capsule, Diffused Acrylic Canvas & Purified Player HUD
+
+A fidelity and interface refinement release delivering the unified category segmented capsule, fixing background circular gradient banding with true seamless acrylic diffusion, and purifying the in-player Quick Menu per videophile reference standards.
+
+### 1. Unified Category Segmented Capsule
+- **Single Segmented Control**: Replaced individual floating category pills with a single unified 38dp frosted milk-glass capsule housing Movies, Series, and Anime tabs.
+- **Physics-Based Sliding Thumb**: Integrated an animated selection pill thumb using Jetpack Compose spring physics (damping ratio 0.85, stiffness 380), gliding seamlessly between segments with zero text jump.
+- **Translucent Milk Glass Styling**: Styled with frosted milk-glass background (`0xF2FFFFFF` in Light, `0xFF1E1A29` in Dark), hairline lilac contour rim (`0x286750A4`), and dynamic spot elevation.
+
+### 2. Diffused Acrylic Canvas & Anti-Banding Architecture
+- **Eliminated Hard Circle Clipping**: Replaced geometric `drawCircle` primitives with full-bleed `drawRect` covering the entire viewport, preventing visible perimeter arcs and circle boundaries on wide displays.
+- **Hue-Preserving Zero-Alpha Falloff**: Fixed the dark grayish banding ring caused by Compose `Color.Transparent` black interpolation by fading each gradient color to its own hue at alpha 0.0f (`Color.copy(alpha = 0f)`).
+- **4-Stop Gaussian Multi-Mesh**: Layered subtle lilac, glacier cyan, and warm champagne gradients with 4-stop Gaussian falloffs across Light and Dark themes for genuine physical frosted glass depth.
+
+### 3. Purified Videophile Player Quick Menu (Option A)
+- **Eliminated Distortive Post-Processing**: Purged the "Video & Color Studio" shader controls to prevent artificial highlight clipping, crushed shadow detail, and color space distortion over master SDR and HDR video streams.
+- **Removed Legacy Audio Virtualizer**: Removed "Spatial Cinema 3D" to prevent phase smearing, comb filtering, and muffled dialogue caused by Android's legacy audio effect, preserving clean stereo and multichannel downmix fidelity.
+- **Streamlined Cinephile Tools**: Removed in-playback frame palette extraction clutter while keeping core media playback essentials: Subtitle Track & Search, Audio Track & Language, Dialogue Voice Clarity (Vocal Boost), Playback Diagnostics (Nerd Stats), Aspect Ratio, Playback Speed, Chapters & Acts, and Lossless Scene Clipper.
+
+---
+
 # Jadzumi v3.3.7 — Living Light Acrylic Canvas, Dynamic Poster Monet & Precision HUD Alignment
 
 A visual atmosphere and ergonomics release delivering the Living Light Acrylic Canvas architecture, system-wide Material Expressive frosted glass surfaces, dynamic film poster Monet color extraction, upper-right screen orientation rotation in the player HUD, and duplicate control cleanup.

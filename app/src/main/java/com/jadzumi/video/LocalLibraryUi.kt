@@ -31,6 +31,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -819,33 +820,96 @@ fun JadzumiCategoryPillsRow(
 ) {
     val theme = LocalThemeName.current
     val isLight = theme == "Light"
+    val isAmoled = theme == "AMOLED"
     val categories = remember { listOf("Movies", "Series", "Anime") }
 
-    Row(
+    val selectedIndex = when (selectedCategory) {
+        "Series", "TV Shows" -> 1
+        "Anime" -> 2
+        else -> 0
+    }
+
+    val sliderProgress by animateFloatAsState(
+        targetValue = selectedIndex.toFloat(),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f),
+        label = "categoryCapsuleProgress"
+    )
+
+    val capsuleBg = when {
+        isAmoled -> Color(0xFF14121B)
+        isLight -> Color(0xF2FFFFFF)
+        else -> Color(0xFF1E1A29).copy(alpha = 0.82f)
+    }
+    val capsuleBorder = when {
+        isAmoled -> Color.White.copy(alpha = 0.12f)
+        isLight -> Color(0x286750A4)
+        else -> Color.White.copy(alpha = 0.08f)
+    }
+    val unselectedText = if (isLight) Color(0xFF49454F) else Color(0xFFCAC4D0)
+    val thumbGradient = when {
+        isAmoled -> Brush.horizontalGradient(listOf(Color(0xFF6750A4), Color(0xFF5E35B1)))
+        isLight -> Brush.horizontalGradient(listOf(Color(0xFF6750A4), Color(0xFF7E57C2)))
+        else -> Brush.horizontalGradient(listOf(Color(0xFF7E57C2), Color(0xFF9575CD)))
+    }
+
+    Surface(
         modifier = modifier
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .height(38.dp)
+            .width(225.dp),
+        shape = RoundedCornerShape(19.dp),
+        color = capsuleBg,
+        border = BorderStroke(0.85.dp, capsuleBorder),
+        shadowElevation = if (isLight) 2.dp else 0.dp
     ) {
-        categories.forEach { cat ->
-            val isSelected = cat == selectedCategory || (cat == "Series" && (selectedCategory == "TV Shows" || selectedCategory == "Series"))
-            MaterialExpressivePill(
-                isSelected = isSelected,
-                onClick = { onCategorySelected(if (cat == "Series") "TV Shows" else cat) },
-                theme = theme
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(3.dp)
+        ) {
+            val segmentWidth = maxWidth / categories.size
+
+            // Animated sliding selection pill thumb
+            Box(
+                modifier = Modifier
+                    .offset(x = segmentWidth * sliderProgress)
+                    .width(segmentWidth)
+                    .fillMaxHeight()
+                    .shadow(
+                        elevation = if (isLight) 4.dp else 2.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        spotColor = Color(0xFF6750A4).copy(alpha = 0.40f)
+                    )
+                    .background(thumbGradient, shape = RoundedCornerShape(16.dp))
+            )
+
+            // Category text labels row
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = cat,
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                    fontSize = 12.5.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) {
-                        if (isLight) MaterialExpressive.OnPrimaryContainerLight else MaterialExpressive.OnPrimaryDark
-                    } else {
-                        if (isLight) MaterialExpressive.TextSecondaryLight else MaterialExpressive.TextSecondaryDark
-                    },
-                    maxLines = 1
-                )
+                categories.forEachIndexed { index, cat ->
+                    val isSelected = selectedIndex == index
+                    Box(
+                        modifier = Modifier
+                            .width(segmentWidth)
+                            .fillMaxHeight()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                onCategorySelected(if (cat == "Series") "TV Shows" else cat)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = cat,
+                            fontSize = 12.5.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                            color = if (isSelected) Color.White else unselectedText,
+                            maxLines = 1
+                        )
+                    }
+                }
             }
         }
     }

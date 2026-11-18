@@ -1861,14 +1861,8 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
 
                         HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
 
-                        // Category 2: Video & Color Studio
-                        QuickMenuCategoryHeader("VIDEO & COLOR STUDIO")
-                        QuickMenuRow(
-                            icon = Icons.Rounded.Tune,
-                            label = "Video Enhancer & HDR",
-                            value = if (playback.isHdr) (playback.hdrFlavor ?: "HDR Master") else playback.videoEnhancerProfile.displayName.substringBefore(" ("),
-                            onClick = { onSelectSection("enhancer") }
-                        )
+                        // Category 2: Playback & Diagnostics (Reference Pure)
+                        QuickMenuCategoryHeader("PLAYBACK & DIAGNOSTICS")
                         QuickMenuRow(
                             icon = Icons.Rounded.Analytics,
                             label = "Playback Diagnostics",
@@ -1878,19 +1872,13 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
 
                         HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
 
-                        // Category 3: Audio & Soundstage
-                        QuickMenuCategoryHeader("AUDIO & SOUNDSTAGE")
+                        // Category 3: Audio & Voice Clarity
+                        QuickMenuCategoryHeader("AUDIO & VOICE")
                         QuickMenuRow(
                             icon = Icons.Rounded.GraphicEq,
                             label = "Audio track",
                             value = audioSummary,
                             onClick = { onSelectSection("audio") }
-                        )
-                        QuickMenuRow(
-                            icon = Icons.Rounded.SurroundSound,
-                            label = "Spatial Cinema 3D",
-                            value = playback.spatial3DMode.displayName.substringBefore(" ("),
-                            onClick = { onSelectSection("spatial_3d") }
                         )
                         QuickMenuRow(
                             icon = Icons.Rounded.RecordVoiceOver,
@@ -1915,8 +1903,8 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
 
                         HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
 
-                        // Category 5: Cinephile Studio
-                        QuickMenuCategoryHeader("CINEPHILE STUDIO")
+                        // Category 5: Cinephile Navigation & Tools
+                        QuickMenuCategoryHeader("CINEPHILE TOOLS")
                         QuickMenuRow(
                             icon = Icons.Rounded.BookmarkBorder,
                             label = "Chapters & Acts",
@@ -1928,12 +1916,6 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             label = "Clip Scene",
                             value = "Instant 1080p/4K",
                             onClick = onOpenTrimmer
-                        )
-                        QuickMenuRow(
-                            icon = Icons.Rounded.ColorLens,
-                            label = "Aesthetic Color Harmony & Frame",
-                            value = "5-Swatch Palette",
-                            onClick = { onOpenTools("palette") }
                         )
                         QuickMenuRow(
                             icon = Icons.Rounded.Animation,
