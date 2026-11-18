@@ -1,3 +1,32 @@
+# Jadzumi v3.4.0 - Global WebRTC Watch Party, Audio Cinema Bridge, Episode Drawer & Micro-Scrubbing
+
+A major feature release introducing Global WebRTC Watch Party with zero-install browser streaming and real-time voice call, Audio Cinema Bridge for dual-headphone synchronization, In-Player "Up Next" Episode Drawer, Variable Micro-Scrubbing precision, and Letterbox Subtitle Placement.
+
+### 1. Global WebRTC Watch Party with Live Voice Calling & Reaction Chat
+- **Zero-Install Browser Streaming**: Generate an instant shareable link and QR code from the player HUD. Remote friends on PC, Mac, iPhone, or Android can join by simply opening the link in their web browser without installing any app.
+- **Bi-directional WebRTC Voice Call**: Integrated real-time Opus 48 kHz voice calling with hardware Acoustic Echo Cancellation (AEC) and noise suppression, allowing you to speak with friends while watching.
+- **Smart Movie Audio Ducking**: The player DSP automatically dips the movie volume by 25% when voice speech is detected, ensuring conversations remain completely clear during action scenes.
+- **Frame-Accurate Playback Synchronization**: Bi-directional WebRTC DataChannel clock syncs play, pause, seek, and buffer states with sub-second accuracy across all connected guests.
+- **Live Reaction Chat**: In-player floating reaction feed and guest web chat bar for instant messaging without obstructing the video frame.
+
+### 2. Audio Cinema Bridge (Dual-Headphone Synchronization)
+- **Private Headphone Relay**: Stream uncompressed, zero-latency stereo audio directly over local Wi-Fi or mobile hotspot to a partner's phone and headphones.
+- **Hardware Limitation Bypass**: Overcomes Android's dual-Bluetooth audio connection bottlenecks by broadcasting synchronized audio packets that any partner can receive via phone and AirPods.
+- **Instant QR Pairing**: Partners connect in seconds by scanning the Audio Bridge QR code directly off the tablet or phone screen.
+
+### 3. In-Player "Up Next" Episode Drawer
+- **Seamless Episode Browsing**: Access the season episode queue directly from the player HUD utility row or Cinephile Tools menu without navigating back to the library.
+- **Visual Episode Cards**: Displays episode thumbnails, season and episode tags (e.g. S01E03), running times, and an active glowing playback indicator.
+
+### 4. Variable Micro-Scrubbing Precision
+- **Multi-Tier Seek Velocity**: Dragging downward vertically while scrubbing along the timeline downshifts seek velocity through 4 discrete precision rates (100% at under 25px, 50% at over 25px, 25% at over 60px, and Fine 1-second ticks at over 110px).
+- **Tactile Feedback & Visual Badge**: Provides tactile haptic feedback ticks on precision gear shifts and displays a floating micro-scrubbing rate pill directly above the seeker.
+
+### 5. Letterbox Subtitle Placement
+- **Unobstructed 2.39:1 Cinema Viewing**: Added a toggle in Subtitle Settings that dynamically reparents subtitles into the lower black letterbox bars on widescreen films, preventing text from overlapping video action.
+
+---
+
 # Jadzumi v3.3.8 — Unified Category Segmented Capsule, Diffused Acrylic Canvas & Purified Player HUD
 
 A fidelity and interface refinement release delivering the unified category segmented capsule, fixing background circular gradient banding with true seamless acrylic diffusion, and purifying the in-player Quick Menu per videophile reference standards.

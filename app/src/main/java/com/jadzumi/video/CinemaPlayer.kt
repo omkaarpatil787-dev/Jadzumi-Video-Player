@@ -17,6 +17,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
@@ -31,6 +32,7 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -45,7 +47,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -56,6 +60,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -167,6 +172,16 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
     var controls by remember(video.identity) { mutableStateOf(true) }
     var quickMenuSection by remember(video.identity) { mutableStateOf<String?>(null) }
     var toolsSection by remember(video.identity) { mutableStateOf<String?>(null) }
+    var showEpisodesDrawer by remember(video.identity) { mutableStateOf(false) }
+    val watchPartyServer = remember(video.identity) { WatchPartyServer(activity) }
+    var showRelaySheet by remember(video.identity) { mutableStateOf(false) }
+
+    DisposableEffect(video.identity) {
+        onDispose {
+            watchPartyServer.stop()
+        }
+    }
+    var microScrubLabel by remember(video.identity) { mutableStateOf<String?>(null) }
     var isFastForwarding by remember(video.identity) { mutableStateOf(false) }
     var speedBeforeHold by remember(video.identity) { mutableFloatStateOf(1f) }
     var scrub by remember(video.identity) { mutableStateOf<Float?>(null) }
@@ -301,6 +316,9 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
     val isInteracting = quickMenuSection != null ||
             toolsSection != null ||
             showDiagnosticsCapsule ||
+            showEpisodesDrawer ||
+            showRelaySheet ||
+            showChaptersDrawer ||
             hudSide != null ||
             scrub != null ||
             isFastForwarding ||
@@ -993,6 +1011,46 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                     )
                                 }
 
+                                if (playback.currentQueue.size > 1 || playback.video?.episode != null) {
+                                    FrostedCircleButton(
+                                        label = "Season Episodes",
+                                        onClick = {
+                                            showEpisodesDrawer = true
+                                            interaction++
+                                        },
+                                        size = 42.dp,
+                                        bgColor = if (showEpisodesDrawer) LavenderAccent.copy(alpha = 0.22f) else dynamicFrostedCircleBg,
+                                        rimColor = if (showEpisodesDrawer) LavenderAccent.copy(alpha = 0.5f) else dynamicFrostedCircleRim
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.VideoLibrary,
+                                            contentDescription = "Season Episodes",
+                                            tint = if (showEpisodesDrawer) LavenderAccent else playerContentColor,
+                                            modifier = Modifier.size(19.dp)
+                                        )
+                                    }
+                                }
+
+                                if (watchPartyServer.isRunning) {
+                                    FrostedCircleButton(
+                                        label = if (watchPartyServer.relayMode == CinemaRelayMode.WATCH_PARTY) "Watch Party (${watchPartyServer.guestCount})" else "Audio Bridge",
+                                        onClick = {
+                                            showRelaySheet = true
+                                            interaction++
+                                        },
+                                        size = 42.dp,
+                                        bgColor = if (watchPartyServer.relayMode == CinemaRelayMode.WATCH_PARTY) Color(0xFF4ADE80).copy(alpha = 0.25f) else Color(0xFF38BDF8).copy(alpha = 0.25f),
+                                        rimColor = if (watchPartyServer.relayMode == CinemaRelayMode.WATCH_PARTY) Color(0xFF4ADE80).copy(alpha = 0.6f) else Color(0xFF38BDF8).copy(alpha = 0.6f)
+                                    ) {
+                                        Icon(
+                                            if (watchPartyServer.relayMode == CinemaRelayMode.WATCH_PARTY) Icons.Rounded.Groups else Icons.Rounded.Headphones,
+                                            contentDescription = "Active Relay",
+                                            tint = if (watchPartyServer.relayMode == CinemaRelayMode.WATCH_PARTY) Color(0xFF4ADE80) else Color(0xFF38BDF8),
+                                            modifier = Modifier.size(19.dp)
+                                        )
+                                    }
+                                }
+
                                 FrostedCircleButton(
                                     label = "Quick Menu",
                                     onClick = {
@@ -1216,6 +1274,28 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                         .padding(horizontal = 14.dp, vertical = 8.dp),
                                     verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
+                                    // Variable Micro-Scrubbing Velocity Badge
+                                    AnimatedVisibility(
+                                        visible = microScrubLabel != null,
+                                        enter = fadeIn(tween(140)) + slideInVertically(tween(140)) { it / 2 },
+                                        exit = fadeOut(tween(100)) + slideOutVertically(tween(100)) { it / 2 },
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                    ) {
+                                        Surface(
+                                            shape = RoundedCornerShape(999.dp),
+                                            color = Color(0xF21E1A29),
+                                            border = BorderStroke(1.dp, LavenderAccent.copy(alpha = 0.5f))
+                                        ) {
+                                            Text(
+                                                text = microScrubLabel ?: "",
+                                                color = LavenderAccent,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp,
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    }
+
                                     // Row 1: Timeline Scrubber with Timecodes
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -1237,9 +1317,11 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                                 enabled = playback.seekable && playback.duration > 0,
                                                 chapters = playback.chapters,
                                                 onScrub = { scrub = it; interaction++ },
+                                                onScrubRateChange = { microScrubLabel = it },
                                                 onScrubFinished = {
                                                     scrub?.let { playback.seekTo((it * playback.duration).toLong()) }
                                                     scrub = null
+                                                    microScrubLabel = null
                                                 }
                                             )
                                         }
@@ -1435,6 +1517,22 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                             },
                             onSelectSection = { quickMenuSection = it; interaction++ },
                             onAddExternalSubtitle = { subtitleFileLauncher.launch(arrayOf("*/*")) },
+                            onOpenEpisodes = { showEpisodesDrawer = true; quickMenuSection = null },
+                            onOpenWatchParty = {
+                                if (!watchPartyServer.isRunning || watchPartyServer.relayMode != CinemaRelayMode.WATCH_PARTY) {
+                                    watchPartyServer.start(CinemaRelayMode.WATCH_PARTY, playback)
+                                }
+                                showRelaySheet = true
+                                quickMenuSection = null
+                            },
+                            onOpenAudioBridge = {
+                                if (!watchPartyServer.isRunning || watchPartyServer.relayMode != CinemaRelayMode.AUDIO_BRIDGE) {
+                                    watchPartyServer.start(CinemaRelayMode.AUDIO_BRIDGE, playback)
+                                }
+                                showRelaySheet = true
+                                quickMenuSection = null
+                            },
+                            watchPartyServer = watchPartyServer,
                             onOpenChapters = { showChaptersDrawer = true; quickMenuSection = null },
                             onOpenTrimmer = { showTrimmerDialog = true; quickMenuSection = null },
                             onOpenBinge = { showBingeDialog = true; quickMenuSection = null },
@@ -1452,6 +1550,9 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                             },
                             onSearchSubtitles = {
                                 if (!subtitleSearchBusy) subtitleSearchLauncher.launch(arrayOf("*/*"))
+                            },
+                            onApplySubtitles = {
+                                playerViewRef?.let { SubtitlePreferences.applyToPlayerView(activity, it) }
                             },
                             onMessage = { message = it; interaction++ },
                             onDismiss = { quickMenuSection = null },
@@ -1523,6 +1624,30 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
             }
         }
 
+        if (showEpisodesDrawer) {
+            val episodes = remember(playback.video?.identity, playback.currentQueue) {
+                playback.currentQueue.ifEmpty { listOfNotNull(playback.video) }
+            }
+            EpisodeDrawerSheet(
+                episodes = episodes,
+                currentVideo = video,
+                onSelectEpisode = { ep ->
+                    showEpisodesDrawer = false
+                    playback.open(ep, episodes)
+                    message = "Switched to ${ep.title.ifBlank { ep.name }}"
+                },
+                onDismiss = { showEpisodesDrawer = false }
+            )
+        }
+
+        if (showRelaySheet) {
+            CinemaRelaySheet(
+                server = watchPartyServer,
+                playback = playback,
+                onDismiss = { showRelaySheet = false }
+            )
+        }
+
         if (showChaptersDrawer) {
             val extractedChapters by produceState(emptyList<VideoChapter>(), video.identity) {
                 value = ChapterExtractor.extractChapters(activity, video)
@@ -1562,7 +1687,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
         }
     }
 
-/** Panel 1 & 3: Ultra-Thin Periwinkle-Blue Timeline with Chapter Marks & Haptic Snap */
+/** Panel 1 & 3: Ultra-Thin Periwinkle-Blue Timeline with Chapter Marks, Haptic Snap & Variable Micro-Scrubbing */
 @Composable private fun CinemaTimelineBar(
     fraction: Float,
     bufferedFraction: Float,
@@ -1570,6 +1695,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
     enabled: Boolean,
     chapters: List<ChapterMarker> = emptyList(),
     onScrub: (Float) -> Unit,
+    onScrubRateChange: (String?) -> Unit = {},
     onScrubFinished: () -> Unit
 ) {
     val motion = LocalMotionStyle.current
@@ -1611,17 +1737,41 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
             }
             .pointerInput(enabled, chapters) {
                 if (!enabled) return@pointerInput
-                detectHorizontalDragGestures(
+                var startY = 0f
+                var currentFrac = fraction
+                var lastTier = -1
+                detectDragGestures(
                     onDragStart = { offset ->
-                        val f = (offset.x / size.width.coerceAtLeast(1)).coerceIn(0f, 1f)
-                        processScrubFraction(f)
+                        startY = offset.y
+                        currentFrac = (offset.x / size.width.coerceAtLeast(1)).coerceIn(0f, 1f)
+                        processScrubFraction(currentFrac)
+                        onScrubRateChange(null)
                     },
-                    onDragEnd = onScrubFinished,
-                    onDragCancel = onScrubFinished
-                ) { change, _ ->
+                    onDragEnd = {
+                        onScrubRateChange(null)
+                        onScrubFinished()
+                    },
+                    onDragCancel = {
+                        onScrubRateChange(null)
+                        onScrubFinished()
+                    }
+                ) { change, dragAmount ->
                     change.consume()
-                    val f = (change.position.x / size.width.coerceAtLeast(1)).coerceIn(0f, 1f)
-                    processScrubFraction(f)
+                    val dy = (change.position.y - startY).coerceAtLeast(0f)
+                    val (rate, label, tier) = when {
+                        dy > 110f -> Triple(0.08f, "Fine Micro-Scrub (1s)", 3)
+                        dy > 60f  -> Triple(0.25f, "Quarter Speed (25%)", 2)
+                        dy > 25f  -> Triple(0.50f, "Half Speed (50%)", 1)
+                        else      -> Triple(1.0f, null, 0)
+                    }
+                    if (tier != lastTier) {
+                        lastTier = tier
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    }
+                    onScrubRateChange(label)
+                    val deltaFrac = (dragAmount.x / size.width.coerceAtLeast(1)) * rate
+                    currentFrac = (currentFrac + deltaFrac).coerceIn(0f, 1f)
+                    processScrubFraction(currentFrac)
                 }
             },
         contentAlignment = Alignment.Center
@@ -1740,11 +1890,16 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
     onToggleMinimalHud: () -> Unit = {},
     onSelectSection: (String) -> Unit,
     onAddExternalSubtitle: () -> Unit,
+    onOpenEpisodes: () -> Unit = {},
+    onOpenWatchParty: () -> Unit = {},
+    onOpenAudioBridge: () -> Unit = {},
+    watchPartyServer: WatchPartyServer? = null,
     onOpenChapters: () -> Unit = {},
     onOpenTrimmer: () -> Unit = {},
     onOpenBinge: () -> Unit = {},
     onSearchSubtitles: () -> Unit,
     onOpenTools: (String) -> Unit,
+    onApplySubtitles: () -> Unit = {},
     onMessage: (String) -> Unit,
     onDismiss: () -> Unit,
     onClosePlayer: () -> Unit = playback::close
@@ -1905,6 +2060,26 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
 
                         // Category 5: Cinephile Navigation & Tools
                         QuickMenuCategoryHeader("CINEPHILE TOOLS")
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Groups,
+                            label = "Live Watch Party",
+                            value = if (watchPartyServer?.isRunning == true && watchPartyServer.relayMode == CinemaRelayMode.WATCH_PARTY) "Active (${watchPartyServer.guestCount})" else "WebRTC & Sync",
+                            onClick = onOpenWatchParty
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Headphones,
+                            label = "Audio Cinema Bridge",
+                            value = if (watchPartyServer?.isRunning == true && watchPartyServer.relayMode == CinemaRelayMode.AUDIO_BRIDGE) "Active" else "Dual Headphone",
+                            onClick = onOpenAudioBridge
+                        )
+                        if (playback.currentQueue.size > 1 || playback.video?.episode != null) {
+                            QuickMenuRow(
+                                icon = Icons.Rounded.VideoLibrary,
+                                label = "Season Episodes",
+                                value = "${playback.currentQueue.size} in queue",
+                                onClick = onOpenEpisodes
+                            )
+                        }
                         QuickMenuRow(
                             icon = Icons.Rounded.BookmarkBorder,
                             label = "Chapters & Acts",
@@ -2388,6 +2563,31 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             value = "",
                             onClick = { onSearchSubtitles(); onDismiss() }
                         )
+
+                        // Letterbox Placement Toggle (Widescreen Cinema Bar)
+                        val subCtx = androidx.compose.ui.platform.LocalContext.current
+                        var isLetterbox by remember { mutableStateOf(SubtitlePreferences.getLetterboxPlacement(subCtx)) }
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text("Letterbox Bar Placement", color = palette.primaryText, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Drop subtitles into black bars on 2.39:1 films", color = palette.secondaryText, fontSize = 11.sp)
+                            }
+                            Switch(
+                                checked = isLetterbox,
+                                onCheckedChange = { checked ->
+                                    isLetterbox = checked
+                                    SubtitlePreferences.setLetterboxPlacement(subCtx, checked)
+                                    onApplySubtitles()
+                                    onMessage(if (checked) "Subtitles: Render in Black Letterbox Bar" else "Subtitles: Inside Video Frame")
+                                }
+                            )
+                        }
+
+                        HorizontalDivider(Modifier.padding(vertical = 6.dp), color = palette.divider)
 
                         // Subtitle Timing Calibration
                         Row(
@@ -3467,6 +3667,454 @@ private fun PlayerStatusPill(
                 modifier = modifier
             ) {
                 pillContent()
+            }
+        }
+    }
+}
+
+/**
+ * In-Player Episode Drawer Sheet
+ * Allows instant browsing and jumping across season episodes without leaving the player surface.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EpisodeDrawerSheet(
+    episodes: List<LocalVideo>,
+    currentVideo: LocalVideo,
+    onSelectEpisode: (LocalVideo) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = null,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.72f)
+                .padding(20.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(38.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Rounded.VideoLibrary,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        val seriesTitle = remember(currentVideo.name) {
+                            EpisodePatterns.parse(currentVideo.name)?.seriesTitle ?: currentVideo.title.ifBlank { currentVideo.name }
+                        }
+                        Text(
+                            text = seriesTitle,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "${episodes.size} episodes available",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Rounded.Close, contentDescription = "Close")
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                itemsIndexed(episodes) { index, ep ->
+                    val isPlaying = ep.identity == currentVideo.identity
+                    val epInfo = EpisodePatterns.parse(ep.name)
+                    val epLabel = if (epInfo != null) "S%02dE%02d".format(epInfo.season, epInfo.episode) else "Ep ${index + 1}"
+                    val epTitle = epInfo?.episodeTitle?.ifBlank { ep.title } ?: ep.title.ifBlank { ep.name }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f),
+                        border = if (isPlaying) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                        else BorderStroke(0.75.dp, Color.White.copy(alpha = 0.08f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onSelectEpisode(ep)
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Thumbnail with Now Playing badge
+                            Box(
+                                modifier = Modifier
+                                    .width(84.dp)
+                                    .height(52.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color.Black.copy(alpha = 0.25f))
+                            ) {
+                                LocalThumbnail(video = ep, modifier = Modifier.fillMaxSize())
+                                if (isPlaying) {
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .padding(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "PLAYING",
+                                            fontSize = 8.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Metadata Column
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = epLabel,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                                )
+                                Text(
+                                    text = epTitle,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                if (ep.duration > 0) {
+                                    val durMin = (ep.duration / 60000).toInt()
+                                    Text(
+                                        text = "${durMin}m",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Cinema Relay Sheet: Interactive Bottom Sheet for WebRTC Watch Party & Audio Cinema Bridge.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CinemaRelaySheet(
+    server: WatchPartyServer,
+    playback: PlaybackController,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val isWatchParty = server.relayMode == CinemaRelayMode.WATCH_PARTY
+    val activeUrl = if (isWatchParty) server.partyUrl else server.audioBridgeUrl
+    val qrBitmap = remember(activeUrl) {
+        QrCodeGenerator.generate(activeUrl, sizePx = 384, foregroundColor = Color.White, backgroundColor = Color(0x33100B1A))
+    }
+    var chatInput by remember { mutableStateOf("") }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Color(0xF5130F1F),
+        contentColor = Color.White,
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.35f))
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(if (isWatchParty) Color(0x289D85FF) else Color(0x2838BDF8)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            if (isWatchParty) Icons.Rounded.Groups else Icons.Rounded.Headphones,
+                            contentDescription = null,
+                            tint = if (isWatchParty) Color(0xFF9D85FF) else Color(0xFF38BDF8),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            if (isWatchParty) "Live Cinema Watch Party" else "Audio Cinema Bridge",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            if (isWatchParty) "Zero-install browser stream & real-time sync" else "Dual-headphone zero lag relay for partner",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFA49FB5)
+                        )
+                    }
+                }
+                Surface(
+                    onClick = onDismiss,
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.1f),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.Close, "Close", tint = Color.White, modifier = Modifier.size(18.dp))
+                    }
+                }
+            }
+
+            // Status Pill
+            Row(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color(0x1F4ADE80))
+                    .border(1.dp, Color(0x404ADE80), CircleShape)
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF4ADE80))
+                )
+                Text(
+                    text = if (isWatchParty) "ROOM ONLINE • ${server.guestCount} GUESTS CONNECTED" else "HEADPHONE STREAM ONLINE • READY",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF4ADE80)
+                )
+            }
+
+            // QR Code Container
+            if (qrBitmap != null) {
+                Surface(
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color(0xFF1B1629),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+                    modifier = Modifier.size(190.dp).padding(10.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Image(
+                            bitmap = qrBitmap,
+                            contentDescription = "Relay QR Code",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+                Text(
+                    "Scan with any phone camera or open the link below",
+                    fontSize = 12.sp,
+                    color = Color(0xFFA49FB5)
+                )
+            }
+
+            // URL Box
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color.Black.copy(alpha = 0.4f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = activeUrl,
+                        fontSize = 12.sp,
+                        color = Color(0xFFD4CCF0),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Button(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(activeUrl))
+                            },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9D85FF), contentColor = Color(0xFF0B0718))
+                        ) {
+                            Text("Copy", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                        IconButton(
+                            onClick = {
+                                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, "Join my Jadzumi Cinema Stream: $activeUrl")
+                                }
+                                context.startActivity(Intent.createChooser(sendIntent, "Share Stream"))
+                            }
+                        ) {
+                            Icon(Icons.Rounded.Share, "Share", tint = Color.White, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
+
+            // Voice Call & Controls (Watch Party Mode)
+            if (isWatchParty) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White.copy(alpha = 0.05f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("VOICE CALL & AUDIO SETTINGS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFA49FB5))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text("Host Microphone", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.White)
+                                Text(if (server.isMicMuted) "Muted" else "Open mic with Echo Cancellation", fontSize = 11.sp, color = Color(0xFFA49FB5))
+                            }
+                            Switch(
+                                checked = !server.isMicMuted,
+                                onCheckedChange = { server.isMicMuted = !it }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text("Movie Auto-Ducking", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.White)
+                                Text("Dips movie volume by 25% when voice is detected", fontSize = 11.sp, color = Color(0xFFA49FB5))
+                            }
+                            Switch(
+                                checked = server.isAudioDuckingEnabled,
+                                onCheckedChange = { server.isAudioDuckingEnabled = it }
+                            )
+                        }
+                    }
+                }
+
+                // Chat Input & Feed
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White.copy(alpha = 0.05f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("LIVE REACTION CHAT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFA49FB5))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 120.dp)
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            server.chatMessages.takeLast(6).forEach { msg ->
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text("${msg.sender}:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (msg.sender == "Host") Color(0xFF9D85FF) else Color(0xFF4ADE80))
+                                    Text(msg.text, fontSize = 12.sp, color = Color.White)
+                                }
+                            }
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(
+                                value = chatInput,
+                                onValueChange = { chatInput = it },
+                                placeholder = { Text("Send reaction...", fontSize = 12.sp, color = Color(0xFFA49FB5)) },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            Button(
+                                onClick = {
+                                    server.sendHostChat(chatInput)
+                                    chatInput = ""
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9D85FF), contentColor = Color(0xFF0B0718))
+                            ) {
+                                Text("Send", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Stop Session Button
+            Button(
+                onClick = {
+                    server.stop()
+                    onDismiss()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935).copy(alpha = 0.2f), contentColor = Color(0xFFFF6B6B)),
+                border = BorderStroke(1.dp, Color(0xFFE53935).copy(alpha = 0.4f))
+            ) {
+                Text(if (isWatchParty) "End Watch Party Session" else "Disconnect Audio Bridge", fontWeight = FontWeight.Bold)
             }
         }
     }

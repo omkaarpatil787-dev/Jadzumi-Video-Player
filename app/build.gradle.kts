@@ -34,8 +34,8 @@ android {
         applicationId = "com.jadzumi.video"
         minSdk = 26
         targetSdk = 35
-        versionCode = 82
-        versionName = "3.3.8"
+        versionCode = 83
+        versionName = "3.4.0"
         ndk { abiFilters += "arm64-v8a" }
     }
 
@@ -109,6 +109,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("com.google.zxing:core:3.5.3")
     testImplementation("junit:junit:4.13.2")
 }
 

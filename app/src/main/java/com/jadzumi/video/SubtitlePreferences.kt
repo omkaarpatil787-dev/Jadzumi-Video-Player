@@ -3,8 +3,11 @@ package com.jadzumi.video
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.SubtitleView
@@ -85,6 +88,9 @@ object SubtitlePreferences {
     fun getBottomMargin(context: Context): Float = prefs(context).getFloat("bottom_margin", 0.08f)
     fun setBottomMargin(context: Context, margin: Float) = prefs(context).edit { putFloat("bottom_margin", margin) }
 
+    fun getLetterboxPlacement(context: Context): Boolean = prefs(context).getBoolean("letterbox_placement", false)
+    fun setLetterboxPlacement(context: Context, enabled: Boolean) = prefs(context).edit { putBoolean("letterbox_placement", enabled) }
+
     fun getTypeface(font: String, styleName: String = "Regular"): Typeface {
         val baseTypeface = when (font) {
             "Cinema Serif" -> Typeface.SERIF
@@ -144,6 +150,7 @@ object SubtitlePreferences {
         val edge = getEdge(context)
         val size = getSize(context)
         val bottomMargin = getBottomMargin(context)
+        val letterboxPlacement = getLetterboxPlacement(context)
 
         val style = CaptionStyleCompat(
             getColorInt(color),
@@ -153,10 +160,42 @@ object SubtitlePreferences {
             getEdgeColor(edge),
             getTypeface(font, fontStyle)
         )
-        playerView.subtitleView?.apply {
-            setStyle(style)
-            setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * size)
-            setBottomPaddingFraction(bottomMargin)
+
+        val sv = playerView.subtitleView
+        if (sv != null) {
+            val parent = sv.parent as? ViewGroup
+            val contentFrame = playerView.findViewById<AspectRatioFrameLayout>(androidx.media3.ui.R.id.exo_content_frame)
+
+            if (letterboxPlacement) {
+                // Detach subtitle view from content frame and attach directly to full playerView container
+                if (parent != null && parent != playerView) {
+                    parent.removeView(sv)
+                    playerView.addView(
+                        sv,
+                        FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    )
+                }
+            } else {
+                // Return subtitle view inside aspect ratio content frame
+                if (contentFrame != null && parent == playerView) {
+                    playerView.removeView(sv)
+                    contentFrame.addView(
+                        sv,
+                        FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    )
+                }
+            }
+
+            sv.setStyle(style)
+            sv.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * size)
+            // In letterbox mode, position at bottom 4% of the entire display (inside bottom black bar)
+            sv.setBottomPaddingFraction(if (letterboxPlacement) 0.04f else bottomMargin)
         }
     }
 }
