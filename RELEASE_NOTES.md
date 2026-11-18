@@ -1,3 +1,25 @@
+# Jadzumi v3.4.2 - Host Watch Party Mode, Collapsible Live Chat Dock & Content Picker
+
+A major experience upgrade transforming the player into a comprehensive Watch Party command center on host tablets and devices, featuring a shrinkable/collapsible live reaction chat card, in-player video library switching, floating reaction bursts, and butter-smooth card list performance.
+
+### 1. Dedicated Host Watch Party Mode
+- **Player HUD Transformation**: Activating a Watch Party instantly transitions the player into Watch Party Mode, displaying a streamlined top control capsule with connected guest count, session status, and quick host actions.
+- **Floating Live Reaction Bursts**: Animated reaction bubbles and emojis sent by either host or guests gently float upward across the video canvas without blocking playback visibility.
+- **Clean One-Tap Session Teardown**: Tapping "End Party" cleanly shuts down background HTTP and WebRTC stream servers, disconnects peer clients, and seamlessly restores normal solo playback HUD.
+
+### 2. Shrinkable & Collapsible Live Chat Card
+- **Normal Docked View**: Anchored cleanly on the side with a 330dp acrylic blur card offering full live message history, host microphone mute toggle with automatic movie ducking indicator (-25%), quick reaction chips, and text composer.
+- **Compact Floating Pill Capsule**: With a single tap on the minimize button, the chat card morphs into a floating frosted capsule showing unread count badges and incoming message snippet ticker. Tapping the capsule instantly expands back to full view.
+
+### 3. In-Party Content Selector ("Choose What to Watch Next")
+- **Live Video Switching**: Host can browse local device videos, series, and movie episodes inside an acrylic bottom drawer without disconnecting or leaving the watch party.
+- **Synchronized Playback Transition**: Selecting a new title immediately changes media playback for the host and synchronizes the new stream to all connected guests.
+
+### 4. Zero-Lag Card List & Drawer Scrolling
+- **Stable Identity Keys**: Enhanced EpisodeDrawerSheet and card collections with unique stable item keys (`ep.identity`), preventing expensive layout remeasurements and eliminating scroll stutter.
+
+---
+
 # Jadzumi v3.4.1 - WebRTC Watch Party Audio Gate, Live Voice Controls & Reaction Bursts
 
 A targeted maintenance and refinement release resolving browser audio playback restrictions, enabling bidirectional WebRTC live voice calling controls for guests, optimizing dynamic viewport layouts for mobile devices, and adding instant reaction bursts.

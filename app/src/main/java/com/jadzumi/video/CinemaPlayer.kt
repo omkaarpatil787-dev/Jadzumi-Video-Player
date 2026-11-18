@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -175,6 +176,8 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
     var showEpisodesDrawer by remember(video.identity) { mutableStateOf(false) }
     val watchPartyServer = remember(video.identity) { WatchPartyServer(activity) }
     var showRelaySheet by remember(video.identity) { mutableStateOf(false) }
+    var isChatDockShrunk by remember(video.identity) { mutableStateOf(false) }
+    var showPartyContentPicker by remember(video.identity) { mutableStateOf(false) }
 
     DisposableEffect(video.identity) {
         onDispose {
@@ -1621,6 +1624,45 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                         }
                     }
                 }
+
+                // Dedicated Watch Party Top Capsule HUD
+                AnimatedVisibility(
+                    visible = watchPartyServer.isRunning && watchPartyServer.relayMode == CinemaRelayMode.WATCH_PARTY && !playback.locked && !playback.inPip,
+                    enter = fadeIn(tween(250)) + slideInVertically(tween(300)) { -it },
+                    exit = fadeOut(tween(200)) + slideOutVertically(tween(250)) { -it },
+                    modifier = Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 16.dp)
+                ) {
+                    WatchPartyTopHud(
+                        server = watchPartyServer,
+                        onOpenContentPicker = { showPartyContentPicker = true; interaction++ },
+                        onOpenShare = { showRelaySheet = true; interaction++ },
+                        isChatShrunk = isChatDockShrunk,
+                        onToggleChatShrunk = { isChatDockShrunk = !isChatDockShrunk; interaction++ },
+                        onEndParty = {
+                            watchPartyServer.stop()
+                            message = "Watch Party session ended"
+                        }
+                    )
+                }
+
+                // In-Video Floating Reaction Bursts
+                if (watchPartyServer.isRunning && watchPartyServer.relayMode == CinemaRelayMode.WATCH_PARTY) {
+                    WatchPartyFloatingReactions(messages = watchPartyServer.chatMessages)
+                }
+
+                // Dedicated Watch Party Live Chat Dock (Normal Size or Shrunk Capsule)
+                AnimatedVisibility(
+                    visible = watchPartyServer.isRunning && watchPartyServer.relayMode == CinemaRelayMode.WATCH_PARTY && !playback.locked && !playback.inPip,
+                    enter = fadeIn(tween(250)) + slideInHorizontally(tween(300)) { it },
+                    exit = fadeOut(tween(200)) + slideOutHorizontally(tween(250)) { it },
+                    modifier = Modifier.align(Alignment.BottomEnd).safeDrawingPadding().padding(end = 16.dp, bottom = 16.dp)
+                ) {
+                    WatchPartyHostChatDock(
+                        server = watchPartyServer,
+                        isShrunk = isChatDockShrunk,
+                        onToggleShrunk = { isChatDockShrunk = !isChatDockShrunk; interaction++ }
+                    )
+                }
             }
         }
 
@@ -1645,6 +1687,23 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                 server = watchPartyServer,
                 playback = playback,
                 onDismiss = { showRelaySheet = false }
+            )
+        }
+
+        if (showPartyContentPicker) {
+            val episodes = remember(playback.video?.identity, playback.currentQueue) {
+                playback.currentQueue.ifEmpty { listOfNotNull(playback.video) }
+            }
+            WatchPartyContentPickerSheet(
+                episodes = episodes,
+                currentVideo = video,
+                onSelectEpisode = { ep ->
+                    showPartyContentPicker = false
+                    playback.open(ep, episodes)
+                    watchPartyServer.sendHostChat("Host switched stream to: ${ep.title.ifBlank { ep.name }}")
+                    message = "Switched to ${ep.title.ifBlank { ep.name }}"
+                },
+                onDismiss = { showPartyContentPicker = false }
             )
         }
 
@@ -3747,7 +3806,7 @@ fun EpisodeDrawerSheet(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                itemsIndexed(episodes) { index, ep ->
+                itemsIndexed(episodes, key = { _, ep -> ep.identity }) { index, ep ->
                     val isPlaying = ep.identity == currentVideo.identity
                     val epInfo = EpisodePatterns.parse(ep.name)
                     val epLabel = if (epInfo != null) "S%02dE%02d".format(epInfo.season, epInfo.episode) else "Ep ${index + 1}"
@@ -4115,6 +4174,497 @@ fun CinemaRelaySheet(
                 border = BorderStroke(1.dp, Color(0xFFE53935).copy(alpha = 0.4f))
             ) {
                 Text(if (isWatchParty) "End Watch Party Session" else "Disconnect Audio Bridge", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun WatchPartyTopHud(
+    server: WatchPartyServer,
+    onOpenContentPicker: () -> Unit,
+    onOpenShare: () -> Unit,
+    isChatShrunk: Boolean,
+    onToggleChatShrunk: () -> Unit,
+    onEndParty: () -> Unit
+) {
+    Surface(
+        shape = CircleShape,
+        color = Color(0xF2140F22),
+        border = BorderStroke(1.dp, Color(0x559D85FF)),
+        shadowElevation = 12.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF4ADE80))
+            )
+            Text(
+                text = "WATCH PARTY (${server.guestCount})",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF4ADE80)
+            )
+
+            // Choose Content Button
+            Surface(
+                onClick = onOpenContentPicker,
+                shape = CircleShape,
+                color = Color(0x339D85FF),
+                border = BorderStroke(1.dp, Color(0x669D85FF))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(Icons.Rounded.VideoLibrary, null, tint = Color(0xFFC4B5FD), modifier = Modifier.size(14.dp))
+                    Text("Choose Video", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC4B5FD))
+                }
+            }
+
+            // Share / QR Button
+            Surface(
+                onClick = onOpenShare,
+                shape = CircleShape,
+                color = Color.White.copy(alpha = 0.08f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(Icons.Rounded.Share, null, tint = Color.White, modifier = Modifier.size(13.dp))
+                    Text("Share", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                }
+            }
+
+            // Chat size toggle
+            Surface(
+                onClick = onToggleChatShrunk,
+                shape = CircleShape,
+                color = Color.White.copy(alpha = 0.08f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        if (isChatShrunk) Icons.Rounded.ChatBubble else Icons.Rounded.Remove,
+                        null,
+                        tint = Color.White,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(if (isChatShrunk) "Expand Chat" else "Shrink Chat", fontSize = 11.sp, color = Color.White)
+                }
+            }
+
+            // End party button
+            Surface(
+                onClick = onEndParty,
+                shape = CircleShape,
+                color = Color(0x28F87171),
+                border = BorderStroke(1.dp, Color(0x55F87171))
+            ) {
+                Text(
+                    "End Party",
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFF87171)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WatchPartyFloatingReactions(messages: List<PartyChatMessage>) {
+    val recentReaction = remember(messages.size) {
+        messages.lastOrNull()?.text?.takeIf { txt ->
+            txt.contains("❤️") || txt.contains("🔥") || txt.contains("😂") || txt.contains("👏") || txt.contains("🍿") || txt.contains("🤯")
+        }
+    }
+    recentReaction?.let { rx ->
+        var animStarted by remember(rx) { mutableStateOf(false) }
+        val offsetY by animateFloatAsState(
+            targetValue = if (animStarted) -280f else 0f,
+            animationSpec = tween(2800, easing = LinearOutSlowInEasing),
+            label = "rxFloat"
+        )
+        val alpha by animateFloatAsState(
+            targetValue = if (animStarted) 0f else 1f,
+            animationSpec = tween(2800),
+            label = "rxAlpha"
+        )
+        LaunchedEffect(rx) {
+            animStarted = true
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 60.dp, start = 80.dp),
+            contentAlignment = Alignment.BottomStart
+        ) {
+            Text(
+                text = rx.take(4),
+                fontSize = 32.sp,
+                modifier = Modifier
+                    .graphicsLayer {
+                        translationY = offsetY
+                        this.alpha = alpha
+                    }
+            )
+        }
+    }
+}
+
+@Composable
+private fun WatchPartyHostChatDock(
+    server: WatchPartyServer,
+    isShrunk: Boolean,
+    onToggleShrunk: () -> Unit
+) {
+    var hostInput by remember { mutableStateOf("") }
+    val lastMsg = server.chatMessages.lastOrNull()
+
+    if (isShrunk) {
+        // Compact Floating Frosted Capsule (Shrunk State)
+        Surface(
+            onClick = onToggleShrunk,
+            shape = CircleShape,
+            color = Color(0xF2140F22),
+            border = BorderStroke(1.dp, Color(0x669D85FF)),
+            shadowElevation = 16.dp,
+            modifier = Modifier.widthIn(max = 280.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(26.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x339D85FF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Rounded.ChatBubble, null, tint = Color(0xFF9D85FF), modifier = Modifier.size(14.dp))
+                }
+                Column(modifier = Modifier.weight(1f, fill = false)) {
+                    Text("Cinema Chat", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(
+                        text = if (lastMsg != null) "${lastMsg.sender}: ${lastMsg.text}" else "Tap to expand",
+                        fontSize = 10.sp,
+                        color = Color(0xFFA49FB5),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Icon(Icons.Rounded.ExpandLess, null, tint = Color(0xFF9D85FF), modifier = Modifier.size(16.dp))
+            }
+        }
+    } else {
+        // Normal Full-Size Chat Card
+        Surface(
+            shape = RoundedCornerShape(22.dp),
+            color = Color(0xF2140F22),
+            border = BorderStroke(1.dp, Color(0x449D85FF)),
+            shadowElevation = 20.dp,
+            modifier = Modifier
+                .width(330.dp)
+                .heightIn(max = 380.dp)
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Header with Shrink Button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(Icons.Rounded.ChatBubble, null, tint = Color(0xFF9D85FF), modifier = Modifier.size(16.dp))
+                        Text("Live Cinema Chat", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                    Surface(
+                        onClick = onToggleShrunk,
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.08f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Icon(Icons.Rounded.ExpandMore, null, tint = Color(0xFFA49FB5), modifier = Modifier.size(14.dp))
+                            Text("Shrink", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFA49FB5))
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+
+                // Voice status row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(22.dp)
+                                .clip(CircleShape)
+                                .background(if (!server.isMicMuted) Color(0x284ADE80) else Color(0x28F87171)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                if (!server.isMicMuted) Icons.Rounded.Mic else Icons.Rounded.MicOff,
+                                null,
+                                tint = if (!server.isMicMuted) Color(0xFF4ADE80) else Color(0xFFF87171),
+                                modifier = Modifier.size(13.dp)
+                            )
+                        }
+                        Text(
+                            if (!server.isMicMuted) "Host Mic: Open" else "Host Mic: Muted",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFFA49FB5)
+                        )
+                    }
+                    Switch(
+                        checked = !server.isMicMuted,
+                        onCheckedChange = { server.isMicMuted = !it },
+                        modifier = Modifier.scale(0.7f)
+                    )
+                }
+
+                HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
+
+                // Chat Messages Feed
+                val scrollState = rememberScrollState()
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    server.chatMessages.takeLast(20).forEach { msg ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                text = "${msg.sender}:",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (msg.sender == "Host") Color(0xFFC4B5FD)
+                                else if (msg.sender == "System") Color(0xFFA49FB5)
+                                else Color(0xFF4ADE80)
+                            )
+                            Text(msg.text, fontSize = 11.sp, color = Color.White)
+                        }
+                    }
+                }
+
+                // Quick Reactions Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    listOf("❤️ Love", "🔥 Epic", "😂 Laugh", "👏 Bravo", "🍿 Cinema", "🤯 Mindblown").forEach { rx ->
+                        Surface(
+                            onClick = { server.sendHostChat(rx) },
+                            shape = CircleShape,
+                            color = Color.White.copy(alpha = 0.06f),
+                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.1f))
+                        ) {
+                            Text(
+                                text = rx,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Composer Input Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = hostInput,
+                        onValueChange = { hostInput = it },
+                        placeholder = { Text("Chat with party...", fontSize = 11.sp, color = Color(0xFFA49FB5)) },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    Button(
+                        onClick = {
+                            if (hostInput.isNotBlank()) {
+                                server.sendHostChat(hostInput)
+                                hostInput = ""
+                            }
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9D85FF), contentColor = Color(0xFF0B0718))
+                    ) {
+                        Text("Send", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WatchPartyContentPickerSheet(
+    episodes: List<LocalVideo>,
+    currentVideo: LocalVideo,
+    onSelectEpisode: (LocalVideo) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Color(0xF5130F1F),
+        contentColor = Color.White,
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.35f))
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.75f)
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        "Choose What to Watch Next",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        "Select any movie or episode to switch stream for all connected guests",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFA49FB5)
+                    )
+                }
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Rounded.Close, "Close", tint = Color.White)
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                itemsIndexed(episodes, key = { _, ep -> ep.identity }) { index, ep ->
+                    val isPlaying = ep.identity == currentVideo.identity
+                    val epInfo = EpisodePatterns.parse(ep.name)
+                    val epLabel = if (epInfo != null) "S%02dE%02d".format(epInfo.season, epInfo.episode) else "Movie ${index + 1}"
+                    val epTitle = epInfo?.episodeTitle?.ifBlank { ep.title } ?: ep.title.ifBlank { ep.name }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isPlaying) Color(0x339D85FF) else Color(0x15FFFFFF),
+                        border = if (isPlaying) BorderStroke(1.5.dp, Color(0xFF9D85FF)) else BorderStroke(0.5.dp, Color.White.copy(alpha = 0.1f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelectEpisode(ep) }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(84.dp)
+                                    .height(52.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color.Black.copy(alpha = 0.35f))
+                            ) {
+                                LocalThumbnail(video = ep, modifier = Modifier.fillMaxSize())
+                                if (isPlaying) {
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = Color(0xFF4ADE80),
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .padding(4.dp)
+                                    ) {
+                                        Text(
+                                            "STREAMING",
+                                            fontSize = 8.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color.Black,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = epLabel,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isPlaying) Color(0xFF9D85FF) else Color(0xFF38BDF8)
+                                )
+                                Text(
+                                    text = epTitle,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                if (ep.duration > 0) {
+                                    val durMin = (ep.duration / 60000).toInt()
+                                    Text("${durMin}m", fontSize = 11.sp, color = Color(0xFFA49FB5))
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
