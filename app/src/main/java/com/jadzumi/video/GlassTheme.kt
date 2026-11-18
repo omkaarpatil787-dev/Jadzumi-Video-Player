@@ -289,7 +289,7 @@ object MaterialExpressive {
 
     fun cardBg(theme: String): Color {
         return when (theme) {
-            "Light" -> LightContainer
+            "Light" -> Color(0xF0FFFFFF) // Translucent milk-glass for Living Acrylic canvas
             "AMOLED" -> AmoledContainer
             else -> DarkContainer
         }
@@ -297,7 +297,7 @@ object MaterialExpressive {
 
     fun subCardBg(theme: String): Color {
         return when (theme) {
-            "Light" -> LightContainerHigh
+            "Light" -> Color(0xE0FFFFFF) // Translucent milk-glass for capsules, chips & actions
             "AMOLED" -> AmoledContainerHigh
             else -> DarkContainerHigh
         }
@@ -305,7 +305,7 @@ object MaterialExpressive {
 
     fun containerLowest(theme: String): Color {
         return when (theme) {
-            "Light" -> LightContainerLowest
+            "Light" -> Color(0xF8FFFFFF)
             "AMOLED" -> AmoledContainerLowest
             else -> DarkContainerLowest
         }
@@ -313,7 +313,7 @@ object MaterialExpressive {
 
     fun cardBorder(theme: String, strokeWidth: Dp = 0.75.dp): BorderStroke {
         val color = when (theme) {
-            "Light" -> Color(0x1F79747E)
+            "Light" -> Color(0x286750A4) // Specular hairline rim
             "AMOLED" -> Color(0x14FFFFFF)
             else -> Color(0x14FFFFFF)
         }

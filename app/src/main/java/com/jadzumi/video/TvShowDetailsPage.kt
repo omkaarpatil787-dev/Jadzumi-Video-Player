@@ -100,11 +100,52 @@ fun TvShowDetailsPage(
     val isLight = surfaceColor.luminance() > 0.5f
     val theme = if (isLight) "Light" else "Dark"
 
-    BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    val posterUri = onlineShow?.posterUrl ?: onlineShow?.backdropUrl ?: onlineShow?.localPosterPath
+    val cachedBitmap = remember(posterUri) { posterUri?.let { SidecarMemory.cache.get(it) } }
+    var posterBitmap by remember(posterUri) { mutableStateOf(cachedBitmap) }
+
+    LaunchedEffect(posterUri) {
+        if (posterBitmap == null && posterUri != null) {
+            val bmp = withContext(Dispatchers.IO) {
+                SidecarMemory.cache.get(posterUri) ?: decodeSampledBitmap(context, posterUri)?.also {
+                    SidecarMemory.cache.put(posterUri, it)
+                }
+            }
+            posterBitmap = bmp
+        }
+    }
+
+    val monetColor = remember(posterUri, posterBitmap) {
+        PosterMonetExtractor.getColor(posterUri, posterBitmap)
+    }
+    val ctaContainerColor = monetColor ?: (if (isLight) MaterialTheme.colorScheme.primary else LavenderAccent)
+    val ctaContentColor = if (ctaContainerColor.luminance() > 0.5f) Obsidian else Color.White
+
+    BoxWithConstraints(Modifier.fillMaxSize()) {
         val isTablet = maxWidth >= 840.dp
         val horizontalPad = if (isTablet) 28.dp else 16.dp
         val topPad = if (isTablet) 20.dp else 12.dp
         val scrollState = rememberLazyListState()
+
+        // 1. Living Acrylic UI Canvas
+        AdaptiveAtmosphericCanvas(theme = theme)
+
+        // 2. Dynamic Poster Monet Cinema Glow Layer
+        val auraPrimary = monetColor ?: (if (isLight) MaterialTheme.colorScheme.primary else LavenderAccent)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(340.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            auraPrimary.copy(alpha = if (isLight) 0.16f else 0.26f),
+                            auraPrimary.copy(alpha = if (isLight) 0.05f else 0.08f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
 
 
         LazyColumn(
@@ -178,6 +219,7 @@ fun TvShowDetailsPage(
                     totalWatched = totalWatchedInSeries,
                     onlineShow = onlineShow,
                     isTablet = isTablet,
+                    monetColor = monetColor,
                     onPlayNext = {
                         val epToPlay = nextUnwatched ?: currentSeasonEpisodes.firstOrNull()
                         if (epToPlay != null) {
@@ -484,6 +526,7 @@ private fun ShowHeroCard(
     totalWatched: Int,
     onlineShow: OnlineMediaMetadata?,
     isTablet: Boolean,
+    monetColor: Color? = null,
     onPlayNext: () -> Unit,
     onMarkSeasonWatched: () -> Unit
 ) {
@@ -514,6 +557,9 @@ private fun ShowHeroCard(
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isLight = surfaceColor.luminance() > 0.5f
     val theme = if (isLight) "Light" else "Dark"
+
+    val ctaContainerColor = monetColor ?: (if (isLight) MaterialTheme.colorScheme.primary else LavenderAccent)
+    val ctaContentColor = if (ctaContainerColor.luminance() > 0.5f) Obsidian else Color.White
 
     Surface(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
@@ -700,11 +746,11 @@ private fun ShowHeroCard(
                             modifier = Modifier.height(46.dp),
                             shape = CircleShape,
                             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            colors = ButtonDefaults.buttonColors(containerColor = ctaContainerColor, contentColor = ctaContentColor)
                         ) {
-                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
+                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp), tint = ctaContentColor)
                             Spacer(Modifier.width(6.dp))
-                            Text(buttonText, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(buttonText, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = ctaContentColor)
                         }
 
                         OutlinedButton(
@@ -726,11 +772,11 @@ private fun ShowHeroCard(
                             onClick = onPlayNext,
                             modifier = Modifier.fillMaxWidth().height(46.dp),
                             shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            colors = ButtonDefaults.buttonColors(containerColor = ctaContainerColor, contentColor = ctaContentColor)
                         ) {
-                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp))
+                            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp), tint = ctaContentColor)
                             Spacer(Modifier.width(8.dp))
-                            Text(buttonText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text(buttonText, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = ctaContentColor)
                         }
 
                         OutlinedButton(

@@ -182,6 +182,19 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
     val totalSec = (effectiveDuration / 1000).coerceAtLeast(0)
     val showAnyHud = playback.showPlayerClock || playback.showBatteryPercentage || playback.showRemainingTime
     var showDisplayDuringPlaybackDialog by remember(video.identity) { mutableStateOf(false) }
+    var playerOrientationMode by remember(video.identity) {
+        val isLandscape = activity.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        mutableIntStateOf(if (isLandscape) 0 else 1)
+    }
+    val orientationAngle by animateFloatAsState(
+        targetValue = when (playerOrientationMode) {
+            0 -> 90f
+            1 -> 0f
+            else -> 180f
+        },
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = 400f),
+        label = "orientationRotationAnim"
+    )
 
     var showDiagnosticsCapsule by remember(video.identity) { mutableStateOf(false) }
     var seekGestureDeltaText by remember(video.identity) { mutableStateOf<String?>(null) }
@@ -928,6 +941,40 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 FrostedCircleButton(
+                                    label = "Rotate screen orientation",
+                                    onClick = {
+                                        playerOrientationMode = (playerOrientationMode + 1) % 3
+                                        when (playerOrientationMode) {
+                                            0 -> {
+                                                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                                message = "Orientation: Landscape Locked"
+                                            }
+                                            1 -> {
+                                                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                                                message = "Orientation: Portrait Locked"
+                                            }
+                                            2 -> {
+                                                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+                                                message = "Orientation: Auto Sensor"
+                                            }
+                                        }
+                                        interaction++
+                                    },
+                                    size = 42.dp,
+                                    bgColor = if (playerOrientationMode != 2) LavenderAccent.copy(alpha = 0.16f) else dynamicFrostedCircleBg,
+                                    rimColor = if (playerOrientationMode != 2) LavenderAccent.copy(alpha = 0.45f) else dynamicFrostedCircleRim
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.ScreenRotation,
+                                        contentDescription = "Screen orientation",
+                                        tint = if (playerOrientationMode != 2) LavenderAccent else playerContentColor,
+                                        modifier = Modifier
+                                            .size(19.dp)
+                                            .graphicsLayer(rotationZ = orientationAngle)
+                                    )
+                                }
+
+                                FrostedCircleButton(
                                     label = "Picture in Picture",
                                     onClick = {
                                         controls = false
@@ -1028,31 +1075,33 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                 }
                             }
 
-                            // Style C Minimalist Outline Play/Pause Centerpiece (48dp)
-                            Box(
+                            // Style C Minimalist Outline Play/Pause Centerpiece (50dp, Circular Ripple & Clipped Outline)
+                            Surface(
+                                onClick = { playback.toggle(); interaction++ },
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.14f),
+                                border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.50f)),
                                 modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .border(1.5.dp, Color.White.copy(alpha = 0.50f), CircleShape)
-                                    .background(Color.White.copy(alpha = 0.14f), CircleShape)
-                                    .clickable { playback.toggle(); interaction++ }
-                                    .touchMotion(),
-                                contentAlignment = Alignment.Center
+                                    .size(50.dp)
+                                    .touchMotion()
+                                    .semantics { contentDescription = if (playback.playRequested) "Pause" else "Play" }
                             ) {
-                                AnimatedContent(
-                                    targetState = playback.playRequested,
-                                    transitionSpec = {
-                                        (fadeIn(tween(140)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
-                                            .togetherWith(fadeOut(tween(110)) + scaleOut(targetScale = 0.72f))
-                                    },
-                                    label = "playPauseIcon"
-                                ) { isPlaying ->
-                                    Icon(
-                                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                        contentDescription = if (isPlaying) "Pause" else "Play",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(26.dp)
-                                    )
+                                Box(contentAlignment = Alignment.Center) {
+                                    AnimatedContent(
+                                        targetState = playback.playRequested,
+                                        transitionSpec = {
+                                            (fadeIn(tween(140)) + scaleIn(spring(dampingRatio = 0.65f, stiffness = 500f), initialScale = 0.72f))
+                                                .togetherWith(fadeOut(tween(110)) + scaleOut(targetScale = 0.72f))
+                                        },
+                                        label = "playPauseIcon"
+                                    ) { isPlaying ->
+                                        Icon(
+                                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                            contentDescription = if (isPlaying) "Pause" else "Play",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(26.dp)
+                                        )
+                                    }
                                 }
                             }
 

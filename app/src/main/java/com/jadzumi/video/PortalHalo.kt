@@ -94,53 +94,99 @@ fun AdaptiveAtmosphericCanvas(
             }
             "Light" -> {
                 // Architectural paper base
-                drawRect(color = Color(0xFFF8F7FC))
+                drawRect(color = Color(0xFFF6F5FA))
+                // Multi-mesh radial atmospheric aura (Acrylic UI light mesh)
+                // Soft Lilac / Violet aura (top-left)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFD8B4FE).copy(alpha = 0.28f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.10f, size.height * 0.12f),
+                        radius = size.width * 0.70f
+                    )
+                )
+                // Sky Glacier Cyan aura (top-right)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFBAE6FD).copy(alpha = 0.32f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.90f, size.height * 0.18f),
+                        radius = size.width * 0.75f
+                    )
+                )
+                // Gentle Warm Peach / Champagne aura (bottom-center)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFFED7AA).copy(alpha = 0.22f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.50f, size.height * 0.85f),
+                        radius = size.width * 0.80f
+                    )
+                )
                 // Subtle top elevation vignette
                 drawRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFFEDEBF5).copy(alpha = 0.5f),
-                            Color(0xFFF8F7FC).copy(alpha = 0f)
-                        ),
-                        startY = 0f,
-                        endY = size.height * 0.35f
-                    )
-                )
-                // Soft corner vignette for depth
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFFE4E1EF).copy(alpha = 0.3f),
+                            Color(0xFFEDEBF5).copy(alpha = 0.35f),
                             Color.Transparent
                         ),
-                        center = Offset(size.width * 0.95f, size.height * 0.05f),
-                        radius = size.width * 0.55f
+                        startY = 0f,
+                        endY = size.height * 0.25f
                     )
                 )
             }
             else -> { // Dark
                 // Deep obsidian base
                 drawRect(color = Color(0xFF0E0C15))
+                // Multi-mesh radial atmospheric aura (Acrylic UI dark mesh)
+                // Muted Iris aura (top-left)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF7E57C2).copy(alpha = 0.18f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.12f, size.height * 0.15f),
+                        radius = size.width * 0.70f
+                    )
+                )
+                // Oceanic Cyan aura (top-right)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF38BDF8).copy(alpha = 0.12f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.88f, size.height * 0.22f),
+                        radius = size.width * 0.75f
+                    )
+                )
+                // Deep Amber micro-glow (bottom-center)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFEAB308).copy(alpha = 0.08f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.50f, size.height * 0.85f),
+                        radius = size.width * 0.80f
+                    )
+                )
                 // Subtle depth falloff from top
                 drawRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF181524),
-                            Color(0xFF0E0C15)
-                        ),
-                        startY = 0f,
-                        endY = size.height * 0.45f
-                    )
-                )
-                // Gentle horizon micro-ambient
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF261F38).copy(alpha = 0.35f),
+                            Color(0xFF181524).copy(alpha = 0.6f),
                             Color.Transparent
                         ),
-                        center = Offset(size.width * 0.5f, 0f),
-                        radius = size.width * 0.75f
+                        startY = 0f,
+                        endY = size.height * 0.35f
                     )
                 )
             }

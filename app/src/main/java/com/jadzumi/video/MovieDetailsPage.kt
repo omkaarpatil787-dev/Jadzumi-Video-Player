@@ -1,6 +1,7 @@
 package com.jadzumi.video
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.text.format.Formatter
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -33,6 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -96,22 +99,47 @@ fun MovieDetailsPage(
     val isLight = surfaceColor.luminance() > 0.5f
     val theme = if (isLight) "Light" else "Dark"
 
-    BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    val posterUri = effectiveMetadata.posterUri ?: effectiveMetadata.backdropUri
+    val cachedBitmap = remember(posterUri) { posterUri?.let { SidecarMemory.cache.get(it) } }
+    var posterBitmap by remember(posterUri) { mutableStateOf(cachedBitmap) }
+
+    LaunchedEffect(posterUri) {
+        if (posterBitmap == null && posterUri != null) {
+            val bmp = withContext(Dispatchers.IO) {
+                SidecarMemory.cache.get(posterUri) ?: decodeSampledBitmap(context, posterUri)?.also {
+                    SidecarMemory.cache.put(posterUri, it)
+                }
+            }
+            posterBitmap = bmp
+        }
+    }
+
+    val monetColor = remember(posterUri, posterBitmap) {
+        PosterMonetExtractor.getColor(posterUri, posterBitmap)
+    }
+    val ctaContainerColor = monetColor ?: (if (isLight) MaterialTheme.colorScheme.primary else LavenderAccent)
+    val ctaContentColor = if (ctaContainerColor.luminance() > 0.5f) Obsidian else Color.White
+
+    BoxWithConstraints(Modifier.fillMaxSize()) {
         val isTablet = maxWidth >= 840.dp
         val horizontalPad = if (isTablet) 28.dp else 16.dp
         val topPad = if (isTablet) 20.dp else 12.dp
         val scrollState = rememberLazyListState()
 
-        // Ambient Horizon / Cinema Glow Layer
+        // 1. Living Acrylic UI Canvas (matches app-wide living mesh)
+        AdaptiveAtmosphericCanvas(theme = theme)
+
+        // 2. Dynamic Poster Monet Cinema Glow Layer (Tinted from film artwork)
+        val auraPrimary = monetColor ?: (if (isLight) MaterialTheme.colorScheme.primary else LavenderAccent)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
+                .height(340.dp)
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            LavenderAccent.copy(alpha = if (isLight) 0.12f else 0.18f),
-                            MoonlitSurface.copy(alpha = 0.05f),
+                            auraPrimary.copy(alpha = if (isLight) 0.16f else 0.26f),
+                            auraPrimary.copy(alpha = if (isLight) 0.05f else 0.08f),
                             Color.Transparent
                         )
                     )
@@ -304,15 +332,15 @@ fun MovieDetailsPage(
                                         modifier = Modifier.height(46.dp),
                                         shape = CircleShape,
                                         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = LavenderAccent, contentColor = Obsidian)
+                                        colors = ButtonDefaults.buttonColors(containerColor = ctaContainerColor, contentColor = ctaContentColor)
                                     ) {
-                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp), tint = Obsidian)
+                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp), tint = ctaContentColor)
                                         Spacer(Modifier.width(6.dp))
                                         Text(
                                             if (inProgress) "Resume from ${timecode(savedPos / 1000)}" else "Play Movie",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 13.sp,
-                                            color = Obsidian
+                                            color = ctaContentColor
                                         )
                                     }
 
@@ -368,15 +396,15 @@ fun MovieDetailsPage(
                                         },
                                         modifier = Modifier.fillMaxWidth().height(46.dp),
                                         shape = CircleShape,
-                                        colors = ButtonDefaults.buttonColors(containerColor = LavenderAccent, contentColor = Obsidian)
+                                        colors = ButtonDefaults.buttonColors(containerColor = ctaContainerColor, contentColor = ctaContentColor)
                                     ) {
-                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp), tint = Obsidian)
+                                        Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp), tint = ctaContentColor)
                                         Spacer(Modifier.width(8.dp))
                                         Text(
                                             if (inProgress) "Resume from ${timecode(savedPos / 1000)}" else "Play Movie",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 14.sp,
-                                            color = Obsidian
+                                            color = ctaContentColor
                                         )
                                     }
 

@@ -1,3 +1,28 @@
+# Jadzumi v3.3.7 — Living Light Acrylic Canvas, Dynamic Poster Monet & Precision HUD Alignment
+
+A visual atmosphere and ergonomics release delivering the Living Light Acrylic Canvas architecture, system-wide Material Expressive frosted glass surfaces, dynamic film poster Monet color extraction, upper-right screen orientation rotation in the player HUD, and duplicate control cleanup.
+
+### 1. Living Light Acrylic Canvas Architecture
+- **Multi-Mesh Iridescent Canvas**: Replaced flat, stark white paper backgrounds with a living multi-mesh optical canvas composed of soft Lilac (`#D8B4FE` at 28%), Glacier Sky Cyan (`#BAE6FD` at 32%), and Warm Peach (`#FED7AA` at 22%) on an architectural base (`#F6F5FA`).
+- **Dark & AMOLED Parity**: Refined the Dark theme multi-mesh with Muted Iris and Oceanic Cyan ambient gradients, while AMOLED remains pitch-black (`#000000`) for infinite contrast.
+- **Material Expressive Frosted Milk Glass**: Updated cards, segmented navigation capsules, and category chips to translucent milk glass (`0xF0FFFFFF` and `0xE0FFFFFF`) with hairline specular contours (`0x286750A4`) floating with zero elevation drop shadows.
+
+### 2. Dynamic Poster Monet Palette Adaptation
+- **Deterministic 144-Point Chroma Sampler**: Implemented zero-dependency poster color extraction with saturation scoring and luminosity bounding, filtering out near-blacks and washed-out highlights.
+- **Cinema Details Aura**: Movie details and TV show hero banners project an ambient aura matching the film's artwork (e.g. Solar Amber for Dune: Part Two, Gothic Cyan for Corpse Bride, Emerald for Beware Boiuna).
+- **Adaptive Primary CTA**: Primary Play and Resume buttons automatically inherit the poster's dominant chroma with high-contrast text typography.
+
+### 3. Screen Orientation Rotation & Player HUD Alignment
+- **HUD Orientation Control**: Added a dedicated 42dp frosted circular button on the upper-right utility row of the player HUD, cycling between Landscape Locked, Portrait Locked, and Sensor Auto with spring-animated rotation.
+- **Control Deduplication**: Removed redundant Picture-in-Picture and 3-dots Quick Menu buttons from the bottom deck, ensuring clean alignment across the four 42dp frosted circular controls at the top right.
+- **Circular Play Button Interaction**: Fixed the squarish gray box bounding artifact during center play button clicks by using a bounded Surface container and radial circular touch bursts.
+
+### 4. Uncongested Mobile Phone Top Deck
+- **Fluid Collapsible Search**: Standardized an uncongested two-row mobile header with a segmented Home/Settings capsule on the left, compact 38dp circular actions on the right, and thumb-friendly horizontal category chips on row two.
+- **Full-Width Expansion**: Search input smoothly expands full-width across row one upon tap, with clear and close microinteractions.
+
+---
+
 # Jadzumi v3.3.6 — HUD Alignment, Collapsible Search Bar & Material Expressive Spec Sheet
 
 A precision UX refinement release delivering symmetric 42dp player HUD controls, a fluid collapsible search bar resolving library header congestion, and the complete Material Expressive 2.0 Media Inspector spec sheet.

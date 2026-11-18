@@ -164,12 +164,15 @@ internal fun Modifier.touchMotion(): Modifier = composed {
     }.drawWithContent {
         drawContent()
         if (style.light && pressed) {
-            drawRect(
-                Brush.radialGradient(
+            val radius = (size.maxDimension / 2f).coerceAtLeast(1f)
+            drawCircle(
+                brush = Brush.radialGradient(
                     listOf(tint.copy(alpha = 0.12f), tint.copy(alpha = 0f)),
                     center = origin,
-                    radius = size.maxDimension.coerceAtLeast(1f)
-                )
+                    radius = radius
+                ),
+                radius = radius,
+                center = origin
             )
         }
     }
