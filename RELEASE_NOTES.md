@@ -1,3 +1,27 @@
+# Jadzumi v3.3.4 — Pure Borderless Action Pill, In-Player Telemetry Control, Flat Quick Menu & Dynamic OTA
+
+A refinement release delivering the strict borderless Variation 3B action pill with luminescent accents, direct in-player telemetry HUD controls, a flat 0dp elevation quick menu drawer, and real-time dynamic OTA changelog parsing.
+
+### 1. Pure Borderless Variation 3B Action Pill
+- **Zero Inner Containers**: Removed all inner background boxes and individual button borders inside the upper-right capsule.
+- **Luminescent Accents**: Borderless pure typography and vector icons floating directly on glass with active lavender glow (`#D0BCFF`).
+- **Hairline Dividers**: Slim 15dp vertical hairline dividers (`0.75dp` stroke) providing clean separation.
+
+### 2. In-Player Telemetry HUD Controls
+- **Direct Quick Menu Integration**: Added a dedicated "Display during playback" row into the player's quick menu drawer.
+- **Live Live Opacity & Indicator Tuning**: Adjust HUD opacity (20%-100%) and toggle Remaining Time, Clock, and Battery directly from within the video player without exiting to settings.
+
+### 3. Pure Flat Quick Menu Drawer
+- **Flat Living Elevation**: Standardized the quick menu drawer to 0dp elevation and 0.75dp hairline borders across all categories and sub-menus.
+
+### 4. Dynamic Real-Time OTA Changelog
+- **Live GitHub Release Parsing**: Replaced static release cards with a real-time Markdown parser that extracts key changes directly from GitHub release notes into clean, categorized bullet tags.
+
+### 5. Concept A Laser Trace Splash Screen
+- **App Logo Fusion**: Integrated the official Jadzumi Adaptive Glass Playhead Icon with the Concept A dynamic vector laser stroke trace and breathing ambient aura.
+
+---
+
 # Jadzumi v3.3.3 — Luminescent Morphing Pill, Telemetry Opacity & PiP Desync Fix
 
 A major player ergonomics, visual elegance, and system stability release introducing the Variation 3B Luminescent Action Pill with dynamic downward in-pill menu morphing, telemetry HUD adjustable opacity slider, and robust Android Picture-in-Picture window-manager desync resolution.

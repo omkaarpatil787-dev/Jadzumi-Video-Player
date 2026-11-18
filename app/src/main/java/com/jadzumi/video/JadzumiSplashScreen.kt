@@ -102,7 +102,8 @@ fun JadzumiAdaptiveSplashIcon(
     modifier: Modifier = Modifier,
     rearProgress: Float = 1f,
     frontProgress: Float = 1f,
-    sheenProgress: Float = 0f
+    sheenProgress: Float = 0f,
+    laserProgress: Float = 1f
 ) {
     Canvas(modifier = modifier) {
         val w = size.width
@@ -146,12 +147,27 @@ fun JadzumiAdaptiveSplashIcon(
             )
         )
 
-        // Squircle Stroke
-        drawPath(
-            path = clipSquircle,
-            color = Color.White,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f * sx)
-        )
+        // Squircle Stroke & Concept A Laser Trace
+        if (laserProgress < 1f) {
+            val laserColor = Color(0xFFD0BCFF)
+            drawPath(
+                path = clipSquircle,
+                color = laserColor.copy(alpha = 0.5f),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                    width = 4f * sx,
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                        floatArrayOf(960f * sx * laserProgress, 960f * sx),
+                        0f
+                    )
+                )
+            )
+        } else {
+            drawPath(
+                path = clipSquircle,
+                color = Color.White,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f * sx)
+            )
+        }
 
         // Rear Wing Enter Animation interpolation:
         // 0% -> (28px, 8px, rot 8deg) | 65% -> (-5px, -2px, rot -2deg) | 100% -> (0, 0, rot 0)
@@ -420,6 +436,9 @@ fun JadzumiSplashScreen(
         // sheen: 280ms to 1630ms (1350ms duration)
         val sheenProgress = ((t - 280f) / 1350f).coerceIn(0f, 1f)
 
+    // Laser Trace Progress (Concept A: 0 to 1100ms)
+    val laserProgress = (t / 1100f).coerceIn(0f, 1f)
+
         // title fadeRise: 400ms to 1200ms (800ms)
         val titleP = ((t - 400f) / 800f).coerceIn(0f, 1f)
         val titleAlpha = titleP
@@ -470,7 +489,8 @@ fun JadzumiSplashScreen(
                     modifier = Modifier.size(iconSize),
                     rearProgress = rearProgress,
                     frontProgress = frontProgress,
-                    sheenProgress = sheenProgress
+                    sheenProgress = sheenProgress,
+                    laserProgress = laserProgress
                 )
 
                 // Title Typography

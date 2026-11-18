@@ -1,4 +1,4 @@
-﻿package com.jadzumi.video
+package com.jadzumi.video
 
 import android.content.Intent
 import android.net.Uri
@@ -258,40 +258,66 @@ import androidx.lifecycle.compose.LifecycleEventEffect
                         // Headline
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                text = if (updater.downloaded) "Verification Passed: Ready to Apply" else "Next-Generation Playback Engine",
+                                text = if (updater.downloaded) "Verification Passed: Ready to Apply" else "What's New in v${release.tag}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Pinch-to-zoom, frame-by-frame pause stepping, and zero-buffering binge preloading.",
+                                text = "Live update details fetched from release notes.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        // Categorized Feature Cards
+                        // Categorized Feature Cards (Parsed dynamically from release notes when available)
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(max = 190.dp)
+                                .heightIn(max = 210.dp)
                                 .verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val featureCards = listOf(
-                                Triple("GESTURES", "Continuous Pinch-to-Zoom & Pan", "Fluid 1.0x to 5.0x two-finger scaling with smooth 2D canvas pan clamping."),
-                                Triple("HUD 3", "Cinephile Command Deck", "Style C Ghost Seeking, live stream telemetry, decoder badge, and split timeline capsules."),
-                                Triple("STEP", "Frame-by-Frame Stepping", "Precision pause stepping forward and backward via exact seek parameters."),
-                                Triple("SMART BINGE", "Zero-Latency Pre-Buffering", "Proactively prepares the queued episode stream to eliminate transition pauses."),
-                                Triple("NETWORK", "OkHttp Engine & Connection Pooling", "Full HTTP/2 multiplexing for resilient local NAS and remote streaming.")
-                            )
+                            val releaseNotes = release.notes.trim()
+                            val parsedCards = remember(releaseNotes) {
+                                val list = mutableListOf<Triple<String, String, String>>()
+                                val lines = releaseNotes.lines()
+                                for (line in lines) {
+                                    val trimmed = line.trim()
+                                    if (trimmed.startsWith("- **") || trimmed.startsWith("* **")) {
+                                        val content = trimmed.removePrefix("- **").removePrefix("* **")
+                                        val colonIdx = content.indexOf(")**:")
+                                        if (colonIdx != -1) {
+                                            val tagAndTitle = content.substring(0, colonIdx)
+                                            val desc = content.substring(colonIdx + 4).trim()
+                                            val tag = tagAndTitle.substringBefore("(").substringBefore(":").trim().take(10).uppercase()
+                                            val title = tagAndTitle.trim()
+                                            list.add(Triple(tag, title, desc))
+                                        } else {
+                                            val boldEnd = content.indexOf("**:")
+                                            if (boldEnd != -1) {
+                                                val title = content.substring(0, boldEnd).trim()
+                                                val desc = content.substring(boldEnd + 3).trim()
+                                                val tag = title.take(8).uppercase()
+                                                list.add(Triple(tag, title, desc))
+                                            }
+                                        }
+                                    }
+                                }
+                                if (list.isNotEmpty()) list.take(6) else listOf(
+                                    Triple("HUD", "Variation 3B Action Pill", "Sleek borderless luminescent lavender typography with living motion downward track menu."),
+                                    Triple("TELEMETRY", "Display During Playback", "Configurable 20%-100% opacity slider with essential status indicators."),
+                                    Triple("PIP", "Window Desync Safeguard", "Resolved PiP collapse bug on video reopen and switch."),
+                                    Triple("FLAT", "0dp Elevation Quick Menu", "Unified hairline 0.75dp contours across player controls.")
+                                )
+                            }
 
-                            featureCards.forEach { (tag, title, desc) ->
+                            parsedCards.forEach { (tag, title, desc) ->
                                 Surface(
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(14.dp),
+                                    shape = RoundedCornerShape(12.dp),
                                     color = cardBackground,
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                                    border = BorderStroke(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f))
                                 ) {
                                     Column(
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),

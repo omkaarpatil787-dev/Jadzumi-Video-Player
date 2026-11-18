@@ -181,6 +181,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
     val seekDeltaMs = playback.seekIncrementSeconds * 1000L
     val totalSec = (effectiveDuration / 1000).coerceAtLeast(0)
     val showAnyHud = playback.showPlayerClock || playback.showBatteryPercentage || playback.showRemainingTime
+    var showDisplayDuringPlaybackDialog by remember(video.identity) { mutableStateOf(false) }
 
     var showDiagnosticsCapsule by remember(video.identity) { mutableStateOf(false) }
     var seekGestureDeltaText by remember(video.identity) { mutableStateOf<String?>(null) }
@@ -909,7 +910,7 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                 }
                             }
 
-                            // Top-Right: Symmetrical Dynamic Action Capsule (Morphs smoothly into track selector)
+                            // Top-Right: Symmetrical Dynamic Action Capsule (Variation 3B: Pure Borderless Text & Luminescent Accents)
                             val isExpandedTrackMenu = quickMenuSection == "audio" || quickMenuSection == "subs"
                             val pillCornerRadius by animateDpAsState(
                                 targetValue = if (isExpandedTrackMenu) 20.dp else 999.dp,
@@ -928,29 +929,32 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                             ) {
                                 Column(
                                     modifier = Modifier.padding(
-                                        horizontal = if (isExpandedTrackMenu) 10.dp else 5.dp,
-                                        vertical = if (isExpandedTrackMenu) 10.dp else 3.dp
+                                        horizontal = if (isExpandedTrackMenu) 10.dp else 6.dp,
+                                        vertical = if (isExpandedTrackMenu) 10.dp else 4.dp
                                     ),
                                     horizontalAlignment = Alignment.End
                                 ) {
                                     Row(
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(2.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         val audioTrack = playback.audioTracks.firstOrNull { it.isSelected }
                                         val audioText = formatCompactAudioPill(audioTrack)
                                         val isAudioActive = quickMenuSection == "audio"
-                                        SpatialTactilePill(
-                                            onClick = { quickMenuSection = if (isAudioActive) null else "audio"; interaction++ },
-                                            isActive = false,
-                                            isOled = isAmoled,
-                                            modifier = Modifier.height(32.dp),
-                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
+
+                                        // Audio Pill Button: Pure borderless text & icon
+                                        Row(
+                                            modifier = Modifier
+                                                .height(32.dp)
+                                                .clip(RoundedCornerShape(999.dp))
+                                                .clickable { quickMenuSection = if (isAudioActive) null else "audio"; interaction++ }
+                                                .padding(horizontal = 9.dp),
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Icon(
                                                 Icons.Rounded.GraphicEq,
                                                 null,
-                                                Modifier.size(13.dp),
+                                                Modifier.size(13.5.dp),
                                                 tint = if (isAudioActive) Color(0xFFD0BCFF) else TimelineAccent
                                             )
                                             Spacer(Modifier.width(4.dp))
@@ -967,17 +971,20 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                         val subTrack = playback.subtitleTracks.firstOrNull { it.isSelected }
                                         val subText = formatCompactSubtitlePill(subTrack)
                                         val isSubsActive = quickMenuSection == "subs"
-                                        SpatialTactilePill(
-                                            onClick = { quickMenuSection = if (isSubsActive) null else "subs"; interaction++ },
-                                            isActive = false,
-                                            isOled = isAmoled,
-                                            modifier = Modifier.height(32.dp),
-                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
+
+                                        // Subtitles Pill Button: Pure borderless text & icon
+                                        Row(
+                                            modifier = Modifier
+                                                .height(32.dp)
+                                                .clip(RoundedCornerShape(999.dp))
+                                                .clickable { quickMenuSection = if (isSubsActive) null else "subs"; interaction++ }
+                                                .padding(horizontal = 9.dp),
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Icon(
                                                 Icons.Rounded.ClosedCaption,
                                                 null,
-                                                Modifier.size(13.dp),
+                                                Modifier.size(13.5.dp),
                                                 tint = if (isSubsActive || subTrack != null) Color(0xFFD0BCFF) else playerContentColor
                                             )
                                             Spacer(Modifier.width(4.dp))
@@ -991,21 +998,33 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                             )
                                         }
 
-                                        SpatialTactilePill(
-                                            onClick = {
-                                                val next = when (playback.speed) {
-                                                    1.0f -> 1.25f
-                                                    1.25f -> 1.5f
-                                                    2.0f -> 1.0f
-                                                    else -> 1.0f
+                                        // Hairline Vertical Divider
+                                        Box(
+                                            modifier = Modifier
+                                                .padding(horizontal = 3.dp)
+                                                .width(0.75.dp)
+                                                .height(15.dp)
+                                                .background(Color.White.copy(alpha = 0.16f))
+                                        )
+
+                                        // Playback Speed: Pure borderless
+                                        Box(
+                                            modifier = Modifier
+                                                .height(32.dp)
+                                                .clip(RoundedCornerShape(999.dp))
+                                                .clickable {
+                                                    val next = when (playback.speed) {
+                                                        1.0f -> 1.25f
+                                                        1.25f -> 1.5f
+                                                        2.0f -> 1.0f
+                                                        else -> 1.0f
+                                                    }
+                                                    playback.changeSpeed(next)
+                                                    message = "${next}x Speed"
+                                                    interaction++
                                                 }
-                                                playback.changeSpeed(next)
-                                                message = "${next}x Speed"
-                                                interaction++
-                                            },
-                                            isOled = isAmoled,
-                                            modifier = Modifier.height(32.dp),
-                                            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp)
+                                                .padding(horizontal = 8.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
                                             Text(
                                                 "${playback.speed}x",
@@ -1018,22 +1037,25 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                         }
 
                                         val isZoomMode = playback.aspectMode == AspectRatioMode.ZOOM
-                                        SpatialTactilePill(
-                                            onClick = {
-                                                val next = if (isZoomMode) AspectRatioMode.FIT else AspectRatioMode.ZOOM
-                                                playback.setAspectRatioMode(next)
-                                                message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
-                                                interaction++
-                                            },
-                                            isActive = false,
-                                            isOled = isAmoled,
-                                            modifier = Modifier.height(32.dp),
-                                            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp)
+
+                                        // Aspect Ratio: Pure borderless
+                                        Row(
+                                            modifier = Modifier
+                                                .height(32.dp)
+                                                .clip(RoundedCornerShape(999.dp))
+                                                .clickable {
+                                                    val next = if (isZoomMode) AspectRatioMode.FIT else AspectRatioMode.ZOOM
+                                                    playback.setAspectRatioMode(next)
+                                                    message = if (next == AspectRatioMode.ZOOM) "Crop / Fill (Zoom)" else "Fit (Original)"
+                                                    interaction++
+                                                }
+                                                .padding(horizontal = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Icon(
                                                 Icons.Rounded.AspectRatio,
                                                 null,
-                                                Modifier.size(13.dp),
+                                                Modifier.size(13.5.dp),
                                                 tint = if (isZoomMode) Color(0xFFD0BCFF) else playerContentColor
                                             )
                                             Spacer(Modifier.width(4.dp))
@@ -1050,40 +1072,50 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                         // Hairline Vertical Divider
                                         Box(
                                             modifier = Modifier
+                                                .padding(horizontal = 3.dp)
                                                 .width(0.75.dp)
-                                                .height(16.dp)
+                                                .height(15.dp)
                                                 .background(Color.White.copy(alpha = 0.16f))
                                         )
 
-                                        // Symmetrical 32dp Circular Utility Icons
-                                        SpatialTactilePill(
-                                            onClick = {
-                                                controls = false
-                                                activity.enterCinemaPip()
-                                                interaction++
-                                            },
-                                            isOled = isAmoled,
-                                            modifier = Modifier.size(32.dp),
-                                            contentPadding = PaddingValues(0.dp)
+                                        // PiP Circular Icon
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .clickable {
+                                                    controls = false
+                                                    activity.enterCinemaPip()
+                                                    interaction++
+                                                },
+                                            contentAlignment = Alignment.Center
                                         ) {
                                             Icon(Icons.Rounded.PictureInPictureAlt, "PiP", tint = playerContentColor, modifier = Modifier.size(15.dp))
                                         }
 
-                                        SpatialTactilePill(
-                                            onClick = { quickMenuSection = if (quickMenuSection == "main") null else "main"; interaction++ },
-                                            isActive = false,
-                                            isOled = isAmoled,
-                                            modifier = Modifier.size(32.dp),
-                                            contentPadding = PaddingValues(0.dp)
+                                        // More Vert Circular Icon
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .clickable { quickMenuSection = if (quickMenuSection == "main") null else "main"; interaction++ },
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(Icons.Rounded.MoreVert, "More", tint = if (quickMenuSection == "main") Color(0xFFD0BCFF) else playerContentColor, modifier = Modifier.size(15.dp))
+                                            Icon(
+                                                Icons.Rounded.MoreVert,
+                                                "More",
+                                                tint = if (quickMenuSection == "main") Color(0xFFD0BCFF) else playerContentColor,
+                                                modifier = Modifier.size(15.dp)
+                                            )
                                         }
 
-                                        SpatialTactilePill(
-                                            onClick = { playback.locked = true; interaction++ },
-                                            isOled = isAmoled,
-                                            modifier = Modifier.size(32.dp),
-                                            contentPadding = PaddingValues(0.dp)
+                                        // Lock Circular Icon
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .clickable { playback.locked = true; interaction++ },
+                                            contentAlignment = Alignment.Center
                                         ) {
                                             Icon(Icons.Rounded.Lock, "Lock", tint = playerContentColor, modifier = Modifier.size(14.dp))
                                         }
@@ -1547,6 +1579,9 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
                                 if (section == "diagnostics") {
                                     showDiagnosticsCapsule = true
                                     quickMenuSection = null
+                                } else if (section == "display_playback") {
+                                    showDisplayDuringPlaybackDialog = true
+                                    quickMenuSection = null
                                 } else {
                                     toolsSection = section
                                     quickMenuSection = null
@@ -1653,6 +1688,13 @@ private fun formatCompactSubtitlePill(track: SubtitleTrackInfo?): String {
             BingeSettingsDialog(
                 seriesName = BingeManager.resolveSeriesKey(video.name),
                 onDismiss = { showBingeDialog = false }
+            )
+        }
+
+        if (showDisplayDuringPlaybackDialog) {
+            DisplayDuringPlaybackDialog(
+                playback = playback,
+                onDismiss = { showDisplayDuringPlaybackDialog = false }
             )
         }
     }
@@ -1904,9 +1946,9 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                         .clickable(enabled = false) {}
                 },
                 color = palette.bg,
-                border = SpatialGlass.pillBorder(1.dp),
-                shape = if (isPhonePortrait && !isFloatingBottom) RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp) else RoundedCornerShape(24.dp),
-                shadowElevation = 24.dp
+                border = SpatialGlass.pillBorder(0.75.dp),
+                shape = if (isPhonePortrait && !isFloatingBottom) RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp) else RoundedCornerShape(20.dp),
+                shadowElevation = 0.dp
             ) {
                 Column {
                     if (isPhonePortrait) {
@@ -1942,6 +1984,14 @@ private val LocalQuickMenuPalette = staticCompositionLocalOf {
                             label = "Minimalist HUD",
                             value = if (isMinimalHud) "On" else "Off",
                             onClick = onToggleMinimalHud
+                        )
+                        QuickMenuRow(
+                            icon = Icons.Rounded.Visibility,
+                            label = "Display during playback",
+                            value = "${(playback.displayDuringPlaybackOpacity * 100).toInt()}% · ${playback.displayDuringPlaybackSummary}",
+                            onClick = {
+                                onOpenTools("display_playback")
+                            }
                         )
                         QuickMenuRow(Icons.Rounded.Bedtime, "Sleep controls", if (playback.sleepPlan != null) "Active" else "Off", { onOpenTools("sleep") })
                         QuickMenuRow(Icons.Rounded.PlaylistPlay, "Episode continuity", "", { onOpenTools("continuity") })
