@@ -1137,7 +1137,7 @@ internal object SidecarMemory {
     val permits = Semaphore(3)
 }
 
-internal fun decodeSampledBitmap(context: android.content.Context, uriString: String, reqWidth: Int = 800, reqHeight: Int = 1200): Bitmap? {
+internal fun decodeSampledBitmap(context: android.content.Context, uriString: String, reqWidth: Int = 480, reqHeight: Int = 720): Bitmap? {
     return try {
         val resolvedPathOrUri: String = if (uriString.startsWith("http://") || uriString.startsWith("https://")) {
             val key = uriString.hashCode().toString()

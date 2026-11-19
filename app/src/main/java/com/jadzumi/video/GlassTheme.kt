@@ -32,6 +32,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -621,58 +622,59 @@ fun liquidCardBrush(theme: String, glassIntensity: Float): Brush = GlassTheme.em
 /**
  * Scroll blend fade modifier:
  * Applies a smooth vertical fading edge on top and bottom of scrollable containers.
- * Top edge fades when content is scrolled down; bottom edge fades when more content remains below.
+ * Optimized for zero-copy Direct Hardware Composer rendering without offscreen GPU buffer allocations.
  */
 @Composable
 fun Modifier.animatedScrollBlendFade(
     listState: LazyListState,
-    topFadeHeight: Dp = 32.dp,
-    bottomFadeHeight: Dp = 56.dp
+    topFadeHeight: Dp = 24.dp,
+    bottomFadeHeight: Dp = 36.dp
 ): Modifier {
+    val canScrollBack by remember(listState) { derivedStateOf { listState.canScrollBackward } }
+    val canScrollFwd by remember(listState) { derivedStateOf { listState.canScrollForward } }
+
     val animatedTopPx by animateDpAsState(
-        targetValue = if (listState.canScrollBackward) topFadeHeight else 0.dp,
-        animationSpec = tween(240, easing = LinearOutSlowInEasing),
+        targetValue = if (canScrollBack) topFadeHeight else 0.dp,
+        animationSpec = tween(180, easing = LinearOutSlowInEasing),
         label = "scrollFadeTop"
     )
     val animatedBottomPx by animateDpAsState(
-        targetValue = if (listState.canScrollForward) bottomFadeHeight else 0.dp,
-        animationSpec = tween(240, easing = LinearOutSlowInEasing),
+        targetValue = if (canScrollFwd) bottomFadeHeight else 0.dp,
+        animationSpec = tween(180, easing = LinearOutSlowInEasing),
         label = "scrollFadeBottom"
     )
     val hasFade = animatedTopPx > 0.5.dp || animatedBottomPx > 0.5.dp
     if (!hasFade) return this
 
-    return this
-        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-        .drawWithContent {
-            drawContent()
-            val height = size.height
-            val topPx = animatedTopPx.toPx()
-            val bottomPx = animatedBottomPx.toPx()
+    val bgColor = MaterialTheme.colorScheme.background
 
-            if (topPx > 1f) {
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        0.0f to Color.Transparent,
-                        1.0f to Color.Black,
-                        startY = 0f,
-                        endY = topPx
-                    ),
-                    blendMode = BlendMode.DstIn
+    return this.drawWithContent {
+        drawContent()
+        val height = size.height
+        val topPx = animatedTopPx.toPx()
+        val bottomPx = animatedBottomPx.toPx()
+
+        if (topPx > 1f) {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    0.0f to bgColor,
+                    1.0f to Color.Transparent,
+                    startY = 0f,
+                    endY = topPx
                 )
-            }
-            if (bottomPx > 1f) {
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        0.0f to Color.Black,
-                        1.0f to Color.Transparent,
-                        startY = (height - bottomPx).coerceAtLeast(0f),
-                        endY = height
-                    ),
-                    blendMode = BlendMode.DstIn
-                )
-            }
+            )
         }
+        if (bottomPx > 1f) {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    0.0f to Color.Transparent,
+                    1.0f to bgColor,
+                    startY = (height - bottomPx).coerceAtLeast(0f),
+                    endY = height
+                )
+            )
+        }
+    }
 }
 
 /**

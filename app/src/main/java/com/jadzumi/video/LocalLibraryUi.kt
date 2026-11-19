@@ -989,15 +989,8 @@ fun isCameraOrPersonalClip(video: LocalVideo): Boolean {
     }
 
     val currentActiveListState = getCategoryListState(category)
-    val isHeroMinimized by remember(currentActiveListState) {
-        derivedStateOf {
-            currentActiveListState.firstVisibleItemIndex > 0 || currentActiveListState.firstVisibleItemScrollOffset > 60
-        }
-    }
     val shouldMinimizeDock by remember(currentActiveListState) {
-        derivedStateOf {
-            currentActiveListState.firstVisibleItemIndex > 0 || currentActiveListState.firstVisibleItemScrollOffset > 100
-        }
+        derivedStateOf { currentActiveListState.firstVisibleItemIndex > 0 }
     }
     LaunchedEffect(shouldMinimizeDock) {
         onScrollActive?.invoke(shouldMinimizeDock)
@@ -1945,7 +1938,7 @@ fun CleanContinueWatchingCard(
     val percentText = "${(progress * 100).toInt()}%"
 
     val movieMeta = remember(video.identity, sidecars) {
-        if (sidecars.isNotEmpty()) extractMovieMetadata(video, sidecars, context) else null
+        if (sidecars.isNotEmpty()) extractMovieMetadata(video, sidecars, context = null) else null
     }
     var onlinePosterUri by remember(video.identity) {
         mutableStateOf(movieMeta?.backdropUri ?: movieMeta?.posterUri)
@@ -2186,7 +2179,7 @@ fun CleanRailPosterCard(
 ) {
     val context = LocalContext.current
     val movieMeta = remember(video.identity, sidecars) {
-        extractMovieMetadata(video, sidecars, context)
+        extractMovieMetadata(video, sidecars, context = null)
     }
     var onlinePosterUri by remember(video.identity) {
         mutableStateOf(movieMeta.posterUri)
@@ -2462,7 +2455,7 @@ fun CleanRailAnimeCard(
 ) {
     val context = LocalContext.current
     val movieMeta = remember(video.identity, sidecars) {
-        if (sidecars.isNotEmpty()) extractMovieMetadata(video, sidecars, context) else null
+        if (sidecars.isNotEmpty()) extractMovieMetadata(video, sidecars, context = null) else null
     }
     var onlinePosterUri by remember(video.identity) {
         mutableStateOf(movieMeta?.posterUri)
@@ -3052,12 +3045,14 @@ fun MovieSummaryCard(
 
     LaunchedEffect(video.identity, video.name) {
         val (cleanTitle, cleanYear) = OnlineMetadataFetcher.extractCleanTitleAndYear(video.name)
-        val cached = OnlineMetadataFetcher.getCachedMovie(context, cleanTitle, cleanYear, video.identity)
+        val cached = withContext(Dispatchers.IO) {
+            OnlineMetadataFetcher.getCachedMovie(context, cleanTitle, cleanYear, video.identity)
+        }
         val cachedPoster = cached?.localPosterPath ?: cached?.posterUrl
         if (cachedPoster != null) {
             livePosterUri = cachedPoster
         } else {
-            val fetched = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val fetched = withContext(Dispatchers.IO) {
                 OnlineMetadataFetcher.fetchMovieMetadata(context, cleanTitle, cleanYear, video.identity)
             }
             val fetchedPoster = fetched?.localPosterPath ?: fetched?.posterUrl
@@ -3068,7 +3063,7 @@ fun MovieSummaryCard(
     }
 
     val metadata = remember(video, sidecars, livePosterUri) {
-        val base = extractMovieMetadata(video, sidecars, context)
+        val base = extractMovieMetadata(video, sidecars, context = null)
         if (base.posterUri == null && livePosterUri != null) {
             base.copy(posterUri = livePosterUri, backdropUri = base.backdropUri ?: livePosterUri)
         } else {
@@ -3965,7 +3960,10 @@ internal object ThumbnailMemory {
         return runCatching {
             val file = getDiskFile(context, key)
             if (file.exists() && file.length() > 0) {
-                BitmapFactory.decodeFile(file.absolutePath)
+                val opts = BitmapFactory.Options().apply {
+                    inPreferredConfig = Bitmap.Config.RGB_565
+                }
+                BitmapFactory.decodeFile(file.absolutePath, opts)
             } else null
         }.getOrNull()
     }
